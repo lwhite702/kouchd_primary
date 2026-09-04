@@ -1,0 +1,115 @@
+import { convexTest } from "convex-test";
+import { describe, expect, it } from "vitest";
+
+import { api } from "../convex/_generated/api";
+import schema from "../convex/schema";
+
+const modules = import.meta.glob([
+  "../convex/**/*.ts",
+  "!../convex/lib/**",
+  "!../convex/schema.ts",
+  "!../convex/auth.config.ts",
+]);
+
+const firstTerms = {
+  startDate: "2026-09-01",
+  endDate: "2026-09-21",
+  cadence: "weekly" as const,
+  rateCents: 20_000,
+  earlyDiscountPercentage: 5,
+  earlyDiscountDays: 2,
+  lateFeeCents: 1_500,
+  graceDays: 2,
+  houseNotes: "Quiet after 10:30 PM.",
+};
+
+async function createUser(t: ReturnType<typeof convexTest>, subject: string, name: string) {
+  const actor = t.withIdentity({ subject, name, email: `${subject}@example.com` });
+  await actor.mutation(api.users.syncCurrent, {});
+  return actor;
+}
+
+describe("shared stay authorization and audit rules", () => {
+  it("rejects weak invite hashes and invalid financial terms", async () => {
+    const t = convexTest(schema, modules);
+    const host = await createUser(t, "host-validation", "Lee");
+    await expect(host.mutation(api.stays.create, {
+      timezone: "America/New_York",
+      terms: { ...firstTerms, earlyDiscountPercentage: 125 },
+    })).rejects.toThrow("Early discount");
+    await expect(host.mutation(api.stays.create, {
+      timezone: "America/New_York",
+      terms: { ...firstTerms, startDate: "later" },
+    })).rejects.toThrow("calendar date");
+
+    const stayId = await host.mutation(api.stays.create, { timezone: "America/New_York", terms: firstTerms });
+    await expect(host.mutation(api.invites.create, {
+      stayId,
+      tokenHash: "weak",
+      expiresAt: Date.now() + 86_400_000,
+    })).rejects.toThrow("invite hash");
+  });
+
+  it("keeps a stay private and activates only after both members accept", async () => {
+    const t = convexTest(schema, modules);
+    const host = await createUser(t, "host-1", "Lee");
+    const guest = await createUser(t, "guest-1", "Marcus");
+    const outsider = await createUser(t, "outsider-1", "Other");
+    const stayId = await host.mutation(api.stays.create, {
+      timezone: "America/New_York",
+      nextCheckInDate: "2026-09-08",
+      terms: firstTerms,
+    });
+
+    await expect(outsider.query(api.stays.getBundle, { stayId })).rejects.toThrow("Not authorized");
+
+    const tokenHash = "a".repeat(64);
+    await host.mutation(api.invites.create, { stayId, tokenHash, expiresAt: Date.now() + 86_400_000 });
+    await guest.mutation(api.invites.accept, { tokenHash });
+    await expect(guest.mutation(api.invites.accept, { tokenHash })).rejects.toThrow("invalid or expired");
+
+    const before = await host.query(api.stays.getBundle, { stayId });
+    expect(before.stay.status).toBe("pending");
+    expect(await guest.mutation(api.terms.acceptCurrent, { stayId })).toBe("active");
+    const after = await guest.query(api.stays.getBundle, { stayId });
+    expect(after.stay.status).toBe("active");
+  });
+
+  it("requires the other member to confirm and retains voided history", async () => {
+    const t = convexTest(schema, modules);
+    const host = await createUser(t, "host-2", "Lee");
+    const guest = await createUser(t, "guest-2", "Marcus");
+    const stayId = await host.mutation(api.stays.create, { timezone: "America/New_York", terms: firstTerms });
+    const tokenHash = "b".repeat(64);
+    await host.mutation(api.invites.create, { stayId, tokenHash, expiresAt: Date.now() + 86_400_000 });
+    await guest.mutation(api.invites.accept, { tokenHash });
+
+    const contributionId = await guest.mutation(api.contributions.create, {
+      stayId,
+      type: "groceries",
+      amountCents: 4_850,
+      date: "2026-09-03",
+      note: "Kitchen restock",
+      countsTowardBalance: true,
+    });
+    await expect(guest.mutation(api.contributions.confirm, { contributionId })).rejects.toThrow("cannot confirm");
+    await host.mutation(api.contributions.confirm, { contributionId });
+    await guest.mutation(api.contributions.voidContribution, { contributionId });
+
+    const entries = await host.query(api.contributions.list, { stayId });
+    expect(entries).toHaveLength(1);
+    expect(entries[0].status).toBe("voided");
+    expect(entries[0].voidedAt).toEqual(expect.any(Number));
+  });
+
+  it("ends a stay idempotently and keeps its records", async () => {
+    const t = convexTest(schema, modules);
+    const host = await createUser(t, "host-3", "Lee");
+    const stayId = await host.mutation(api.stays.create, { timezone: "America/New_York", terms: firstTerms });
+    await host.mutation(api.stays.end, { stayId });
+    await host.mutation(api.stays.end, { stayId });
+    const bundle = await host.query(api.stays.getBundle, { stayId });
+    expect(bundle.stay.status).toBe("ended");
+    expect(bundle.terms?.houseNotes).toBe(firstTerms.houseNotes);
+  });
+});
