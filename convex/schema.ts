@@ -76,6 +76,20 @@ export default defineSchema({
     .index("by_terms_user", ["termsId", "userId"])
     .index("by_stay_terms", ["stayId", "termsId"]),
 
+  obligations: defineTable({
+    stayId: v.id("stays"),
+    termsId: v.id("terms"),
+    periodStart: v.string(),
+    periodEnd: v.string(),
+    dueDate: v.string(),
+    baseAmountCents: v.number(),
+    lateFeeWaivedAt: v.optional(v.number()),
+    lateFeeWaivedBy: v.optional(v.id("users")),
+    createdAt: v.number(),
+  })
+    .index("by_stay", ["stayId"])
+    .index("by_terms", ["termsId"]),
+
   contributions: defineTable({
     stayId: v.id("stays"),
     createdBy: v.id("users"),
@@ -115,7 +129,7 @@ export default defineSchema({
   activity: defineTable({
     stayId: v.id("stays"),
     actorUserId: v.id("users"),
-    kind: v.union(v.literal("stay"), v.literal("terms"), v.literal("invite"), v.literal("contribution"), v.literal("chore"), v.literal("check_in")),
+    kind: v.union(v.literal("stay"), v.literal("terms"), v.literal("invite"), v.literal("contribution"), v.literal("chore"), v.literal("check_in"), v.literal("obligation")),
     action: v.string(),
     detail: v.string(),
     entityId: v.optional(v.string()),

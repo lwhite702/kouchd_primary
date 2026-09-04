@@ -112,4 +112,41 @@ describe("shared stay authorization and audit rules", () => {
     expect(bundle.stay.status).toBe("ended");
     expect(bundle.terms?.houseNotes).toBe(firstTerms.houseNotes);
   });
+
+  it("generates obligation periods on activation and audits a host fee waiver", async () => {
+    const t = convexTest(schema, modules);
+    const host = await createUser(t, "host-obligations", "Lee");
+    const guest = await createUser(t, "guest-obligations", "Marcus");
+    const outsider = await createUser(t, "outsider-obligations", "Other");
+    const stayId = await host.mutation(api.stays.create, { timezone: "America/New_York", terms: firstTerms });
+    const tokenHash = "c".repeat(64);
+    await host.mutation(api.invites.create, { stayId, tokenHash, expiresAt: Date.now() + 86_400_000 });
+    await guest.mutation(api.invites.accept, { tokenHash });
+    await guest.mutation(api.terms.acceptCurrent, { stayId });
+
+    const contributionId = await guest.mutation(api.contributions.create, {
+      stayId,
+      type: "payment",
+      amountCents: 19_000,
+      date: "2026-09-05",
+      note: "First week paid early",
+      countsTowardBalance: true,
+    });
+    await host.mutation(api.contributions.confirm, { contributionId });
+
+    await expect(outsider.query(api.obligations.list, { stayId, asOfDate: "2026-09-30" })).rejects.toThrow("Not authorized");
+    const beforeWaiver = await host.query(api.obligations.list, { stayId, asOfDate: "2026-09-30" });
+    expect(beforeWaiver).toHaveLength(3);
+    expect(beforeWaiver[0]).toMatchObject({ baseAmountCents: 20_000, earlyDiscountCents: -1_000, balanceCents: 0 });
+    expect(beforeWaiver[1].lateFeeCents).toBe(1_500);
+
+    await expect(guest.mutation(api.obligations.waiveLateFee, { obligationId: beforeWaiver[1]._id })).rejects.toThrow("Host access");
+    await host.mutation(api.obligations.waiveLateFee, { obligationId: beforeWaiver[1]._id });
+    await host.mutation(api.obligations.waiveLateFee, { obligationId: beforeWaiver[1]._id });
+    const afterWaiver = await host.query(api.obligations.list, { stayId, asOfDate: "2026-09-30" });
+    expect(afterWaiver[1]).toMatchObject({ lateFeeCents: 0, lateFeeWaived: true });
+
+    const activity = await host.query(api.activity.list, { stayId });
+    expect(activity.filter((item) => item.action === "late_fee_waived")).toHaveLength(1);
+  });
 });

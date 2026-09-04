@@ -3,6 +3,7 @@ const SHA_256_HEX = /^[a-f0-9]{64}$/i;
 
 const MAX_MONEY_CENTS = 100_000_000;
 const MAX_RULE_DAYS = 365;
+const MAX_STAY_DAYS = 730;
 const MAX_HOUSE_NOTES_LENGTH = 5_000;
 const MAX_ENTRY_NOTE_LENGTH = 2_000;
 const MAX_CHORE_TITLE_LENGTH = 160;
@@ -51,6 +52,8 @@ export function assertStayTerms(terms: StayTermsInput) {
   assertCalendarDate(terms.startDate, "Start date");
   assertCalendarDate(terms.endDate, "End date");
   if (terms.endDate < terms.startDate) throw new Error("End date must be on or after start date");
+  const stayLength = Math.floor((Date.parse(`${terms.endDate}T00:00:00.000Z`) - Date.parse(`${terms.startDate}T00:00:00.000Z`)) / 86_400_000) + 1;
+  if (stayLength > MAX_STAY_DAYS) throw new Error(`Stay length cannot exceed ${MAX_STAY_DAYS} days`);
 
   assertIntegerInRange(terms.rateCents, 0, MAX_MONEY_CENTS, "Rate");
   assertIntegerInRange(terms.earlyDiscountPercentage, 0, 100, "Early discount percentage");

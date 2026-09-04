@@ -9,6 +9,8 @@ Kouchd helps a host and one temporary house guest keep dates, expectations, cont
 - Convex schema and real-time functions for users, stays, memberships, invitations, terms, contributions, chores, and immutable activity
 - Single-use, expiring guest invitation links stored only as SHA-256 hashes
 - Mutual acceptance of versioned stay terms
+- Per-period daily or weekly obligations with prorated final weeks
+- Full-payment early discounts, one-time late fees, and audited host fee waivers
 - Two-party contribution confirmation with pending, confirmed, disputed, and voided states
 - Daily and weekly pricing represented in integer cents
 - Responsive, installable PWA metadata and the original Kouchd visual direction

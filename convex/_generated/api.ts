@@ -9,6 +9,7 @@ import type * as activity from "../activity.js";
 import type * as chores from "../chores.js";
 import type * as contributions from "../contributions.js";
 import type * as invites from "../invites.js";
+import type * as obligations from "../obligations.js";
 import type * as stays from "../stays.js";
 import type * as terms from "../terms.js";
 import type * as users from "../users.js";
@@ -18,6 +19,7 @@ const fullApi: ApiFromModules<{
   chores: typeof chores;
   contributions: typeof contributions;
   invites: typeof invites;
+  obligations: typeof obligations;
   stays: typeof stays;
   terms: typeof terms;
   users: typeof users;
