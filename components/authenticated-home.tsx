@@ -1,6 +1,6 @@
 "use client";
 
-import { SignInButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
+import { Show, SignInButton, SignUpButton, UserButton } from "@clerk/nextjs";
 import { useMutation, useQuery } from "convex/react";
 import { ArrowRight, Armchair, Check, ClipboardList, Copy, Home, Landmark, Plus, ReceiptText, Users } from "lucide-react";
 import Link from "next/link";
@@ -22,16 +22,29 @@ function value(form: FormData, name: string) { return String(form.get(name) ?? "
 export function AuthenticatedHome() {
   return (
     <>
-      <SignedOut>
+      <Show when="signed-out">
         <main className="auth-landing">
           <div className="auth-art"><Armchair size={42} /></div>
           <p className="eyebrow">Make room for clarity</p>
           <h1>A shared stay without the awkward spreadsheet.</h1>
           <p>Sign in to create a private stay, invite one guest, and keep the same record together.</p>
-          <SignInButton mode="modal"><button className="button primary" type="button">Sign in to Kouchd <ArrowRight size={18} /></button></SignInButton>
+          <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center", flexWrap: "wrap" }}>
+            <SignUpButton mode="modal">
+              <button className="button primary" type="button">
+                Sign up for Kouchd <ArrowRight size={18} />
+              </button>
+            </SignUpButton>
+            <SignInButton mode="modal">
+              <button className="button soft" type="button">
+                Sign in
+              </button>
+            </SignInButton>
+          </div>
         </main>
-      </SignedOut>
-      <SignedIn><SyncedWorkspace /></SignedIn>
+      </Show>
+      <Show when="signed-in">
+        <SyncedWorkspace />
+      </Show>
     </>
   );
 }

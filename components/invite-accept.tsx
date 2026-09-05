@@ -1,6 +1,6 @@
 "use client";
 
-import { SignInButton, SignedIn, SignedOut } from "@clerk/nextjs";
+import { Show, SignInButton, SignUpButton } from "@clerk/nextjs";
 import { useMutation } from "convex/react";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
@@ -10,7 +10,30 @@ import { api } from "@/convex/_generated/api";
 import { hashInviteToken } from "@/lib/invite";
 
 export function InviteAccept({ token }: { token: string }) {
-  return <main className="auth-landing"><SignedOut><p className="eyebrow">You&apos;ve been invited</p><h1>There&apos;s a spot for you on Kouchd.</h1><p>Sign in to accept the private shared-stay invitation.</p><SignInButton mode="modal"><button className="button primary" type="button">Sign in to accept <ArrowRight size={18} /></button></SignInButton></SignedOut><SignedIn><Accept token={token} /></SignedIn></main>;
+  return (
+    <main className="auth-landing">
+      <Show when="signed-out">
+        <p className="eyebrow">You&apos;ve been invited</p>
+        <h1>There&apos;s a spot for you on Kouchd.</h1>
+        <p>Sign in or create an account to accept the private shared-stay invitation.</p>
+        <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center", flexWrap: "wrap" }}>
+          <SignUpButton mode="modal">
+            <button className="button primary" type="button">
+              Sign up to accept <ArrowRight size={18} />
+            </button>
+          </SignUpButton>
+          <SignInButton mode="modal">
+            <button className="button soft" type="button">
+              Sign in
+            </button>
+          </SignInButton>
+        </div>
+      </Show>
+      <Show when="signed-in">
+        <Accept token={token} />
+      </Show>
+    </main>
+  );
 }
 
 function Accept({ token }: { token: string }) {
