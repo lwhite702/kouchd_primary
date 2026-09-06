@@ -30,3 +30,37 @@ export async function requireHost(ctx: AppCtx, stayId: Id<"stays">) {
   if (result.membership.role !== "host") throw new Error("Host access required");
   return result;
 }
+
+export async function resolveFinancialGuest(
+  ctx: AppCtx,
+  stayId: Id<"stays">,
+  requestedGuestUserId?: Id<"users">,
+) {
+  const result = await requireMembership(ctx, stayId);
+  if (result.membership.role === "guest") {
+    if (requestedGuestUserId && requestedGuestUserId !== result.user._id) {
+      throw new Error("Guests cannot access another guest's financial record");
+    }
+    const memberships = await ctx.db
+      .query("memberships")
+      .withIndex("by_stay", (query) => query.eq("stayId", stayId))
+      .take(21);
+    const guestCount = memberships.filter((membership) => membership.status === "active" && membership.role === "guest").length;
+    return { ...result, guestUserId: result.user._id, includeLegacyUnscoped: guestCount === 1 };
+  }
+
+  const memberships = await ctx.db
+    .query("memberships")
+    .withIndex("by_stay", (query) => query.eq("stayId", stayId))
+    .take(21);
+  const guests = memberships.filter((membership) => membership.status === "active" && membership.role === "guest");
+  const target = requestedGuestUserId ?? (guests.length === 1 ? guests[0]?.userId : undefined);
+  if (!target) {
+    if (guests.length === 0) return { ...result, guestUserId: undefined, includeLegacyUnscoped: false };
+    throw new Error("Choose a guest to view financial records");
+  }
+  if (!guests.some((membership) => membership.userId === target)) {
+    throw new Error("Guest is not an active member of this stay");
+  }
+  return { ...result, guestUserId: target, includeLegacyUnscoped: guests.length === 1 };
+}

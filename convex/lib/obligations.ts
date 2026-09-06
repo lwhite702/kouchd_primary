@@ -7,11 +7,12 @@ export async function ensureObligationsForTerms(
   ctx: MutationCtx,
   stayId: Id<"stays">,
   termsId: Id<"terms">,
+  guestUserId: Id<"users">,
   actorUserId: Id<"users">,
 ) {
   const existing = await ctx.db
     .query("obligations")
-    .withIndex("by_terms", (query) => query.eq("termsId", termsId))
+    .withIndex("by_terms_and_guest", (query) => query.eq("termsId", termsId).eq("guestUserId", guestUserId))
     .take(1);
   if (existing.length > 0) return;
 
@@ -24,6 +25,8 @@ export async function ensureObligationsForTerms(
     await ctx.db.insert("obligations", {
       stayId,
       termsId,
+      guestUserId,
+      type: "cadence",
       ...period,
       createdAt,
     });
@@ -32,6 +35,7 @@ export async function ensureObligationsForTerms(
   await recordActivity(ctx, {
     stayId,
     actorUserId,
+    guestUserId,
     kind: "obligation",
     action: "generated",
     detail: `${periods.length} contribution obligation${periods.length === 1 ? "" : "s"} created`,

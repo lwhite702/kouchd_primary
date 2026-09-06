@@ -153,9 +153,73 @@
 .invite-output { display: flex; gap: 8px; min-width: min(100%, 420px); }
 .invite-output input { min-width: 0; flex: 1; }
 
+.auth-actions,
+.topbar-actions,
+.heading-actions,
+.guest-tabs,
+.section-heading .mini-button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.topbar-actions { margin-left: auto; }
+.icon-button.compact { width: 40px; height: 40px; font-size: 1.35rem; }
+.heading-actions { flex-wrap: wrap; justify-content: flex-end; }
+
+.estimate-card {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 18px;
+  border: 1px solid #b8d2c1;
+  border-radius: 18px;
+  background: #e9f3ec;
+  padding: 18px;
+}
+.estimate-card span { color: var(--muted); font-size: .8rem; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; }
+.estimate-card strong { color: var(--green); font-size: 1.45rem; }
+.estimate-card small { grid-column: 1 / -1; color: var(--muted); }
+
+.switch-row {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center;
+  gap: 14px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--paper);
+  padding: 16px 18px;
+}
+.switch-row input { width: 22px; height: 22px; accent-color: var(--green); }
+.switch-row strong,
+.switch-row small { display: block; }
+.switch-row small { margin-top: 3px; color: var(--muted); }
+
+.guest-tabs {
+  margin: 0 0 18px;
+  overflow-x: auto;
+  padding: 4px;
+}
+.guest-tabs button {
+  flex: 0 0 auto;
+  min-height: 42px;
+  border: 1px solid var(--line);
+  border-radius: 99px;
+  background: var(--card);
+  color: var(--ink);
+  padding: 0 16px;
+  font-weight: 800;
+}
+.guest-tabs button.active { border-color: var(--green); background: var(--green); color: white; }
+.settings-fields { margin-top: 18px; }
+
 @media (max-width: 760px) {
   .invite-card { grid-template-columns: 1fr; }
   .invite-output { flex-direction: column; }
+  .auth-actions,
+  .heading-actions { width: 100%; flex-direction: column; align-items: stretch; }
+  .estimate-card { grid-template-columns: 1fr; }
+  .estimate-card small { grid-column: auto; }
 }
 
 @media (max-width: 760px) {

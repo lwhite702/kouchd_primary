@@ -15,12 +15,17 @@ export const list = query({
 });
 
 export const create = mutation({
-  args: { stayId: v.id("stays"), title: v.string(), note: v.string(), assignee: v.union(v.literal("host"), v.literal("guest"), v.literal("shared")), dueDate: v.string() },
+  args: { stayId: v.id("stays"), title: v.string(), note: v.string(), assignee: v.union(v.literal("host"), v.literal("guest"), v.literal("shared")), assigneeUserId: v.optional(v.id("users")), dueDate: v.string() },
   returns: v.id("chores"),
   handler: async (ctx, args) => {
     const { user } = await requireMembership(ctx, args.stayId);
     const stay = await ctx.db.get(args.stayId);
     if (!stay || stay.status === "ended") throw new Error("Ended stays cannot add ordinary chores");
+    const assigneeUserId = args.assigneeUserId;
+    if (assigneeUserId) {
+      const assignee = await ctx.db.query("memberships").withIndex("by_stay_user", (query) => query.eq("stayId", args.stayId).eq("userId", assigneeUserId)).unique();
+      if (!assignee || assignee.status !== "active") throw new Error("Chore assignee must be an active member");
+    }
     assertChoreInput(args.title, args.note, args.dueDate);
     const now = Date.now();
     const choreId = await ctx.db.insert("chores", { ...args, createdBy: user._id, createdAt: now, updatedAt: now });

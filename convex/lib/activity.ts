@@ -6,7 +6,8 @@ export async function recordActivity(
   entry: {
     stayId: Id<"stays">;
     actorUserId: Id<"users">;
-    kind: "stay" | "terms" | "invite" | "contribution" | "chore" | "check_in" | "obligation";
+    guestUserId?: Id<"users">;
+    kind: "stay" | "terms" | "invite" | "contribution" | "chore" | "check_in" | "obligation" | "announcement" | "notification";
     action: string;
     detail: string;
     entityId?: string;

@@ -10,8 +10,10 @@ const weeklyTerms = {
   endDate: "2026-09-10",
   cadence: "weekly" as const,
   rateCents: 14_000,
+  earlyDiscountEnabled: true,
   earlyDiscountPercentage: 5,
   earlyDiscountDays: 2,
+  lateFeeEnabled: true,
   lateFeeCents: 1_500,
   graceDays: 2,
 };
@@ -68,7 +70,7 @@ describe("obligation ledger", () => {
     });
   });
 
-  it("adds one late fee after grace and never repeats it", () => {
+  it("adds a weekly rollover fee while the balance remains unpaid", () => {
     const obligations = buildObligationPeriods({
       ...weeklyTerms,
       startDate: "2026-09-01",
@@ -84,10 +86,11 @@ describe("obligation ledger", () => {
       terms: { ...weeklyTerms, cadence: "daily", rateCents: 10_000, earlyDiscountPercentage: 0 },
     });
     expect(late).toMatchObject({
-      lateFeeCents: 1_500,
-      effectiveChargeCents: 11_500,
+      lateFeeCents: 6_000,
+      lateFeeOccurrences: 4,
+      effectiveChargeCents: 16_000,
       creditedCents: 4_000,
-      balanceCents: 7_500,
+      balanceCents: 12_000,
       status: "late",
     });
   });

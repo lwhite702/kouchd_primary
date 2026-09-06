@@ -9,8 +9,8 @@ import { assertStayTerms } from "./lib/validation";
 const termsInput = {
   startDate: v.string(), endDate: v.string(),
   cadence: v.union(v.literal("daily"), v.literal("weekly")),
-  rateCents: v.number(), earlyDiscountPercentage: v.number(), earlyDiscountDays: v.number(),
-  lateFeeCents: v.number(), graceDays: v.number(), houseNotes: v.string(),
+  rateCents: v.number(), earlyDiscountEnabled: v.boolean(), earlyDiscountPercentage: v.number(), earlyDiscountDays: v.number(),
+  lateFeeEnabled: v.boolean(), lateFeeCents: v.number(), graceDays: v.number(), houseNotes: v.string(),
 };
 
 export const acceptCurrent = mutation({
@@ -24,10 +24,14 @@ export const acceptCurrent = mutation({
     const existing = await ctx.db.query("termsAcceptances").withIndex("by_terms_user", (query) => query.eq("termsId", termsId).eq("userId", user._id)).unique();
     if (!existing) await ctx.db.insert("termsAcceptances", { stayId, termsId, userId: user._id, acceptedAt: Date.now() });
     if (membership.acceptedTermsId !== termsId) await ctx.db.patch(membership._id, { acceptedTermsId: termsId });
-    const memberships = await ctx.db.query("memberships").withIndex("by_stay", (query) => query.eq("stayId", stayId)).take(3);
-    const allAccepted = memberships.length === 2 && memberships.every((member) => member.status === "active" && (member.userId === user._id ? true : member.acceptedTermsId === termsId));
+    if (membership.role === "guest") {
+      await ensureObligationsForTerms(ctx, stayId, termsId, user._id, user._id);
+    }
+    const memberships = await ctx.db.query("memberships").withIndex("by_stay", (query) => query.eq("stayId", stayId)).take(50);
+    const activeMemberships = memberships.filter((member) => member.status === "active");
+    const allAccepted = activeMemberships.length >= 2
+      && activeMemberships.every((member) => member.userId === user._id ? true : member.acceptedTermsId === termsId);
     if (allAccepted) {
-      await ensureObligationsForTerms(ctx, stayId, termsId, user._id);
       if (stay.status !== "active") await ctx.db.patch(stayId, { status: "active", updatedAt: Date.now() });
     }
     await recordActivity(ctx, { stayId, actorUserId: user._id, kind: "terms", action: "accepted", detail: "Current stay terms accepted", entityId: termsId });

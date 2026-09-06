@@ -10,8 +10,10 @@ const termsInput = {
   endDate: v.string(),
   cadence: v.union(v.literal("daily"), v.literal("weekly")),
   rateCents: v.number(),
+  earlyDiscountEnabled: v.boolean(),
   earlyDiscountPercentage: v.number(),
   earlyDiscountDays: v.number(),
+  lateFeeEnabled: v.boolean(),
   lateFeeCents: v.number(),
   graceDays: v.number(),
   houseNotes: v.string(),
@@ -62,7 +64,7 @@ export const getBundle = query({
     const stay = await ctx.db.get(stayId);
     if (!stay) throw new Error("Stay not found");
     const terms = stay.currentTermsId ? await ctx.db.get(stay.currentTermsId) : null;
-    const memberships = await ctx.db.query("memberships").withIndex("by_stay", (query) => query.eq("stayId", stayId)).take(3);
+    const memberships = await ctx.db.query("memberships").withIndex("by_stay", (query) => query.eq("stayId", stayId)).take(50);
     const members = [];
     for (const item of memberships) {
       const person = await ctx.db.get(item.userId);

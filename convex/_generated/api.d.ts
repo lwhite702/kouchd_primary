@@ -9,14 +9,19 @@
  */
 
 import type * as activity from "../activity.js";
+import type * as announcements from "../announcements.js";
 import type * as chores from "../chores.js";
 import type * as contributions from "../contributions.js";
+import type * as crons from "../crons.js";
 import type * as invites from "../invites.js";
+import type * as knock from "../knock.js";
 import type * as lib_activity from "../lib/activity.js";
 import type * as lib_auth from "../lib/auth.js";
 import type * as lib_obligations from "../lib/obligations.js";
 import type * as lib_validation from "../lib/validation.js";
+import type * as notifications from "../notifications.js";
 import type * as obligations from "../obligations.js";
+import type * as reminders from "../reminders.js";
 import type * as stays from "../stays.js";
 import type * as terms from "../terms.js";
 import type * as users from "../users.js";
@@ -29,14 +34,19 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   activity: typeof activity;
+  announcements: typeof announcements;
   chores: typeof chores;
   contributions: typeof contributions;
+  crons: typeof crons;
   invites: typeof invites;
+  knock: typeof knock;
   "lib/activity": typeof lib_activity;
   "lib/auth": typeof lib_auth;
   "lib/obligations": typeof lib_obligations;
   "lib/validation": typeof lib_validation;
+  notifications: typeof notifications;
   obligations: typeof obligations;
+  reminders: typeof reminders;
   stays: typeof stays;
   terms: typeof terms;
   users: typeof users;

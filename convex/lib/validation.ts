@@ -7,6 +7,8 @@ const MAX_STAY_DAYS = 730;
 const MAX_HOUSE_NOTES_LENGTH = 5_000;
 const MAX_ENTRY_NOTE_LENGTH = 2_000;
 const MAX_CHORE_TITLE_LENGTH = 160;
+const MAX_ANNOUNCEMENT_TITLE_LENGTH = 160;
+const E164_PHONE = /^\+[1-9]\d{7,14}$/;
 const MAX_INVITE_LIFETIME_MS = 30 * 24 * 60 * 60 * 1_000;
 
 export type StayTermsInput = {
@@ -14,8 +16,10 @@ export type StayTermsInput = {
   endDate: string;
   cadence: "daily" | "weekly";
   rateCents: number;
+  earlyDiscountEnabled: boolean;
   earlyDiscountPercentage: number;
   earlyDiscountDays: number;
+  lateFeeEnabled: boolean;
   lateFeeCents: number;
   graceDays: number;
   houseNotes: string;
@@ -61,6 +65,13 @@ export function assertStayTerms(terms: StayTermsInput) {
   assertIntegerInRange(terms.lateFeeCents, 0, MAX_MONEY_CENTS, "Late fee");
   assertIntegerInRange(terms.graceDays, 0, MAX_RULE_DAYS, "Grace days");
 
+  if (!terms.earlyDiscountEnabled && (terms.earlyDiscountPercentage !== 0 || terms.earlyDiscountDays !== 0)) {
+    throw new Error("Disabled early discounts must use zero values");
+  }
+  if (!terms.lateFeeEnabled && (terms.lateFeeCents !== 0 || terms.graceDays !== 0)) {
+    throw new Error("Disabled late fees must use zero values");
+  }
+
   if (terms.houseNotes.length > MAX_HOUSE_NOTES_LENGTH) {
     throw new Error(`House notes must be ${MAX_HOUSE_NOTES_LENGTH} characters or fewer`);
   }
@@ -89,4 +100,30 @@ export function assertChoreInput(title: string, note: string, dueDate: string) {
   }
   if (note.length > MAX_ENTRY_NOTE_LENGTH) throw new Error(`Chore note must be ${MAX_ENTRY_NOTE_LENGTH} characters or fewer`);
   assertCalendarDate(dueDate, "Chore due date");
+}
+
+export function assertAdhocChargeInput(title: string, amountCents: number, effectiveDate: string, dueDate: string) {
+  const trimmedTitle = title.trim();
+  if (!trimmedTitle || trimmedTitle.length > MAX_CHORE_TITLE_LENGTH) {
+    throw new Error(`Charge title must be between 1 and ${MAX_CHORE_TITLE_LENGTH} characters`);
+  }
+  assertIntegerInRange(amountCents, 1, MAX_MONEY_CENTS, "Charge amount");
+  assertCalendarDate(effectiveDate, "Charge date");
+  assertCalendarDate(dueDate, "Charge due date");
+  if (dueDate < effectiveDate) throw new Error("Charge due date cannot be before its effective date");
+}
+
+export function assertAnnouncementInput(title: string, body: string, pinnedUntil?: string) {
+  const trimmedTitle = title.trim();
+  if (!trimmedTitle || trimmedTitle.length > MAX_ANNOUNCEMENT_TITLE_LENGTH) {
+    throw new Error(`Announcement title must be between 1 and ${MAX_ANNOUNCEMENT_TITLE_LENGTH} characters`);
+  }
+  if (!body.trim() || body.length > MAX_ENTRY_NOTE_LENGTH) {
+    throw new Error(`Announcement body must be between 1 and ${MAX_ENTRY_NOTE_LENGTH} characters`);
+  }
+  if (pinnedUntil) assertCalendarDate(pinnedUntil, "Pinned-until date");
+}
+
+export function assertPhone(phone?: string) {
+  if (phone && !E164_PHONE.test(phone)) throw new Error("Phone number must use E.164 format, such as +15551234567");
 }

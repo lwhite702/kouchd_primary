@@ -1,10 +1,11 @@
 import { v } from "convex/values";
 
 import { calculateObligationLedger } from "../lib/domain/obligations";
+import { internal } from "./_generated/api";
 import { mutation, query } from "./_generated/server";
-import { requireHost, requireMembership } from "./lib/auth";
+import { requireHost, resolveFinancialGuest } from "./lib/auth";
 import { recordActivity } from "./lib/activity";
-import { assertCalendarDate } from "./lib/validation";
+import { assertAdhocChargeInput, assertCalendarDate } from "./lib/validation";
 
 const ledgerItem = v.object({
   _id: v.id("obligations"),
@@ -12,8 +13,11 @@ const ledgerItem = v.object({
   periodEnd: v.string(),
   dueDate: v.string(),
   baseAmountCents: v.number(),
+  type: v.union(v.literal("cadence"), v.literal("adhoc")),
+  title: v.optional(v.string()),
   earlyDiscountCents: v.number(),
   lateFeeCents: v.number(),
+  lateFeeOccurrences: v.number(),
   effectiveChargeCents: v.number(),
   creditedCents: v.number(),
   balanceCents: v.number(),
@@ -22,20 +26,29 @@ const ledgerItem = v.object({
 });
 
 export const list = query({
-  args: { stayId: v.id("stays"), asOfDate: v.string() },
+  args: { stayId: v.id("stays"), asOfDate: v.string(), guestUserId: v.optional(v.id("users")) },
   returns: v.array(ledgerItem),
-  handler: async (ctx, { stayId, asOfDate }) => {
-    await requireMembership(ctx, stayId);
+  handler: async (ctx, { stayId, asOfDate, guestUserId: requestedGuestUserId }) => {
+    const access = await resolveFinancialGuest(ctx, stayId, requestedGuestUserId);
     assertCalendarDate(asOfDate, "Ledger date");
+    if (!access.guestUserId) return [];
     const stay = await ctx.db.get(stayId);
     if (!stay || !stay.currentTermsId) return [];
     const terms = await ctx.db.get(stay.currentTermsId);
     if (!terms) return [];
 
-    const [obligations, contributions] = await Promise.all([
-      ctx.db.query("obligations").withIndex("by_terms", (query) => query.eq("termsId", terms._id)).take(731),
-      ctx.db.query("contributions").withIndex("by_stay_date", (query) => query.eq("stayId", stayId)).order("asc").take(5_000),
+    const [scopedObligations, scopedContributions] = await Promise.all([
+      ctx.db.query("obligations").withIndex("by_stay_and_guest", (query) => query.eq("stayId", stayId).eq("guestUserId", access.guestUserId)).take(1_000),
+      ctx.db.query("contributions").withIndex("by_stay_guest_and_date", (query) => query.eq("stayId", stayId).eq("guestUserId", access.guestUserId)).order("asc").take(5_000),
     ]);
+    const [legacyObligations, legacyContributions] = access.includeLegacyUnscoped
+      ? await Promise.all([
+        ctx.db.query("obligations").withIndex("by_stay_and_guest", (query) => query.eq("stayId", stayId).eq("guestUserId", undefined)).take(1_000),
+        ctx.db.query("contributions").withIndex("by_stay_guest_and_date", (query) => query.eq("stayId", stayId).eq("guestUserId", undefined)).order("asc").take(5_000),
+      ])
+      : [[], []];
+    const obligations = [...scopedObligations, ...legacyObligations];
+    const contributions = [...scopedContributions, ...legacyContributions];
     const credits = contributions
       .filter((entry) => entry.status === "confirmed" && entry.countsTowardBalance)
       .map((entry) => ({ amountCents: entry.amountCents, date: entry.date }));
@@ -46,7 +59,10 @@ export const list = query({
         periodEnd: item.periodEnd,
         dueDate: item.dueDate,
         baseAmountCents: item.baseAmountCents,
+        type: item.type ?? "cadence",
+        title: item.title,
         lateFeeWaived: Boolean(item.lateFeeWaivedAt),
+        voided: Boolean(item.voidedAt),
       })),
       contributions: credits,
       asOfDate,
@@ -59,8 +75,11 @@ export const list = query({
       periodEnd: item.periodEnd,
       dueDate: item.dueDate,
       baseAmountCents: item.baseAmountCents,
+      type: item.type ?? "cadence",
+      title: item.title,
       earlyDiscountCents: item.earlyDiscountCents,
       lateFeeCents: item.lateFeeCents,
+      lateFeeOccurrences: item.lateFeeOccurrences,
       effectiveChargeCents: item.effectiveChargeCents,
       creditedCents: item.creditedCents,
       balanceCents: item.balanceCents,
@@ -70,12 +89,89 @@ export const list = query({
   },
 });
 
+export const createAdhocCharge = mutation({
+  args: {
+    stayId: v.id("stays"),
+    guestUserId: v.id("users"),
+    title: v.string(),
+    amountCents: v.number(),
+    effectiveDate: v.string(),
+    dueDate: v.string(),
+  },
+  returns: v.id("obligations"),
+  handler: async (ctx, args) => {
+    const { user } = await requireHost(ctx, args.stayId);
+    await resolveFinancialGuest(ctx, args.stayId, args.guestUserId);
+    assertAdhocChargeInput(args.title, args.amountCents, args.effectiveDate, args.dueDate);
+    const stay = await ctx.db.get(args.stayId);
+    if (!stay || stay.status === "ended") throw new Error("Ended stays cannot add charges");
+    const obligationId = await ctx.db.insert("obligations", {
+      stayId: args.stayId,
+      termsId: stay.currentTermsId,
+      guestUserId: args.guestUserId,
+      type: "adhoc",
+      title: args.title.trim(),
+      periodStart: args.effectiveDate,
+      periodEnd: args.effectiveDate,
+      dueDate: args.dueDate,
+      baseAmountCents: args.amountCents,
+      createdAt: Date.now(),
+    });
+    await recordActivity(ctx, {
+      stayId: args.stayId,
+      actorUserId: user._id,
+      guestUserId: args.guestUserId,
+      kind: "obligation",
+      action: "adhoc_charge_created",
+      detail: `${args.title.trim()} charge added`,
+      entityId: obligationId,
+    });
+    await ctx.scheduler.runAfter(0, internal.knock.triggerWorkflow, {
+      userId: args.guestUserId,
+      stayId: args.stayId,
+      workflow: "adhoc-fee-posted",
+      entityId: `obligation:${obligationId}`,
+      data: {
+        hostName: user.name,
+        feeTitle: args.title.trim(),
+        amount: args.amountCents,
+        dueDate: args.dueDate,
+      },
+    });
+    return obligationId;
+  },
+});
+
+export const voidAdhocCharge = mutation({
+  args: { obligationId: v.id("obligations") },
+  returns: v.null(),
+  handler: async (ctx, { obligationId }) => {
+    const obligation = await ctx.db.get(obligationId);
+    if (!obligation) throw new Error("Obligation not found");
+    const { user } = await requireHost(ctx, obligation.stayId);
+    if ((obligation.type ?? "cadence") !== "adhoc") throw new Error("Only ad-hoc charges can be voided");
+    if (obligation.voidedAt) return null;
+    await ctx.db.patch(obligationId, { voidedAt: Date.now(), voidedBy: user._id });
+    await recordActivity(ctx, {
+      stayId: obligation.stayId,
+      actorUserId: user._id,
+      guestUserId: obligation.guestUserId,
+      kind: "obligation",
+      action: "adhoc_charge_voided",
+      detail: `${obligation.title ?? "Ad-hoc"} charge voided; history retained`,
+      entityId: obligationId,
+    });
+    return null;
+  },
+});
+
 export const waiveLateFee = mutation({
   args: { obligationId: v.id("obligations") },
   returns: v.null(),
   handler: async (ctx, { obligationId }) => {
     const obligation = await ctx.db.get(obligationId);
     if (!obligation) throw new Error("Obligation not found");
+    if (obligation.voidedAt) throw new Error("Voided obligations cannot be changed");
     const { user } = await requireHost(ctx, obligation.stayId);
     if (obligation.lateFeeWaivedAt) return null;
 
@@ -86,6 +182,7 @@ export const waiveLateFee = mutation({
     await recordActivity(ctx, {
       stayId: obligation.stayId,
       actorUserId: user._id,
+      guestUserId: obligation.guestUserId,
       kind: "obligation",
       action: "late_fee_waived",
       detail: `Late fee waived for obligation due ${obligation.dueDate}`,
