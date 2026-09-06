@@ -16,8 +16,10 @@ const firstTerms = {
   endDate: "2026-09-21",
   cadence: "weekly" as const,
   rateCents: 20_000,
+  earlyDiscountEnabled: true,
   earlyDiscountPercentage: 5,
   earlyDiscountDays: 2,
+  lateFeeEnabled: true,
   lateFeeCents: 1_500,
   graceDays: 2,
   houseNotes: "Quiet after 10:30 PM.",
@@ -138,7 +140,7 @@ describe("shared stay authorization and audit rules", () => {
     const beforeWaiver = await host.query(api.obligations.list, { stayId, asOfDate: "2026-09-30" });
     expect(beforeWaiver).toHaveLength(3);
     expect(beforeWaiver[0]).toMatchObject({ baseAmountCents: 20_000, earlyDiscountCents: -1_000, balanceCents: 0 });
-    expect(beforeWaiver[1].lateFeeCents).toBe(1_500);
+    expect(beforeWaiver[1].lateFeeCents).toBe(3_000);
 
     await expect(guest.mutation(api.obligations.waiveLateFee, { obligationId: beforeWaiver[1]._id })).rejects.toThrow("Host access");
     await host.mutation(api.obligations.waiveLateFee, { obligationId: beforeWaiver[1]._id });
@@ -147,6 +149,54 @@ describe("shared stay authorization and audit rules", () => {
     expect(afterWaiver[1]).toMatchObject({ lateFeeCents: 0, lateFeeWaived: true });
 
     const activity = await host.query(api.activity.list, { stayId });
-    expect(activity.filter((item) => item.action === "late_fee_waived")).toHaveLength(1);
+    expect(activity.filter((item: { action: string }) => item.action === "late_fee_waived")).toHaveLength(1);
+  });
+
+  it("enforces guest-by-guest financial privacy in a multi-guest stay", async () => {
+    const t = convexTest(schema, modules);
+    const host = await createUser(t, "host-private", "Lee");
+    const guestA = await createUser(t, "guest-private-a", "Marcus");
+    const guestB = await createUser(t, "guest-private-b", "Avery");
+    const stayId = await host.mutation(api.stays.create, { timezone: "America/New_York", terms: firstTerms });
+
+    await host.mutation(api.invites.create, { stayId, tokenHash: "d".repeat(64), expiresAt: Date.now() + 86_400_000 });
+    await guestA.mutation(api.invites.accept, { tokenHash: "d".repeat(64) });
+    await host.mutation(api.invites.create, { stayId, tokenHash: "e".repeat(64), expiresAt: Date.now() + 86_400_000 });
+    await guestB.mutation(api.invites.accept, { tokenHash: "e".repeat(64) });
+    await guestA.mutation(api.terms.acceptCurrent, { stayId });
+    await guestB.mutation(api.terms.acceptCurrent, { stayId });
+
+    const bundleA = await guestA.query(api.stays.getBundle, { stayId });
+    const bundleB = await guestB.query(api.stays.getBundle, { stayId });
+    const guestAId = bundleA.membership.userId;
+    const guestBId = bundleB.membership.userId;
+    await host.mutation(api.obligations.createAdhocCharge, { stayId, guestUserId: guestAId, title: "Alice utility", amountCents: 4_000, effectiveDate: "2026-09-01", dueDate: "2026-09-02" });
+    await host.mutation(api.obligations.createAdhocCharge, { stayId, guestUserId: guestBId, title: "Bob utility", amountCents: 8_000, effectiveDate: "2026-09-01", dueDate: "2026-09-02" });
+
+    await expect(guestA.query(api.obligations.list, { stayId, guestUserId: guestBId, asOfDate: "2026-09-03" })).rejects.toThrow("cannot access another guest");
+    await expect(guestA.mutation(api.contributions.create, { stayId, guestUserId: guestBId, type: "payment", amountCents: 2_000, date: "2026-09-03", note: "Nope", countsTowardBalance: true })).rejects.toThrow("cannot access another guest");
+
+    const ledgerA = await guestA.query(api.obligations.list, { stayId, asOfDate: "2026-09-03" });
+    const ledgerB = await guestB.query(api.obligations.list, { stayId, asOfDate: "2026-09-03" });
+    expect(ledgerA.some((item: { title?: string }) => item.title === "Alice utility")).toBe(true);
+    expect(ledgerA.some((item: { title?: string }) => item.title === "Bob utility")).toBe(false);
+    expect(ledgerB.some((item: { title?: string }) => item.title === "Bob utility")).toBe(true);
+    expect(ledgerB.some((item: { title?: string }) => item.title === "Alice utility")).toBe(false);
+    const activityA = await guestA.query(api.activity.list, { stayId });
+    const activityB = await guestB.query(api.activity.list, { stayId });
+    expect(activityA.some((item: { detail: string }) => item.detail.includes("Alice utility"))).toBe(true);
+    expect(activityA.some((item: { detail: string }) => item.detail.includes("Bob utility"))).toBe(false);
+    expect(activityB.some((item: { detail: string }) => item.detail.includes("Bob utility"))).toBe(true);
+    expect(activityB.some((item: { detail: string }) => item.detail.includes("Alice utility"))).toBe(false);
+  });
+
+  it("validates notification preferences before scheduling a Knock sync", async () => {
+    const t = convexTest(schema, modules);
+    const user = await createUser(t, "notify-user", "Lee");
+    await expect(user.mutation(api.users.updatePreferences, { phone: "555", notifyEmail: true, notifySms: true })).rejects.toThrow("E.164");
+    await expect(user.mutation(api.users.updatePreferences, { notifyEmail: true, notifySms: true })).rejects.toThrow("phone number");
+    await user.mutation(api.users.updatePreferences, { phone: "+15551234567", notifyEmail: true, notifySms: true });
+    const viewer = await user.query(api.users.viewer, {});
+    expect(viewer).toMatchObject({ phone: "+15551234567", notifyEmail: true, notifySms: true });
   });
 });
