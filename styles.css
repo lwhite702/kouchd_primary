@@ -1,18 +1,41 @@
 :root {
   color-scheme: light;
-  --ink: #17251f;
-  --muted: #66716b;
-  --paper: #f5f0e8;
-  --card: #fffdf8;
-  --line: #ded8ce;
-  --green: #184f3a;
+  --kouchd-forest: #184f3a;
+  --kouchd-lime: #dff25e;
+  --kouchd-paper: #f5f0e8;
+  --kouchd-surface: #fffdf8;
+  --kouchd-ink: #17251f;
+  --kouchd-muted: #59675f;
+  --kouchd-sage: #e5edde;
+  --kouchd-sky: #c9e7f0;
+  --kouchd-line: #ded8ce;
+  --kouchd-radius-8: 8px;
+  --kouchd-radius-16: 16px;
+  --kouchd-radius-32: 32px;
+  --kouchd-radius-999: 999px;
+  --kouchd-space-0: 0px;
+  --kouchd-space-4: 4px;
+  --kouchd-space-8: 8px;
+  --kouchd-space-12: 12px;
+  --kouchd-space-16: 16px;
+  --kouchd-space-32: 32px;
+  --kouchd-space-40: 40px;
+  --kouchd-space-64: 64px;
+
+  /* Legacy aliases for existing classes */
+  --ink: var(--kouchd-ink);
+  --muted: var(--kouchd-muted);
+  --paper: var(--kouchd-paper);
+  --card: var(--kouchd-surface);
+  --line: var(--kouchd-line);
+  --green: var(--kouchd-forest);
   --green-2: #2b6b50;
-  --lime: #dff25e;
+  --lime: var(--kouchd-lime);
   --coral: #ed755c;
-  --blue: #c9e7f0;
+  --blue: var(--kouchd-sky);
   --shadow: 0 18px 50px rgba(23, 37, 31, 0.08);
   --radius: 24px;
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: var(--font-manrope), "Manrope", Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
 * { box-sizing: border-box; }
@@ -246,6 +269,111 @@ h2 { margin-bottom: 8px; font-size: 1.35rem; letter-spacing: -0.035em; }
 .nav-item.active { background: var(--green); color: white; }
 .nav-item:disabled { cursor: not-allowed; opacity: .45; }
 .nav-icon { font-size: 1.25rem; line-height: 1; }
+
+/* Desktop Sidebar Layout */
+.app-layout-desktop {
+  display: flex;
+  min-height: 100vh;
+}
+
+.desktop-sidebar {
+  display: none;
+  width: 250px;
+  background: var(--kouchd-surface);
+  border-right: 1px solid var(--kouchd-line);
+  padding: 24px 16px;
+  flex-direction: column;
+  gap: 20px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  flex-shrink: 0;
+}
+
+.desktop-main-area {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.stay-switcher-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: var(--kouchd-radius-16);
+  border: 1px solid var(--kouchd-line);
+  background: var(--kouchd-surface);
+  color: var(--kouchd-ink);
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: var(--kouchd-paper);
+  padding: 6px;
+  border-radius: var(--kouchd-radius-16);
+}
+
+.sidebar-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: var(--kouchd-radius-8);
+  border: 0;
+  background: transparent;
+  color: var(--kouchd-muted);
+  font-weight: 600;
+  font-size: 0.9rem;
+  width: 100%;
+  text-align: left;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.sidebar-nav-item:hover {
+  color: var(--kouchd-ink);
+  background: rgba(229, 237, 222, 0.4);
+}
+
+.sidebar-nav-item.active {
+  background: var(--kouchd-sage);
+  color: var(--kouchd-forest);
+  font-weight: 700;
+}
+
+.sidebar-household-profile {
+  margin-top: auto;
+  padding: 12px;
+  border-top: 1px solid var(--kouchd-line);
+}
+
+.two-column-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
+
+@media (min-width: 960px) {
+  .desktop-sidebar {
+    display: flex;
+  }
+  .app-shell.has-sidebar .bottom-nav {
+    display: none;
+  }
+  .app-shell.has-sidebar .topbar .brand {
+    display: none;
+  }
+  .two-column-grid {
+    grid-template-columns: 1.5fr 1fr;
+  }
+}
 
 dialog { width: min(660px, calc(100% - 24px)); max-height: calc(100vh - 30px); border: 0; border-radius: 28px; background: var(--card); color: var(--ink); padding: 0; box-shadow: 0 28px 90px rgba(23,37,31,.28); }
 dialog::backdrop { background: rgba(19,31,26,.55); backdrop-filter: blur(4px); }

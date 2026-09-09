@@ -1,8 +1,8 @@
 "use client";
 
-import { Show, SignInButton, SignUpButton, UserButton } from "@clerk/nextjs";
+import { Show, UserButton } from "@clerk/nextjs";
 import { useMutation, useQuery } from "convex/react";
-import { ArrowRight, Armchair, Bell, Check, ClipboardList, Copy, Home, Landmark, Megaphone, Plus, ReceiptText, Settings, Users } from "lucide-react";
+import { Bell, Check, ClipboardList, Copy, Home, Landmark, Megaphone, Plus, ReceiptText, Settings, Users } from "lucide-react";
 import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 
@@ -11,6 +11,9 @@ import type { Doc, Id } from "@/convex/_generated/dataModel";
 import { addCalendarDays, calendarDateInTimezone } from "@/lib/domain/dates";
 import { calculateStayChargeCents, confirmedCreditCents } from "@/lib/domain/pricing";
 import { createInviteToken, hashInviteToken } from "@/lib/invite";
+
+import { KouchdWordmark } from "@/components/brand/kouchd-logo";
+import { LandingPage } from "@/components/landing-page";
 
 const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
 const date = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
@@ -42,10 +45,16 @@ function formatDate(value: string) { return date.format(new Date(`${value}T00:00
 function value(form: FormData, name: string) { return String(form.get(name) ?? "").trim(); }
 
 export function AuthenticatedHome() {
-  return <>
-    <Show when="signed-out"><main className="auth-landing"><div className="auth-art"><Armchair size={42} /></div><p className="eyebrow">Make room for clarity</p><h1>A shared stay without the awkward spreadsheet.</h1><p>Sign in to create a private stay, invite your household, and keep one clear record.</p><div className="auth-actions"><SignUpButton mode="modal"><button className="button primary" type="button">Sign up for Kouchd <ArrowRight size={18} /></button></SignUpButton><SignInButton mode="modal"><button className="button soft" type="button">Sign in</button></SignInButton></div></main></Show>
-    <Show when="signed-in"><SyncedWorkspace /></Show>
-  </>;
+  return (
+    <>
+      <Show when="signed-out">
+        <LandingPage hasClerk={true} />
+      </Show>
+      <Show when="signed-in">
+        <SyncedWorkspace />
+      </Show>
+    </>
+  );
 }
 
 function SyncedWorkspace() {
@@ -66,7 +75,21 @@ function SyncedWorkspace() {
 }
 
 function AccountHeader({ onSettings }: { onSettings?: () => void }) {
-  return <header className="topbar"><Link className="brand" href="/"><span className="brand-mark">K</span><span>Kouchd</span></Link><div className="topbar-actions">{onSettings && <button className="icon-button compact" type="button" onClick={onSettings} aria-label="Notification settings"><Settings size={19} /></button>}<UserButton /></div></header>;
+  return (
+    <header className="topbar">
+      <Link className="brand" href="/" style={{ textDecoration: "none" }}>
+        <KouchdWordmark size="md" />
+      </Link>
+      <div className="topbar-actions">
+        {onSettings && (
+          <button className="icon-button compact" type="button" onClick={onSettings} aria-label="Notification settings">
+            <Settings size={19} />
+          </button>
+        )}
+        <UserButton />
+      </div>
+    </header>
+  );
 }
 
 function CreateStay() {

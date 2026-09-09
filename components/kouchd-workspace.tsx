@@ -4,8 +4,6 @@ import {
   CalendarDays,
   Check,
   CheckCircle2,
-  ClipboardList,
-  Home,
   Landmark,
   Plus,
   ReceiptText,
@@ -17,6 +15,9 @@ import {
 import { FormEvent, useMemo, useState } from "react";
 
 import { calculateStayChargeCents, confirmedCreditCents } from "@/lib/domain/pricing";
+
+import { KouchdWordmark } from "@/components/brand/kouchd-logo";
+import { HomeNavIcon, ContributionsNavIcon, ChoresNavIcon, StayNavIcon } from "@/components/brand/nav-icons";
 
 type Screen = "home" | "contributions" | "chores" | "stay";
 type Role = "host" | "guest";
@@ -55,11 +56,11 @@ const initialChores: Chore[] = [
   { id: "h3", title: "Fresh sheets", assignee: "Host", dueDate: "2026-09-02", done: true },
 ];
 
-const navItems: Array<{ id: Screen; label: string; icon: typeof Home }> = [
-  { id: "home", label: "Home", icon: Home },
-  { id: "contributions", label: "Contribute", icon: Landmark },
-  { id: "chores", label: "Chores", icon: CheckCircle2 },
-  { id: "stay", label: "Stay", icon: ClipboardList },
+const navItems = [
+  { id: "home" as Screen, label: "Home", icon: HomeNavIcon },
+  { id: "contributions" as Screen, label: "Contribute", icon: ContributionsNavIcon },
+  { id: "chores" as Screen, label: "Chores", icon: ChoresNavIcon },
+  { id: "stay" as Screen, label: "Stay", icon: StayNavIcon },
 ];
 
 function money(cents: number) {
@@ -157,29 +158,78 @@ export function KouchdWorkspace({ servicesConfigured }: { servicesConfigured: bo
   }
 
   return (
-    <div className="app-shell production-shell">
-      <header className="topbar">
-        <button className="brand brand-button" type="button" onClick={() => setScreen("home")} aria-label="Kouchd dashboard">
-          <span className="brand-mark">K</span>
-          <span>Kouchd</span>
-        </button>
-        <div className="top-actions">
-          {!servicesConfigured && <span className="mode-pill"><Sparkles size={14} /> Preview data</span>}
-          <label className="role-switch">
-            <span className="sr-only">View as</span>
-            <select value={role} onChange={(event) => setRole(event.target.value as Role)} aria-label="View as host or guest">
-              <option value="host">Host view</option>
-              <option value="guest">Guest view</option>
-            </select>
-          </label>
-          <button className="avatar" type="button" onClick={() => setModal("agreement")} aria-label="Open stay settings">L</button>
+    <div className="app-layout-desktop production-shell">
+      {/* Desktop Sidebar */}
+      <aside className="desktop-sidebar" aria-label="Desktop sidebar navigation">
+        <div style={{ padding: "0 4px" }}>
+          <KouchdWordmark size="md" />
         </div>
-      </header>
 
-      <main tabIndex={-1}>
-        {screen === "home" && <>
-          <div className="page-heading dashboard-heading">
-            <div><p className="eyebrow">Good to see you, Lee</p><h1>Here&apos;s the stay at a glance.</h1></div>
+        <button
+          type="button"
+          className="stay-switcher-button"
+          onClick={() => setModal("agreement")}
+          aria-label="Switch stay or view agreement"
+        >
+          <span>Maple House</span>
+          <span style={{ fontSize: "0.8rem", opacity: 0.6 }}>▾</span>
+        </button>
+
+        <nav className="sidebar-nav" aria-label="Sidebar main navigation">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const active = screen === item.id;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                className={`sidebar-nav-item ${active ? "active" : ""}`}
+                onClick={() => setScreen(item.id)}
+              >
+                <Icon size={18} color={active ? "var(--kouchd-forest, #184f3a)" : "var(--kouchd-muted, #59675f)"} />
+                <span>{item.label}</span>
+              </button>
+            );
+          })}
+        </nav>
+
+        <div className="sidebar-household-profile">
+          <div style={{ fontSize: "0.7rem", fontWeight: 800, color: "var(--kouchd-muted, #59675f)", letterSpacing: "0.08em", marginBottom: "6px" }}>
+            PRIVATE HOUSEHOLD
+          </div>
+          <div style={{ fontWeight: 700, fontSize: "0.88rem" }}>
+            {role === "host" ? "Lee" : "Marcus"}
+          </div>
+          <div style={{ fontSize: "0.78rem", color: "var(--kouchd-muted, #59675f)" }}>
+            {role === "host" ? "Host" : "Guest"}
+          </div>
+        </div>
+      </aside>
+
+      <div className="desktop-main-area app-shell has-sidebar">
+        <header className="topbar">
+          <button className="brand brand-button" type="button" onClick={() => setScreen("home")} aria-label="Kouchd dashboard">
+            <KouchdWordmark size="sm" />
+          </button>
+          <div className="top-actions">
+            {!servicesConfigured && <span className="mode-pill"><Sparkles size={14} /> Preview data</span>}
+            <label className="role-switch">
+              <span className="sr-only">View as</span>
+              <select value={role} onChange={(event) => setRole(event.target.value as Role)} aria-label="View as host or guest">
+                <option value="host">Host view</option>
+                <option value="guest">Guest view</option>
+              </select>
+            </label>
+            <button className="avatar" type="button" onClick={() => setModal("agreement")} aria-label="Open stay settings">
+              {role === "host" ? "L" : "M"}
+            </button>
+          </div>
+        </header>
+
+        <main tabIndex={-1}>
+          {screen === "home" && <>
+            <div className="page-heading dashboard-heading">
+              <div><p className="eyebrow">Good to see you, Lee</p><h1>Here&apos;s the stay at a glance.</h1></div>
             <button className="button soft desktop-action" type="button" onClick={() => setModal("contribution")}><Plus size={18} /> Add contribution</button>
           </div>
           <article className="stay-card">
@@ -230,6 +280,7 @@ export function KouchdWorkspace({ servicesConfigured }: { servicesConfigured: bo
       </section></div>}
 
       <div className={`toast ${toast ? "show" : ""}`} role="status" aria-live="polite">{toast}</div>
+      </div>
     </div>
   );
 }
