@@ -1,9 +1,9 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { SignInButton, SignUpButton } from "@clerk/nextjs";
-import { ArrowRight, Check, Sparkles } from "lucide-react";
 import { KouchdWordmark } from "@/components/brand/kouchd-logo";
 
 interface LandingPageProps {
@@ -12,413 +12,255 @@ interface LandingPageProps {
 
 export function LandingPage({ hasClerk = true }: LandingPageProps) {
   return (
-    <div className="landing-container" style={{ background: "var(--kouchd-paper, #f5f0e8)", minHeight: "100vh", color: "var(--kouchd-ink, #17251f)" }}>
-      {/* Navigation */}
-      <header
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          padding: "20px 36px",
-          maxWidth: "1280px",
-          margin: "0 auto",
-        }}
-      >
-        <KouchdWordmark size="md" />
-        <nav
-          style={{
-            display: "none",
-            gap: "28px",
-            fontSize: "0.95rem",
-            fontWeight: 600,
-            color: "var(--kouchd-muted, #59675f)",
-          }}
-          className="desktop-nav"
-        >
-          <a href="#how-it-works" style={{ color: "inherit", textDecoration: "none" }}>How it works</a>
-          <a href="#for-hosts-and-guests" style={{ color: "inherit", textDecoration: "none" }}>For hosts & guests</a>
-          <a href="#trust" style={{ color: "inherit", textDecoration: "none" }}>Privacy</a>
+    <div className="landing-page-root">
+      {/* 13:39 Navigation */}
+      <header className="landing-nav-bar">
+        <Link href="/" className="landing-brand-link">
+          <KouchdWordmark size="md" />
+        </Link>
+
+        <nav className="landing-nav-links">
+          <a href="#how-it-works">How it works</a>
+          <a href="#hosts-and-guests">For hosts &amp; guests</a>
+          <a href="#trust">What’s next</a>
         </nav>
-        <div style={{ display: "flex", gap: "12px", alignItems: "center" }}>
+
+        <div className="landing-nav-actions">
           {hasClerk ? (
-            <>
-              <SignInButton mode="modal">
-                <button
-                  type="button"
-                  style={{
-                    background: "transparent",
-                    border: "1px solid var(--kouchd-line, #ded8ce)",
-                    padding: "10px 18px",
-                    borderRadius: "var(--kouchd-radius-999, 999px)",
-                    fontWeight: 700,
-                    fontSize: "0.9rem",
-                    color: "var(--kouchd-ink, #17251f)",
-                  }}
-                >
-                  Sign in
-                </button>
-              </SignInButton>
-              <SignUpButton mode="modal">
-                <button
-                  type="button"
-                  style={{
-                    background: "var(--kouchd-forest, #184f3a)",
-                    border: 0,
-                    padding: "10px 20px",
-                    borderRadius: "var(--kouchd-radius-999, 999px)",
-                    fontWeight: 700,
-                    fontSize: "0.9rem",
-                    color: "#ffffff",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "6px",
-                  }}
-                >
-                  Get started
-                </button>
-              </SignUpButton>
-            </>
+            <SignInButton mode="modal">
+              <button type="button" className="landing-btn-secondary">
+                Sign in
+              </button>
+            </SignInButton>
           ) : (
-            <Link
-              href="/?preview=true"
-              style={{
-                background: "var(--kouchd-forest, #184f3a)",
-                padding: "10px 20px",
-                borderRadius: "var(--kouchd-radius-999, 999px)",
-                fontWeight: 700,
-                fontSize: "0.9rem",
-                color: "#ffffff",
-                textDecoration: "none",
-              }}
-            >
-              Open Workspace
+            <Link href="/?preview=true" className="landing-btn-secondary">
+              Sign in
             </Link>
           )}
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section
-        style={{
-          maxWidth: "1280px",
-          margin: "0 auto",
-          padding: "48px 36px 72px",
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
-          gap: "48px",
-          alignItems: "center",
-        }}
-      >
-        <div style={{ maxWidth: "600px" }}>
-          <div
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "8px",
-              padding: "6px 14px",
-              borderRadius: "var(--kouchd-radius-999, 999px)",
-              background: "var(--kouchd-sage, #e5edde)",
-              color: "var(--kouchd-forest, #184f3a)",
-              fontWeight: 700,
-              fontSize: "0.82rem",
-              marginBottom: "24px",
-            }}
-          >
-            <Sparkles size={14} /> Make room for clarity
+      {/* 13:50 Hero */}
+      <section className="landing-hero-section">
+        <div className="landing-hero-content">
+          <div className="landing-status-pill">
+            <span>MAKE ROOM FOR CLARITY</span>
           </div>
-          <h1
-            style={{
-              fontSize: "clamp(2.4rem, 5vw, 3.8rem)",
-              fontWeight: 800,
-              lineHeight: 1.1,
-              letterSpacing: "-0.04em",
-              color: "var(--kouchd-forest, #184f3a)",
-              marginBottom: "20px",
-            }}
-          >
-            A shared stay.<br />A softer landing.
+
+          <h1 className="landing-hero-title">
+            <span>A shared stay.</span>
+            <span>A softer landing.</span>
           </h1>
-          <p
-            style={{
-              fontSize: "1.15rem",
-              lineHeight: 1.55,
-              color: "var(--kouchd-muted, #59675f)",
-              marginBottom: "32px",
-            }}
-          >
-            Dates, contributions, chores, and expectations. One private place to keep everyone on the same page without the awkward spreadsheet.
+
+          <p className="landing-hero-desc">
+            Dates, contributions, chores, and expectations. One private place to
+            keep the practical stuff clear—and the welcome warm.
           </p>
 
-          <div style={{ display: "flex", gap: "14px", flexWrap: "wrap", alignItems: "center", marginBottom: "20px" }}>
+          <div className="landing-hero-action-group">
             {hasClerk ? (
               <SignUpButton mode="modal">
-                <button
-                  type="button"
-                  style={{
-                    background: "var(--kouchd-forest, #184f3a)",
-                    border: 0,
-                    padding: "14px 28px",
-                    borderRadius: "var(--kouchd-radius-16, 16px)",
-                    fontWeight: 700,
-                    fontSize: "1.05rem",
-                    color: "#ffffff",
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: "8px",
-                  }}
-                >
-                  Create your stay <ArrowRight size={18} />
+                <button type="button" className="landing-btn-primary">
+                  Start a shared stay
                 </button>
               </SignUpButton>
-            ) : null}
-            <a
-              href="#how-it-works"
-              style={{
-                background: "var(--kouchd-surface, #fffdf8)",
-                border: "1px solid var(--kouchd-line, #ded8ce)",
-                padding: "14px 24px",
-                borderRadius: "var(--kouchd-radius-16, 16px)",
-                fontWeight: 700,
-                fontSize: "1.05rem",
-                color: "var(--kouchd-ink, #17251f)",
-                textDecoration: "none",
-              }}
-            >
-              See how it works
-            </a>
+            ) : (
+              <Link href="/?preview=true" className="landing-btn-primary">
+                Start a shared stay
+              </Link>
+            )}
+            <p className="landing-hero-hint">
+              Already invited? Open your invitation link.
+            </p>
           </div>
-          <p style={{ fontSize: "0.85rem", color: "var(--kouchd-muted, #59675f)" }}>
-            Already invited? Open the invitation link sent by your host.
+        </div>
+
+        {/* 13:59 Authentic Hero Room Vector Artwork */}
+        <div className="landing-hero-visual" data-name="A room with space for everyone">
+          <Image
+            src="/hero-illustration.svg"
+            alt="A room with space for everyone — Kouchd illustration"
+            width={648}
+            height={464}
+            priority
+            className="landing-hero-img"
+          />
+        </div>
+      </section>
+
+      {/* 13:121 Product preview */}
+      <section className="landing-preview-section">
+        <h2 className="landing-preview-title">
+          <span>Less guessing.</span>
+          <span>More feeling at home.</span>
+        </h2>
+
+        <div className="landing-preview-grid">
+          {/* Stay Card (9:63) */}
+          <div className="landing-preview-card landing-card-stay">
+            <h3 className="landing-card-heading">Your stay at Jordan’s</h3>
+            <p className="landing-card-subtext">Sep 1 – Sep 21 · Shared with Alex</p>
+            <div className="landing-card-rule" />
+            <p className="landing-card-meta">Dates and expectations, agreed together</p>
+          </div>
+
+          {/* Contribution summary (13:129) */}
+          <div className="landing-preview-card landing-card-contrib">
+            <span className="landing-card-label">Next contribution</span>
+            <div className="landing-card-big-price">$200</div>
+            <p className="landing-card-subtext">Due Sep 8 · Recorded outside Kouchd</p>
+          </div>
+
+          {/* Chores preview (13:133) */}
+          <div className="landing-preview-card landing-card-chores">
+            <h3 className="landing-card-heading-dark">A little give and take.</h3>
+            <div className="landing-card-chores-list">
+              <p>Kitchen reset · Alex</p>
+              <p>Bins on Tuesday · Jordan</p>
+              <p>Sunday check-in · Together</p>
+            </div>
+          </div>
+        </div>
+
+        <p className="landing-preview-footnote">
+          Illustrative product preview. Kouchd currently records contributions; it does not move money.
+        </p>
+      </section>
+
+      {/* 14:52 How it works */}
+      <section id="how-it-works" className="landing-how-section">
+        <h2 className="landing-how-title">
+          <span>A good stay starts</span>
+          <span>with the same page.</span>
+        </h2>
+
+        <div className="landing-steps-grid">
+          <div className="landing-step-box">
+            <span className="landing-step-num">01</span>
+            <h3 className="landing-step-heading">Make a little room.</h3>
+            <p className="landing-step-desc">
+              Set the dates, contribution rhythm, and house expectations.
+            </p>
+          </div>
+
+          <div className="landing-step-box">
+            <span className="landing-step-num">02</span>
+            <h3 className="landing-step-heading">Bring your guest in.</h3>
+            <p className="landing-step-desc">
+              Send a private invitation. Review and accept the same version together.
+            </p>
+          </div>
+
+          <div className="landing-step-box">
+            <span className="landing-step-num">03</span>
+            <h3 className="landing-step-heading">Keep it comfortable.</h3>
+            <p className="landing-step-desc">
+              Record contributions, share chores, and make time for a check-in.
+            </p>
+          </div>
+        </div>
+
+        {/* 14:67 For both sides of the stay */}
+        <div id="hosts-and-guests" className="landing-both-sides-grid">
+          <div className="landing-side-box landing-side-host">
+            <h3 className="landing-side-heading">For the person making room.</h3>
+            <p className="landing-side-desc">
+              Keep dates, contributions, and boundaries organized without repeating yourself.
+            </p>
+          </div>
+
+          <div className="landing-side-box landing-side-guest">
+            <h3 className="landing-side-heading">For the person settling in.</h3>
+            <p className="landing-side-desc">
+              Know what’s expected, see your own record, and have a voice in the agreement.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* 14:96 Trust and next steps */}
+      <section id="trust" className="landing-trust-section">
+        <div className="landing-trust-banner">
+          <h3 className="landing-trust-banner-title">Your stay. Your shared record.</h3>
+          <p className="landing-trust-banner-desc">
+            Invite the person you’re staying with. Keep your dates, expectations, and
+            contributions in a private shared space.
           </p>
         </div>
 
-        {/* Hero Illustration / Preview Graphic */}
-        <div
-          style={{
-            background: "linear-gradient(135deg, var(--kouchd-surface, #fffdf8) 0%, #edf3eb 100%)",
-            border: "1px solid var(--kouchd-line, #ded8ce)",
-            borderRadius: "var(--kouchd-radius-32, 32px)",
-            padding: "36px",
-            boxShadow: "0 24px 60px rgba(24, 79, 58, 0.08)",
-            display: "flex",
-            flexDirection: "column",
-            gap: "24px",
-          }}
-        >
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span style={{ fontWeight: 800, fontSize: "1.1rem", color: "var(--kouchd-forest, #184f3a)" }}>
-              Maple House
-            </span>
-            <span
-              style={{
-                background: "var(--kouchd-lime, #dff25e)",
-                color: "var(--kouchd-forest, #184f3a)",
-                padding: "4px 10px",
-                borderRadius: "var(--kouchd-radius-999, 999px)",
-                fontSize: "0.75rem",
-                fontWeight: 800,
-              }}
-            >
-              ACTIVE STAY
-            </span>
+        <div className="landing-coming-soon-box">
+          <div className="landing-status-pill-sky">
+            <span>Coming soon</span>
           </div>
-
-          <div
-            style={{
-              background: "#ffffff",
-              borderRadius: "var(--kouchd-radius-16, 16px)",
-              padding: "20px",
-              border: "1px solid var(--kouchd-line, #ded8ce)",
-            }}
-          >
-            <div style={{ fontSize: "0.75rem", fontWeight: 700, color: "var(--kouchd-muted, #59675f)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-              Next contribution
-            </div>
-            <div style={{ fontSize: "2.4rem", fontWeight: 800, color: "var(--kouchd-forest, #184f3a)", margin: "4px 0" }}>
-              $200
-            </div>
-            <div style={{ fontSize: "0.85rem", color: "var(--kouchd-muted, #59675f)" }}>
-              Due Tuesday, Sep 8 · Recorded outside Kouchd
-            </div>
-          </div>
-
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
-            <div
-              style={{
-                background: "#ffffff",
-                borderRadius: "var(--kouchd-radius-16, 16px)",
-                padding: "16px",
-                border: "1px solid var(--kouchd-line, #ded8ce)",
-              }}
-            >
-              <div style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--kouchd-muted, #59675f)", marginBottom: "6px" }}>
-                Chores
-              </div>
-              <div style={{ fontSize: "0.88rem", fontWeight: 700 }}>Kitchen reset</div>
-              <div style={{ fontSize: "0.76rem", color: "var(--kouchd-forest, #184f3a)" }}>Alex (Guest)</div>
-            </div>
-
-            <div
-              style={{
-                background: "#ffffff",
-                borderRadius: "var(--kouchd-radius-16, 16px)",
-                padding: "16px",
-                border: "1px solid var(--kouchd-line, #ded8ce)",
-              }}
-            >
-              <div style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--kouchd-muted, #59675f)", marginBottom: "6px" }}>
-                Expectations
-              </div>
-              <div style={{ fontSize: "0.88rem", fontWeight: 700 }}>Quiet after 10:30 PM</div>
-              <div style={{ fontSize: "0.76rem", color: "var(--kouchd-muted, #59675f)" }}>Mutually accepted</div>
-            </div>
+          <h3 className="landing-coming-soon-heading">More room to grow.</h3>
+          <div className="landing-coming-soon-desc">
+            <p>Multiple stays and guests. In-app payments. Native iOS and Android apps.</p>
+            <p>We’re designing the next chapter of Kouchd.</p>
           </div>
         </div>
-      </section>
 
-      {/* How it Works Section */}
-      <section id="how-it-works" style={{ background: "var(--kouchd-surface, #fffdf8)", padding: "80px 36px", borderTop: "1px solid var(--kouchd-line, #ded8ce)", borderBottom: "1px solid var(--kouchd-line, #ded8ce)" }}>
-        <div style={{ maxWidth: "1280px", margin: "0 auto" }}>
-          <div style={{ textAlign: "center", maxWidth: "680px", margin: "0 auto 60px" }}>
-            <p style={{ fontSize: "0.85rem", fontWeight: 800, color: "var(--kouchd-forest, #184f3a)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "12px" }}>
-              How it works
+        <h3 className="landing-faq-title">A few things to know.</h3>
+
+        <div className="landing-faq-stack">
+          <div className="landing-faq-entry">
+            <h4 className="landing-faq-query">Can I find a place to stay here?</h4>
+            <p className="landing-faq-response">
+              Kouchd helps people who already know where they’re staying. There are no public listings or bookings.
             </p>
-            <h2 style={{ fontSize: "clamp(1.8rem, 3.5vw, 2.8rem)", fontWeight: 800, color: "var(--kouchd-forest, #184f3a)", letterSpacing: "-0.03em" }}>
-              A good stay starts with the same page.
-            </h2>
+            <div className="landing-faq-sep" />
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "24px" }}>
-            <div style={{ background: "var(--kouchd-paper, #f5f0e8)", borderRadius: "var(--kouchd-radius-24, 24px)", padding: "32px", border: "1px solid var(--kouchd-line, #ded8ce)" }}>
-              <div style={{ fontSize: "1.8rem", fontWeight: 800, color: "var(--kouchd-forest, #184f3a)", marginBottom: "14px" }}>01</div>
-              <h3 style={{ fontSize: "1.25rem", fontWeight: 800, marginBottom: "10px" }}>Make a little room.</h3>
-              <p style={{ color: "var(--kouchd-muted, #59675f)", lineHeight: 1.5, fontSize: "0.95rem" }}>
-                Set the dates, contribution rhythm, and house expectations clearly from the start.
-              </p>
-            </div>
-
-            <div style={{ background: "var(--kouchd-paper, #f5f0e8)", borderRadius: "var(--kouchd-radius-24, 24px)", padding: "32px", border: "1px solid var(--kouchd-line, #ded8ce)" }}>
-              <div style={{ fontSize: "1.8rem", fontWeight: 800, color: "var(--kouchd-forest, #184f3a)", marginBottom: "14px" }}>02</div>
-              <h3 style={{ fontSize: "1.25rem", fontWeight: 800, marginBottom: "10px" }}>Bring your guest in.</h3>
-              <p style={{ color: "var(--kouchd-muted, #59675f)", lineHeight: 1.5, fontSize: "0.95rem" }}>
-                Send a single-use private link. Both parties review and accept the exact same terms version together.
-              </p>
-            </div>
-
-            <div style={{ background: "var(--kouchd-paper, #f5f0e8)", borderRadius: "var(--kouchd-radius-24, 24px)", padding: "32px", border: "1px solid var(--kouchd-line, #ded8ce)" }}>
-              <div style={{ fontSize: "1.8rem", fontWeight: 800, color: "var(--kouchd-forest, #184f3a)", marginBottom: "14px" }}>03</div>
-              <h3 style={{ fontSize: "1.25rem", fontWeight: 800, marginBottom: "10px" }}>Keep it comfortable.</h3>
-              <p style={{ color: "var(--kouchd-muted, #59675f)", lineHeight: 1.5, fontSize: "0.95rem" }}>
-                Record contributions, assign household chores, and maintain an immutable, shared history.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* For Hosts & Guests */}
-      <section id="for-hosts-and-guests" style={{ maxWidth: "1280px", margin: "0 auto", padding: "80px 36px" }}>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "28px" }}>
-          <div
-            style={{
-              background: "var(--kouchd-surface, #fffdf8)",
-              border: "1px solid var(--kouchd-line, #ded8ce)",
-              borderRadius: "var(--kouchd-radius-24, 24px)",
-              padding: "36px",
-            }}
-          >
-            <span style={{ fontSize: "0.8rem", fontWeight: 800, color: "var(--kouchd-forest, #184f3a)", textTransform: "uppercase" }}>
-              For Hosts
-            </span>
-            <h3 style={{ fontSize: "1.5rem", fontWeight: 800, color: "var(--kouchd-forest, #184f3a)", margin: "8px 0 14px" }}>
-              For the person making room.
-            </h3>
-            <p style={{ color: "var(--kouchd-muted, #59675f)", lineHeight: 1.6, marginBottom: "20px" }}>
-              Keep dates, contributions, and boundaries organized without repeating yourself or sending awkward reminder texts.
+          <div className="landing-faq-entry">
+            <h4 className="landing-faq-query">Does Kouchd collect payments?</h4>
+            <p className="landing-faq-response">
+              Not currently. You can record payments made elsewhere and other agreed contributions in your shared record.
             </p>
-            <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "10px", fontSize: "0.92rem" }}>
-              <li style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <Check size={16} color="var(--kouchd-forest, #184f3a)" /> Daily or weekly contribution tracking
-              </li>
-              <li style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <Check size={16} color="var(--kouchd-forest, #184f3a)" /> Automatic discount & late-fee calculations
-              </li>
-              <li style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <Check size={16} color="var(--kouchd-forest, #184f3a)" /> Two-party contribution confirmation
-              </li>
-            </ul>
+            <div className="landing-faq-sep" />
           </div>
 
-          <div
-            style={{
-              background: "var(--kouchd-surface, #fffdf8)",
-              border: "1px solid var(--kouchd-line, #ded8ce)",
-              borderRadius: "var(--kouchd-radius-24, 24px)",
-              padding: "36px",
-            }}
-          >
-            <span style={{ fontSize: "0.8rem", fontWeight: 800, color: "var(--kouchd-forest, #184f3a)", textTransform: "uppercase" }}>
-              For Guests
-            </span>
-            <h3 style={{ fontSize: "1.5rem", fontWeight: 800, color: "var(--kouchd-forest, #184f3a)", margin: "8px 0 14px" }}>
-              For the person settling in.
-            </h3>
-            <p style={{ color: "var(--kouchd-muted, #59675f)", lineHeight: 1.6, marginBottom: "20px" }}>
-              Know what’s expected, see your own verifiable record, and have an equal voice in agreed house terms and chores.
+          <div className="landing-faq-entry">
+            <h4 className="landing-faq-query">What if our plans change?</h4>
+            <p className="landing-faq-response">
+              Review updated expectations together. The shared record keeps the details easy to refer back to.
             </p>
-            <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: "10px", fontSize: "0.92rem" }}>
-              <li style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <Check size={16} color="var(--kouchd-forest, #184f3a)" /> Mutual terms acceptance before stay begins
-              </li>
-              <li style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <Check size={16} color="var(--kouchd-forest, #184f3a)" /> Non-cash contribution logging (groceries, labor)
-              </li>
-              <li style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                <Check size={16} color="var(--kouchd-forest, #184f3a)" /> Transparent shared balance anytime
-              </li>
-            </ul>
+            <div className="landing-faq-sep" />
           </div>
         </div>
+
+        {/* 14:118 Final Call to Action */}
+        <div className="landing-final-banner">
+          <h3 className="landing-final-banner-title">
+            <span>Make room for</span>
+            <span>a better stay.</span>
+          </h3>
+
+          <div>
+            {hasClerk ? (
+              <SignUpButton mode="modal">
+                <button type="button" className="landing-btn-secondary-large">
+                  Start a shared stay
+                </button>
+              </SignUpButton>
+            ) : (
+              <Link href="/?preview=true" className="landing-btn-secondary-large">
+                Start a shared stay
+              </Link>
+            )}
+          </div>
+        </div>
+
+        {/* 14:122 Footer */}
+        <footer className="landing-page-footer">
+          <Link href="/" className="landing-brand-link">
+            <KouchdWordmark size="md" />
+          </Link>
+          <div className="landing-page-footer-copy">
+            <p>Make room for clarity.</p>
+            <p>Kouchd records shared expectations; it does not replace applicable housing rights.</p>
+          </div>
+        </footer>
       </section>
-
-      {/* Trust and Privacy Footer */}
-      <footer id="trust" style={{ background: "var(--kouchd-forest, #184f3a)", color: "var(--kouchd-paper, #f5f0e8)", padding: "64px 36px" }}>
-        <div style={{ maxWidth: "1280px", margin: "0 auto", display: "flex", flexDirection: "column", gap: "40px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", flexWrap: "wrap", gap: "24px" }}>
-            <div>
-              <KouchdWordmark size="md" theme="cream" />
-              <p style={{ color: "rgba(245, 240, 232, 0.75)", fontSize: "0.92rem", marginTop: "12px", maxWidth: "420px" }}>
-                A private, shared household record for host and guest. No automated money movement, no public space listings, and no advertising.
-              </p>
-            </div>
-            <div style={{ display: "flex", gap: "16px", alignItems: "center" }}>
-              {hasClerk ? (
-                <SignUpButton mode="modal">
-                  <button
-                    type="button"
-                    style={{
-                      background: "var(--kouchd-lime, #dff25e)",
-                      color: "var(--kouchd-forest, #184f3a)",
-                      border: 0,
-                      padding: "12px 24px",
-                      borderRadius: "var(--kouchd-radius-999, 999px)",
-                      fontWeight: 800,
-                      fontSize: "0.95rem",
-                    }}
-                  >
-                    Get started
-                  </button>
-                </SignUpButton>
-              ) : null}
-            </div>
-          </div>
-
-          <div style={{ borderTop: "1px solid rgba(245, 240, 232, 0.15)", paddingTop: "24px", display: "flex", justifyContent: "space-between", fontSize: "0.82rem", color: "rgba(245, 240, 232, 0.6)", flexWrap: "wrap", gap: "12px" }}>
-            <div>&copy; {new Date().getFullYear()} Kouchd. All rights reserved.</div>
-            <div>Built for trust, clarity, and comfort.</div>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }
+
