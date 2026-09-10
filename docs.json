@@ -18,16 +18,6 @@
       "dark": "#FFFDF8"
     }
   },
-  "fonts": {
-    "heading": {
-      "family": "Manrope",
-      "weight": 800
-    },
-    "body": {
-      "family": "Manrope",
-      "weight": 400
-    }
-  },
   "icons": {
     "library": "lucide"
   },
@@ -102,30 +92,6 @@
       "label": "Open Kouchd",
       "href": "https://kouchd.com"
     }
-  },
-  "footer": {
-    "socials": {
-      "website": "https://kouchd.com",
-      "github": "https://github.com/lwhite702/kouchd_primary"
-    },
-    "links": [
-      {
-        "header": "Product",
-        "items": [
-          { "label": "Kouchd App", "href": "https://kouchd.com" },
-          { "label": "Quickstart", "href": "/help/quickstart" },
-          { "label": "Host Guide", "href": "/help/hosts/getting-started" },
-          { "label": "Guest Guide", "href": "/help/guests/joining-a-stay" }
-        ]
-      },
-      {
-        "header": "Trust & Privacy",
-        "items": [
-          { "label": "Stay Agreements", "href": "/help/legal-trust/stay-agreements" },
-          { "label": "Privacy & Security", "href": "/help/legal-trust/privacy-and-security" }
-        ]
-      }
-    ]
   },
   "contextual": {
     "options": [
