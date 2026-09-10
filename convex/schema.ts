@@ -18,6 +18,7 @@ export default defineSchema({
     hostUserId: v.id("users"),
     status: v.union(v.literal("pending"), v.literal("active"), v.literal("ended")),
     timezone: v.string(),
+    referralCode: v.optional(v.string()),
     currentTermsId: v.optional(v.id("terms")),
     nextCheckInDate: v.optional(v.string()),
     endedAt: v.optional(v.number()),
@@ -26,6 +27,7 @@ export default defineSchema({
   })
     .index("by_host_user_id", ["hostUserId"])
     .index("by_status", ["status"])
+    .index("by_referral_code", ["referralCode"])
     .index("by_next_check_in_date", ["nextCheckInDate"]),
 
   memberships: defineTable({
@@ -68,6 +70,25 @@ export default defineSchema({
     lateFeeCents: v.number(),
     graceDays: v.number(),
     houseNotes: v.string(),
+    houseRules: v.optional(
+      v.array(
+        v.object({
+          id: v.string(),
+          category: v.string(),
+          title: v.string(),
+          description: v.string(),
+          required: v.boolean(),
+        })
+      )
+    ),
+    rewards: v.optional(
+      v.object({
+        enabled: v.boolean(),
+        coinName: v.string(),
+        centsPerPoint: v.number(),
+        maxCreditPerPeriodCents: v.number(),
+      })
+    ),
     createdBy: v.id("users"),
     createdAt: v.number(),
   })
@@ -156,11 +177,56 @@ export default defineSchema({
     updatedAt: v.number(),
   }).index("by_stay", ["stayId"]),
 
+  contributionRules: defineTable({
+    stayId: v.id("stays"),
+    title: v.string(),
+    category: v.union(v.literal("cleaning"), v.literal("groceries"), v.literal("maintenance"), v.literal("cooking"), v.literal("care"), v.literal("other")),
+    pointsAwarded: v.number(),
+    description: v.string(),
+    cadenceLimit: v.optional(v.string()),
+    isActive: v.boolean(),
+    createdAt: v.number(),
+  })
+    .index("by_stay", ["stayId"])
+    .index("by_stay_and_active", ["stayId", "isActive"]),
+
+  pointClaims: defineTable({
+    stayId: v.id("stays"),
+    guestUserId: v.id("users"),
+    ruleId: v.optional(v.id("contributionRules")),
+    title: v.string(),
+    points: v.number(),
+    note: v.string(),
+    date: v.string(),
+    status: v.union(v.literal("pending"), v.literal("confirmed"), v.literal("disputed"), v.literal("voided")),
+    confirmedBy: v.optional(v.id("users")),
+    confirmedAt: v.optional(v.number()),
+    disputedBy: v.optional(v.id("users")),
+    voidedBy: v.optional(v.id("users")),
+    voidedAt: v.optional(v.number()),
+    createdAt: v.number(),
+  })
+    .index("by_stay", ["stayId"])
+    .index("by_stay_and_guest", ["stayId", "guestUserId"])
+    .index("by_stay_guest_and_status", ["stayId", "guestUserId", "status"]),
+
+  pointRedemptions: defineTable({
+    stayId: v.id("stays"),
+    guestUserId: v.id("users"),
+    pointsRedeemed: v.number(),
+    amountCents: v.number(),
+    date: v.string(),
+    contributionId: v.id("contributions"),
+    createdAt: v.number(),
+  })
+    .index("by_stay", ["stayId"])
+    .index("by_stay_and_guest", ["stayId", "guestUserId"]),
+
   activity: defineTable({
     stayId: v.id("stays"),
     actorUserId: v.id("users"),
     guestUserId: v.optional(v.id("users")),
-    kind: v.union(v.literal("stay"), v.literal("terms"), v.literal("invite"), v.literal("contribution"), v.literal("chore"), v.literal("check_in"), v.literal("obligation"), v.literal("announcement"), v.literal("notification")),
+    kind: v.union(v.literal("stay"), v.literal("terms"), v.literal("invite"), v.literal("contribution"), v.literal("chore"), v.literal("check_in"), v.literal("obligation"), v.literal("announcement"), v.literal("notification"), v.literal("reward")),
     action: v.string(),
     detail: v.string(),
     entityId: v.optional(v.string()),

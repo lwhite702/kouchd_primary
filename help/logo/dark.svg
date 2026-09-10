@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 48" fill="none">
+  <g transform="translate(0, 4)">
+    <rect width="40" height="40" rx="10" fill="#184F3A"/>
+    <g transform="translate(4, 4) scale(0.16)">
+      <path d="M45 105V72.5C45 50 60 40 80 40H120C140 40 155 50 155 72.5V105" stroke="#dff25e" stroke-width="12" stroke-linecap="round"/>
+      <path d="M30 92.5C40 92.5 47.5 100 47.5 110V122.5H152.5V110C152.5 100 160 92.5 170 92.5C180 92.5 187.5 100 187.5 110V140C187.5 152.5 177.5 162.5 165 162.5H35C22.5 162.5 12.5 152.5 12.5 140V110C12.5 100 20 92.5 30 92.5Z" fill="#dff25e"/>
+      <path d="M42.5 160V175M157.5 160V175" stroke="#dff25e" stroke-width="10" stroke-linecap="round"/>
+    </g>
+  </g>
+  <text x="50" y="32" font-family="Manrope, system-ui, sans-serif" font-size="24" font-weight="800" fill="#ffffff" letter-spacing="-0.04em">kouchd</text>
+  <text x="135" y="32" font-family="Manrope, system-ui, sans-serif" font-size="14" font-weight="600" fill="#a0b3a8">help</text>
+</svg>

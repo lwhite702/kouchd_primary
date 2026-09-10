@@ -23,6 +23,19 @@ export type StayTermsInput = {
   lateFeeCents: number;
   graceDays: number;
   houseNotes: string;
+  houseRules?: Array<{
+    id: string;
+    category: string;
+    title: string;
+    description: string;
+    required: boolean;
+  }>;
+  rewards?: {
+    enabled: boolean;
+    coinName: string;
+    centsPerPoint: number;
+    maxCreditPerPeriodCents: number;
+  };
 };
 
 export function assertCalendarDate(value: string, label = "Date") {
@@ -74,6 +87,30 @@ export function assertStayTerms(terms: StayTermsInput) {
 
   if (terms.houseNotes.length > MAX_HOUSE_NOTES_LENGTH) {
     throw new Error(`House notes must be ${MAX_HOUSE_NOTES_LENGTH} characters or fewer`);
+  }
+
+  if (terms.houseRules) {
+    if (!Array.isArray(terms.houseRules) || terms.houseRules.length > 50) {
+      throw new Error("House rules must contain 50 or fewer items");
+    }
+    for (const rule of terms.houseRules) {
+      if (!rule.title.trim() || rule.title.length > 160) {
+        throw new Error("Each house rule title must be between 1 and 160 characters");
+      }
+      if (rule.description.length > 1_000) {
+        throw new Error("Each house rule description must be 1,000 characters or fewer");
+      }
+    }
+  }
+
+  if (terms.rewards) {
+    if (terms.rewards.enabled) {
+      assertIntegerInRange(terms.rewards.centsPerPoint, 1, 100_000, "Cents per point");
+      assertIntegerInRange(terms.rewards.maxCreditPerPeriodCents, 0, MAX_MONEY_CENTS, "Max reward credit per period");
+      if (!terms.rewards.coinName.trim() || terms.rewards.coinName.length > 30) {
+        throw new Error("Coin name must be between 1 and 30 characters");
+      }
+    }
   }
 }
 
@@ -127,3 +164,34 @@ export function assertAnnouncementInput(title: string, body: string, pinnedUntil
 export function assertPhone(phone?: string) {
   if (phone && !E164_PHONE.test(phone)) throw new Error("Phone number must use E.164 format, such as +15551234567");
 }
+
+export function assertReferralCode(code: string) {
+  const clean = code.trim().toUpperCase();
+  if (!clean || clean.length > 32) {
+    throw new Error("Referral code is required and must be 32 characters or fewer");
+  }
+}
+
+export function assertContributionRuleInput(title: string, pointsAwarded: number, description: string) {
+  const trimmed = title.trim();
+  if (!trimmed || trimmed.length > 160) {
+    throw new Error("Contribution rule title must be between 1 and 160 characters");
+  }
+  assertIntegerInRange(pointsAwarded, 1, 10_000, "Points awarded");
+  if (description.length > 1_000) {
+    throw new Error("Contribution rule description must be 1,000 characters or fewer");
+  }
+}
+
+export function assertPointClaimInput(title: string, points: number, note: string, date: string) {
+  const trimmed = title.trim();
+  if (!trimmed || trimmed.length > 160) {
+    throw new Error("Claim title must be between 1 and 160 characters");
+  }
+  assertIntegerInRange(points, 1, 10_000, "Points");
+  assertCalendarDate(date, "Claim date");
+  if (note.length > MAX_ENTRY_NOTE_LENGTH) {
+    throw new Error(`Claim note must be ${MAX_ENTRY_NOTE_LENGTH} characters or fewer`);
+  }
+}
+

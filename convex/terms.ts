@@ -7,10 +7,36 @@ import { ensureObligationsForTerms } from "./lib/obligations";
 import { assertStayTerms } from "./lib/validation";
 
 const termsInput = {
-  startDate: v.string(), endDate: v.string(),
+  startDate: v.string(),
+  endDate: v.string(),
   cadence: v.union(v.literal("daily"), v.literal("weekly")),
-  rateCents: v.number(), earlyDiscountEnabled: v.boolean(), earlyDiscountPercentage: v.number(), earlyDiscountDays: v.number(),
-  lateFeeEnabled: v.boolean(), lateFeeCents: v.number(), graceDays: v.number(), houseNotes: v.string(),
+  rateCents: v.number(),
+  earlyDiscountEnabled: v.boolean(),
+  earlyDiscountPercentage: v.number(),
+  earlyDiscountDays: v.number(),
+  lateFeeEnabled: v.boolean(),
+  lateFeeCents: v.number(),
+  graceDays: v.number(),
+  houseNotes: v.string(),
+  houseRules: v.optional(
+    v.array(
+      v.object({
+        id: v.string(),
+        category: v.string(),
+        title: v.string(),
+        description: v.string(),
+        required: v.boolean(),
+      })
+    )
+  ),
+  rewards: v.optional(
+    v.object({
+      enabled: v.boolean(),
+      coinName: v.string(),
+      centsPerPoint: v.number(),
+      maxCreditPerPeriodCents: v.number(),
+    })
+  ),
 };
 
 export const acceptCurrent = mutation({

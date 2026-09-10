@@ -1,0 +1,72 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "Kouchd Help Center",
+  "colors": {
+    "primary": "#184F3A",
+    "light": "#22C55E",
+    "dark": "#103627"
+  },
+  "favicon": "/help/favicon.svg",
+  "navigation": {
+    "pages": [
+      {
+        "group": "Overview",
+        "pages": [
+          "help/index",
+          "help/quickstart"
+        ]
+      },
+      {
+        "group": "For Hosts",
+        "pages": [
+          "help/hosts/getting-started",
+          "help/hosts/pricing-and-terms",
+          "help/hosts/house-rules-and-chores",
+          "help/hosts/ledger-management"
+        ]
+      },
+      {
+        "group": "For Guests",
+        "pages": [
+          "help/guests/joining-a-stay",
+          "help/guests/logging-contributions",
+          "help/guests/kouchd-coins"
+        ]
+      },
+      {
+        "group": "Trust & Legal",
+        "pages": [
+          "help/legal-trust/stay-agreements",
+          "help/legal-trust/privacy-and-security"
+        ]
+      }
+    ],
+    "global": {
+      "anchors": [
+        {
+          "anchor": "Open App",
+          "href": "https://kouchd.com",
+          "icon": "house"
+        }
+      ]
+    }
+  },
+  "logo": {
+    "light": "/help/logo/light.svg",
+    "dark": "/help/logo/dark.svg"
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "App",
+        "href": "https://kouchd.com"
+      }
+    ],
+    "primary": {
+      "type": "button",
+      "label": "Open Kouchd",
+      "href": "https://kouchd.com"
+    }
+  }
+}

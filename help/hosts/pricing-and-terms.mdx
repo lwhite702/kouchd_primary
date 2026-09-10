@@ -1,0 +1,23 @@
+---
+title: Pricing, Cadence & Terms
+description: How Kouchd calculates obligations, early discounts, and late fees.
+---
+
+## Financial Mechanics
+
+Kouchd calculates all ledger items deterministically down to the exact cent using integer arithmetic.
+
+### Cadence
+- **Weekly**: Obligations are generated for 7-day intervals starting from your stay's start date.
+- **Daily**: Obligations are generated per 24-hour cycle.
+
+### Early Discounts
+To encourage timely contributions, you can configure an early discount:
+- **Example**: A weekly rate of $200.00 with a 10% discount if paid 2 days early.
+- If the obligation is due on September 8th, paying on or before September 6th reduces the effective charge to $180.00.
+- The discount is evaluated once per obligation based on the date the full balance or payment is initiated.
+
+### Late Fees & Grace Periods
+- **Grace Period**: Number of days after the due date before late fees apply (e.g. 2 grace days).
+- **Late Fee**: A flat dollar amount (e.g. $25.00) added to overdue obligations.
+- **Host Waiver**: Hosts always retain the ability to waive a late fee with a single tap if circumstances warrant flexibility.

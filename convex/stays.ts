@@ -5,6 +5,9 @@ import { requireCurrentUser, requireHost, requireMembership } from "./lib/auth";
 import { recordActivity } from "./lib/activity";
 import { assertCalendarDate, assertStayTerms, assertTimezone } from "./lib/validation";
 
+import { generateReferralCode } from "../lib/referral";
+import { SUGGESTED_CONTRIBUTION_TASKS } from "../lib/domain/rewards";
+
 const termsInput = {
   startDate: v.string(),
   endDate: v.string(),
@@ -17,6 +20,25 @@ const termsInput = {
   lateFeeCents: v.number(),
   graceDays: v.number(),
   houseNotes: v.string(),
+  houseRules: v.optional(
+    v.array(
+      v.object({
+        id: v.string(),
+        category: v.string(),
+        title: v.string(),
+        description: v.string(),
+        required: v.boolean(),
+      })
+    )
+  ),
+  rewards: v.optional(
+    v.object({
+      enabled: v.boolean(),
+      coinName: v.string(),
+      centsPerPoint: v.number(),
+      maxCreditPerPeriodCents: v.number(),
+    })
+  ),
 };
 
 export const create = mutation({
@@ -28,13 +50,38 @@ export const create = mutation({
     assertStayTerms(args.terms);
     if (args.nextCheckInDate) assertCalendarDate(args.nextCheckInDate, "Next check-in date");
     const now = Date.now();
-    const stayId = await ctx.db.insert("stays", { hostUserId: user._id, status: "pending", timezone: args.timezone, nextCheckInDate: args.nextCheckInDate, createdAt: now, updatedAt: now });
+    const referralCode = generateReferralCode();
+    const stayId = await ctx.db.insert("stays", {
+      hostUserId: user._id,
+      status: "pending",
+      timezone: args.timezone,
+      referralCode,
+      nextCheckInDate: args.nextCheckInDate,
+      createdAt: now,
+      updatedAt: now,
+    });
     await ctx.db.insert("memberships", { stayId, userId: user._id, role: "host", status: "active", joinedAt: now });
     const termsId = await ctx.db.insert("terms", { stayId, version: 1, ...args.terms, createdBy: user._id, createdAt: now });
     await ctx.db.patch(stayId, { currentTermsId: termsId });
     await ctx.db.insert("termsAcceptances", { stayId, termsId, userId: user._id, acceptedAt: now });
     const membership = await ctx.db.query("memberships").withIndex("by_stay_user", (query) => query.eq("stayId", stayId).eq("userId", user._id)).unique();
     if (membership) await ctx.db.patch(membership._id, { acceptedTermsId: termsId });
+
+    // Seed default suggested contribution tasks if rewards are enabled
+    if (args.terms.rewards?.enabled) {
+      for (const task of SUGGESTED_CONTRIBUTION_TASKS) {
+        await ctx.db.insert("contributionRules", {
+          stayId,
+          title: task.title,
+          category: task.category,
+          pointsAwarded: task.defaultPoints,
+          description: task.description,
+          isActive: true,
+          createdAt: now,
+        });
+      }
+    }
+
     await recordActivity(ctx, { stayId, actorUserId: user._id, kind: "stay", action: "created", detail: "Stay and first terms version created", entityId: stayId });
     return stayId;
   },
