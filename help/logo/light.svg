@@ -1,12 +1,31 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 48" fill="none">
-  <g transform="translate(0, 4)">
-    <rect width="40" height="40" rx="10" fill="#dff25e"/>
-    <g transform="translate(4, 4) scale(0.16)">
-      <path d="M45 105V72.5C45 50 60 40 80 40H120C140 40 155 50 155 72.5V105" stroke="#184F3A" stroke-width="12" stroke-linecap="round"/>
-      <path d="M30 92.5C40 92.5 47.5 100 47.5 110V122.5H152.5V110C152.5 100 160 92.5 170 92.5C180 92.5 187.5 100 187.5 110V140C187.5 152.5 177.5 162.5 165 162.5H35C22.5 162.5 12.5 152.5 12.5 140V110C12.5 100 20 92.5 30 92.5Z" fill="#184F3A"/>
-      <path d="M42.5 160V175M157.5 160V175" stroke="#184F3A" stroke-width="10" stroke-linecap="round"/>
-    </g>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 170 36" fill="none">
+  <!-- Master Kouchd Couch Symbol -->
+  <g transform="translate(0, 2) scale(0.5)">
+    <path
+      d="M14.4 33.6V23.2C14.4 16 19.2 12.8 25.6 12.8H38.4C44.8 12.8 49.6 16 49.6 23.2V33.6"
+      stroke="#184F3A"
+      stroke-width="7"
+      stroke-linecap="round"
+    />
+    <path
+      d="M9.6 29.6C12.8 29.6 15.2 32 15.2 35.2V39.2H48.8V35.2C48.8 32 51.2 29.6 54.4 29.6C57.6 29.6 60 32 60 35.2V44.8C60 48.8 56.8 52 52.8 52H11.2C7.2 52 4 48.8 4 44.8V35.2C4 32 6.4 29.6 9.6 29.6Z"
+      fill="#184F3A"
+    />
+    <path
+      d="M13.6 51.2V56M50.4 51.2V56"
+      stroke="#184F3A"
+      stroke-width="6"
+      stroke-linecap="round"
+    />
+    <path
+      d="M22.4 28H28M36 28H41.6"
+      stroke="#DFF25E"
+      stroke-width="5"
+      stroke-linecap="round"
+    />
   </g>
-  <text x="50" y="32" font-family="Manrope, system-ui, sans-serif" font-size="24" font-weight="800" fill="#184F3A" letter-spacing="-0.04em">kouchd</text>
-  <text x="135" y="32" font-family="Manrope, system-ui, sans-serif" font-size="14" font-weight="600" fill="#59675F">help</text>
+  <!-- Kouchd Wordmark -->
+  <text x="40" y="25" font-family="Manrope, system-ui, -apple-system, sans-serif" font-size="22" font-weight="800" fill="#184F3A" letter-spacing="-0.04em">kouchd</text>
+  <!-- Help Label -->
+  <text x="122" y="25" font-family="Manrope, system-ui, -apple-system, sans-serif" font-size="14" font-weight="500" fill="#59675F" letter-spacing="-0.02em">help</text>
 </svg>

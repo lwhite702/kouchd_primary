@@ -2,10 +2,13 @@
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
   "name": "Kouchd Help Center",
+  "mode": {
+    "default": "light"
+  },
   "colors": {
     "primary": "#184F3A",
-    "light": "#22C55E",
-    "dark": "#103627"
+    "light": "#184F3A",
+    "dark": "#184F3A"
   },
   "favicon": "/help/favicon.svg",
   "navigation": {
@@ -54,7 +57,7 @@
   },
   "logo": {
     "light": "/help/logo/light.svg",
-    "dark": "/help/logo/dark.svg"
+    "dark": "/help/logo/light.svg"
   },
   "navbar": {
     "links": [
