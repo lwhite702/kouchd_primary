@@ -7,38 +7,38 @@
     "light": "#22C55E",
     "dark": "#103627"
   },
-  "favicon": "/favicon.svg",
+  "favicon": "/help/favicon.svg",
   "navigation": {
     "pages": [
       {
         "group": "Overview",
         "pages": [
-          "index",
-          "quickstart"
+          "help/index",
+          "help/quickstart"
         ]
       },
       {
         "group": "For Hosts",
         "pages": [
-          "hosts/getting-started",
-          "hosts/pricing-and-terms",
-          "hosts/house-rules-and-chores",
-          "hosts/ledger-management"
+          "help/hosts/getting-started",
+          "help/hosts/pricing-and-terms",
+          "help/hosts/house-rules-and-chores",
+          "help/hosts/ledger-management"
         ]
       },
       {
         "group": "For Guests",
         "pages": [
-          "guests/joining-a-stay",
-          "guests/logging-contributions",
-          "guests/kouchd-coins"
+          "help/guests/joining-a-stay",
+          "help/guests/logging-contributions",
+          "help/guests/kouchd-coins"
         ]
       },
       {
         "group": "Trust & Legal",
         "pages": [
-          "legal-trust/stay-agreements",
-          "legal-trust/privacy-and-security"
+          "help/legal-trust/stay-agreements",
+          "help/legal-trust/privacy-and-security"
         ]
       }
     ],
@@ -53,8 +53,8 @@
     }
   },
   "logo": {
-    "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
+    "light": "/help/logo/light.svg",
+    "dark": "/help/logo/dark.svg"
   },
   "navbar": {
     "links": [
