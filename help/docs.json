@@ -1,16 +1,45 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "theme": "mint",
   "name": "Kouchd Help Center",
-  "mode": {
-    "default": "light"
+  "description": "Guides, ledger management, house rules, and guest agreements for Kouchd.",
+  "theme": "mint",
+  "appearance": {
+    "default": "light",
+    "strict": true
   },
   "colors": {
     "primary": "#184F3A",
-    "light": "#184F3A",
-    "dark": "#184F3A"
+    "light": "#22C55E",
+    "dark": "#103627"
   },
-  "favicon": "/help/favicon.svg",
+  "background": {
+    "color": {
+      "light": "#FFFDF8",
+      "dark": "#FFFDF8"
+    }
+  },
+  "fonts": {
+    "heading": {
+      "family": "Manrope",
+      "weight": 800
+    },
+    "body": {
+      "family": "Manrope",
+      "weight": 400
+    }
+  },
+  "icons": {
+    "library": "lucide"
+  },
+  "logo": {
+    "light": "/help/logo/light.svg",
+    "dark": "/help/logo/light.svg",
+    "href": "https://kouchd.com"
+  },
+  "favicon": {
+    "light": "/help/favicon.svg",
+    "dark": "/help/favicon.svg"
+  },
   "navigation": {
     "pages": [
       {
@@ -55,14 +84,16 @@
       ]
     }
   },
-  "logo": {
-    "light": "/help/logo/light.svg",
-    "dark": "/help/logo/light.svg"
+  "interaction": {
+    "drilldown": false
+  },
+  "search": {
+    "prompt": "Search guides, rules, or ledger help..."
   },
   "navbar": {
     "links": [
       {
-        "label": "App",
+        "label": "Web App",
         "href": "https://kouchd.com"
       }
     ],
@@ -70,6 +101,63 @@
       "type": "button",
       "label": "Open Kouchd",
       "href": "https://kouchd.com"
+    }
+  },
+  "footer": {
+    "socials": {
+      "website": "https://kouchd.com",
+      "github": "https://github.com/lwhite702/kouchd_primary"
+    },
+    "links": [
+      {
+        "header": "Product",
+        "items": [
+          { "label": "Kouchd App", "href": "https://kouchd.com" },
+          { "label": "Quickstart", "href": "/help/quickstart" },
+          { "label": "Host Guide", "href": "/help/hosts/getting-started" },
+          { "label": "Guest Guide", "href": "/help/guests/joining-a-stay" }
+        ]
+      },
+      {
+        "header": "Trust & Privacy",
+        "items": [
+          { "label": "Stay Agreements", "href": "/help/legal-trust/stay-agreements" },
+          { "label": "Privacy & Security", "href": "/help/legal-trust/privacy-and-security" }
+        ]
+      }
+    ]
+  },
+  "contextual": {
+    "options": [
+      "copy",
+      "view"
+    ],
+    "display": "header"
+  },
+  "styling": {
+    "codeblocks": {
+      "theme": {
+        "light": "github-light",
+        "dark": "github-light"
+      }
+    },
+    "latex": false
+  },
+  "metadata": {
+    "timestamp": false
+  },
+  "thumbnails": {
+    "appearance": "light",
+    "fonts": {
+      "family": "Manrope"
+    }
+  },
+  "seo": {
+    "indexing": "navigable"
+  },
+  "errors": {
+    "404": {
+      "redirect": true
     }
   }
 }
