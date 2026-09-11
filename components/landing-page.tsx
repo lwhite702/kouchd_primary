@@ -23,6 +23,7 @@ export function LandingPage({ hasClerk = true }: LandingPageProps) {
           <a href="#how-it-works">How it works</a>
           <a href="#hosts-and-guests">For hosts &amp; guests</a>
           <a href="#trust">What’s next</a>
+          <a href="https://help.kouchd.com" target="_blank" rel="noopener noreferrer">Docs</a>
         </nav>
 
         <div className="landing-nav-actions">
@@ -44,7 +45,7 @@ export function LandingPage({ hasClerk = true }: LandingPageProps) {
       <section className="landing-hero-section">
         <div className="landing-hero-content">
           <div className="landing-status-pill">
-            <span>MAKE ROOM FOR CLARITY</span>
+            <span>COORDINATION &middot; CLARITY &middot; MUTUAL RESPECT</span>
           </div>
 
           <h1 className="landing-hero-title">
@@ -53,8 +54,8 @@ export function LandingPage({ hasClerk = true }: LandingPageProps) {
           </h1>
 
           <p className="landing-hero-desc">
-            Dates, contributions, chores, and expectations. One private place to
-            keep the practical stuff clear—and the welcome warm.
+            Kouchd is a friendly communication and organization tool for hosts and guests. 
+            Keep track of dates, household contributions, chore rotations, and shared expectations in one comfortable space—so everyone stays on the same page.
           </p>
 
           <div className="landing-hero-action-group">
@@ -125,6 +126,47 @@ export function LandingPage({ hasClerk = true }: LandingPageProps) {
         <p className="landing-preview-footnote">
           Illustrative product preview. Kouchd currently records contributions; it does not move money.
         </p>
+        {/* Communication & Neutral Tool Clarification */}
+        <div style={{
+          maxWidth: 960,
+          margin: "0 auto",
+          padding: "24px 28px",
+          backgroundColor: "#fbf8f2",
+          border: "1px solid var(--kouchd-line, #ded8ce)",
+          borderRadius: "var(--kouchd-radius-24, 24px)",
+          display: "flex",
+          flexDirection: "column",
+          gap: "10px",
+          textAlign: "left"
+        }}>
+          <div style={{
+            fontSize: "0.75rem",
+            fontWeight: 800,
+            letterSpacing: "0.08em",
+            textTransform: "uppercase",
+            color: "var(--kouchd-forest, #184f3a)"
+          }}>
+            A tool for communication, not friction
+          </div>
+          <h3 style={{
+            margin: 0,
+            fontSize: "1.25rem",
+            fontWeight: 800,
+            color: "var(--kouchd-ink, #17251f)",
+            lineHeight: 1.35
+          }}>
+            Designed to support relationships, never to disparage or single anyone out.
+          </h3>
+          <p style={{
+            margin: 0,
+            fontSize: "0.95rem",
+            lineHeight: 1.6,
+            color: "var(--kouchd-muted, #59675f)"
+          }}>
+            Opening your home or staying with friends, family, or colleagues shouldn’t come with awkward guesswork. Kouchd isn’t a landlord app or an enforcement mechanism—it is simply a shared notebook where both host and guest communicate openly, organize household responsibilities, and celebrate contributions with mutual respect.
+          </p>
+        </div>
+
       </section>
 
       {/* 14:52 How it works */}
@@ -181,10 +223,9 @@ export function LandingPage({ hasClerk = true }: LandingPageProps) {
       {/* 14:96 Trust and next steps */}
       <section id="trust" className="landing-trust-section">
         <div className="landing-trust-banner">
-          <h3 className="landing-trust-banner-title">Your stay. Your shared record.</h3>
+          <h3 className="landing-trust-banner-title">A shared record built on mutual trust.</h3>
           <p className="landing-trust-banner-desc">
-            Invite the person you’re staying with. Keep your dates, expectations, and
-            contributions in a private shared space.
+            Kouchd provides an organized platform for communication, agreement clarity, and task organization. Private financial scoping protects privacy, and both host and guest maintain a clear voice in every expectation set.
           </p>
         </div>
 
@@ -202,6 +243,14 @@ export function LandingPage({ hasClerk = true }: LandingPageProps) {
         <h3 className="landing-faq-title">A few things to know.</h3>
 
         <div className="landing-faq-stack">
+          <div className="landing-faq-entry">
+            <h4 className="landing-faq-query">Is Kouchd an enforcement or collection tool?</h4>
+            <p className="landing-faq-response">
+              No. Kouchd is strictly an organizational and communication tool. It is never meant to be offensive, punitive, or disparaging. It simply gives hosts and guests a neutral, positive place to keep track of shared dates, household contributions, chores, and boundaries so nothing falls through the cracks.
+            </p>
+            <div className="landing-faq-sep" />
+          </div>
+
           <div className="landing-faq-entry">
             <h4 className="landing-faq-query">Can I find a place to stay here?</h4>
             <p className="landing-faq-response">
@@ -255,6 +304,11 @@ export function LandingPage({ hasClerk = true }: LandingPageProps) {
             <KouchdWordmark size="md" />
           </Link>
           <div className="landing-page-footer-copy">
+            <p style={{ marginBottom: 8 }}>
+              <a href="https://help.kouchd.com" target="_blank" rel="noopener noreferrer" style={{ color: "var(--kouchd-forest, #184f3a)", fontWeight: 700, textDecoration: "none", marginRight: 16 }}>Help Center &amp; Docs &rarr;</a>
+              <a href="https://help.kouchd.com/legal-trust/housing-law-disclaimer" target="_blank" rel="noopener noreferrer" style={{ color: "var(--kouchd-muted, #59675f)", textDecoration: "none", marginRight: 16 }}>Housing Disclaimer</a>
+              <a href="https://help.kouchd.com/legal-trust/dispute-policy" target="_blank" rel="noopener noreferrer" style={{ color: "var(--kouchd-muted, #59675f)", textDecoration: "none" }}>Dispute Policy</a>
+            </p>
             <p>Make room for clarity.</p>
             <p>Kouchd records shared expectations; it does not replace applicable housing rights.</p>
           </div>

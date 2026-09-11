@@ -102,7 +102,7 @@ export function KouchdWordmark({
           accentColor={accentColor}
         />
       )}
-      <span style={{ ...textStyles[size], fontFamily: "inherit" }}>kouchd</span>
+      <span style={{ ...textStyles[size], fontFamily: "inherit", color: textColor }}>kouchd</span>
     </span>
   );
 }

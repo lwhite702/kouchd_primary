@@ -2,6 +2,7 @@
 
 import {
   CalendarDays,
+  BookOpen,
   Check,
   CheckCircle2,
   Landmark,
@@ -212,6 +213,16 @@ export function KouchdWorkspace({ servicesConfigured }: { servicesConfigured: bo
             <KouchdWordmark size="sm" />
           </button>
           <div className="top-actions">
+            <a
+              className="button ghost compact"
+              href="https://help.kouchd.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ fontSize: "0.8rem", padding: "4px 10px", color: "var(--kouchd-muted)", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 4 }}
+              title="Guides & Documentation"
+            >
+              <BookOpen size={15} /> Docs
+            </a>
             {!servicesConfigured && <span className="mode-pill"><Sparkles size={14} /> Preview data</span>}
             <label className="role-switch">
               <span className="sr-only">View as</span>

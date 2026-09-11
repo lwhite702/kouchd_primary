@@ -2,7 +2,7 @@
 
 import { Show, UserButton } from "@clerk/nextjs";
 import { useMutation, useQuery } from "convex/react";
-import { Bell, Check, ClipboardList, Copy, Home, KeyRound, Landmark, Megaphone, Plus, ReceiptText, Settings, Sparkles, Users } from "lucide-react";
+import { Bell, BookOpen, Check, ClipboardList, Copy, Home, KeyRound, Landmark, Megaphone, Plus, ReceiptText, Settings, Sparkles, Users } from "lucide-react";
 import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 
@@ -85,6 +85,16 @@ function AccountHeader({ onSettings, onJoinCode }: { onSettings?: () => void; on
         <KouchdWordmark size="md" />
       </Link>
       <div className="topbar-actions">
+        <a
+          className="button ghost compact"
+          href="https://help.kouchd.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ fontSize: "0.8rem", padding: "4px 10px", color: "var(--muted)", textDecoration: "none" }}
+          title="Guides & Documentation"
+        >
+          <BookOpen size={15} /> Docs
+        </a>
         {onJoinCode && (
           <button className="button soft compact" type="button" onClick={onJoinCode} style={{ fontSize: "0.8rem", padding: "4px 10px" }}>
             <KeyRound size={15} /> Join with code

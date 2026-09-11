@@ -251,7 +251,7 @@ h2 { margin-bottom: 8px; font-size: 1.35rem; letter-spacing: -0.035em; }
 .bottom-nav {
   position: fixed;
   left: 50%;
-  bottom: 20px;
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
   z-index: 10;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -399,9 +399,9 @@ textarea { resize: vertical; }
 .toast.show { opacity: 1; transform: translate(-50%, 0); }
 
 @media (max-width: 760px) {
-  .topbar { height: 70px; padding: 0 18px; }
+  .topbar { height: calc(70px + env(safe-area-inset-top, 0px)); padding: env(safe-area-inset-top, 0px) 18px 0; }
   .role-switch select { width: 112px; }
-  main { padding: 34px 16px 110px; }
+  main { padding: 34px 16px calc(110px + env(safe-area-inset-bottom, 0px)); }
   .page-heading { align-items: flex-start; flex-direction: column; gap: 16px; }
   .page-heading .button { width: 100%; }
   .desktop-action { display: none; }
