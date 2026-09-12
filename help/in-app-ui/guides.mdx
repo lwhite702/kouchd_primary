@@ -1,11 +1,11 @@
 ---
 title: In-App UI Guides
-description: Power in-product messaging such as announcements, check-in banners, and household guides using your own components.
+description: Power in-product messaging, check-in banners, and onboarding modals in Kouchd using Knock Guides.
 ---
 
 ## Overview
 
-A guide represents a piece of UI that you want to be **powered by Knock within Kouchd**.
+A **Guide** represents an in-app messaging component (such as an announcement banner, a welcome modal, or a check-in reminder) powered dynamically by **Knock** within the **Kouchd** application.
 
 <div style={{ position: "relative", paddingBottom: "56.25%", height: 0, marginBottom: "1.5rem" }}>
   <iframe
@@ -23,27 +23,132 @@ A guide represents a piece of UI that you want to be **powered by Knock within K
   />
 </div>
 
-You configure your guide in the Knock dashboard, including its **content**, its **targeting** rules (who can see it), and its **activation** rules (where in your product they can see it).
+With Knock Guides in Kouchd:
+1. **Engineering owns the UI layer**: Kouchd components match the brand colors (`#184F3A`, `#E9F3EC`, `#FFFDF8`), typography, and design tokens natively.
+2. **Operations & Growth manage content**: Copy, CTAs, activation triggers, and targeting rules are configured directly in the Knock dashboard without requiring code deployments.
+3. **Targeting is contextual**: Household parameters (`role: "host" | "guest"`, `stayStatus: "active" | "pending"`, `stayId`) pass automatically to guide targeting rules.
 
-You then use Knock's API and client SDKs to render the **data** of a guide directly within Kouchd's interface.
+---
 
-Your engineering team owns the UI layer (matching Kouchd's design system and tokens), while your team can manage the contents of the UI shown to users. Knock seamlessly powers this on your behalf, making it effortless to build managed UI components that anyone on your team can maintain.
+## Active Kouchd Guides
 
-## Use Cases in Kouchd
+Kouchd comes pre-configured with two primary guide channels and components:
 
-- **Welcome & Onboarding Modals.** Display a friendly welcome modal to new guests or hosts when they first join a household stay.
-- **Check-In & House Notice Banners.** Surface timely reminders about upcoming check-ins, quiet hour notices, or scheduled maintenance across the household dashboard.
-- **Contribution Milestones & Feature Announcements.** Prompt household members to explore newly introduced features like **Kouchd Coins** or milestone progress.
-- **Plan & Capacity Notices.** Display guided prompts when a household approaches member limits or needs to update stay agreements.
+### 1. Household Notice Banner (`household-notice-banner`)
 
-## Benefits
+Renders a non-intrusive alert banner across the top of the active stay workspace. Perfect for quiet hours reminders, check-in countdowns, maintenance notices, and stay milestones.
 
-Using Knock guides to power Kouchd application UI provides:
+- **Component**: `<KouchdGuideBanner guideKey="household-notice-banner" />`
+- **Location**: Top of `<LiveStay>` in `components/authenticated-home.tsx`.
+- **Supported Step Schema**:
+  ```json
+  {
+    "title": "Scheduled Water Heater Maintenance",
+    "body": "Hot water will be briefly shut off between 10am and 12pm this Thursday.",
+    "primary_button": {
+      "text": "View Details",
+      "action": "https://kouchd.com"
+    },
+    "dismissible": true
+  }
+  ```
 
-- **Native Performance.** Guides render as first-class React components instead of injected third-party scripts. They add zero runtime lag and stay strictly aligned with Kouchd's design system.
-- **Composable Primitives.** Assemble hooks, low-level APIs, and socket infrastructure into custom in-product announcements, banners, or walkthroughs.
-- **Self-Service Content.** Content, targeting, and activation rules are managed directly in the dashboard without requiring code changes or redeployments.
-- **Built-in Analytics & Observability.** Delivery and engagement events (views, clicks, dismissals) are tracked automatically.
+### 2. Welcome & Milestone Modal (`welcome-modal`)
+
+Renders an interactive centered modal for high-priority onboarding moments, terms updates, and newly unlocked features (e.g., Kouchd Coins).
+
+- **Component**: `<KouchdGuideModal guideKey="welcome-modal" />`
+- **Location**: Mounted within `<LiveStay>` to trigger whenever eligible for the viewer.
+- **Supported Step Schema**:
+  ```json
+  {
+    "title": "Welcome to your Household!",
+    "body": "Your stay agreement is active. You can now log shared grocery receipts, check chores, and review your private ledger anytime.",
+    "primary_button": {
+      "text": "Get Started",
+      "action": "/"
+    },
+    "dismissible": true
+  }
+  ```
+
+---
+
+## Architecture & Integration
+
+Kouchd wraps the authenticated workspace with `KnockGuidesProvider`:
+
+```tsx
+import { KnockGuidesProvider } from "@/components/knock/knock-guides-provider";
+import { KouchdGuideBanner, KouchdGuideModal } from "@/components/knock/kouchd-guides";
+
+export function SyncedWorkspace() {
+  // ...
+  return (
+    <KnockGuidesProvider
+      userProperties={{
+        stayId: stay._id,
+        role: membership.role,
+        stayStatus: stay.status,
+      }}
+    >
+      <LiveStay stayId={stay._id} />
+    </KnockGuidesProvider>
+  );
+}
+```
+
+Inside `LiveStay`, custom components hook into Knock using `useGuide`:
+
+```tsx
+import { useGuide } from "@knocklabs/react";
+
+export function KouchdGuideBanner({ guideKey }: { guideKey: string }) {
+  const { guide, step, client } = useGuide({ key: guideKey });
+
+  if (!guide || !step) return null;
+
+  return (
+    <div className="agreement-callout">
+      <strong>{step.content.title}</strong>
+      <span>{step.content.body}</span>
+      <button onClick={() => client.markAsInteracted(guide, step)}>
+        {step.content.primary_button?.text}
+      </button>
+      <button onClick={() => client.markAsArchived(guide, step)}>Dismiss</button>
+    </div>
+  );
+}
+```
+
+---
+
+## Environment Configuration
+
+To connect live Knock Guides to your environment, set the following environment variables in `.env.local` or your production deployment settings:
+
+```bash
+NEXT_PUBLIC_KNOCK_PUBLIC_API_KEY=pk_test_...
+NEXT_PUBLIC_KNOCK_GUIDES_CHANNEL_ID=your-guides-channel-uuid
+```
+
+> **Offline & Local Resilience**: If either variable is omitted, `KnockGuidesProvider` fails open gracefully, rendering the application cleanly without throwing errors or blocking rendering.
+
+---
+
+## Setting Up a New Guide in Knock
+
+To create a new guide for Kouchd:
+
+1. In the **Knock Dashboard**, navigate to **Guides** > **Create Guide**.
+2. Select your channel type (`In-App Guide`).
+3. Set the **Guide Key** matching your component (e.g. `household-notice-banner` or `welcome-modal`).
+4. Configure your **Targeting Rules**:
+   - Filter by user properties: e.g. `role == "guest"` or `stayStatus == "active"`.
+5. Define the **Step Content** with `title`, `body`, and optional `primary_button` (`text`, `action`).
+6. Publish the guide to staging or production.
+
+---
 
 ## Frequently Asked Questions
 
@@ -51,16 +156,14 @@ Using Knock guides to power Kouchd application UI provides:
   <Accordion title="How does pricing for Guides work?">
     Guides uses a monthly engaged users (MEU) pricing model based on the distinct number of users who have **seen** or **engaged** with a guide in the billing period.
   </Accordion>
-  <Accordion title="Can I use guides in cross-channel workflows and broadcasts?">
-    Users are made eligible for guides based on their audience membership and targeting rules. You can add an in-app guide step directly to workflow runs or update user properties to enroll them dynamically.
+  <Accordion title="Can I target specific stay roles (hosts vs. guests)?">
+    Yes. Kouchd automatically provides `role`, `stayId`, and `stayStatus` in `userProperties` to `KnockGuidesProvider`. You can filter target audiences in Knock based on these attributes.
   </Accordion>
-  <Accordion title="Can I pass application state to guides to use in targeting and personalization?">
-    Yes, you can pass custom application properties (such as stay duration, host vs. guest role, or active obligation status) to Knock's guides API to determine eligibility and personalize in-product copy.
+  <Accordion title="Does dismissal persist across sessions?">
+    Yes. When a user clicks dismiss or the primary action button, Kouchd calls `client.markAsArchived(guide, step)` or `client.markAsInteracted(guide, step)`, which Knock remembers across reloads and devices.
   </Accordion>
-  <Accordion title="Is guide eligibility recalculated in real-time?">
-    Guide eligibility is evaluated on fetch. When user properties change, trigger a fresh fetch or wait for the next periodic check to refresh eligibility.
-  </Accordion>
-  <Accordion title="Can I power multi-step product tours with guides?">
-    Multi-step guides and tours can be composed using Knock guide steps paired with Kouchd's custom wizard components.
+  <Accordion title="What happens when Knock keys are not configured?">
+    Kouchd's guide components and provider fail open safely. No network requests are made, no runtime errors are thrown, and normal household operations proceed uninterrupted.
   </Accordion>
 </AccordionGroup>
+

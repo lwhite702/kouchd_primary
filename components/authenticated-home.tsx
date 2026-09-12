@@ -18,6 +18,8 @@ import { HostOnboardingWizard } from "@/components/onboarding/host-onboarding-wi
 import { GuestOnboardingFlow } from "@/components/onboarding/guest-onboarding-flow";
 import { JoinHouseholdCard } from "@/components/referral/join-household";
 import { RewardsHub } from "@/components/rewards/rewards-hub";
+import { KnockGuidesProvider } from "@/components/knock/knock-guides-provider";
+import { KouchdGuideBanner, KouchdGuideModal } from "@/components/knock/kouchd-guides";
 
 const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
 const date = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
@@ -74,8 +76,24 @@ function SyncedWorkspace() {
   const stays = useQuery(api.stays.listMine, synced ? {} : "skip") as Array<{ stay: Doc<"stays">; membership: Doc<"memberships"> }> | undefined;
   if (syncError) return <main className="route-state"><h1>Sign-in needs a reset.</h1><p className="muted">{syncError}</p></main>;
   if (!synced || stays === undefined) return <div className="route-state">Setting out the clean sheets...</div>;
-  if (stays.length === 0) return <GetStartedHub />;
-  return <LiveStay stayId={stays[0].stay._id} />;
+  if (stays.length === 0) {
+    return (
+      <KnockGuidesProvider>
+        <GetStartedHub />
+      </KnockGuidesProvider>
+    );
+  }
+  return (
+    <KnockGuidesProvider
+      userProperties={{
+        stayId: stays[0].stay._id,
+        role: stays[0].membership.role,
+        stayStatus: stays[0].stay.status,
+      }}
+    >
+      <LiveStay stayId={stays[0].stay._id} />
+    </KnockGuidesProvider>
+  );
 }
 
 function AccountHeader({ onSettings, onJoinCode }: { onSettings?: () => void; onJoinCode?: () => void }) {
@@ -225,6 +243,8 @@ function LiveStay({ stayId }: { stayId: Id<"stays"> }) {
 
   const ledgerLabel = isHost ? `${selectedGuest?.name ?? "Guest"}'s private ledger` : "Your private ledger";
   return <div className="app-shell production-shell"><AccountHeader onSettings={() => setPanel("settings")} onJoinCode={() => setJoinModalOpen(true)} /><main>
+    <KouchdGuideBanner guideKey="household-notice-banner" />
+    <KouchdGuideModal guideKey="welcome-modal" />
     {!hasAccepted && !isHost && (
       <div className="agreement-callout" style={{ background: "#eef6f0", borderColor: "#b8d2c1", marginBottom: "1.25rem" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
