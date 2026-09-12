@@ -1,0 +1,66 @@
+---
+title: In-App UI Guides
+description: Power in-product messaging such as announcements, check-in banners, and household guides using your own components.
+---
+
+## Overview
+
+A guide represents a piece of UI that you want to be **powered by Knock within Kouchd**.
+
+<div style={{ position: "relative", paddingBottom: "56.25%", height: 0, marginBottom: "1.5rem" }}>
+  <iframe
+    src="https://www.youtube.com/embed/lKYfB3FYMtk?si=VFbtG8BqXpa8m3PS"
+    frameBorder="0"
+    allowFullScreen
+    style={{
+      position: "absolute",
+      top: 0,
+      left: 0,
+      width: "100%",
+      height: "100%",
+      borderRadius: "16px",
+    }}
+  />
+</div>
+
+You configure your guide in the Knock dashboard, including its **content**, its **targeting** rules (who can see it), and its **activation** rules (where in your product they can see it).
+
+You then use Knock's API and client SDKs to render the **data** of a guide directly within Kouchd's interface.
+
+Your engineering team owns the UI layer (matching Kouchd's design system and tokens), while your team can manage the contents of the UI shown to users. Knock seamlessly powers this on your behalf, making it effortless to build managed UI components that anyone on your team can maintain.
+
+## Use Cases in Kouchd
+
+- **Welcome & Onboarding Modals.** Display a friendly welcome modal to new guests or hosts when they first join a household stay.
+- **Check-In & House Notice Banners.** Surface timely reminders about upcoming check-ins, quiet hour notices, or scheduled maintenance across the household dashboard.
+- **Contribution Milestones & Feature Announcements.** Prompt household members to explore newly introduced features like **Kouchd Coins** or milestone progress.
+- **Plan & Capacity Notices.** Display guided prompts when a household approaches member limits or needs to update stay agreements.
+
+## Benefits
+
+Using Knock guides to power Kouchd application UI provides:
+
+- **Native Performance.** Guides render as first-class React components instead of injected third-party scripts. They add zero runtime lag and stay strictly aligned with Kouchd's design system.
+- **Composable Primitives.** Assemble hooks, low-level APIs, and socket infrastructure into custom in-product announcements, banners, or walkthroughs.
+- **Self-Service Content.** Content, targeting, and activation rules are managed directly in the dashboard without requiring code changes or redeployments.
+- **Built-in Analytics & Observability.** Delivery and engagement events (views, clicks, dismissals) are tracked automatically.
+
+## Frequently Asked Questions
+
+<AccordionGroup>
+  <Accordion title="How does pricing for Guides work?">
+    Guides uses a monthly engaged users (MEU) pricing model based on the distinct number of users who have **seen** or **engaged** with a guide in the billing period.
+  </Accordion>
+  <Accordion title="Can I use guides in cross-channel workflows and broadcasts?">
+    Users are made eligible for guides based on their audience membership and targeting rules. You can add an in-app guide step directly to workflow runs or update user properties to enroll them dynamically.
+  </Accordion>
+  <Accordion title="Can I pass application state to guides to use in targeting and personalization?">
+    Yes, you can pass custom application properties (such as stay duration, host vs. guest role, or active obligation status) to Knock's guides API to determine eligibility and personalize in-product copy.
+  </Accordion>
+  <Accordion title="Is guide eligibility recalculated in real-time?">
+    Guide eligibility is evaluated on fetch. When user properties change, trigger a fresh fetch or wait for the next periodic check to refresh eligibility.
+  </Accordion>
+  <Accordion title="Can I power multi-step product tours with guides?">
+    Multi-step guides and tours can be composed using Knock guide steps paired with Kouchd's custom wizard components.
+  </Accordion>
+</AccordionGroup>

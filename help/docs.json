@@ -72,6 +72,12 @@
           "help/legal-trust/stay-agreements",
           "help/legal-trust/privacy-and-security"
         ]
+      },
+      {
+        "group": "Building In-App UI",
+        "pages": [
+          "help/in-app-ui/guides"
+        ]
       }
     ],
     "global": {
