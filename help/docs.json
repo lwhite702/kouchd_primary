@@ -76,6 +76,7 @@
       {
         "group": "Building In-App UI",
         "pages": [
+          "help/in-app-ui/index",
           "help/in-app-ui/guides"
         ]
       }
