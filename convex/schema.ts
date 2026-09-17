@@ -22,6 +22,20 @@ export default defineSchema({
     currentTermsId: v.optional(v.id("terms")),
     nextCheckInDate: v.optional(v.string()),
     endedAt: v.optional(v.number()),
+    houseInfo: v.optional(
+      v.object({
+        wifiNetwork: v.optional(v.string()),
+        wifiPassword: v.optional(v.string()),
+        streetAddress: v.optional(v.string()),
+        unit: v.optional(v.string()),
+        cityStateZip: v.optional(v.string()),
+        doorCode: v.optional(v.string()),
+        parkingNotes: v.optional(v.string()),
+        trashDay: v.optional(v.string()),
+        emergencyContact: v.optional(v.string()),
+        otherNotes: v.optional(v.string()),
+      })
+    ),
     createdAt: v.number(),
     updatedAt: v.number(),
   })

@@ -305,12 +305,14 @@ export function LandingPage({ hasClerk = true }: LandingPageProps) {
           </Link>
           <div className="landing-page-footer-copy">
             <p style={{ marginBottom: 8 }}>
-              <a href="https://help.kouchd.com" target="_blank" rel="noopener noreferrer" style={{ color: "var(--kouchd-forest, #184f3a)", fontWeight: 700, textDecoration: "none", marginRight: 16 }}>Help Center &amp; Docs &rarr;</a>
-              <a href="https://help.kouchd.com/legal-trust/housing-law-disclaimer" target="_blank" rel="noopener noreferrer" style={{ color: "var(--kouchd-muted, #59675f)", textDecoration: "none", marginRight: 16 }}>Housing Disclaimer</a>
-              <a href="https://help.kouchd.com/legal-trust/dispute-policy" target="_blank" rel="noopener noreferrer" style={{ color: "var(--kouchd-muted, #59675f)", textDecoration: "none" }}>Dispute Policy</a>
+              <Link href="/privacy" style={{ color: "var(--kouchd-forest, #184f3a)", fontWeight: 700, textDecoration: "none", marginRight: 16 }}>Privacy Policy</Link>
+              <Link href="/terms" style={{ color: "var(--kouchd-forest, #184f3a)", fontWeight: 700, textDecoration: "none", marginRight: 16 }}>Terms &amp; Conditions</Link>
+              <Link href="/sms-opt-in" style={{ color: "var(--kouchd-forest, #184f3a)", fontWeight: 700, textDecoration: "none", marginRight: 16 }}>SMS Acceptance</Link>
+              <a href="https://help.kouchd.com" target="_blank" rel="noopener noreferrer" style={{ color: "var(--kouchd-muted, #59675f)", textDecoration: "none" }}>Help Center &rarr;</a>
             </p>
-            <p>Make room for clarity.</p>
-            <p>Kouchd records shared expectations; it does not replace applicable housing rights.</p>
+            <p style={{ marginBottom: 4 }}>Make room for clarity.</p>
+            <p style={{ marginBottom: 4 }}>Kouchd records shared expectations; it does not replace applicable housing rights.</p>
+            <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--kouchd-muted, #59675f)" }}>&copy; {new Date().getFullYear()} Wrelik Brands LLC. All rights reserved.</p>
           </div>
         </footer>
       </section>

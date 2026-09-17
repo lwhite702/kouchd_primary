@@ -19,11 +19,16 @@ export const syncCurrent = mutation({
     const name = identity.name ?? identity.nickname ?? "Kouchd member";
     const email = identity.email;
     const imageUrl = identity.pictureUrl;
+    let userId = existing?._id;
     if (existing) {
       await ctx.db.patch(existing._id, { name, email, imageUrl, updatedAt: now });
-      return existing._id;
+    } else {
+      userId = await ctx.db.insert("users", { clerkUserId: identity.subject, name, email, imageUrl, createdAt: now, updatedAt: now });
     }
-    return await ctx.db.insert("users", { clerkUserId: identity.subject, name, email, imageUrl, createdAt: now, updatedAt: now });
+    if (userId) {
+      await ctx.scheduler.runAfter(0, internal.knock.identifyUser, { userId });
+    }
+    return userId!;
   },
 });
 

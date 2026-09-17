@@ -3,10 +3,23 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { requireCurrentUser, requireHost, requireMembership } from "./lib/auth";
 import { recordActivity } from "./lib/activity";
-import { assertCalendarDate, assertStayTerms, assertTimezone } from "./lib/validation";
+import { assertCalendarDate, assertHouseInfoInput, assertStayTerms, assertTimezone } from "./lib/validation";
 
 import { generateReferralCode } from "../lib/referral";
 import { SUGGESTED_CONTRIBUTION_TASKS } from "../lib/domain/rewards";
+
+const houseInfoInput = {
+  wifiNetwork: v.optional(v.string()),
+  wifiPassword: v.optional(v.string()),
+  streetAddress: v.optional(v.string()),
+  unit: v.optional(v.string()),
+  cityStateZip: v.optional(v.string()),
+  doorCode: v.optional(v.string()),
+  parkingNotes: v.optional(v.string()),
+  trashDay: v.optional(v.string()),
+  emergencyContact: v.optional(v.string()),
+  otherNotes: v.optional(v.string()),
+};
 
 const termsInput = {
   startDate: v.string(),
@@ -42,13 +55,19 @@ const termsInput = {
 };
 
 export const create = mutation({
-  args: { timezone: v.string(), nextCheckInDate: v.optional(v.string()), terms: v.object(termsInput) },
+  args: {
+    timezone: v.string(),
+    nextCheckInDate: v.optional(v.string()),
+    houseInfo: v.optional(v.object(houseInfoInput)),
+    terms: v.object(termsInput),
+  },
   returns: v.id("stays"),
   handler: async (ctx, args) => {
     const user = await requireCurrentUser(ctx);
     assertTimezone(args.timezone);
     assertStayTerms(args.terms);
     if (args.nextCheckInDate) assertCalendarDate(args.nextCheckInDate, "Next check-in date");
+    if (args.houseInfo) assertHouseInfoInput(args.houseInfo);
     const now = Date.now();
     const referralCode = generateReferralCode();
     const stayId = await ctx.db.insert("stays", {
@@ -57,6 +76,7 @@ export const create = mutation({
       timezone: args.timezone,
       referralCode,
       nextCheckInDate: args.nextCheckInDate,
+      houseInfo: args.houseInfo,
       createdAt: now,
       updatedAt: now,
     });
@@ -135,3 +155,32 @@ export const end = mutation({
     return null;
   },
 });
+
+export const updateHouseInfo = mutation({
+  args: {
+    stayId: v.id("stays"),
+    houseInfo: v.object(houseInfoInput),
+  },
+  returns: v.null(),
+  handler: async (ctx, { stayId, houseInfo }) => {
+    const { user } = await requireHost(ctx, stayId);
+    const stay = await ctx.db.get(stayId);
+    if (!stay) throw new Error("Stay not found");
+    assertHouseInfoInput(houseInfo);
+    const now = Date.now();
+    await ctx.db.patch(stayId, {
+      houseInfo,
+      updatedAt: now,
+    });
+    await recordActivity(ctx, {
+      stayId,
+      actorUserId: user._id,
+      kind: "stay",
+      action: "house_info_updated",
+      detail: "Household logistics & WiFi updated",
+      entityId: stayId,
+    });
+    return null;
+  },
+});
+

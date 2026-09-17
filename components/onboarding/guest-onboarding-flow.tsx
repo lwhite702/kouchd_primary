@@ -1,7 +1,8 @@
 "use client";
 
 import { useMutation, useQuery } from "convex/react";
-import { ArrowLeft, ArrowRight, CheckCircle2, Coins, ShieldCheck } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, Coins, MessageSquare, ShieldCheck } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 
 import { api } from "@/convex/_generated/api";
@@ -19,10 +20,14 @@ export function GuestOnboardingFlow({
   onCancel?: () => void;
 }) {
   const bundle = useQuery(api.stays.getBundle, { stayId });
+  const viewer = useQuery(api.users.viewer, {});
   const acceptTerms = useMutation(api.terms.acceptCurrent);
+  const updatePreferences = useMutation(api.users.updatePreferences);
 
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
   const [rulesAcknowledged, setRulesAcknowledged] = useState(false);
+  const [phone, setPhone] = useState("");
+  const [optInSms, setOptInSms] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
@@ -39,6 +44,20 @@ export function GuestOnboardingFlow({
     setSubmitting(true);
     setError("");
     try {
+      const targetPhone = phone.trim() || viewer?.phone?.trim() || "";
+      if (optInSms && targetPhone) {
+        const digits = targetPhone.replace(/\D/g, "");
+        const formatted = targetPhone.startsWith("+")
+          ? targetPhone
+          : digits.length === 10
+            ? `+1${digits}`
+            : `+${digits}`;
+        await updatePreferences({
+          phone: formatted,
+          notifyEmail: viewer?.notifyEmail ?? true,
+          notifySms: true,
+        });
+      }
       await acceptTerms({ stayId });
       onComplete();
     } catch (reason) {
@@ -72,7 +91,7 @@ export function GuestOnboardingFlow({
 
       {/* Step 1: Welcome & Household Summary */}
       {step === 1 && (
-        <div>
+        <div key="guest-step-1" className="screen-transition">
           <p className="eyebrow">Step 1 of 4 · Welcome</p>
           <h1>Welcome to the household.</h1>
           <p className="subhead">
@@ -158,13 +177,13 @@ export function GuestOnboardingFlow({
         </div>
       )}
 
-      {/* Step 2: House Rules & Expectations */}
+      {/* Step 2: House Rules & Living Expectations */}
       {step === 2 && (
-        <div>
+        <div key="guest-step-2" className="screen-transition">
           <p className="eyebrow">Step 2 of 4 · Living Expectations</p>
-          <h1>House Rules and Boundaries</h1>
+          <h1>Household Rules & Guidelines.</h1>
           <p className="subhead">
-            The host set these guidelines to ensure mutual respect, peace of mind, and shared comfort.
+            The host has outlined clear expectations for the space. Acknowledge each guideline to continue.
           </p>
 
           <div style={{ marginTop: "1.5rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
@@ -245,11 +264,11 @@ export function GuestOnboardingFlow({
 
       {/* Step 3: Financial Terms & Contribution Opportunities */}
       {step === 3 && (
-        <div>
+        <div key="guest-step-3" className="screen-transition">
           <p className="eyebrow">Step 3 of 4 · Financial Agreement</p>
           <h1>Financial Terms & Rewards</h1>
           <p className="subhead">
-            Clear numbers with zero hidden spreadsheet formulas.
+            Your recurring rate and opportunities to earn points and stay credits through household tasks.
           </p>
 
           <div style={{ marginTop: "1.5rem", display: "flex", flexDirection: "column", gap: "1rem" }}>
@@ -332,7 +351,7 @@ export function GuestOnboardingFlow({
 
       {/* Step 4: Digital Signature & Acceptance */}
       {step === 4 && (
-        <div>
+        <div key="guest-step-4" className="screen-transition">
           <p className="eyebrow">Step 4 of 4 · Final Acceptance</p>
           <h1>Join the Stay.</h1>
           <p className="subhead">
@@ -355,6 +374,73 @@ export function GuestOnboardingFlow({
             <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--muted, #6f6b64)", lineHeight: 1.5 }}>
               Your financial balance, payments, and points redemptions are private between you and your host. Other guests cannot view your ledger.
             </p>
+          </div>
+
+          {/* SMS Notification Acceptance */}
+          <div
+            style={{
+              marginTop: "1.25rem",
+              border: "1px solid #b8d2c1",
+              borderRadius: "16px",
+              padding: "1.25rem 1.5rem",
+              background: "#eaf4ec",
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", marginBottom: "0.5rem" }}>
+              <MessageSquare size={20} color="var(--green, #184f3a)" />
+              <strong style={{ fontSize: "0.95rem", color: "var(--green, #184f3a)" }}>
+                Text Message (SMS) Notifications &middot; Wrelik Brands LLC
+              </strong>
+            </div>
+            <p style={{ margin: "0 0 0.85rem", fontSize: "0.82rem", color: "#2d4438", lineHeight: 1.5 }}>
+              Receive stay updates, chore reminders, check-in logistics, and ledger notices on your phone from <strong>Wrelik Brands LLC</strong> (operating <strong>Kouchd</strong>).
+            </p>
+
+            <div style={{ marginBottom: "0.75rem" }}>
+              <label style={{ display: "block", fontSize: "0.8rem", fontWeight: 700, color: "#184f3a", marginBottom: "0.3rem" }}>
+                Mobile Phone Number
+              </label>
+              <input
+                type="tel"
+                defaultValue={viewer?.phone ?? ""}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="+1 (555) 019-2834"
+                style={{
+                  width: "100%",
+                  padding: "0.6rem 0.85rem",
+                  borderRadius: "8px",
+                  border: "1px solid var(--line, #e2ded7)",
+                  background: "#fff",
+                  fontSize: "0.9rem",
+                  color: "var(--ink, #17251f)",
+                }}
+              />
+            </div>
+
+            <label style={{ display: "flex", alignItems: "flex-start", gap: "0.6rem", cursor: "pointer" }}>
+              <input
+                type="checkbox"
+                checked={optInSms}
+                onChange={(e) => setOptInSms(e.target.checked)}
+                style={{
+                  width: "18px",
+                  height: "18px",
+                  marginTop: "2px",
+                  accentColor: "var(--green, #184f3a)",
+                  flexShrink: 0,
+                }}
+              />
+              <span style={{ fontSize: "0.78rem", color: "#184f3a", lineHeight: 1.5 }}>
+                I agree to receive transactional text messages (SMS) from Wrelik Brands LLC (operating Kouchd). <strong>Message and data rates may apply.</strong> Message frequency varies. Reply STOP to cancel, HELP for info. View{" "}
+                <Link href="/terms" target="_blank" style={{ color: "var(--green, #184f3a)", fontWeight: 700, textDecoration: "underline" }}>
+                  Terms &amp; Conditions
+                </Link>{" "}
+                and{" "}
+                <Link href="/privacy" target="_blank" style={{ color: "var(--green, #184f3a)", fontWeight: 700, textDecoration: "underline" }}>
+                  Privacy Policy
+                </Link>.
+              </span>
+            </label>
           </div>
 
           {error && <p className="form-error" role="alert" style={{ marginTop: "1rem" }}>{error}</p>}

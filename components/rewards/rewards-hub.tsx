@@ -39,6 +39,7 @@ export function RewardsHub({
   const [claimPoints, setClaimPoints] = useState("25");
   const [claimNote, setClaimNote] = useState("");
   const [redeemPoints, setRedeemPoints] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const settings = wallet?.settings;
   const isEnabled = settings?.enabled;
@@ -64,6 +65,7 @@ export function RewardsHub({
   async function handleClaimSubmit(e: FormEvent) {
     e.preventDefault();
     if (!claimTitle.trim()) return;
+    setIsSubmitting(true);
     try {
       const today = new Date().toISOString().slice(0, 10);
       await submitClaim({
@@ -81,6 +83,8 @@ export function RewardsHub({
       onNotify("Contribution claim submitted for host confirmation.");
     } catch (reason) {
       alert(reason instanceof Error ? reason.message : "Could not submit claim");
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
@@ -88,6 +92,7 @@ export function RewardsHub({
     e.preventDefault();
     const points = Number(redeemPoints);
     if (!points || points <= 0) return;
+    setIsSubmitting(true);
     try {
       const today = new Date().toISOString().slice(0, 10);
       const res = await redeem({
@@ -100,12 +105,15 @@ export function RewardsHub({
       onNotify(`Redeemed ${res.pointsRedeemed} ${coinName} for ${money.format(res.amountCents / 100)} stay credit!`);
     } catch (reason) {
       alert(reason instanceof Error ? reason.message : "Could not redeem points");
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
   async function handleAddRule(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const form = new FormData(e.currentTarget);
+    setIsSubmitting(true);
     try {
       await createRule({
         stayId,
@@ -118,6 +126,8 @@ export function RewardsHub({
       onNotify("New contribution rule created.");
     } catch (reason) {
       alert(reason instanceof Error ? reason.message : "Could not create rule");
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
@@ -392,8 +402,10 @@ export function RewardsHub({
                 </label>
               </div>
               <div className="dialog-actions" style={{ marginTop: "1.5rem" }}>
-                <button className="button ghost" type="button" onClick={() => setModal(null)}>Cancel</button>
-                <button className="button primary" type="submit">Submit Claim</button>
+                <button className="button ghost" type="button" onClick={() => setModal(null)} disabled={isSubmitting}>Cancel</button>
+                <button className="button primary" type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? "Submitting..." : "Submit Claim"}
+                </button>
               </div>
             </form>
           </section>
@@ -451,9 +463,9 @@ export function RewardsHub({
               </div>
 
               <div className="dialog-actions" style={{ marginTop: "1.5rem" }}>
-                <button className="button ghost" type="button" onClick={() => setModal(null)}>Cancel</button>
-                <button className="button primary" type="submit" disabled={!Number(redeemPoints) || Number(redeemPoints) > maxPoints}>
-                  Redeem Credit
+                <button className="button ghost" type="button" onClick={() => setModal(null)} disabled={isSubmitting}>Cancel</button>
+                <button className="button primary" type="submit" disabled={isSubmitting || !Number(redeemPoints) || Number(redeemPoints) > maxPoints}>
+                  {isSubmitting ? "Redeeming..." : "Redeem Credit"}
                 </button>
               </div>
             </form>
@@ -499,8 +511,10 @@ export function RewardsHub({
                 </label>
               </div>
               <div className="dialog-actions" style={{ marginTop: "1.5rem" }}>
-                <button className="button ghost" type="button" onClick={() => setModal(null)}>Cancel</button>
-                <button className="button primary" type="submit">Create Task</button>
+                <button className="button ghost" type="button" onClick={() => setModal(null)} disabled={isSubmitting}>Cancel</button>
+                <button className="button primary" type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? "Creating..." : "Create Task"}
+                </button>
               </div>
             </form>
           </section>

@@ -1,7 +1,8 @@
 "use client";
 
-import { useMutation } from "convex/react";
-import { ArrowLeft, ArrowRight, Check, Plus, Sparkles } from "lucide-react";
+import { useMutation, useQuery } from "convex/react";
+import { ArrowLeft, ArrowRight, Check, CreditCard, MessageSquare, Plus, Sparkles } from "lucide-react";
+import Link from "next/link";
 import { FormEvent, useMemo, useState } from "react";
 
 import { api } from "@/convex/_generated/api";
@@ -19,11 +20,15 @@ export function HostOnboardingWizard({
   onCancel?: () => void;
   onComplete?: () => void;
 }) {
+  const viewer = useQuery(api.users.viewer, {});
   const createStay = useMutation(api.stays.create);
+  const updatePreferences = useMutation(api.users.updatePreferences);
   const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
   const today = calendarDateInTimezone(new Date(), timezone);
 
   const [step, setStep] = useState<1 | 2 | 3 | 4 | 5>(1);
+  const [phone, setPhone] = useState("");
+  const [optInSms, setOptInSms] = useState(false);
   const [startDate, setStartDate] = useState(today);
   const [endDate, setEndDate] = useState(addCalendarDays(today, 14));
   const [cadence, setCadence] = useState<"daily" | "weekly">("weekly");
@@ -106,6 +111,21 @@ export function HostOnboardingWizard({
     setSaving(true);
     setError("");
     try {
+      const targetPhone = phone.trim() || viewer?.phone?.trim() || "";
+      if (optInSms && targetPhone) {
+        const digits = targetPhone.replace(/\D/g, "");
+        const formatted = targetPhone.startsWith("+")
+          ? targetPhone
+          : digits.length === 10
+            ? `+1${digits}`
+            : `+${digits}`;
+        await updatePreferences({
+          phone: formatted,
+          notifyEmail: viewer?.notifyEmail ?? true,
+          notifySms: true,
+        });
+      }
+
       // Compile human-readable notes from house rules
       const rulesMarkdown = selectedRules
         .map((r, i) => `${i + 1}. **${r.title}**: ${r.description}`)
@@ -151,29 +171,26 @@ export function HostOnboardingWizard({
   return (
     <div className="setup-card" style={{ maxWidth: 760, margin: "0 auto" }}>
       {/* Wizard Progress Bar */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1.5rem" }}>
-        <div style={{ display: "flex", gap: "0.5rem" }}>
+      <div className="wizard-header">
+        <div className="wizard-progress-track">
           {[1, 2, 3, 4, 5].map((s) => (
             <span
               key={s}
+              className="wizard-progress-step"
               style={{
-                width: 36,
-                height: 6,
-                borderRadius: 3,
                 background: s <= step ? "var(--green, #184f3a)" : "var(--line, #e2ded7)",
-                transition: "background 0.2s ease",
               }}
             />
           ))}
         </div>
-        <span style={{ fontSize: "0.8rem", color: "var(--muted, #6f6b64)", fontWeight: 600 }}>
-          Step {step} of 5
+        <span className="wizard-step-label">
+          Step {step} of 5 · {["Dates", "Rules", "Rewards", "Financials", "Review"][step - 1]}
         </span>
       </div>
 
       {/* Step 1: Stay Basics & Cadence */}
       {step === 1 && (
-        <div>
+        <div key="step-1" className="screen-transition">
           <p className="eyebrow">Step 1 of 5 · Stay Schedule</p>
           <h1>Set the dates and contribution cadence.</h1>
           <p className="subhead">
@@ -241,6 +258,15 @@ export function HostOnboardingWizard({
                 onChange={(e) => setNextCheckInDate(e.target.value)}
               />
             </label>
+            <label>
+              <span>Household Timezone</span>
+              <input
+                type="text"
+                readOnly
+                value={`${timezone} (Auto-detected)`}
+                style={{ background: "var(--paper, #f5f0e8)", color: "var(--muted)", cursor: "default" }}
+              />
+            </label>
           </div>
 
           <div className="dialog-actions" style={{ marginTop: "2rem" }}>
@@ -258,7 +284,7 @@ export function HostOnboardingWizard({
 
       {/* Step 2: Guided House Rules & Boundaries */}
       {step === 2 && (
-        <div>
+        <div key="step-2" className="screen-transition">
           <p className="eyebrow">Step 2 of 5 · Living Expectations</p>
           <h1>Establish clear house rules.</h1>
           <p className="subhead">
@@ -267,32 +293,19 @@ export function HostOnboardingWizard({
 
           <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem", marginTop: "1.5rem" }}>
             {SUGGESTED_HOUSE_RULES.map((category) => (
-              <div
-                key={category.category}
-                style={{
-                  border: "1px solid var(--line, #e2ded7)",
-                  borderRadius: "14px",
-                  padding: "1rem 1.25rem",
-                  background: "#fff",
-                }}
-              >
-                <div style={{ marginBottom: "0.75rem" }}>
-                  <strong style={{ fontSize: "0.95rem", display: "block" }}>{category.label}</strong>
-                  <span style={{ fontSize: "0.8rem", color: "var(--muted, #6f6b64)" }}>{category.description}</span>
+              <div key={category.category} className="rule-category-card">
+                <div className="rule-category-header">
+                  <strong>{category.label}</strong>
+                  <span>{category.description}</span>
                 </div>
-                <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
                   {category.suggestions.map((suggestion) => {
                     const isSelected = selectedRules.some((r) => r.id === suggestion.id);
                     return (
                       <label
                         key={suggestion.id}
-                        style={{
-                          display: "flex",
-                          alignItems: "flex-start",
-                          gap: "0.65rem",
-                          cursor: "pointer",
-                          fontSize: "0.88rem",
-                        }}
+                        className="rule-check-item"
+                        style={{ background: isSelected ? "#f2f8f4" : undefined }}
                       >
                         <input
                           type="checkbox"
@@ -303,13 +316,10 @@ export function HostOnboardingWizard({
                               category: category.category,
                             })
                           }
-                          style={{ marginTop: "0.2rem" }}
                         />
-                        <div>
+                        <div className="rule-check-content">
                           <strong>{suggestion.title}</strong>
-                          <p style={{ margin: "2px 0 0", fontSize: "0.8rem", color: "var(--muted, #6f6b64)" }}>
-                            {suggestion.description}
-                          </p>
+                          <p>{suggestion.description}</p>
                         </div>
                       </label>
                     );
@@ -322,34 +332,37 @@ export function HostOnboardingWizard({
             <div
               style={{
                 border: "1px dashed var(--line, #e2ded7)",
-                borderRadius: "14px",
-                padding: "1rem 1.25rem",
-                background: "#faf8f5",
+                borderRadius: "16px",
+                padding: "1.2rem 1.4rem",
+                background: "var(--paper, #faf8f5)",
               }}
             >
-              <strong style={{ fontSize: "0.9rem", display: "block", marginBottom: "0.5rem" }}>
+              <strong style={{ fontSize: "0.95rem", display: "block", marginBottom: "0.35rem", color: "var(--ink)" }}>
                 Add a custom house rule
               </strong>
-              <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+              <p className="muted" style={{ fontSize: "0.82rem", margin: "0 0 0.85rem" }}>
+                Add specific rules for keys, quiet hours, pets, or shared spaces.
+              </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
                 <input
                   type="text"
-                  placeholder="e.g. Lock the front deadbolt whenever leaving"
+                  placeholder="Rule title (e.g. Lock deadbolt whenever leaving)"
                   value={customRuleTitle}
                   onChange={(e) => setCustomRuleTitle(e.target.value)}
-                  style={{ width: "100%", padding: "0.5rem 0.75rem", borderRadius: "8px", border: "1px solid var(--line, #e2ded7)" }}
+                  maxLength={160}
                 />
                 <input
                   type="text"
                   placeholder="Optional details or context"
                   value={customRuleDesc}
                   onChange={(e) => setCustomRuleDesc(e.target.value)}
-                  style={{ width: "100%", padding: "0.5rem 0.75rem", borderRadius: "8px", border: "1px solid var(--line, #e2ded7)" }}
+                  maxLength={500}
                 />
                 <button
                   className="button soft"
                   type="button"
                   onClick={addCustomRule}
-                  style={{ alignSelf: "flex-start", marginTop: "0.25rem" }}
+                  style={{ alignSelf: "flex-start" }}
                   disabled={!customRuleTitle.trim()}
                 >
                   <Plus size={16} /> Add rule
@@ -359,9 +372,9 @@ export function HostOnboardingWizard({
 
             {/* Selected Rules Summary */}
             {selectedRules.length > 0 && (
-              <div style={{ marginTop: "0.5rem" }}>
-                <p style={{ fontSize: "0.82rem", fontWeight: 700, color: "var(--green, #184f3a)" }}>
-                  {selectedRules.length} house rules selected for this agreement
+              <div style={{ marginTop: "0.25rem" }}>
+                <p style={{ fontSize: "0.85rem", fontWeight: 700, color: "var(--green, #184f3a)" }}>
+                  ✓ {selectedRules.length} house rule{selectedRules.length === 1 ? "" : "s"} selected for this agreement
                 </p>
               </div>
             )}
@@ -378,11 +391,11 @@ export function HostOnboardingWizard({
         </div>
       )}
 
-      {/* Step 3: Contribution Rewards System */}
+      {/* Step 3: Contribution Rewards & Household Economy */}
       {step === 3 && (
-        <div>
-          <p className="eyebrow">Step 3 of 5 · Optional System</p>
-          <h1>Contribution Points & Stay Credits</h1>
+        <div key="step-3" className="screen-transition">
+          <p className="eyebrow">Step 3 of 5 · Contribution Rewards</p>
+          <h1>Reward household contributions.</h1>
           <p className="subhead">
             Allow members to earn points/coins by contributing to the household, which can turn into financial value toward their stay.
           </p>
@@ -402,19 +415,9 @@ export function HostOnboardingWizard({
 
             {rewardsEnabled && (
               <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-                    gap: "1rem",
-                    border: "1px solid var(--line, #e2ded7)",
-                    borderRadius: "14px",
-                    padding: "1rem 1.25rem",
-                    background: "#fff",
-                  }}
-                >
+                <div className="rewards-config-grid">
                   <label>
-                    <span style={{ fontSize: "0.85rem", fontWeight: 600 }}>Coin / Point Name</span>
+                    <span style={{ fontSize: "0.82rem", fontWeight: 700 }}>Coin / Point Name</span>
                     <input
                       type="text"
                       value={coinName}
@@ -424,7 +427,7 @@ export function HostOnboardingWizard({
                     />
                   </label>
                   <label>
-                    <span style={{ fontSize: "0.85rem", fontWeight: 600 }}>Financial Value per Coin</span>
+                    <span style={{ fontSize: "0.82rem", fontWeight: 700 }}>Financial Value per Coin</span>
                     <div className="money-input">
                       <span>$</span>
                       <input
@@ -438,7 +441,7 @@ export function HostOnboardingWizard({
                     </div>
                   </label>
                   <label>
-                    <span style={{ fontSize: "0.85rem", fontWeight: 600 }}>Max Credit Cap per {cadence === "weekly" ? "Week" : "Day"}</span>
+                    <span style={{ fontSize: "0.82rem", fontWeight: 700 }}>Max Credit Cap per {cadence === "weekly" ? "Week" : "Day"}</span>
                     <div className="money-input">
                       <span>$</span>
                       <input
@@ -458,7 +461,7 @@ export function HostOnboardingWizard({
                   <strong style={{ fontSize: "0.95rem", display: "block", marginBottom: "0.25rem" }}>
                     Select Eligible Contribution Activities
                   </strong>
-                  <p style={{ fontSize: "0.8rem", color: "var(--muted, #6f6b64)", marginBottom: "0.75rem" }}>
+                  <p style={{ fontSize: "0.82rem", color: "var(--muted, #6f6b64)", marginBottom: "0.75rem" }}>
                     Guests can complete these tasks and request host confirmation to earn {coinName}.
                   </p>
 
@@ -492,6 +495,7 @@ export function HostOnboardingWizard({
                                 color: "#fff",
                                 display: "grid",
                                 placeItems: "center",
+                                flexShrink: 0,
                               }}
                             >
                               {isSelected && <Check size={14} />}
@@ -506,12 +510,14 @@ export function HostOnboardingWizard({
                           <span
                             style={{
                               fontWeight: 700,
-                              fontSize: "0.85rem",
+                              fontSize: "0.82rem",
                               color: "var(--green, #184f3a)",
                               background: "rgba(24, 79, 58, 0.1)",
                               padding: "4px 10px",
                               borderRadius: "99px",
                               whiteSpace: "nowrap",
+                              marginLeft: "8px",
+                              flexShrink: 0,
                             }}
                           >
                             +{task.defaultPoints} {coinName}
@@ -536,9 +542,9 @@ export function HostOnboardingWizard({
         </div>
       )}
 
-      {/* Step 4: Early Discount & Late Fee Rules */}
+      {/* Step 4: Early Discount & Late Fee Rules + IN-APP PAYMENTS */}
       {step === 4 && (
-        <div>
+        <div key="step-4" className="screen-transition">
           <p className="eyebrow">Step 4 of 5 · Financial Rules</p>
           <h1>Discounts and late fee terms.</h1>
           <p className="subhead">Optional incentives to encourage timely contributions. Both are off by default.</p>
@@ -572,12 +578,15 @@ export function HostOnboardingWizard({
                 </label>
                 <label>
                   <span>Days paid before due date</span>
-                  <input
-                    type="number"
-                    min="1"
-                    value={earlyDays}
-                    onChange={(e) => setEarlyDays(e.target.value)}
-                  />
+                  <div className="suffix-input">
+                    <input
+                      type="number"
+                      min="1"
+                      value={earlyDays}
+                      onChange={(e) => setEarlyDays(e.target.value)}
+                    />
+                    <span>days</span>
+                  </div>
                 </label>
               </>
             )}
@@ -624,6 +633,50 @@ export function HostOnboardingWizard({
             )}
           </div>
 
+          {/* In-App Payments Coming Soon Section */}
+          <div className="coming-soon-card">
+            <div className="coming-soon-badge">
+              <Sparkles size={13} />
+              <span>Coming Soon</span>
+            </div>
+            <div className="coming-soon-header">
+              <div className="coming-soon-icon">
+                <CreditCard size={24} />
+              </div>
+              <div>
+                <h3>In-App Payments & Direct Bank Payouts</h3>
+                <p>
+                  Direct guest billing with instant host payouts is currently in active development.
+                </p>
+              </div>
+            </div>
+
+            <div className="coming-soon-features">
+              <div className="feature-chip">
+                <Check size={14} color="var(--green, #184f3a)" />
+                <span>Credit Card, Apple Pay & ACH</span>
+              </div>
+              <div className="feature-chip">
+                <Check size={14} color="var(--green, #184f3a)" />
+                <span>Automated direct deposit to host bank</span>
+              </div>
+              <div className="feature-chip">
+                <Check size={14} color="var(--green, #184f3a)" />
+                <span>Auto-cleared on stay ledger</span>
+              </div>
+              <div className="feature-chip">
+                <Check size={14} color="var(--green, #184f3a)" />
+                <span>Zero awkward money reminders</span>
+              </div>
+            </div>
+
+            <div className="coming-soon-notice">
+              <p>
+                <strong>How payment tracking works today:</strong> Kouchd tracks and verifies payments made via your preferred method (Venmo, Zelle, Cash App, or bank transfer). When In-App Payments launch, you will be able to enable one-click automated billing directly on this stay.
+              </p>
+            </div>
+          </div>
+
           <div className="dialog-actions" style={{ marginTop: "2rem" }}>
             <button className="button ghost" type="button" onClick={() => setStep(3)}>
               <ArrowLeft size={18} /> Back
@@ -637,7 +690,7 @@ export function HostOnboardingWizard({
 
       {/* Step 5: Final Review & Agreement Launch */}
       {step === 5 && (
-        <div>
+        <div key="step-5" className="screen-transition">
           <p className="eyebrow">Step 5 of 5 · Final Agreement</p>
           <h1>Review the House Agreement.</h1>
           <p className="subhead">
@@ -653,18 +706,18 @@ export function HostOnboardingWizard({
               background: "#faf8f5",
             }}
           >
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "1rem", marginBottom: "1.5rem" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))", gap: "1.25rem", marginBottom: "1.5rem" }}>
               <div>
                 <span style={{ fontSize: "0.75rem", textTransform: "uppercase", color: "var(--muted, #6f6b64)", fontWeight: 700 }}>
                   Stay Dates
                 </span>
-                <p style={{ margin: "2px 0 0", fontWeight: 700 }}>{startDate} to {endDate}</p>
+                <p style={{ margin: "2px 0 0", fontWeight: 700, fontSize: "1rem" }}>{startDate} to {endDate}</p>
               </div>
               <div>
                 <span style={{ fontSize: "0.75rem", textTransform: "uppercase", color: "var(--muted, #6f6b64)", fontWeight: 700 }}>
                   Contribution Plan
                 </span>
-                <p style={{ margin: "2px 0 0", fontWeight: 700 }}>
+                <p style={{ margin: "2px 0 0", fontWeight: 700, fontSize: "1rem" }}>
                   ${rate} / {cadence === "weekly" ? "week" : "day"}
                 </p>
               </div>
@@ -672,8 +725,16 @@ export function HostOnboardingWizard({
                 <span style={{ fontSize: "0.75rem", textTransform: "uppercase", color: "var(--muted, #6f6b64)", fontWeight: 700 }}>
                   Contribution Rewards
                 </span>
-                <p style={{ margin: "2px 0 0", fontWeight: 700 }}>
+                <p style={{ margin: "2px 0 0", fontWeight: 700, fontSize: "1rem" }}>
                   {rewardsEnabled ? `Active (1 ${coinName} = $${(Number(centsPerPoint) / 100).toFixed(2)})` : "Off"}
+                </p>
+              </div>
+              <div>
+                <span style={{ fontSize: "0.75rem", textTransform: "uppercase", color: "var(--muted, #6f6b64)", fontWeight: 700 }}>
+                  Payment Processing
+                </span>
+                <p style={{ margin: "2px 0 0", fontWeight: 700, fontSize: "0.92rem", color: "var(--green, #184f3a)" }}>
+                  Verified Ledger · In-App Payments Soon
                 </p>
               </div>
             </div>
@@ -692,6 +753,73 @@ export function HostOnboardingWizard({
                   </div>
                 ))}
               </div>
+            </div>
+
+            {/* SMS Notification Acceptance */}
+            <div
+              style={{
+                marginTop: "1.25rem",
+                border: "1px solid #b8d2c1",
+                borderRadius: "14px",
+                padding: "1.25rem",
+                background: "#eaf4ec",
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", marginBottom: "0.5rem" }}>
+                <MessageSquare size={20} color="var(--green, #184f3a)" />
+                <strong style={{ fontSize: "0.95rem", color: "var(--green, #184f3a)" }}>
+                  Host SMS Notifications &middot; Wrelik Brands LLC
+                </strong>
+              </div>
+              <p style={{ margin: "0 0 0.85rem", fontSize: "0.82rem", color: "#2d4438", lineHeight: 1.5 }}>
+                Receive real-time text alerts when guests join, log contributions, or accept agreements from <strong>Wrelik Brands LLC</strong> (operating <strong>Kouchd</strong>).
+              </p>
+
+              <div style={{ marginBottom: "0.75rem" }}>
+                <label style={{ display: "block", fontSize: "0.8rem", fontWeight: 700, color: "#184f3a", marginBottom: "0.3rem" }}>
+                  Mobile Phone Number
+                </label>
+                <input
+                  type="tel"
+                  defaultValue={viewer?.phone ?? ""}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="+1 (555) 019-2834"
+                  style={{
+                    width: "100%",
+                    padding: "0.6rem 0.85rem",
+                    borderRadius: "8px",
+                    border: "1px solid var(--line, #e2ded7)",
+                    background: "#fff",
+                    fontSize: "0.9rem",
+                    color: "var(--ink, #17251f)",
+                  }}
+                />
+              </div>
+
+              <label style={{ display: "flex", alignItems: "flex-start", gap: "0.6rem", cursor: "pointer" }}>
+                <input
+                  type="checkbox"
+                  checked={optInSms}
+                  onChange={(e) => setOptInSms(e.target.checked)}
+                  style={{
+                    width: "18px",
+                    height: "18px",
+                    marginTop: "2px",
+                    accentColor: "var(--green, #184f3a)",
+                    flexShrink: 0,
+                  }}
+                />
+                <span style={{ fontSize: "0.78rem", color: "#184f3a", lineHeight: 1.5 }}>
+                  I agree to receive transactional text messages (SMS) from Wrelik Brands LLC (operating Kouchd). <strong>Message and data rates may apply.</strong> Message frequency varies. Reply STOP to cancel, HELP for info. View{" "}
+                  <Link href="/terms" target="_blank" style={{ color: "var(--green, #184f3a)", fontWeight: 700, textDecoration: "underline" }}>
+                    Terms &amp; Conditions
+                  </Link>{" "}
+                  and{" "}
+                  <Link href="/privacy" target="_blank" style={{ color: "var(--green, #184f3a)", fontWeight: 700, textDecoration: "underline" }}>
+                    Privacy Policy
+                  </Link>.
+                </span>
+              </label>
             </div>
           </div>
 

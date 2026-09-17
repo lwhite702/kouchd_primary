@@ -195,3 +195,29 @@ export function assertPointClaimInput(title: string, points: number, note: strin
   }
 }
 
+export type HouseInfoInput = {
+  wifiNetwork?: string;
+  wifiPassword?: string;
+  streetAddress?: string;
+  unit?: string;
+  cityStateZip?: string;
+  doorCode?: string;
+  parkingNotes?: string;
+  trashDay?: string;
+  emergencyContact?: string;
+  otherNotes?: string;
+};
+
+export function assertHouseInfoInput(info: HouseInfoInput) {
+  if (info.wifiNetwork && info.wifiNetwork.length > 100) throw new Error("WiFi network name must be 100 characters or fewer");
+  if (info.wifiPassword && info.wifiPassword.length > 100) throw new Error("WiFi password must be 100 characters or fewer");
+  if (info.streetAddress && info.streetAddress.length > 200) throw new Error("Street address must be 200 characters or fewer");
+  if (info.unit && info.unit.length > 50) throw new Error("Unit/Apt must be 50 characters or fewer");
+  if (info.cityStateZip && info.cityStateZip.length > 100) throw new Error("City, state, zip must be 100 characters or fewer");
+  if (info.doorCode && info.doorCode.length > 100) throw new Error("Door/gate code must be 100 characters or fewer");
+  if (info.parkingNotes && info.parkingNotes.length > 1000) throw new Error("Parking notes must be 1,000 characters or fewer");
+  if (info.trashDay && info.trashDay.length > 200) throw new Error("Trash schedule must be 200 characters or fewer");
+  if (info.emergencyContact && info.emergencyContact.length > 300) throw new Error("Emergency contact must be 300 characters or fewer");
+  if (info.otherNotes && info.otherNotes.length > 2000) throw new Error("House notes must be 2,000 characters or fewer");
+}
+

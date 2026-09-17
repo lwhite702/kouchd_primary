@@ -238,7 +238,7 @@ export function KouchdWorkspace({ servicesConfigured }: { servicesConfigured: bo
         </header>
 
         <main tabIndex={-1}>
-          {screen === "home" && <>
+          {screen === "home" && <div key="home" className="screen-transition">
             <div className="page-heading dashboard-heading">
               <div><p className="eyebrow">Good to see you, Lee</p><h1>Here&apos;s the stay at a glance.</h1></div>
             <button className="button soft desktop-action" type="button" onClick={() => setModal("contribution")}><Plus size={18} /> Add contribution</button>
@@ -260,26 +260,26 @@ export function KouchdWorkspace({ servicesConfigured }: { servicesConfigured: bo
             <div className="section-heading"><div><p className="eyebrow">Shared record</p><h2 id="activity-title">Recent activity</h2></div></div>
             <div className="activity-list">{activity.map((item) => <article className="list-row" key={item.id}><span className="list-icon"><item.icon size={20} /></span><div className="list-copy"><strong>{item.title}</strong><span>{item.detail}</span></div><div className="list-value"><small>{formatDate(item.date)}</small></div></article>)}</div>
           </section>
-        </>}
+        </div>}
 
-        {screen === "contributions" && <>
+        {screen === "contributions" && <div key="contributions" className="screen-transition">
           <div className="page-heading"><div><p className="eyebrow">Money and more</p><h1>Contributions</h1><p className="subhead">Track cash, groceries, supplies, and agreed work in one shared record.</p></div><button className="button primary" type="button" onClick={() => setModal("contribution")}><Plus size={18} /> Add contribution</button></div>
           <div className="summary-strip"><div className="summary-item"><span>Stay total</span><strong>{money(chargeCents)}</strong></div><div className="summary-item"><span>Confirmed credit</span><strong>{money(creditCents)}</strong></div><div className="summary-item"><span>Balance</span><strong>{money(balance)}</strong></div></div>
           <div className="ledger-list">{contributions.map((item) => <article className="list-row contribution-row" key={item.id}><span className="list-icon payment"><Landmark size={20} /></span><div className="list-copy"><strong>{item.type}</strong><span>{item.note} · {item.status}</span></div><div className="list-value">{money(item.amountCents)}<small>{formatDate(item.date)}</small></div>{item.status === "pending" && role === "host" && <div className="row-actions"><button className="mini-button" type="button" onClick={() => confirmContribution(item.id)}>Confirm</button></div>}</article>)}</div>
-        </>}
+        </div>}
 
-        {screen === "chores" && <>
+        {screen === "chores" && <div key="chores" className="screen-transition">
           <div className="page-heading"><div><p className="eyebrow">No mystery dishes</p><h1>Chore board</h1><p className="subhead">Make the invisible work visible without turning the house into boot camp.</p></div><button className="button primary" type="button" onClick={() => setModal("chore")}><Plus size={18} /> Add chore</button></div>
           <div className="chore-list">{chores.map((item) => <article className={`list-row chore-row ${item.done ? "done" : ""}`} key={item.id}><button className={`chore-check ${item.done ? "checked" : ""}`} type="button" onClick={() => toggleChore(item.id)} aria-label={`${item.done ? "Reopen" : "Complete"} ${item.title}`}>{item.done && <Check size={18} />}</button><div className="list-copy"><strong>{item.title}</strong><span>Due {formatDate(item.dueDate)}</span><span className="badge">{item.assignee}</span></div><span className="list-value"><small>{item.done ? "Done" : "Open"}</small></span></article>)}</div>
-        </>}
+        </div>}
 
-        {screen === "stay" && <>
+        {screen === "stay" && <div key="stay" className="screen-transition">
           <div className="page-heading"><div><p className="eyebrow">The agreement</p><h1>Stay details</h1><p className="subhead">The practical stuff everyone can point back to.</p></div>{role === "host" && <button className="button soft" type="button" onClick={() => setModal("agreement")}><Settings2 size={18} /> Edit agreement</button>}</div>
           <div className="agreement-callout"><div><Users size={22} /><div><strong>Terms version 1</strong><span>Accepted by Lee and Marcus</span></div></div><span className="accepted-pill"><CheckCircle2 size={16} /> Mutually accepted</span></div>
           <div className="details-grid"><article className="details-card"><p className="overline">People</p><p>Lee hosting Marcus</p></article><article className="details-card"><p className="overline">Dates</p><p>Sep 1 to Sep 21, 2026</p></article><article className="details-card"><p className="overline">Contribution plan</p><p>$200 per week</p></article><article className="details-card"><p className="overline">Timing rules</p><p>5% early discount · $15 late fee after 2 days</p></article></div>
           <article className="boundary-card"><p className="overline">Shared expectations</p><h2>Clear beats assumed.</h2><p className="notes-copy">Quiet after 10:30 PM. Text before visitors. Groceries on the left shelf are shared. Sunday check-in takes ten minutes.</p></article>
           {role === "host" && !ended && <button className="button danger-outline" type="button" onClick={() => { setEnded(true); notify("Stay ended. The full record is still here."); }}>End this stay</button>}
-        </>}
+        </div>}
       </main>
 
       <nav className="bottom-nav" aria-label="Primary navigation">{navItems.map((item) => <button className={`nav-item ${screen === item.id ? "active" : ""}`} type="button" key={item.id} onClick={() => setScreen(item.id)}><item.icon className="nav-icon" size={20} /><span>{item.label}</span></button>)}</nav>

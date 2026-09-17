@@ -1,7 +1,7 @@
 "use client";
 
 import { Show, SignInButton, SignUpButton } from "@clerk/nextjs";
-import { useMutation } from "convex/react";
+import { useConvexAuth, useMutation } from "convex/react";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
@@ -37,6 +37,7 @@ export function InviteAccept({ token }: { token: string }) {
 }
 
 function Accept({ token }: { token: string }) {
+  const { isLoading: authLoading, isAuthenticated } = useConvexAuth();
   const sync = useMutation(api.users.syncCurrent);
   const accept = useMutation(api.invites.accept);
   const started = useRef(false);
@@ -44,16 +45,35 @@ function Accept({ token }: { token: string }) {
   const [done, setDone] = useState(false);
 
   useEffect(() => {
-    if (started.current) return;
+    if (!isAuthenticated || started.current) return;
     started.current = true;
     void (async () => {
       try {
         await sync({});
         await accept({ tokenHash: await hashInviteToken(token) });
-        setDone(true); setStatus("You joined the stay. The current terms are ready for your review.");
-      } catch (reason) { setStatus(reason instanceof Error ? reason.message : "This invitation could not be accepted."); }
+        setDone(true);
+        setStatus("You joined the stay. The current terms are ready for your review.");
+      } catch (reason) {
+        setStatus(reason instanceof Error ? reason.message : "This invitation could not be accepted.");
+      }
     })();
-  }, [accept, sync, token]);
+  }, [isAuthenticated, accept, sync, token]);
 
-  return <>{done && <CheckCircle2 className="auth-success" size={42} />}<p className="eyebrow">Guest invitation</p><h1>{done ? "You're Kouchd." : "Joining the stay"}</h1><p>{status}</p>{done && <Link className="button primary button-link" href="/">Open the shared stay</Link>}</>;
+  if (authLoading || !isAuthenticated) {
+    return <p>{status}</p>;
+  }
+
+  return (
+    <>
+      {done && <CheckCircle2 className="auth-success" size={42} />}
+      <p className="eyebrow">Guest invitation</p>
+      <h1>{done ? "You're Kouchd." : "Joining the stay"}</h1>
+      <p>{status}</p>
+      {done && (
+        <Link className="button primary button-link" href="/">
+          Open the shared stay
+        </Link>
+      )}
+    </>
+  );
 }

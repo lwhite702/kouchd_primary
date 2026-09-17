@@ -1,7 +1,7 @@
 "use client";
 
 import { Show, UserButton } from "@clerk/nextjs";
-import { useMutation, useQuery } from "convex/react";
+import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { Bell, BookOpen, Check, ClipboardList, Copy, Home, KeyRound, Landmark, Megaphone, Plus, ReceiptText, Settings, Sparkles, Users } from "lucide-react";
 import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
@@ -20,6 +20,8 @@ import { JoinHouseholdCard } from "@/components/referral/join-household";
 import { RewardsHub } from "@/components/rewards/rewards-hub";
 import { KnockGuidesProvider } from "@/components/knock/knock-guides-provider";
 import { KouchdGuideBanner, KouchdGuideModal } from "@/components/knock/kouchd-guides";
+import { HouseholdLogisticsCard, HouseInfoForm } from "@/components/household/household-logistics";
+import { DashboardSkeleton } from "@/components/skeleton-loader";
 
 const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
 const date = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
@@ -44,7 +46,7 @@ type LedgerItem = {
   lateFeeWaived: boolean;
 };
 type Screen = "home" | "contributions" | "chores" | "stay";
-type Panel = "contribution" | "chore" | "adhoc" | "announcement" | "settings" | "invite" | null;
+type Panel = "contribution" | "chore" | "adhoc" | "announcement" | "settings" | "invite" | "houseInfo" | null;
 
 function formatMoney(cents: number) { return money.format(cents / 100); }
 function formatDate(value: string) { return date.format(new Date(`${value}T00:00:00Z`)); }
@@ -64,18 +66,54 @@ export function AuthenticatedHome() {
 }
 
 function SyncedWorkspace() {
+  const { isLoading: authLoading, isAuthenticated } = useConvexAuth();
   const syncCurrent = useMutation(api.users.syncCurrent);
   const started = useRef(false);
   const [synced, setSynced] = useState(false);
   const [syncError, setSyncError] = useState("");
+
   useEffect(() => {
-    if (started.current) return;
+    if (!isAuthenticated || started.current) return;
     started.current = true;
-    void syncCurrent({}).then(() => setSynced(true)).catch(() => setSyncError("We could not prepare your private workspace."));
-  }, [syncCurrent]);
+    void syncCurrent({})
+      .then(() => setSynced(true))
+      .catch((err) => {
+        console.error("Workspace sync error:", err);
+        setSyncError("We could not prepare your private workspace.");
+      });
+  }, [isAuthenticated, syncCurrent]);
+
   const stays = useQuery(api.stays.listMine, synced ? {} : "skip") as Array<{ stay: Doc<"stays">; membership: Doc<"memberships"> }> | undefined;
-  if (syncError) return <main className="route-state"><h1>Sign-in needs a reset.</h1><p className="muted">{syncError}</p></main>;
-  if (!synced || stays === undefined) return <div className="route-state">Setting out the clean sheets...</div>;
+
+  if (syncError) {
+    return (
+      <main className="route-state">
+        <h1>Sign-in needs a reset.</h1>
+        <p className="muted">{syncError}</p>
+        <button
+          className="button primary"
+          type="button"
+          style={{ marginTop: "1rem" }}
+          onClick={() => {
+            started.current = false;
+            setSyncError("");
+            void syncCurrent({})
+              .then(() => setSynced(true))
+              .catch((err) => {
+                console.error("Workspace sync retry error:", err);
+                setSyncError("We could not prepare your private workspace.");
+              });
+          }}
+        >
+          Try again
+        </button>
+      </main>
+    );
+  }
+
+  if (authLoading || !isAuthenticated || !synced || stays === undefined) {
+    return <DashboardSkeleton message="Setting out the clean sheets..." />;
+  }
   if (stays.length === 0) {
     return (
       <KnockGuidesProvider>
@@ -135,7 +173,7 @@ function GetStartedHub() {
   return (
     <div className="app-shell production-shell">
       <AccountHeader />
-      <main style={{ padding: "1.5rem 1rem" }}>
+      <main style={{ padding: "1.5rem 1rem 4rem" }}>
         <div style={{ maxWidth: 440, margin: "0 auto 1.5rem", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem" }}>
           <button
             className={`button ${tab === "host" ? "primary" : "soft"}`}
@@ -178,6 +216,7 @@ function LiveStay({ stayId }: { stayId: Id<"stays"> }) {
   const [notice, setNotice] = useState("");
   const [guestOnboardingOpen, setGuestOnboardingOpen] = useState(false);
   const [joinModalOpen, setJoinModalOpen] = useState(false);
+  const [isSubmittingModal, setIsSubmittingModal] = useState(false);
   const members = bundle?.members ?? [];
   const guestMembers = members.filter((item) => item.membership.role === "guest" && item.membership.status === "active");
   const isHost = bundle?.membership.role === "host";
@@ -195,6 +234,7 @@ function LiveStay({ stayId }: { stayId: Id<"stays"> }) {
   const waiveLateFee = useMutation(api.obligations.waiveLateFee);
   const createInvite = useMutation(api.invites.create);
   const updatePreferences = useMutation(api.users.updatePreferences);
+  const updateHouseInfo = useMutation(api.stays.updateHouseInfo);
   const endStay = useMutation(api.stays.end);
 
   const activeContributions = (contributions ?? []).filter((entry) => entry.status !== "voided");
@@ -207,38 +247,89 @@ function LiveStay({ stayId }: { stayId: Id<"stays"> }) {
   const selectedGuest = guestMembers.find((item) => item.person.id === financialGuestId)?.person;
   const terms = bundle?.terms;
   const hasAccepted = bundle?.membership.acceptedTermsId === bundle?.stay.currentTermsId;
-  if (!bundle || !viewer || !chores || !activities || !announcements || !contributions || !obligations) return <div className="route-state">Pulling the shared record together...</div>;
+  if (!bundle || !viewer || !chores || !activities || !announcements || !contributions || !obligations) return <DashboardSkeleton message="Pulling the shared record together..." />;
 
   function notify(message: string) { setNotice(message); window.setTimeout(() => setNotice(""), 2600); }
   async function makeInvite(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); const form = new FormData(event.currentTarget); const token = createInviteToken(); const url = `${window.location.origin}/invite/${token}`;
-    await createInvite({ stayId, tokenHash: await hashInviteToken(token), invitedEmail: value(form, "email") || undefined, inviteUrl: url, expiresAt: Date.now() + 7 * 86_400_000 });
-    setInviteUrl(url); notify("Private invite created.");
+    setIsSubmittingModal(true);
+    try {
+      await createInvite({ stayId, tokenHash: await hashInviteToken(token), invitedEmail: value(form, "email") || undefined, inviteUrl: url, expiresAt: Date.now() + 7 * 86_400_000 });
+      setInviteUrl(url); notify("Private invite created.");
+    } finally {
+      setIsSubmittingModal(false);
+    }
   }
   async function addContribution(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); if (!financialGuestId) return; const form = new FormData(event.currentTarget);
-    await createContribution({ stayId, guestUserId: financialGuestId, type: value(form, "type") as "payment" | "groceries" | "supplies" | "house_work" | "other", amountCents: Math.round(Number(value(form, "amount")) * 100), date: value(form, "date"), note: value(form, "note"), countsTowardBalance: form.get("counts") === "on" });
-    setPanel(null); notify("Contribution added for confirmation.");
+    setIsSubmittingModal(true);
+    try {
+      await createContribution({ stayId, guestUserId: financialGuestId, type: value(form, "type") as "payment" | "groceries" | "supplies" | "house_work" | "other", amountCents: Math.round(Number(value(form, "amount")) * 100), date: value(form, "date"), note: value(form, "note"), countsTowardBalance: form.get("counts") === "on" });
+      setPanel(null); notify("Contribution added for confirmation.");
+    } finally {
+      setIsSubmittingModal(false);
+    }
   }
   async function addCharge(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); if (!financialGuestId) return; const form = new FormData(event.currentTarget);
-    await createAdhocCharge({ stayId, guestUserId: financialGuestId, title: value(form, "title"), amountCents: Math.round(Number(value(form, "amount")) * 100), effectiveDate: value(form, "effectiveDate"), dueDate: value(form, "dueDate") });
-    setPanel(null); notify("One-off charge added and recorded.");
+    setIsSubmittingModal(true);
+    try {
+      await createAdhocCharge({ stayId, guestUserId: financialGuestId, title: value(form, "title"), amountCents: Math.round(Number(value(form, "amount")) * 100), effectiveDate: value(form, "effectiveDate"), dueDate: value(form, "dueDate") });
+      setPanel(null); notify("One-off charge added and recorded.");
+    } finally {
+      setIsSubmittingModal(false);
+    }
   }
   async function addChore(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); const form = new FormData(event.currentTarget); const assigneeUserId = value(form, "assigneeUserId") as Id<"users"> | "";
-    await createChore({ stayId, title: value(form, "title"), note: value(form, "note"), assignee: assigneeUserId ? "guest" : "shared", assigneeUserId: assigneeUserId || undefined, dueDate: value(form, "dueDate") });
-    setPanel(null); notify("Chore added.");
+    setIsSubmittingModal(true);
+    try {
+      await createChore({ stayId, title: value(form, "title"), note: value(form, "note"), assignee: assigneeUserId ? "guest" : "shared", assigneeUserId: assigneeUserId || undefined, dueDate: value(form, "dueDate") });
+      setPanel(null); notify("Chore added.");
+    } finally {
+      setIsSubmittingModal(false);
+    }
   }
   async function addAnnouncement(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); const form = new FormData(event.currentTarget);
-    await createAnnouncement({ stayId, title: value(form, "title"), body: value(form, "body"), pinnedUntil: value(form, "pinnedUntil") || undefined });
-    setPanel(null); notify("Announcement shared with the household.");
+    setIsSubmittingModal(true);
+    try {
+      await createAnnouncement({ stayId, title: value(form, "title"), body: value(form, "body"), pinnedUntil: value(form, "pinnedUntil") || undefined });
+      setPanel(null); notify("Announcement shared with the household.");
+    } finally {
+      setIsSubmittingModal(false);
+    }
   }
   async function savePreferences(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); const form = new FormData(event.currentTarget);
-    await updatePreferences({ phone: value(form, "phone") || undefined, notifyEmail: form.get("notifyEmail") === "on", notifySms: form.get("notifySms") === "on" });
-    setPanel(null); notify("Reminder preferences saved.");
+    setIsSubmittingModal(true);
+    try {
+      await updatePreferences({ phone: value(form, "phone") || undefined, notifyEmail: form.get("notifyEmail") === "on", notifySms: form.get("notifySms") === "on" });
+      setPanel(null); notify("Reminder preferences saved.");
+    } finally {
+      setIsSubmittingModal(false);
+    }
+  }
+  async function saveHouseInfo(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    await updateHouseInfo({
+      stayId,
+      houseInfo: {
+        wifiNetwork: value(form, "wifiNetwork") || undefined,
+        wifiPassword: value(form, "wifiPassword") || undefined,
+        streetAddress: value(form, "streetAddress") || undefined,
+        unit: value(form, "unit") || undefined,
+        cityStateZip: value(form, "cityStateZip") || undefined,
+        doorCode: value(form, "doorCode") || undefined,
+        parkingNotes: value(form, "parkingNotes") || undefined,
+        trashDay: value(form, "trashDay") || undefined,
+        emergencyContact: value(form, "emergencyContact") || undefined,
+        otherNotes: value(form, "otherNotes") || undefined,
+      },
+    });
+    setPanel(null);
+    notify("Household guide & access info updated.");
   }
 
   const ledgerLabel = isHost ? `${selectedGuest?.name ?? "Guest"}'s private ledger` : "Your private ledger";
@@ -259,18 +350,52 @@ function LiveStay({ stayId }: { stayId: Id<"stays"> }) {
         </button>
       </div>
     )}
-    {screen === "home" && <><div className="page-heading dashboard-heading"><div><p className="eyebrow">Shared and current</p><h1>Here&apos;s the household at a glance.</h1></div><button className="button soft desktop-action" type="button" onClick={() => setPanel("contribution")} disabled={!financialGuestId}><Plus size={18} /> Add contribution</button></div><article className="stay-card"><div><p className="overline">Current stay</p><h2>{members.map((item) => item.person.name).join(" + ")}</h2><p className="muted">{terms ? `${formatDate(terms.startDate)} to ${formatDate(terms.endDate)}` : "Terms pending"}</p></div><span className="status-pill">{bundle.stay.status}</span><div className="progress-block"><div className="progress-copy"><span>Terms version {terms?.version ?? 1}</span><strong>{members.length} members</strong></div><div className="progress-track"><span style={{ width: `${Math.min(100, 40 + members.length * 15)}%` }} /></div></div></article>{isHost && guestMembers.length > 0 && <GuestTabs guests={guestMembers} selected={financialGuestId} onSelect={setSelectedGuestId} />}<div className="metric-grid"><article className="metric-card balance-card"><p className="overline">{ledgerLabel}</p><p className="metric">{formatMoney(balance)}</p><p className="muted">{formatMoney(credits)} confirmed toward {formatMoney(charge)}</p><button className="text-button" type="button" onClick={() => setScreen("contributions")}>View breakdown</button></article><article className="metric-card"><p className="overline">Chores</p><p className="metric">{openChores.length} <small>open</small></p><p className="muted">{openChores[0]?.title ?? "Nothing hanging over anyone."}</p><button className="text-button" type="button" onClick={() => setScreen("chores")}>See chore board</button></article><article className="metric-card"><p className="overline">Next check-in</p><p className="metric date-metric">{bundle.stay.nextCheckInDate ? formatDate(bundle.stay.nextCheckInDate) : "Not set"}</p><p className="muted">Email and SMS follow your reminder settings.</p></article></div><section className="section-block"><div className="section-heading"><div><p className="eyebrow">House notes</p><h2>Announcements</h2></div>{isHost && <button className="mini-button" type="button" onClick={() => setPanel("announcement")}><Megaphone size={16} /> Add</button>}</div><div className="activity-list">{announcements.map((item) => <article className="list-row" key={item._id}><span className="list-icon"><Megaphone size={19} /></span><div className="list-copy"><strong>{item.title}</strong><span>{item.body}</span></div></article>)}{announcements.length === 0 && <p className="muted">No announcements yet.</p>}</div></section><section className="section-block"><div className="section-heading"><div><p className="eyebrow">Shared record</p><h2>Recent activity</h2></div></div><div className="activity-list">{recent.map((item) => <article className="list-row" key={item._id}><span className="list-icon"><ReceiptText size={19} /></span><div className="list-copy"><strong>{item.action.replaceAll("_", " ")}</strong><span>{item.detail}</span></div><div className="list-value"><small>{new Date(item.createdAt).toLocaleDateString()}</small></div></article>)}</div></section></>}
-    {screen === "contributions" && <><div className="page-heading"><div><p className="eyebrow">Private by guest</p><h1>{ledgerLabel}</h1><p className="subhead">Guests can never query another guest&apos;s rates, charges, balance, or payments.</p></div><div className="heading-actions"><button className="button primary" type="button" onClick={() => setPanel("contribution")} disabled={!financialGuestId}><Plus size={18} /> Add contribution</button>{isHost && <button className="button soft" type="button" onClick={() => setPanel("adhoc")} disabled={!financialGuestId}><ReceiptText size={18} /> Add charge</button>}</div></div>{isHost && guestMembers.length > 0 && <GuestTabs guests={guestMembers} selected={financialGuestId} onSelect={setSelectedGuestId} />}<div className="summary-strip"><div className="summary-item"><span>Total charges</span><strong>{formatMoney(charge)}</strong></div><div className="summary-item"><span>Confirmed credit</span><strong>{formatMoney(credits)}</strong></div><div className="summary-item"><span>Balance</span><strong>{formatMoney(balance)}</strong></div></div><section className="section-block"><div className="section-heading"><div><p className="eyebrow">FIFO allocation</p><h2>Oldest charges are paid first</h2></div></div><div className="ledger-list">{obligations.map((item, index) => <article className="list-row contribution-row" key={item._id}><span className="list-icon"><ReceiptText size={19} /></span><div className="list-copy"><strong>{item.title ?? `Period ${index + 1}`} · due {formatDate(item.dueDate)}</strong><span>{formatMoney(item.baseAmountCents)} base{item.earlyDiscountCents ? ` · ${formatMoney(-item.earlyDiscountCents)} early discount` : ""}{item.lateFeeCents ? ` · ${formatMoney(item.lateFeeCents)} across ${item.lateFeeOccurrences} late-fee cycle${item.lateFeeOccurrences === 1 ? "" : "s"}` : ""}{item.lateFeeWaived ? " · fee waived" : ""}</span></div><div className="list-value">{formatMoney(item.balanceCents)}<small>{item.status}</small></div>{isHost && <div className="row-actions">{item.lateFeeCents > 0 && !item.lateFeeWaived && <button className="mini-button" type="button" onClick={() => void waiveLateFee({ obligationId: item._id }).then(() => notify("Late fee waived and audited."))}>Waive fee</button>}{item.type === "adhoc" && <button className="mini-button danger" type="button" onClick={() => void voidAdhocCharge({ obligationId: item._id }).then(() => notify("Charge voided; history retained."))}>Void</button>}</div>}</article>)}{obligations.length === 0 && <p className="muted">Choose a guest, then activate terms or add a one-off charge.</p>}</div></section><RewardsHub stayId={stayId} isHost={isHost} selectedGuestId={financialGuestId} currentBalanceCents={balance} onNotify={notify} /><section className="section-block"><div className="section-heading"><div><p className="eyebrow">Transactions</p><h2>Contribution entries</h2></div></div><div className="ledger-list">{activeContributions.map((item) => <article className="list-row contribution-row" key={item._id}><span className="list-icon payment"><Landmark size={19} /></span><div className="list-copy"><strong>{item.type.replaceAll("_", " ")}</strong><span>{item.note || "No note"} · {item.status}</span></div><div className="list-value">{formatMoney(item.amountCents)}<small>{formatDate(item.date)}</small></div>{item.status === "pending" && item.createdBy !== bundle.membership.userId && <div className="row-actions"><button className="mini-button" type="button" onClick={() => void confirmContribution({ contributionId: item._id })}>Confirm</button></div>}</article>)}</div></section></>}
-    {screen === "chores" && <><div className="page-heading"><div><p className="eyebrow">Shared across the house</p><h1>Chore board</h1><p className="subhead">Household coordination stays shared while financial records stay private.</p></div><button className="button primary" type="button" onClick={() => setPanel("chore")}><Plus size={18} /> Add chore</button></div><div className="chore-list">{chores.filter((item) => !item.voidedAt).map((item) => <article className={`list-row chore-row ${item.completedAt ? "done" : ""}`} key={item._id}><button className={`chore-check ${item.completedAt ? "checked" : ""}`} type="button" onClick={() => void toggleChore({ choreId: item._id })} aria-label={`${item.completedAt ? "Reopen" : "Complete"} ${item.title}`}>{item.completedAt && <Check size={18} />}</button><div className="list-copy"><strong>{item.title}</strong><span>{item.note || `Due ${formatDate(item.dueDate)}`}</span><span className="badge">{item.assigneeUserId ? members.find((member) => member.person.id === item.assigneeUserId)?.person.name ?? "Guest" : item.assignee}</span></div></article>)}</div></>}
-    {screen === "stay" && <><div className="page-heading"><div><p className="eyebrow">The agreement</p><h1>Stay details</h1><p className="subhead">Everyone sees shared expectations; guest finances remain scoped on the server.</p></div>{!hasAccepted && <button className="button primary" type="button" onClick={() => setGuestOnboardingOpen(true)}>Review & accept agreement</button>}</div><div className="agreement-callout"><div><Users size={22} /><div><strong>Terms version {terms?.version ?? 1}</strong><span>{bundle.stay.status === "active" ? "Accepted and active" : "Waiting for current acceptances"}</span></div></div><span className="accepted-pill">{bundle.stay.status}</span></div>{terms && <div className="details-grid"><article className="details-card" style={{ gridColumn: "1 / -1", background: "#f8fbf9", border: "1px dashed var(--green, #184f3a)" }}><div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.75rem" }}><div><p className="overline" style={{ margin: 0 }}>Household Referral Code</p><strong style={{ fontSize: "1.3rem", letterSpacing: "1.5px", color: "var(--green, #184f3a)" }}>{bundle.stay.referralCode ?? "KCH-SHARED"}</strong><p className="muted" style={{ margin: "3px 0 0", fontSize: "0.8rem" }}>Members can join this stay directly by entering this code on Kouchd.</p></div><button className="button soft compact" type="button" onClick={() => { void navigator.clipboard.writeText(bundle.stay.referralCode ?? ""); notify("Referral code copied!"); }}><Copy size={15} /> Copy code</button></div></article><article className="details-card"><p className="overline">Dates</p><p>{formatDate(terms.startDate)} to {formatDate(terms.endDate)}</p></article><article className="details-card"><p className="overline">Contribution plan</p><p>{formatMoney(terms.rateCents)} per {terms.cadence === "weekly" ? "week" : "day"}</p></article><article className="details-card"><p className="overline">Early rule</p><p>{terms.earlyDiscountEnabled ?? terms.earlyDiscountPercentage > 0 ? `${terms.earlyDiscountPercentage}% off when complete ${terms.earlyDiscountDays} days early` : "Off"}</p></article><article className="details-card"><p className="overline">Late rule</p><p>{terms.lateFeeEnabled ?? terms.lateFeeCents > 0 ? `${formatMoney(terms.lateFeeCents)} weekly after ${terms.graceDays} grace days` : "Off"}</p></article></div>}{terms?.houseRules && terms.houseRules.length > 0 && <section className="section-block"><div className="section-heading"><div><p className="eyebrow">Living Guidelines</p><h2>House Rules ({terms.houseRules.length})</h2></div></div><div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>{terms.houseRules.map((rule: { id: string; title: string; description: string }, i: number) => <article className="list-row" key={rule.id}><span style={{ fontWeight: 800, color: "var(--green, #184f3a)", width: 24 }}>{i + 1}.</span><div className="list-copy"><strong>{rule.title}</strong><span>{rule.description}</span></div></article>)}</div></section>}<article className="boundary-card"><p className="overline">Shared expectations</p><h2>Clear beats assumed.</h2><p className="notes-copy">{terms?.houseNotes || "No notes added."}</p></article>{isHost && <section className="invite-card"><div><p className="eyebrow">Grow the household</p><h2>Invite members.</h2><p className="muted">Share your household referral code or generate a private one-week invite link.</p></div><button className="button primary" type="button" onClick={() => { setInviteUrl(""); setPanel("invite"); }}>Invite guest</button></section>}{isHost && bundle.stay.status !== "ended" && <button className="button danger-outline" type="button" onClick={() => void endStay({ stayId }).then(() => notify("Stay ended. The record is retained."))}>End this stay</button>}</>}
+    {screen === "home" && <div key="home" className="screen-transition"><div className="page-heading dashboard-heading"><div><p className="eyebrow">Shared and current</p><h1>Here&apos;s the household at a glance.</h1></div><button className="button soft desktop-action" type="button" onClick={() => setPanel("contribution")} disabled={!financialGuestId}><Plus size={18} /> Add contribution</button></div><article className="stay-card"><div><p className="overline">Current stay</p><h2>{members.map((item) => item.person.name).join(" + ")}</h2><p className="muted">{terms ? `${formatDate(terms.startDate)} to ${formatDate(terms.endDate)}` : "Terms pending"}</p></div><span className="status-pill">{bundle.stay.status}</span><div className="progress-block"><div className="progress-copy"><span>Terms version {terms?.version ?? 1}</span><strong>{members.length} members</strong></div><div className="progress-track"><span style={{ width: `${Math.min(100, 40 + members.length * 15)}%` }} /></div></div></article>{isHost && guestMembers.length > 0 && <GuestTabs guests={guestMembers} selected={financialGuestId} onSelect={setSelectedGuestId} />}<div className="metric-grid"><article className="metric-card balance-card"><p className="overline">{ledgerLabel}</p><p className="metric">{formatMoney(balance)}</p><p className="muted">{formatMoney(credits)} confirmed toward {formatMoney(charge)}</p><button className="text-button" type="button" onClick={() => setScreen("contributions")}>View breakdown</button></article><article className="metric-card"><p className="overline">Chores</p><p className="metric">{openChores.length} <small>open</small></p><p className="muted">{openChores[0]?.title ?? "Nothing hanging over anyone."}</p><button className="text-button" type="button" onClick={() => setScreen("chores")}>See chore board</button></article><article className="metric-card"><p className="overline">Next check-in</p><p className="metric date-metric">{bundle.stay.nextCheckInDate ? formatDate(bundle.stay.nextCheckInDate) : "Not set"}</p><p className="muted">Email and SMS follow your reminder settings.</p></article></div><HouseholdLogisticsCard houseInfo={bundle.stay.houseInfo} isHost={isHost} onEdit={() => setPanel("houseInfo")} onNotify={notify} /><section className="section-block"><div className="section-heading"><div><p className="eyebrow">House notes</p><h2>Announcements</h2></div>{isHost && <button className="mini-button" type="button" onClick={() => setPanel("announcement")}><Megaphone size={16} /> Add</button>}</div><div className="activity-list">{announcements.map((item) => <article className="list-row" key={item._id}><span className="list-icon"><Megaphone size={19} /></span><div className="list-copy"><strong>{item.title}</strong><span>{item.body}</span></div></article>)}{announcements.length === 0 && <p className="muted">No announcements yet.</p>}</div></section><section className="section-block"><div className="section-heading"><div><p className="eyebrow">Shared record</p><h2>Recent activity</h2></div></div><div className="activity-list">{recent.map((item) => <article className="list-row" key={item._id}><span className="list-icon"><ReceiptText size={19} /></span><div className="list-copy"><strong>{item.action.replaceAll("_", " ")}</strong><span>{item.detail}</span></div><div className="list-value"><small>{new Date(item.createdAt).toLocaleDateString()}</small></div></article>)}</div></section></div>}
+    {screen === "contributions" && <div key="contributions" className="screen-transition"><div className="page-heading"><div><p className="eyebrow">Private by guest</p><h1>{ledgerLabel}</h1><p className="subhead">Guests can never query another guest&apos;s rates, charges, balance, or payments.</p></div><div className="heading-actions"><button className="button primary" type="button" onClick={() => setPanel("contribution")} disabled={!financialGuestId}><Plus size={18} /> Add contribution</button>{isHost && <button className="button soft" type="button" onClick={() => setPanel("adhoc")} disabled={!financialGuestId}><ReceiptText size={18} /> Add charge</button>}</div></div>{isHost && guestMembers.length > 0 && <GuestTabs guests={guestMembers} selected={financialGuestId} onSelect={setSelectedGuestId} />}<div className="coming-soon-card" style={{ margin: "0.5rem 0 1.25rem 0", padding: "1.1rem 1.25rem" }}><div className="coming-soon-header"><div className="coming-soon-icon"><Landmark size={20} /></div><div><div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}><strong>In-App Payments & Direct Bank Payouts</strong><span className="coming-soon-badge">Coming Soon</span></div><p style={{ margin: "0.25rem 0 0", fontSize: "0.85rem", color: "var(--muted, #616e64)" }}>Direct card checkout, Apple Pay, and automated host bank deposits are on our active roadmap. For now, log contributions below to maintain your transparent, verified ledger.</p></div></div></div><div className="summary-strip"><div className="summary-item"><span>Total charges</span><strong>{formatMoney(charge)}</strong></div><div className="summary-item"><span>Confirmed credit</span><strong>{formatMoney(credits)}</strong></div><div className="summary-item"><span>Balance</span><strong>{formatMoney(balance)}</strong></div></div><section className="section-block"><div className="section-heading"><div><p className="eyebrow">FIFO allocation</p><h2>Oldest charges are paid first</h2></div></div><div className="ledger-list">{obligations.map((item, index) => <article className="list-row contribution-row" key={item._id}><span className="list-icon"><ReceiptText size={19} /></span><div className="list-copy"><strong>{item.title ?? `Period ${index + 1}`} · due {formatDate(item.dueDate)}</strong><span>{formatMoney(item.baseAmountCents)} base{item.earlyDiscountCents ? ` · ${formatMoney(-item.earlyDiscountCents)} early discount` : ""}{item.lateFeeCents ? ` · ${formatMoney(item.lateFeeCents)} across ${item.lateFeeOccurrences} late-fee cycle${item.lateFeeOccurrences === 1 ? "" : "s"}` : ""}{item.lateFeeWaived ? " · fee waived" : ""}</span></div><div className="list-value">{formatMoney(item.balanceCents)}<small>{item.status}</small></div>{isHost && <div className="row-actions">{item.lateFeeCents > 0 && !item.lateFeeWaived && <button className="mini-button" type="button" onClick={() => void waiveLateFee({ obligationId: item._id }).then(() => notify("Late fee waived and audited."))}>Waive fee</button>}{item.type === "adhoc" && <button className="mini-button danger" type="button" onClick={() => void voidAdhocCharge({ obligationId: item._id }).then(() => notify("Charge voided; history retained."))}>Void</button>}</div>}</article>)}{obligations.length === 0 && <p className="muted">Choose a guest, then activate terms or add a one-off charge.</p>}</div></section><RewardsHub stayId={stayId} isHost={isHost} selectedGuestId={financialGuestId} currentBalanceCents={balance} onNotify={notify} /><section className="section-block"><div className="section-heading"><div><p className="eyebrow">Transactions</p><h2>Contribution entries</h2></div></div><div className="ledger-list">{activeContributions.map((item) => <article className="list-row contribution-row" key={item._id}><span className="list-icon payment"><Landmark size={19} /></span><div className="list-copy"><strong>{item.type.replaceAll("_", " ")}</strong><span>{item.note || "No note"} · {item.status}</span></div><div className="list-value">{formatMoney(item.amountCents)}<small>{formatDate(item.date)}</small></div>{item.status === "pending" && item.createdBy !== bundle.membership.userId && <div className="row-actions"><button className="mini-button" type="button" onClick={() => void confirmContribution({ contributionId: item._id })}>Confirm</button></div>}</article>)}</div></section></div>}
+    {screen === "chores" && <div key="chores" className="screen-transition"><div className="page-heading"><div><p className="eyebrow">Shared across the house</p><h1>Chore board</h1><p className="subhead">Household coordination stays shared while financial records stay private.</p></div><button className="button primary" type="button" onClick={() => setPanel("chore")}><Plus size={18} /> Add chore</button></div><div className="chore-list">{chores.filter((item) => !item.voidedAt).map((item) => <article className={`list-row chore-row ${item.completedAt ? "done" : ""}`} key={item._id}><button className={`chore-check ${item.completedAt ? "checked" : ""}`} type="button" onClick={() => void toggleChore({ choreId: item._id })} aria-label={`${item.completedAt ? "Reopen" : "Complete"} ${item.title}`}>{item.completedAt && <Check size={18} />}</button><div className="list-copy"><strong>{item.title}</strong><span>{item.note || `Due ${formatDate(item.dueDate)}`}</span><span className="badge">{item.assigneeUserId ? members.find((member) => member.person.id === item.assigneeUserId)?.person.name ?? "Guest" : item.assignee}</span></div></article>)}</div></div>}
+    {screen === "stay" && <div key="stay" className="screen-transition"><div className="page-heading"><div><p className="eyebrow">The agreement</p><h1>Stay details</h1><p className="subhead">Everyone sees shared expectations; guest finances remain scoped on the server.</p></div>{!hasAccepted && <button className="button primary" type="button" onClick={() => setGuestOnboardingOpen(true)}>Review & accept agreement</button>}</div><div className="agreement-callout"><div><Users size={22} /><div><strong>Terms version {terms?.version ?? 1}</strong><span>{bundle.stay.status === "active" ? "Accepted and active" : "Waiting for current acceptances"}</span></div></div><span className="accepted-pill">{bundle.stay.status}</span></div>{terms && <div className="details-grid"><article className="details-card" style={{ gridColumn: "1 / -1", background: "#f8fbf9", border: "1px dashed var(--green, #184f3a)" }}><div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.75rem" }}><div><p className="overline" style={{ margin: 0 }}>Household Referral Code</p><strong style={{ fontSize: "1.3rem", letterSpacing: "1.5px", color: "var(--green, #184f3a)" }}>{bundle.stay.referralCode ?? "KCH-SHARED"}</strong><p className="muted" style={{ margin: "3px 0 0", fontSize: "0.8rem" }}>Members can join this stay directly by entering this code on Kouchd.</p></div><button className="button soft compact" type="button" onClick={() => { void navigator.clipboard.writeText(bundle.stay.referralCode ?? ""); notify("Referral code copied!"); }}><Copy size={15} /> Copy code</button></div></article><article className="details-card"><p className="overline">Dates</p><p>{formatDate(terms.startDate)} to {formatDate(terms.endDate)}</p></article><article className="details-card"><p className="overline">Contribution plan</p><p>{formatMoney(terms.rateCents)} per {terms.cadence === "weekly" ? "week" : "day"}</p></article><article className="details-card"><p className="overline">Early rule</p><p>{terms.earlyDiscountEnabled ?? terms.earlyDiscountPercentage > 0 ? `${terms.earlyDiscountPercentage}% off when complete ${terms.earlyDiscountDays} days early` : "Off"}</p></article><article className="details-card"><p className="overline">Late rule</p><p>{terms.lateFeeEnabled ?? terms.lateFeeCents > 0 ? `${formatMoney(terms.lateFeeCents)} weekly after ${terms.graceDays} grace days` : "Off"}</p></article></div>}<HouseholdLogisticsCard houseInfo={bundle.stay.houseInfo} isHost={isHost} onEdit={() => setPanel("houseInfo")} onNotify={notify} />        {terms?.houseRules && terms.houseRules.length > 0 ? (
+          <section className="section-block">
+            <div className="section-heading">
+              <div>
+                <p className="eyebrow">Living Guidelines</p>
+                <h2>House Rules ({terms.houseRules.length})</h2>
+              </div>
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+              {terms.houseRules.map((rule: { id: string; title: string; description: string }, i: number) => (
+                <article className="list-row" key={rule.id}>
+                  <span style={{ fontWeight: 800, color: "var(--green, #184f3a)", width: 24 }}>{i + 1}.</span>
+                  <div className="list-copy">
+                    <strong>{rule.title}</strong>
+                    <span>{rule.description}</span>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+        ) : (
+          <article className="boundary-card">
+            <p className="overline">Shared expectations</p>
+            <h2>Clear beats assumed.</h2>
+            <p className="notes-copy">{terms?.houseNotes || "Standard household expectations apply."}</p>
+          </article>
+        )}
+        {terms?.houseRules && terms.houseRules.length > 0 && terms.houseNotes && !terms.houseRules.every((r: { title: string }) => terms.houseNotes.includes(r.title)) && (
+          <article className="boundary-card">
+            <p className="overline">Additional notes</p>
+            <h2>Clear beats assumed.</h2>
+            <p className="notes-copy">{terms.houseNotes}</p>
+          </article>
+        )}{isHost && <section className="invite-card"><div><p className="eyebrow">Grow the household</p><h2>Invite members.</h2><p className="muted">Share your household referral code or generate a private one-week invite link.</p></div><button className="button primary" type="button" onClick={() => { setInviteUrl(""); setPanel("invite"); }}>Invite guest</button></section>}{isHost && bundle.stay.status !== "ended" && <button className="button danger-outline" type="button" onClick={() => void endStay({ stayId }).then(() => notify("Stay ended. The record is retained."))}>End this stay</button>}</div>}
   </main><nav className="bottom-nav" aria-label="Primary navigation">{([{ id: "home", label: "Home", icon: Home }, { id: "contributions", label: "Ledger", icon: Landmark }, { id: "chores", label: "Chores", icon: ClipboardList }, { id: "stay", label: "Stay", icon: Users }] as const).map((item) => <button className={`nav-item ${screen === item.id ? "active" : ""}`} type="button" key={item.id} onClick={() => setScreen(item.id)}><item.icon size={20} /><span>{item.label}</span></button>)}</nav>
   {panel && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setPanel(null); }}><section className="modal-card" role="dialog" aria-modal="true"><div className="dialog-heading"><div><p className="eyebrow">Kouchd</p><h2>{panelTitle(panel)}</h2></div><button className="icon-button compact" type="button" onClick={() => setPanel(null)} aria-label="Close">×</button></div>
-    {panel === "contribution" && <form onSubmit={addContribution}><div className="form-grid"><label><span>Type</span><select name="type"><option value="payment">Payment</option><option value="groceries">Groceries</option><option value="supplies">Supplies</option><option value="house_work">House work</option><option value="other">Other</option></select></label><label><span>Value</span><div className="money-input"><span>$</span><input name="amount" type="number" min="0.01" step="0.01" required /></div></label><label><span>Transaction date</span><input name="date" type="date" defaultValue={asOfDate ?? undefined} required /></label><label className="full"><span>Note</span><input name="note" placeholder="Backdated payments are supported" /></label><label className="check full"><input name="counts" type="checkbox" defaultChecked /><span>Count toward this guest&apos;s balance</span></label></div><ModalActions close={() => setPanel(null)} action="Add contribution" /></form>}
-    {panel === "adhoc" && <form onSubmit={addCharge}><div className="form-grid"><label className="full"><span>Charge title</span><input name="title" required placeholder="August electric split" /></label><label><span>Amount</span><div className="money-input"><span>$</span><input name="amount" type="number" min="0.01" step="0.01" required /></div></label><label><span>Effective date</span><input name="effectiveDate" type="date" defaultValue={asOfDate ?? undefined} required /></label><label><span>Due date</span><input name="dueDate" type="date" defaultValue={asOfDate ?? undefined} required /></label></div><ModalActions close={() => setPanel(null)} action="Add charge" /></form>}
-    {panel === "chore" && <form onSubmit={addChore}><div className="form-grid"><label className="full"><span>Chore</span><input name="title" required /></label><label><span>Assigned to</span><select name="assigneeUserId"><option value="">Everyone</option>{members.map((member) => <option value={member.person.id} key={member.person.id}>{member.person.name}</option>)}</select></label><label><span>Due date</span><input name="dueDate" type="date" defaultValue={asOfDate ? addCalendarDays(asOfDate, 2) : undefined} required /></label><label className="full"><span>Details</span><input name="note" /></label></div><ModalActions close={() => setPanel(null)} action="Add chore" /></form>}
-    {panel === "announcement" && <form onSubmit={addAnnouncement}><div className="form-grid"><label className="full"><span>Title</span><input name="title" required /></label><label className="full"><span>Announcement</span><textarea name="body" rows={4} required /></label><label><span>Pin until</span><input name="pinnedUntil" type="date" /></label></div><ModalActions close={() => setPanel(null)} action="Share announcement" /></form>}
-    {panel === "settings" && <form onSubmit={savePreferences}><div className="settings-summary"><Bell size={22} /><div><strong>Reminder delivery</strong><span>Knock routes enabled channels from one preference set.</span></div></div><div className="form-grid settings-fields"><label className="full"><span>Mobile number for SMS</span><input name="phone" type="tel" defaultValue={viewer.phone} placeholder="+15551234567" /></label><label className="check full"><input name="notifyEmail" type="checkbox" defaultChecked={viewer.notifyEmail} /><span>Email reminders</span></label><label className="check full"><input name="notifySms" type="checkbox" defaultChecked={viewer.notifySms} /><span>SMS reminders</span></label></div><ModalActions close={() => setPanel(null)} action="Save preferences" /></form>}
-    {panel === "invite" && <><div style={{ border: "1px dashed var(--line)", borderRadius: "12px", padding: "1rem", background: "#faf8f5", marginBottom: "1rem" }}><span style={{ fontSize: "0.75rem", textTransform: "uppercase", color: "var(--muted)", fontWeight: 700 }}>Household Referral Code</span><div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "0.25rem" }}><strong style={{ fontSize: "1.2rem", letterSpacing: "1px", color: "var(--green)" }}>{bundle.stay.referralCode ?? "KCH-SHARED"}</strong><button className="button soft compact" type="button" onClick={() => { void navigator.clipboard.writeText(bundle.stay.referralCode ?? ""); notify("Referral code copied!"); }}><Copy size={15} /> Copy Code</button></div></div>{inviteUrl ? <div className="invite-output"><input readOnly value={inviteUrl} aria-label="Guest invitation link" /><button className="button soft" type="button" onClick={() => void navigator.clipboard.writeText(inviteUrl)}><Copy size={17} /> Copy</button></div> : <form onSubmit={makeInvite}><div className="form-grid"><label className="full"><span>Guest email (optional)</span><input name="email" type="email" placeholder="guest@example.com" /></label></div><p className="muted modal-note">Or share the Referral Code above. Kouchd supports up to 20 active members.</p><ModalActions close={() => setPanel(null)} action="Create invite" /></form>}</>}
+    {panel === "contribution" && <form onSubmit={addContribution}><div className="form-grid"><label><span>Type</span><select name="type"><option value="payment">Payment</option><option value="groceries">Groceries</option><option value="supplies">Supplies</option><option value="house_work">House work</option><option value="other">Other</option></select></label><label><span>Value</span><div className="money-input"><span>$</span><input name="amount" type="number" min="0.01" step="0.01" required /></div></label><label><span>Transaction date</span><input name="date" type="date" defaultValue={asOfDate ?? undefined} required /></label><label className="full"><span>Note</span><input name="note" placeholder="Backdated payments are supported" /></label><label className="check full"><input name="counts" type="checkbox" defaultChecked /><span>Count toward this guest&apos;s balance</span></label></div><ModalActions close={() => setPanel(null)} action="Add contribution" submitting={isSubmittingModal} /></form>}
+    {panel === "adhoc" && <form onSubmit={addCharge}><div className="form-grid"><label className="full"><span>Charge title</span><input name="title" required placeholder="August electric split" /></label><label><span>Amount</span><div className="money-input"><span>$</span><input name="amount" type="number" min="0.01" step="0.01" required /></div></label><label><span>Effective date</span><input name="effectiveDate" type="date" defaultValue={asOfDate ?? undefined} required /></label><label><span>Due date</span><input name="dueDate" type="date" defaultValue={asOfDate ?? undefined} required /></label></div><ModalActions close={() => setPanel(null)} action="Add charge" submitting={isSubmittingModal} /></form>}
+    {panel === "chore" && <form onSubmit={addChore}><div className="form-grid"><label className="full"><span>Chore</span><input name="title" required /></label><label><span>Assigned to</span><select name="assigneeUserId"><option value="">Everyone</option>{members.map((member) => <option value={member.person.id} key={member.person.id}>{member.person.name}</option>)}</select></label><label><span>Due date</span><input name="dueDate" type="date" defaultValue={asOfDate ? addCalendarDays(asOfDate, 2) : undefined} required /></label><label className="full"><span>Details</span><input name="note" /></label></div><ModalActions close={() => setPanel(null)} action="Add chore" submitting={isSubmittingModal} /></form>}
+    {panel === "announcement" && <form onSubmit={addAnnouncement}><div className="form-grid"><label className="full"><span>Title</span><input name="title" required /></label><label className="full"><span>Announcement</span><textarea name="body" rows={4} required /></label><label><span>Pin until</span><input name="pinnedUntil" type="date" /></label></div><ModalActions close={() => setPanel(null)} action="Share announcement" submitting={isSubmittingModal} /></form>}
+    {panel === "settings" && <form onSubmit={savePreferences}><div className="settings-summary"><Bell size={22} /><div><strong>Reminder delivery</strong><span>Knock routes enabled channels from one preference set.</span></div></div><div className="form-grid settings-fields"><label className="full"><span>Mobile number for SMS</span><input name="phone" type="tel" defaultValue={viewer.phone} placeholder="+15551234567" /></label><label className="check full"><input name="notifyEmail" type="checkbox" defaultChecked={viewer.notifyEmail} /><span>Email reminders</span></label><label className="check full"><input name="notifySms" type="checkbox" defaultChecked={viewer.notifySms} /><span>SMS reminders (Wrelik Brands LLC &middot; Kouchd)</span></label></div><div style={{ margin: "0.85rem 0", padding: "0.85rem", background: "#faf8f5", borderRadius: "10px", border: "1px solid var(--line)", fontSize: "0.78rem", color: "var(--muted)", lineHeight: 1.5 }}><p style={{ margin: "0 0 0.35rem" }}>By enabling SMS reminders, you agree to receive transactional text messages from <strong>Wrelik Brands LLC</strong> (operating <strong>Kouchd</strong>). <strong>Message and data rates may apply.</strong> Message frequency varies. Text STOP to cancel, HELP for help.</p><p style={{ margin: "0 0 0.35rem" }}>We do not sell or share your SMS opt-in data or personal information with third parties for marketing purposes.</p><p style={{ margin: 0 }}><Link href="/terms" target="_blank" style={{ color: "var(--green)", fontWeight: 700, textDecoration: "underline" }}>Terms &amp; Conditions</Link> &middot; <Link href="/privacy" target="_blank" style={{ color: "var(--green)", fontWeight: 700, textDecoration: "underline" }}>Privacy Policy</Link> &middot; <Link href="/sms-opt-in" target="_blank" style={{ color: "var(--green)", fontWeight: 700, textDecoration: "underline" }}>SMS Terms Details</Link></p></div><ModalActions close={() => setPanel(null)} action="Save preferences" submitting={isSubmittingModal} /></form>}
+    {panel === "houseInfo" && <HouseInfoForm initialInfo={bundle.stay.houseInfo} onSubmit={saveHouseInfo} onCancel={() => setPanel(null)} />}
+    {panel === "invite" && <><div style={{ border: "1px dashed var(--line)", borderRadius: "12px", padding: "1rem", background: "#faf8f5", marginBottom: "1rem" }}><span style={{ fontSize: "0.75rem", textTransform: "uppercase", color: "var(--muted)", fontWeight: 700 }}>Household Referral Code</span><div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "0.25rem" }}><strong style={{ fontSize: "1.2rem", letterSpacing: "1px", color: "var(--green)" }}>{bundle.stay.referralCode ?? "KCH-SHARED"}</strong><button className="button soft compact" type="button" onClick={() => { void navigator.clipboard.writeText(bundle.stay.referralCode ?? ""); notify("Referral code copied!"); }}><Copy size={15} /> Copy Code</button></div></div>{inviteUrl ? <div className="invite-output"><input readOnly value={inviteUrl} aria-label="Guest invitation link" /><button className="button soft" type="button" onClick={() => void navigator.clipboard.writeText(inviteUrl)}><Copy size={17} /> Copy</button></div> : <form onSubmit={makeInvite}><div className="form-grid"><label className="full"><span>Guest email (optional)</span><input name="email" type="email" placeholder="guest@example.com" /></label></div><p className="muted modal-note">Or share the Referral Code above. Kouchd supports up to 20 active members.</p><ModalActions close={() => setPanel(null)} action="Create invite" submitting={isSubmittingModal} /></form>}</>}
   </section></div>}
   {guestOnboardingOpen && (
     <div className="modal-backdrop" role="presentation" onMouseDown={(e) => { if (e.target === e.currentTarget) setGuestOnboardingOpen(false); }}>
@@ -306,10 +431,26 @@ function GuestTabs({ guests, selected, onSelect }: { guests: Member[]; selected?
   return <div className="guest-tabs" aria-label="Choose a guest ledger">{guests.map((guest) => <button className={selected === guest.person.id ? "active" : ""} type="button" key={guest.person.id} onClick={() => onSelect(guest.person.id)}>{guest.person.name}</button>)}</div>;
 }
 
-function ModalActions({ close, action }: { close: () => void; action: string }) {
-  return <div className="dialog-actions"><button className="button ghost" type="button" onClick={close}>Cancel</button><button className="button primary" type="submit">{action}</button></div>;
+function ModalActions({ close, action, submitting }: { close: () => void; action: string; submitting?: boolean }) {
+  return (
+    <div className="dialog-actions">
+      <button className="button ghost" type="button" onClick={close} disabled={submitting}>Cancel</button>
+      <button className="button primary" type="submit" disabled={submitting}>
+        {submitting ? "Saving..." : action}
+      </button>
+    </div>
+  );
 }
 
 function panelTitle(panel: Exclude<Panel, null>) {
-  return ({ contribution: "New contribution", chore: "Add a chore", adhoc: "Add one-off charge", announcement: "New announcement", settings: "Reminder settings", invite: "Invite a guest" })[panel];
+  return ({
+    contribution: "New contribution",
+    chore: "Add a chore",
+    adhoc: "Add one-off charge",
+    announcement: "New announcement",
+    settings: "Reminder settings",
+    invite: "Invite a guest",
+    houseInfo: "Household Guide & Essentials",
+  })[panel];
 }
+

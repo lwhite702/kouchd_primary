@@ -199,4 +199,40 @@ describe("shared stay authorization and audit rules", () => {
     const viewer = await user.query(api.users.viewer, {});
     expect(viewer).toMatchObject({ phone: "+15551234567", notifyEmail: true, notifySms: true });
   });
+
+  it("manages household logistics and WiFi info with host authorization", async () => {
+    const t = convexTest(schema, modules);
+    const host = await createUser(t, "host-wifi", "Lee");
+    const guest = await createUser(t, "guest-wifi", "Marcus");
+    const stayId = await host.mutation(api.stays.create, { timezone: "America/New_York", terms: firstTerms });
+    const tokenHash = "c".repeat(64);
+    await host.mutation(api.invites.create, { stayId, tokenHash, expiresAt: Date.now() + 86_400_000 });
+    await guest.mutation(api.invites.accept, { tokenHash });
+
+    const houseInfo = {
+      wifiNetwork: "Kouchd-5G",
+      wifiPassword: "GuestPassword123!",
+      streetAddress: "123 Elm St",
+      unit: "Apt 4B",
+      cityStateZip: "Austin, TX 78701",
+      doorCode: "#4321",
+      parkingNotes: "Spot 12 behind building, permit hanging on fridge",
+      trashDay: "Tuesday mornings (bins out Monday night)",
+      emergencyContact: "Building Super Joe: (555) 019-2834",
+      otherNotes: "Thermostat is set automatically; please keep kitchen counters wiped.",
+    };
+
+    // Guest cannot update house info
+    await expect(guest.mutation(api.stays.updateHouseInfo, { stayId, houseInfo })).rejects.toThrow("Host access required");
+
+    // Host updates house info
+    await host.mutation(api.stays.updateHouseInfo, { stayId, houseInfo });
+
+    // Both host and guest can read the house info via stay bundle
+    const hostBundle = await host.query(api.stays.getBundle, { stayId });
+    expect(hostBundle.stay.houseInfo).toMatchObject(houseInfo);
+
+    const guestBundle = await guest.query(api.stays.getBundle, { stayId });
+    expect(guestBundle.stay.houseInfo).toMatchObject(houseInfo);
+  });
 });
