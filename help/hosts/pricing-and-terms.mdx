@@ -1,31 +1,31 @@
 ---
-title: Pricing, Cadence & Terms
-description: How Kouchd calculates obligations, early discounts, and late fees.
+title: Pricing, Timing & Terms
+description: How Kouchd helps you set reasonable rates, discounts, and keep track of credits.
 ---
 
-## Financial Mechanics
+## How the Money Tab Works
 
-Kouchd calculates all ledger items deterministically down to the exact cent using integer arithmetic.
+Kouchd keeps the math simple, fair, and clear down to the exact penny.
 
-### Cadence
-- **Weekly**: Obligations are generated for 7-day intervals starting from your stay's start date.
-- **Daily**: Obligations are generated per 24-hour cycle.
+### Timing
+- **Weekly**: Stays are split into simple 7-day intervals starting from move-in day.
+- **Daily**: Or you can set a simple per-day rate.
 
 ### Early Discounts
-To encourage timely contributions, you can configure an early discount:
-- **Example**: A weekly rate of $200.00 with a 10% discount if paid 2 days early.
-- If the obligation is due on September 8th, paying on or before September 6th reduces the effective charge to $180.00.
-- The discount is evaluated once per obligation based on the date the full balance or payment is initiated.
+Want to encourage your guest to chip in ahead of time? You can set up an optional early discount:
+- **Example**: A weekly share of $200.00 with 10% off if paid 2 days early.
+- If the week's share is due on Friday, sending it by Wednesday drops it to $180.00.
 
-### Late Fees & Grace Periods
-- **Grace Period**: Number of days after the due date before late fees apply (e.g. 2 grace days).
-- **Late Fee**: A flat dollar amount (e.g. $25.00) added to overdue obligations.
-- **Host Waiver**: Hosts always retain the ability to waive a late fee with a single tap if circumstances warrant flexibility.
+### Late Fees & Grace Days
+- **Grace Period**: Give your guest a couple of days leeway before a late reminder kicks in (e.g., 2 grace days).
+- **Late Fee**: A small flat amount (like $20) added if a payment is overdue.
+- **Host Flexibility**: Hosts can waive or remove a late fee anytime with one tap if something came up or you worked it out together.
 
-### Contribution Rewards Credits
-Hosts can optionally incentivize household contributions by enabling **Contribution Rewards**:
-- Set a custom coin name (e.g. *Kouchd Coins* or *Roomie Points*).
-- Define the cash conversion rate (e.g. 100 coins = $1.00 credit).
-- Set an optional maximum credit limit per period (e.g. $50.00/month maximum).
-- When a guest redeems approved points, Kouchd issues an audited credit that reduces the guest's oldest outstanding obligation in the ledger via FIFO.
+### Earning Credits with Household Help
+Hosts can also reward guests for pitching in around the house with **Contribution Rewards**:
+- Pick a fun name for your points (like *Kouchd Coins* or *House Points*).
+- Choose what points are worth (for instance, 100 points = $1.00 credit).
+- Set an optional monthly limit on how much can be earned.
+- When points are redeemed, Kouchd automatically applies the credit toward the oldest unpaid share on the tab.
+
 
