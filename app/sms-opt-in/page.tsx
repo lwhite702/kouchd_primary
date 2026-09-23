@@ -9,6 +9,10 @@ export const metadata: Metadata = {
 };
 
 export default function SmsOptInPage() {
+  const servicesConfigured = Boolean(
+    process.env.NEXT_PUBLIC_CONVEX_URL && process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
+  );
+
   return (
     <LegalPageLayout activeRoute="sms-opt-in">
       <div style={{ borderBottom: "1px solid var(--kouchd-line, #ded8ce)", paddingBottom: "1.25rem", marginBottom: "1.75rem" }}>
@@ -40,7 +44,11 @@ export default function SmsOptInPage() {
         </p>
       </div>
 
-      <SmsOptInForm />
+      {servicesConfigured ? (
+        <SmsOptInForm />
+      ) : (
+        <p role="status">Account and notification services are not connected yet. SMS enrollment is unavailable.</p>
+      )}
     </LegalPageLayout>
   );
 }

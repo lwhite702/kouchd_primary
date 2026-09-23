@@ -304,7 +304,15 @@ function LiveStay({ stayId }: { stayId: Id<"stays"> }) {
     event.preventDefault(); const form = new FormData(event.currentTarget);
     setIsSubmittingModal(true);
     try {
-      await updatePreferences({ phone: value(form, "phone") || undefined, notifyEmail: form.get("notifyEmail") === "on", notifySms: form.get("notifySms") === "on" });
+      const phone = value(form, "phone") || undefined;
+      const notifySms = form.get("notifySms") === "on";
+      await updatePreferences({
+        phone,
+        notifyEmail: form.get("notifyEmail") === "on",
+        notifySms,
+        smsConsentSource: "settings",
+        smsConsentConfirmed: notifySms && (!viewer?.notifySms || phone !== viewer?.phone),
+      });
       setPanel(null); notify("Reminder preferences saved.");
     } finally {
       setIsSubmittingModal(false);
@@ -453,4 +461,3 @@ function panelTitle(panel: Exclude<Panel, null>) {
     houseInfo: "Household Guide & Essentials",
   })[panel];
 }
-

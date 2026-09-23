@@ -123,6 +123,8 @@ export function HostOnboardingWizard({
           phone: formatted,
           notifyEmail: viewer?.notifyEmail ?? true,
           notifySms: true,
+          smsConsentSource: "host_onboarding",
+          smsConsentConfirmed: true,
         });
       }
 

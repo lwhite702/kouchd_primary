@@ -53,4 +53,4 @@ The intended targets are:
 
 Production and Preview must use different Convex deployments and deploy keys. Never commit `.env.local`, Clerk secrets, or Convex deploy keys.
 
-Set `KNOCK_API_KEY` in each Convex deployment (not in browser or Vercel client variables), then create these Knock workflow keys: `guest-invitation`, `check-in-reminder`, `payment-due-reminder`, `chore-reminder`, and `adhoc-fee-posted`. Without the key, notification actions intentionally return `skipped` and do not mark a notification as sent.
+Set `KNOCK_API_KEY` in each Convex deployment (not in browser or Vercel client variables), then configure the five workflow keys and payload contracts in [docs/NOTIFICATIONS.md](docs/NOTIFICATIONS.md). Development and Production need separate secrets and verified workflows. Without the key, notification actions intentionally return `skipped` and do not mark a notification as sent.

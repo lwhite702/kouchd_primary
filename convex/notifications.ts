@@ -1,5 +1,7 @@
 import { v } from "convex/values";
 
+import { calculateObligationLedger } from "../lib/domain/obligations";
+import { addCalendarDays, calendarDateInTimezone } from "../lib/domain/dates";
 import type { Id } from "./_generated/dataModel";
 import { internalMutation, internalQuery } from "./_generated/server";
 
@@ -53,9 +55,9 @@ export const recordSent = internalMutation({
 });
 
 export const reminderCandidates = internalQuery({
-  args: { targetDate: v.string(), choreDate: v.string() },
+  args: { now: v.number() },
   returns: v.array(v.any()),
-  handler: async (ctx, { targetDate, choreDate }) => {
+  handler: async (ctx, { now }) => {
     const candidates: Array<{
       userId: Id<"users">;
       stayId: Id<"stays">;
@@ -63,9 +65,17 @@ export const reminderCandidates = internalQuery({
       entityId: string;
       data: Record<string, unknown>;
     }> = [];
+    const utcToday = calendarDateInTimezone(new Date(now), "UTC");
+    const minDate = addCalendarDays(utcToday, -1);
+    const maxDate = addCalendarDays(utcToday, 2);
 
-    const stays = await ctx.db.query("stays").withIndex("by_next_check_in_date", (query) => query.eq("nextCheckInDate", targetDate)).take(100);
+    const stays = await ctx.db.query("stays").withIndex("by_next_check_in_date", (query) =>
+      query.gte("nextCheckInDate", minDate).lte("nextCheckInDate", maxDate),
+    ).take(500);
     for (const stay of stays) {
+      const localToday = calendarDateInTimezone(new Date(now), stay.timezone);
+      const localTomorrow = addCalendarDays(localToday, 1);
+      if (stay.status === "ended" || stay.nextCheckInDate !== localTomorrow) continue;
       const members = await ctx.db.query("memberships").withIndex("by_stay", (query) => query.eq("stayId", stay._id)).take(20);
       const host = members.find((member) => member.role === "host");
       const hostUser = host ? await ctx.db.get(host.userId) : null;
@@ -74,33 +84,88 @@ export const reminderCandidates = internalQuery({
           userId: member.userId,
           stayId: stay._id,
           workflow: "check-in-reminder",
-          entityId: `check-in:${stay._id}:${targetDate}`,
-          data: { stayName: "Shared stay", hostName: hostUser?.name ?? "Your host", checkInDate: targetDate },
+          entityId: `check-in:${stay._id}:${localTomorrow}`,
+          data: { stayName: "Shared stay", hostName: hostUser?.name ?? "Your host", checkInDate: localTomorrow },
         });
       }
     }
 
-    const obligations = await ctx.db.query("obligations").withIndex("by_due_date", (query) => query.eq("dueDate", targetDate)).take(200);
+    const obligations = await ctx.db.query("obligations").withIndex("by_due_date", (query) =>
+      query.gte("dueDate", minDate).lte("dueDate", maxDate),
+    ).take(1_000);
+    const ledgersByGuest = new Map<string, ReturnType<typeof calculateObligationLedger>>();
     for (const obligation of obligations) {
-      if (!obligation.guestUserId || obligation.voidedAt) continue;
+      const guestUserId = obligation.guestUserId;
+      if (!guestUserId || obligation.voidedAt) continue;
+      const stay = await ctx.db.get(obligation.stayId);
+      if (!stay || stay.status === "ended") continue;
+      const localTomorrow = addCalendarDays(calendarDateInTimezone(new Date(now), stay.timezone), 1);
+      if (obligation.dueDate !== localTomorrow) continue;
+      const terms = stay?.currentTermsId ? await ctx.db.get(stay.currentTermsId) : null;
+      if (!terms) continue;
+      const membership = await ctx.db.query("memberships")
+        .withIndex("by_stay_user", (query) => query.eq("stayId", obligation.stayId).eq("userId", guestUserId))
+        .unique();
+      if (!membership || membership.status !== "active") continue;
+
+      const guestKey = `${obligation.stayId}:${obligation.guestUserId}`;
+      let ledger = ledgersByGuest.get(guestKey);
+      if (!ledger) {
+        const [guestObligations, contributions] = await Promise.all([
+          ctx.db.query("obligations")
+            .withIndex("by_stay_and_guest", (query) => query.eq("stayId", obligation.stayId).eq("guestUserId", guestUserId))
+            .take(1_000),
+          ctx.db.query("contributions")
+            .withIndex("by_stay_guest_and_date", (query) => query.eq("stayId", obligation.stayId).eq("guestUserId", guestUserId))
+            .order("asc")
+            .take(5_000),
+        ]);
+        ledger = calculateObligationLedger({
+          obligations: guestObligations.map((item) => ({
+            _id: item._id,
+            periodStart: item.periodStart,
+            periodEnd: item.periodEnd,
+            dueDate: item.dueDate,
+            baseAmountCents: item.baseAmountCents,
+            type: item.type ?? "cadence",
+            title: item.title,
+            lateFeeWaived: Boolean(item.lateFeeWaivedAt),
+            voided: Boolean(item.voidedAt),
+          })),
+          contributions: contributions
+            .filter((entry) => entry.status === "confirmed" && entry.countsTowardBalance)
+            .map((entry) => ({ amountCents: entry.amountCents, date: entry.date })),
+          asOfDate: localTomorrow,
+          terms,
+        });
+        ledgersByGuest.set(guestKey, ledger);
+      }
+      const ledgerItem = ledger.find((item) => item._id === obligation._id);
+      if (!ledgerItem || ledgerItem.balanceCents <= 0) continue;
       candidates.push({
-        userId: obligation.guestUserId,
-        stayId: obligation.stayId,
-        workflow: "payment-due-reminder",
-        entityId: `obligation:${obligation._id}:${targetDate}`,
+        userId: guestUserId,
+          stayId: obligation.stayId,
+          workflow: "payment-due-reminder",
+          entityId: `obligation:${obligation._id}:${localTomorrow}`,
         data: {
           stayName: "Shared stay",
-          amountDue: obligation.baseAmountCents,
+          amountDue: ledgerItem.balanceCents,
           periodLabel: obligation.title ?? `${obligation.periodStart} to ${obligation.periodEnd}`,
           dueDate: obligation.dueDate,
-          balance: obligation.baseAmountCents,
+          balance: ledgerItem.balanceCents,
         },
       });
     }
 
-    const chores = await ctx.db.query("chores").withIndex("by_due_date", (query) => query.eq("dueDate", choreDate)).take(200);
+    const chores = await ctx.db.query("chores").withIndex("by_due_date", (query) =>
+      query.gte("dueDate", minDate).lte("dueDate", maxDate),
+    ).take(1_000);
     for (const chore of chores) {
       if (chore.completedAt || chore.voidedAt) continue;
+      const stay = await ctx.db.get(chore.stayId);
+      if (!stay || stay.status === "ended") continue;
+      const localToday = calendarDateInTimezone(new Date(now), stay.timezone);
+      if (chore.dueDate !== localToday) continue;
       const members = await ctx.db.query("memberships").withIndex("by_stay", (query) => query.eq("stayId", chore.stayId)).take(20);
       const recipients = chore.assigneeUserId
         ? members.filter((member) => member.userId === chore.assigneeUserId && member.status === "active")
@@ -110,7 +175,7 @@ export const reminderCandidates = internalQuery({
           userId: member.userId,
           stayId: chore.stayId,
           workflow: "chore-reminder",
-          entityId: `chore:${chore._id}:${choreDate}`,
+        entityId: `chore:${chore._id}:${localToday}`,
           data: { choreTitle: chore.title, dueDate: chore.dueDate },
         });
       }

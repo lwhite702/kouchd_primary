@@ -1,20 +1,36 @@
 "use client";
 
+import { SignInButton, SignUpButton, useAuth } from "@clerk/nextjs";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { CheckCircle2, MessageSquare, ShieldCheck, AlertCircle } from "lucide-react";
 import Link from "next/link";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import { api } from "@/convex/_generated/api";
 
 export function SmsOptInForm() {
-  const { isAuthenticated } = useConvexAuth();
-  const viewer = useQuery(api.users.viewer, isAuthenticated ? {} : "skip");
+  const { isLoading: authLoading, isAuthenticated } = useConvexAuth();
+  const { userId } = useAuth();
+  const syncCurrent = useMutation(api.users.syncCurrent);
+  const [syncedUserId, setSyncedUserId] = useState<string | null>(null);
+  const [syncError, setSyncError] = useState("");
+  const synced = isAuthenticated && Boolean(userId) && syncedUserId === userId;
+  const viewer = useQuery(api.users.viewer, isAuthenticated && synced ? {} : "skip");
   const updatePreferences = useMutation(api.users.updatePreferences);
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [submittedData, setSubmittedData] = useState<{ name: string; phone: string } | null>(null);
+
+  useEffect(() => {
+    if (!isAuthenticated || !userId || syncedUserId === userId) return;
+    void syncCurrent({})
+      .then(() => {
+        setSyncedUserId(userId);
+        setSyncError("");
+      })
+      .catch(() => setSyncError("We could not prepare your Kouchd account. Please reload and try again."));
+  }, [isAuthenticated, syncCurrent, syncedUserId, userId]);
 
   function formatToE164(raw: string): string {
     const trimmed = raw.trim();
@@ -57,13 +73,14 @@ export function SmsOptInForm() {
 
     setSubmitting(true);
     try {
-      if (isAuthenticated) {
-        await updatePreferences({
-          phone: formattedPhone,
-          notifyEmail: viewer?.notifyEmail ?? true,
-          notifySms: true,
-        });
-      }
+      if (!isAuthenticated || !synced) throw new Error("Sign in before enrolling in SMS alerts.");
+      await updatePreferences({
+        phone: formattedPhone,
+        notifyEmail: viewer?.notifyEmail ?? true,
+        notifySms: true,
+        smsConsentSource: "sms_opt_in_form",
+        smsConsentConfirmed: true,
+      });
       setSubmittedData({ name: submittedName, phone: formattedPhone });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not complete SMS opt-in. Please try again.");
@@ -149,6 +166,34 @@ export function SmsOptInForm() {
         </div>
       </div>
     );
+  }
+
+  if (authLoading) {
+    return <p role="status">Checking your Kouchd account…</p>;
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div role="status" style={{ background: "#faf8f5", border: "1px solid var(--kouchd-line, #ded8ce)", borderRadius: "14px", padding: "1.25rem" }}>
+        <p style={{ marginTop: 0 }}>Sign in or create a Kouchd account before enrolling. Your number and consent will be saved to your account only after you confirm the opt-in.</p>
+        <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
+          <SignInButton mode="modal" forceRedirectUrl="/sms-opt-in">
+            <button className="button soft" type="button">Sign in</button>
+          </SignInButton>
+          <SignUpButton mode="modal" forceRedirectUrl="/sms-opt-in">
+            <button className="button primary" type="button">Create account</button>
+          </SignUpButton>
+        </div>
+      </div>
+    );
+  }
+
+  if (syncError) {
+    return <p role="alert">{syncError}</p>;
+  }
+
+  if (!synced || viewer === undefined) {
+    return <p role="status">Preparing your Kouchd account…</p>;
   }
 
   return (
