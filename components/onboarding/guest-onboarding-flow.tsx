@@ -56,6 +56,8 @@ export function GuestOnboardingFlow({
           phone: formatted,
           notifyEmail: viewer?.notifyEmail ?? true,
           notifySms: true,
+          smsConsentSource: "guest_onboarding",
+          smsConsentConfirmed: true,
         });
       }
       await acceptTerms({ stayId });

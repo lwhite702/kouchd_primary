@@ -44,14 +44,56 @@ export const viewer = query({
 });
 
 export const updatePreferences = mutation({
-  args: { phone: v.optional(v.string()), notifyEmail: v.boolean(), notifySms: v.boolean() },
+  args: {
+    phone: v.optional(v.string()),
+    notifyEmail: v.boolean(),
+    notifySms: v.boolean(),
+    smsConsentSource: v.optional(v.union(
+      v.literal("host_onboarding"),
+      v.literal("guest_onboarding"),
+      v.literal("settings"),
+      v.literal("sms_opt_in_form"),
+    )),
+    smsConsentConfirmed: v.optional(v.boolean()),
+  },
   returns: v.null(),
   handler: async (ctx, args) => {
     const user = await requireCurrentUser(ctx);
     const phone = args.phone?.trim() || undefined;
     assertPhone(phone);
     if (args.notifySms && !phone) throw new Error("Add a phone number before enabling SMS reminders");
-    await ctx.db.patch(user._id, { phone, notifyEmail: args.notifyEmail, notifySms: args.notifySms, updatedAt: Date.now() });
+    const wasSmsEnabled = user.notifySms ?? false;
+    const previousPhone = user.phone;
+    const now = Date.now();
+    const needsNewConsent = args.notifySms && (!wasSmsEnabled || previousPhone !== phone);
+    const hasExplicitConsent = args.smsConsentConfirmed === true;
+
+    if (needsNewConsent && !hasExplicitConsent) {
+      throw new Error("Confirm SMS consent before enabling reminders");
+    }
+    if ((needsNewConsent || hasExplicitConsent) && args.notifySms) {
+      if (!args.smsConsentSource) throw new Error("SMS consent source is required");
+      await ctx.db.insert("smsConsentEvents", {
+        userId: user._id,
+        phone: phone!,
+        action: "opted_in",
+        source: args.smsConsentSource,
+        consentVersion: "transactional-sms-v1",
+        recordedAt: now,
+      });
+    } else if (!args.notifySms && wasSmsEnabled) {
+      if (!args.smsConsentSource) throw new Error("SMS preference source is required when opting out");
+      await ctx.db.insert("smsConsentEvents", {
+        userId: user._id,
+        phone: previousPhone ?? phone ?? "",
+        action: "opted_out",
+        source: args.smsConsentSource,
+        consentVersion: "transactional-sms-v1",
+        recordedAt: now,
+      });
+    }
+
+    await ctx.db.patch(user._id, { phone, notifyEmail: args.notifyEmail, notifySms: args.notifySms, updatedAt: now });
     await ctx.scheduler.runAfter(0, internal.knock.identifyUser, { userId: user._id });
     return null;
   },

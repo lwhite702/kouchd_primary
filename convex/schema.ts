@@ -14,6 +14,20 @@ export default defineSchema({
     updatedAt: v.number(),
   }).index("by_clerk_user_id", ["clerkUserId"]),
 
+  smsConsentEvents: defineTable({
+    userId: v.id("users"),
+    phone: v.string(),
+    action: v.union(v.literal("opted_in"), v.literal("opted_out")),
+    source: v.union(
+      v.literal("host_onboarding"),
+      v.literal("guest_onboarding"),
+      v.literal("settings"),
+      v.literal("sms_opt_in_form"),
+    ),
+    consentVersion: v.string(),
+    recordedAt: v.number(),
+  }).index("by_user_recorded_at", ["userId", "recordedAt"]),
+
   stays: defineTable({
     hostUserId: v.id("users"),
     status: v.union(v.literal("pending"), v.literal("active"), v.literal("ended")),
