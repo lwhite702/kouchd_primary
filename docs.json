@@ -37,7 +37,8 @@
         "pages": [
           "help/index",
           "help/quickstart"
-        ]
+        ],
+        "expanded": true
       },
       {
         "group": "For Hosts",
