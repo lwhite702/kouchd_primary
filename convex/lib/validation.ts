@@ -240,9 +240,9 @@ export function assertPaymentOptionsInput(options: PaymentOptionInput[]) {
       try {
         url = new URL(detail);
       } catch {
-        throw new Error("Payment links must be valid HTTPS or HTTP URLs");
+        throw new Error("Payment links must be valid HTTPS URLs");
       }
-      if (!["https:", "http:"].includes(url.protocol)) throw new Error("Payment links must use HTTPS or HTTP");
+      if (url.protocol !== "https:") throw new Error("Payment links must use HTTPS");
     }
   }
 }
