@@ -19,11 +19,11 @@
 - `help/AGENTS.md`: public-content conventions and source/preview/validation/publish handoff guidance.
 - Root `docs.json`: roadmap/changelog/notifications navigation and footer links.
 - `help/`: refreshed overview, quickstart, guest invitation/contribution, host contribution review, privacy, and notification guides; added roadmap and public changelog.
+- Root `index.mdx`: replaced the starter Introduction template with the actual help-center landing content and direct links to key guides.
 - `docs/internal/CHANGELOG.md`: internal task change record.
 
 ## Validation and remaining gates
 
-- Record final validation commands and outcomes here after running them.
 - No push, PR, merge, deployment, live Mintlify edit, or publication has occurred. Those are separate approval/action gates.
 - Before publishing, review the Mintlify preview, exact public copy, links, and navigation; confirm public changelog claims against the released commit. Keep the WRE-145 issue open until review/publish disposition is known.
 
@@ -39,3 +39,8 @@
 
 - Documentation and policy content commit: `ca75c56` (`docs(WRE-145): align Kouchd help and repository policies`).
 - The handoff record is updated immediately afterward to capture that content commit and the verified gates.
+
+### Follow-up: root route
+
+- The root route fix is part of the follow-up task commit; re-run Mintlify checks before handoff.
+- Follow-up route verification: `mintlify validate` passed; `mintlify broken-links` found no broken links; root `docs.json` parsed and `git diff --check` passed.

@@ -35,4 +35,5 @@ Read the repository-root `AGENTS.md` first. These instructions apply to the publ
 - Maintain the internal change log and handoff under `docs/internal/`; do not expose these in public navigation.
 - Validate navigation and links after editing. Prefer `mintlify validate` and `mintlify broken-links` when the CLI is available, then run appropriate repository checks.
 - Treat checked-in `help/` pages and root `docs.json` as the editing source. Review page paths, frontmatter, internal/external links, and preview output before requesting a public publish.
+- Keep the repository-root `index.mdx` populated with the content for the actual Mintlify root route; do not leave the starter Introduction template as the help center homepage.
 - In handoff notes, record the exact commit, validation results, preview URL if available, pages changed, remaining caveats, and publish status. Never imply a local edit changed the live help center.

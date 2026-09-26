@@ -10,9 +10,15 @@ Internal engineering record. This file is excluded from Mintlify navigation and 
 - Public changelog is limited to verified currently available behavior. Branch-only work is identified as in development; no ETA or live publish is claimed.
 - Validation and resulting task commit will be appended after checks.
 
+### Follow-up: help center entry route
+
+- Replaced the root Mintlify starter Introduction with a content-rich Kouchd help landing page linking to primary guides, notification settings, roadmap, and privacy guidance.
+- Clarified in root and help-specific agent policies that the repository-root `index.mdx` supplies the actual Mintlify root route.
+
 ### Validation
 
 - `mintlify validate` — passed.
 - `mintlify broken-links` — passed; no broken links found.
 - `docs.json` JSON parse and `git diff --check` — passed.
 - Repository `lint`, `typecheck`, and unit tests were attempted but unavailable because this worktree has no installed npm dependencies (`eslint`, `tsc` dependency modules, and `vitest` missing). No application code changed.
+- Root route follow-up passed `mintlify validate`, `mintlify broken-links`, `docs.json` JSON parsing, and `git diff --check`.

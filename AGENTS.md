@@ -60,6 +60,7 @@ This file governs agent activity in the Kouchd repository. Read it before planni
 ## Mintlify management workflow
 
 - Edit checked-in public pages under `help/`; `docs.json` at the repository root is the canonical Mintlify configuration. `help/docs.json` is legacy and ignored. Keep private process material under `docs/internal/`, outside public navigation.
+- The Mintlify root route is supplied by the repository-root `index.mdx`; keep it a useful Kouchd help landing page rather than starter boilerplate. `help/index.mdx` is a separate page and does not replace the root route.
 - Before editing, inspect the current page, navigation, links, and product source/commit state. For new or renamed pages, update root `docs.json` navigation and confirm each configured page path exists.
 - Keep each public page frontmatter valid (`title` and a useful `description`), links relative and accurate, and Markdown/MDX compatible with Mintlify. Do not place issue IDs, internal commit notes, secrets, customer data, or provider setup in public pages.
 - For customer-visible behavior, update the relevant guide and public changelog only after release verification. Put approved unreleased work on the roadmap without ETA; keep internal changelog and handoff current with source commits, changes, evidence, unresolved items, and release gate.
