@@ -88,7 +88,7 @@ export const acceptCurrent = mutation({
             if (preservedDays > 0 && preservedAmount > 0) {
               await ctx.db.insert("obligations", {
                 stayId,
-                termsId: obligation.termsId,
+                termsId: obligation.termsId ?? sourceTerms?._id,
                 guestUserId: user._id,
                 type: "cadence",
                 periodStart: obligation.periodStart,
