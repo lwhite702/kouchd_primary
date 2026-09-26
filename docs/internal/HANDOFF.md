@@ -34,3 +34,8 @@
 - Root `docs.json` parsed successfully; `git diff --check` passed.
 - `npm run lint` and `npm test -- --run` could not start because npm dependencies are not installed in this worktree (`eslint` and `vitest` missing). `npm run typecheck` ran without dependencies and reported missing project modules/types across the application, so it is not a meaningful code check. No application source was changed.
 - No Mintlify preview or live publish was performed. The browser’s currently open help page is the production help domain and was not edited through the dashboard.
+
+### Commit
+
+- Documentation and policy content commit: `ca75c56` (`docs(WRE-145): align Kouchd help and repository policies`).
+- The handoff record is updated immediately afterward to capture that content commit and the verified gates.
