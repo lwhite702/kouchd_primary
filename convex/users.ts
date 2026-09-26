@@ -5,6 +5,9 @@ import { mutation, query } from "./_generated/server";
 import { requireCurrentUser } from "./lib/auth";
 import { assertPhone } from "./lib/validation";
 
+const guideStateValidator = v.object({ step: v.number(), status: v.union(v.literal("in_progress"), v.literal("completed"), v.literal("skipped")) });
+const guideProgressValidator = v.object({ host: v.optional(guideStateValidator), guest: v.optional(guideStateValidator) });
+
 export const syncCurrent = mutation({
   args: {},
   returns: v.id("users"),
@@ -34,12 +37,25 @@ export const syncCurrent = mutation({
 
 export const viewer = query({
   args: {},
-  returns: v.union(v.null(), v.object({ id: v.id("users"), name: v.string(), email: v.optional(v.string()), phone: v.optional(v.string()), imageUrl: v.optional(v.string()), notifyEmail: v.boolean(), notifySms: v.boolean() })),
+  returns: v.union(v.null(), v.object({ id: v.id("users"), name: v.string(), email: v.optional(v.string()), phone: v.optional(v.string()), imageUrl: v.optional(v.string()), notifyEmail: v.boolean(), notifySms: v.boolean(), guideProgress: v.optional(guideProgressValidator) })),
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return null;
     const user = await ctx.db.query("users").withIndex("by_clerk_user_id", (query) => query.eq("clerkUserId", identity.subject)).unique();
-    return user ? { id: user._id, name: user.name, email: user.email, phone: user.phone, imageUrl: user.imageUrl, notifyEmail: user.notifyEmail ?? true, notifySms: user.notifySms ?? false } : null;
+    return user ? { id: user._id, name: user.name, email: user.email, phone: user.phone, imageUrl: user.imageUrl, notifyEmail: user.notifyEmail ?? true, notifySms: user.notifySms ?? false, guideProgress: user.guideProgress } : null;
+  },
+});
+
+export const updateGuideProgress = mutation({
+  args: { role: v.union(v.literal("host"), v.literal("guest")), step: v.number(), status: v.union(v.literal("in_progress"), v.literal("completed"), v.literal("skipped")) },
+  returns: v.null(),
+  handler: async (ctx, { role, step, status }) => {
+    const user = await requireCurrentUser(ctx);
+    if (!Number.isSafeInteger(step) || step < 0 || step > 3) throw new Error("Invalid guide step");
+    const memberships = await ctx.db.query("memberships").withIndex("by_user", (q) => q.eq("userId", user._id)).take(50);
+    if (!memberships.some((membership) => membership.role === role && membership.status === "active")) throw new Error("You are not an active member in this role");
+    await ctx.db.patch(user._id, { guideProgress: { ...user.guideProgress, [role]: { step, status } }, updatedAt: Date.now() });
+    return null;
   },
 });
 
