@@ -58,6 +58,19 @@
         ]
       },
       {
+        "group": "Notifications",
+        "pages": [
+          "help/notifications/notification-preferences"
+        ]
+      },
+      {
+        "group": "Product updates",
+        "pages": [
+          "help/product/roadmap",
+          "help/product/changelog"
+        ]
+      },
+      {
         "group": "Trust & Legal",
         "pages": [
           "help/legal-trust/stay-agreements",
@@ -93,6 +106,29 @@
       "label": "Open Kouchd",
       "href": "https://kouchd.com"
     }
+  },
+  "footer": {
+    "socials": {
+      "website": "https://kouchd.com"
+    },
+    "links": [
+      {
+        "header": "Product",
+        "items": [
+          { "label": "Open Kouchd", "href": "https://kouchd.com" },
+          { "label": "Roadmap", "href": "/help/product/roadmap" },
+          { "label": "Changelog", "href": "/help/product/changelog" }
+        ]
+      },
+      {
+        "header": "Help & trust",
+        "items": [
+          { "label": "Quickstart", "href": "/help/quickstart" },
+          { "label": "Notification settings", "href": "/help/notifications/notification-preferences" },
+          { "label": "Privacy & security", "href": "/help/legal-trust/privacy-and-security" }
+        ]
+      }
+    ]
   },
   "contextual": {
     "options": [
