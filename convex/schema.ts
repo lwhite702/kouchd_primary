@@ -10,6 +10,10 @@ export default defineSchema({
     imageUrl: v.optional(v.string()),
     notifyEmail: v.optional(v.boolean()),
     notifySms: v.optional(v.boolean()),
+    guideProgress: v.optional(v.object({
+      host: v.optional(v.object({ step: v.number(), status: v.union(v.literal("in_progress"), v.literal("completed"), v.literal("skipped")) })),
+      guest: v.optional(v.object({ step: v.number(), status: v.union(v.literal("in_progress"), v.literal("completed"), v.literal("skipped")) })),
+    })),
     createdAt: v.number(),
     updatedAt: v.number(),
   }).index("by_clerk_user_id", ["clerkUserId"]),

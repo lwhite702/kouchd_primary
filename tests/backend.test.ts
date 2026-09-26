@@ -102,6 +102,21 @@ describe("shared stay authorization and audit rules", () => {
     await expect(firstGuest.query(api.obligations.list, { stayId, asOfDate, guestUserId: secondMember.person.id })).rejects.toThrow("Guests cannot access another guest's financial record");
   });
 
+  it("saves role-specific tour progress for active household members", async () => {
+    const t = convexTest(schema, modules);
+    const host = await createUser(t, "guide-host", "Lee");
+    const guest = await createUser(t, "guide-guest", "Marcus");
+    const stayId = await host.mutation(api.stays.create, { timezone: "America/New_York", terms: firstTerms });
+    const tokenHash = "f".repeat(64);
+    await host.mutation(api.invites.create, { stayId, tokenHash, expiresAt: Date.now() + 86_400_000 });
+    await guest.mutation(api.invites.accept, { tokenHash });
+    await host.mutation(api.users.updateGuideProgress, { role: "host", step: 2, status: "in_progress" });
+    await guest.mutation(api.users.updateGuideProgress, { role: "guest", step: 0, status: "skipped" });
+    expect((await host.query(api.users.viewer, {}))?.guideProgress?.host).toEqual({ step: 2, status: "in_progress" });
+    expect((await guest.query(api.users.viewer, {}))?.guideProgress?.guest).toEqual({ step: 0, status: "skipped" });
+    await expect(guest.mutation(api.users.updateGuideProgress, { role: "host", step: 0, status: "completed" })).rejects.toThrow("not an active member in this role");
+    await expect(host.mutation(api.users.updateGuideProgress, { role: "host", step: -1, status: "in_progress" })).rejects.toThrow("Invalid guide step");
+  });
   it("rejects weak invite hashes and invalid financial terms", async () => {
     const t = convexTest(schema, modules);
     const host = await createUser(t, "host-validation", "Lee");

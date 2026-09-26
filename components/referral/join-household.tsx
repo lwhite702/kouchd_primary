@@ -7,6 +7,7 @@ import { FormEvent, useState } from "react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { normalizeReferralCode } from "@/lib/referral";
+import { HelpTip } from "@/components/onboarding/help-tip";
 
 const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
 
@@ -51,8 +52,9 @@ export function JoinHouseholdCard({
         <p className="eyebrow" style={{ margin: 0 }}>Join a Household</p>
       </div>
       <h1>Enter your referral code.</h1>
-      <p className="subhead">
+      <p className="subhead onboarding-eyebrow">
         Ask your host or housemate for their household referral code (starts with KCH-).
+        <HelpTip title="Join the right household">Enter the code your host shared. Check the preview for the host and stay details before joining.</HelpTip>
       </p>
 
       <form onSubmit={handleJoin} style={{ marginTop: "1.5rem" }}>
