@@ -3,10 +3,11 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { requireCurrentUser, requireHost, requireMembership } from "./lib/auth";
 import { recordActivity } from "./lib/activity";
-import { assertCalendarDate, assertHouseInfoInput, assertStayTerms, assertTimezone } from "./lib/validation";
+import { assertCalendarDate, assertHouseInfoInput, assertPaymentOptionsInput, assertStayTerms, assertTimezone } from "./lib/validation";
 
 import { generateReferralCode } from "../lib/referral";
 import { SUGGESTED_CONTRIBUTION_TASKS } from "../lib/domain/rewards";
+import { getCurrentGuestTerms } from "./lib/stayTerms";
 
 const houseInfoInput = {
   wifiNetwork: v.optional(v.string()),
@@ -20,6 +21,11 @@ const houseInfoInput = {
   emergencyContact: v.optional(v.string()),
   otherNotes: v.optional(v.string()),
 };
+
+const paymentOptionsInput = v.array(v.object({
+  provider: v.union(v.literal("paypal"), v.literal("cashapp"), v.literal("zelle"), v.literal("applepay")),
+  detail: v.string(),
+}));
 
 const termsInput = {
   startDate: v.string(),
@@ -59,6 +65,7 @@ export const create = mutation({
     timezone: v.string(),
     nextCheckInDate: v.optional(v.string()),
     houseInfo: v.optional(v.object(houseInfoInput)),
+    paymentOptions: v.optional(paymentOptionsInput),
     terms: v.object(termsInput),
   },
   returns: v.id("stays"),
@@ -68,6 +75,8 @@ export const create = mutation({
     assertStayTerms(args.terms);
     if (args.nextCheckInDate) assertCalendarDate(args.nextCheckInDate, "Next check-in date");
     if (args.houseInfo) assertHouseInfoInput(args.houseInfo);
+    const paymentOptions = args.paymentOptions ?? [];
+    assertPaymentOptionsInput(paymentOptions);
     const now = Date.now();
     const referralCode = generateReferralCode();
     const stayId = await ctx.db.insert("stays", {
@@ -77,6 +86,7 @@ export const create = mutation({
       referralCode,
       nextCheckInDate: args.nextCheckInDate,
       houseInfo: args.houseInfo,
+      paymentOptions,
       createdAt: now,
       updatedAt: now,
     });
@@ -107,6 +117,27 @@ export const create = mutation({
   },
 });
 
+export const updatePaymentOptions = mutation({
+  args: { stayId: v.id("stays"), paymentOptions: paymentOptionsInput },
+  returns: v.null(),
+  handler: async (ctx, { stayId, paymentOptions }) => {
+    const { user } = await requireHost(ctx, stayId);
+    const stay = await ctx.db.get(stayId);
+    if (!stay || stay.status === "ended") throw new Error("Ended stays cannot be edited");
+    assertPaymentOptionsInput(paymentOptions);
+    await ctx.db.patch(stayId, { paymentOptions, updatedAt: Date.now() });
+    await recordActivity(ctx, {
+      stayId,
+      actorUserId: user._id,
+      kind: "stay",
+      action: "payment_options_updated",
+      detail: "External payment options updated",
+      entityId: stayId,
+    });
+    return null;
+  },
+});
+
 export const listMine = query({
   args: {},
   returns: v.array(v.any()),
@@ -130,12 +161,23 @@ export const getBundle = query({
     const { membership } = await requireMembership(ctx, stayId);
     const stay = await ctx.db.get(stayId);
     if (!stay) throw new Error("Stay not found");
-    const terms = stay.currentTermsId ? await ctx.db.get(stay.currentTermsId) : null;
+    const terms = membership.role === "guest"
+      ? await getCurrentGuestTerms(ctx, stayId, membership.userId)
+      : stay.currentTermsId ? await ctx.db.get(stay.currentTermsId) : null;
     const memberships = await ctx.db.query("memberships").withIndex("by_stay", (query) => query.eq("stayId", stayId)).take(50);
     const members = [];
     for (const item of memberships) {
       const person = await ctx.db.get(item.userId);
-      if (person) members.push({ membership: item, person: { id: person._id, name: person.name, imageUrl: person.imageUrl } });
+      if (person) {
+        const guestTerms = membership.role === "host"
+          ? item.role === "guest" ? await getCurrentGuestTerms(ctx, stayId, item.userId) : terms
+          : null;
+        members.push({
+          membership: item,
+          person: { id: person._id, name: person.name, imageUrl: person.imageUrl },
+          ...(membership.role === "host" ? { terms: guestTerms } : {}),
+        });
+      }
     }
     return { stay, terms, membership, members };
   },
@@ -183,4 +225,3 @@ export const updateHouseInfo = mutation({
     return null;
   },
 });
-

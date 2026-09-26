@@ -5,6 +5,8 @@ import { requireHost, requireMembership } from "./lib/auth";
 import { recordActivity } from "./lib/activity";
 import { ensureObligationsForTerms } from "./lib/obligations";
 import { assertStayTerms } from "./lib/validation";
+import { ensureGuestTerms, getCurrentGuestTerms } from "./lib/stayTerms";
+import { calendarDateInTimezone } from "../lib/domain/dates";
 
 const termsInput = {
   startDate: v.string(),
@@ -46,22 +48,44 @@ export const acceptCurrent = mutation({
     const { user, membership } = await requireMembership(ctx, stayId);
     const stay = await ctx.db.get(stayId);
     if (!stay || !stay.currentTermsId || stay.status === "ended") throw new Error("No active terms to accept");
-    const termsId = stay.currentTermsId;
+    const terms = membership.role === "guest"
+      ? await ensureGuestTerms(ctx, stayId, user._id, stay.hostUserId)
+      : await ctx.db.get(stay.currentTermsId);
+    if (!terms) throw new Error("No active terms to accept");
+    const termsId = terms._id;
     const existing = await ctx.db.query("termsAcceptances").withIndex("by_terms_user", (query) => query.eq("termsId", termsId).eq("userId", user._id)).unique();
     if (!existing) await ctx.db.insert("termsAcceptances", { stayId, termsId, userId: user._id, acceptedAt: Date.now() });
     if (membership.acceptedTermsId !== termsId) await ctx.db.patch(membership._id, { acceptedTermsId: termsId });
     if (membership.role === "guest") {
+      if (terms.effectiveFrom) {
+        const currentDate = calendarDateInTimezone(new Date(), stay.timezone);
+        const previousObligations = await ctx.db
+          .query("obligations")
+          .withIndex("by_stay_and_guest", (query) => query.eq("stayId", stayId).eq("guestUserId", user._id))
+          .take(1_000);
+        for (const obligation of previousObligations) {
+          if (obligation.termsId !== termsId && !obligation.voidedAt && obligation.type !== "adhoc" && obligation.dueDate >= currentDate) {
+            await ctx.db.patch(obligation._id, { voidedAt: Date.now(), voidedBy: user._id });
+          }
+        }
+      }
       await ensureObligationsForTerms(ctx, stayId, termsId, user._id, user._id);
     }
     const memberships = await ctx.db.query("memberships").withIndex("by_stay", (query) => query.eq("stayId", stayId)).take(50);
     const activeMemberships = memberships.filter((member) => member.status === "active");
-    const allAccepted = activeMemberships.length >= 2
-      && activeMemberships.every((member) => member.userId === user._id ? true : member.acceptedTermsId === termsId);
+    let allAccepted = activeMemberships.length >= 2;
+    for (const member of activeMemberships) {
+      if (member.userId === user._id) continue;
+      const memberTerms = member.role === "guest"
+        ? await getCurrentGuestTerms(ctx, stayId, member.userId)
+        : stay.currentTermsId ? await ctx.db.get(stay.currentTermsId) : null;
+      if (!memberTerms || member.acceptedTermsId !== memberTerms._id) allAccepted = false;
+    }
     if (allAccepted) {
       if (stay.status !== "active") await ctx.db.patch(stayId, { status: "active", updatedAt: Date.now() });
     }
     await recordActivity(ctx, { stayId, actorUserId: user._id, kind: "terms", action: "accepted", detail: "Current stay terms accepted", entityId: termsId });
-    return allAccepted ? "active" : "pending";
+    return stay.status === "active" || allAccepted ? "active" : "pending";
   },
 });
 
@@ -80,6 +104,46 @@ export const updateCurrent = mutation({
     await ctx.db.insert("termsAcceptances", { stayId, termsId, userId: user._id, acceptedAt: now });
     await ctx.db.patch(membership._id, { acceptedTermsId: termsId });
     await recordActivity(ctx, { stayId, actorUserId: user._id, kind: "terms", action: "updated", detail: `Terms version ${(previous?.version ?? 0) + 1} created`, entityId: termsId });
+    return termsId;
+  },
+});
+
+export const updateGuest = mutation({
+  args: { stayId: v.id("stays"), guestUserId: v.id("users"), terms: v.object(termsInput) },
+  returns: v.id("terms"),
+  handler: async (ctx, { stayId, guestUserId, terms }) => {
+    const { user } = await requireHost(ctx, stayId);
+    const stay = await ctx.db.get(stayId);
+    if (!stay || stay.status === "ended") throw new Error("Ended stays cannot be edited");
+    const guestMembership = await ctx.db
+      .query("memberships")
+      .withIndex("by_stay_user", (query) => query.eq("stayId", stayId).eq("userId", guestUserId))
+      .unique();
+    if (!guestMembership || guestMembership.role !== "guest" || guestMembership.status !== "active") {
+      throw new Error("Choose an active guest in this household");
+    }
+    assertStayTerms(terms);
+    const previous = await ensureGuestTerms(ctx, stayId, guestUserId, user._id);
+    const now = Date.now();
+    const effectiveFrom = calendarDateInTimezone(new Date(now), stay.timezone);
+    const termsId = await ctx.db.insert("terms", {
+      stayId,
+      guestUserId,
+      version: previous.version + 1,
+      effectiveFrom,
+      ...terms,
+      createdBy: user._id,
+      createdAt: now,
+    });
+    await recordActivity(ctx, {
+      stayId,
+      actorUserId: user._id,
+      guestUserId,
+      kind: "terms",
+      action: "guest_terms_updated",
+      detail: `Guest agreement updated to version ${previous.version + 1}`,
+      entityId: termsId,
+    });
     return termsId;
   },
 });

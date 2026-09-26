@@ -34,6 +34,10 @@ export default defineSchema({
     timezone: v.string(),
     referralCode: v.optional(v.string()),
     currentTermsId: v.optional(v.id("terms")),
+    paymentOptions: v.optional(v.array(v.object({
+      provider: v.union(v.literal("paypal"), v.literal("cashapp"), v.literal("zelle"), v.literal("applepay")),
+      detail: v.string(),
+    }))),
     nextCheckInDate: v.optional(v.string()),
     endedAt: v.optional(v.number()),
     houseInfo: v.optional(
@@ -87,6 +91,7 @@ export default defineSchema({
     stayId: v.id("stays"),
     guestUserId: v.optional(v.id("users")),
     version: v.number(),
+    effectiveFrom: v.optional(v.string()),
     startDate: v.string(),
     endDate: v.string(),
     cadence: v.union(v.literal("daily"), v.literal("weekly")),

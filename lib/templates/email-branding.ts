@@ -74,10 +74,20 @@ export function renderEmailLayout({
             <td style="padding:32px 32px 24px 32px;border-bottom:1px solid ${line};">
               <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%">
                 <tr>
-                  <td>
-                    <div style="display:inline-flex;align-items:center;">
-                      <span style="font-size:24px;font-weight:800;letter-spacing:-0.04em;color:${forest};">kouchd</span>
-                    </div>
+                  <td valign="middle">
+                    <a href="${BRAND_CONFIG.websiteUrl}" aria-label="Kouchd home" style="display:inline-block;text-decoration:none;">
+                      <table role="presentation" border="0" cellpadding="0" cellspacing="0">
+                        <tr>
+                          <td valign="middle" style="padding-right:10px;">
+                            <img src="${BRAND_CONFIG.websiteUrl}/brand/kouchd-icon.png" width="42" height="42" alt="" style="display:block;width:42px;height:42px;border:0;border-radius:12px;" />
+                          </td>
+                          <td valign="middle" style="font-size:24px;font-weight:800;letter-spacing:-0.04em;color:${forest};">Kouchd</td>
+                        </tr>
+                      </table>
+                    </a>
+                  </td>
+                  <td align="right" valign="middle" style="padding-left:8px;font-size:9px;font-weight:800;letter-spacing:0.08em;line-height:1.5;text-align:right;color:${muted};">
+                    <span>SHARED STAY</span><br><span style="color:${forest};">MADE CLEAR</span>
                   </td>
                 </tr>
               </table>
@@ -112,8 +122,8 @@ export function renderEmailLayout({
             <td style="padding:24px 32px;background-color:#faf7f0;border-top:1px solid ${line};font-size:12px;color:${muted};line-height:1.5;">
               ${footnote ? `<p style="margin:0 0 8px 0;">${footnote}</p>` : ""}
               <p style="margin:0;">
-                Sent via <strong>Kouchd</strong> &middot; The shared living platform.
-                <br>Adjust your reminder notifications anytime in your account settings.
+                <strong>Kouchd</strong> &middot; A shared stay, made clear.
+                <br>Keep household expectations, contributions, chores, and check-ins in one shared record.
               </p>
             </td>
           </tr>
@@ -132,22 +142,22 @@ export const NOTIFICATION_TEMPLATES = {
   // 1. Guest Invitation
   guestInvitation: {
     workflowKey: "guest-invitation",
-    subject: "{{ hostName }} invited you to join {{ stayName }} on Kouchd",
+    subject: "{{ hostName }} invited you to join a household on Kouchd",
     generateHtml: () =>
       renderEmailLayout({
-        preheader: "You have been invited to join a shared stay.",
+        preheader: "A private household invitation from {{ hostName }}.",
         eyebrow: "Private Household Invitation",
-        title: "You're invited to join {{ stayName }}",
+        title: "You're invited to join Kouchd",
         bodyContent: `
-          <p style="margin:0 0 14px 0;"><strong>{{ hostName }}</strong> has created a shared household on Kouchd and sent you an invitation to join.</p>
-          <p style="margin:0 0 14px 0;">On Kouchd, expectations, living boundaries, chore rotations, and ledger contributions are clear from day one—no awkward conversations or messy spreadsheets.</p>
+          <p style="margin:0 0 14px 0;"><strong>{{ hostName }}</strong> invited you to join their household on Kouchd.</p>
+          <p style="margin:0 0 14px 0;">Review the stay dates, household expectations, and your contribution terms before you accept. Kouchd keeps the agreement, shared chores, and contribution record together.</p>
           <div style="background-color:#f5f0e8;border-radius:14px;padding:14px 18px;margin:18px 0;border:1px dashed #ded8ce;">
-            <p style="margin:0;font-size:13px;color:#59675f;"><strong>Important:</strong> This invitation link expires on {{ expiresAt }}.</p>
+            <p style="margin:0;font-size:13px;color:#59675f;"><strong>Link expires:</strong> {{ expiresAt }}. If it has expired, ask {{ hostName }} for a new invitation.</p>
           </div>
         `,
-        ctaText: "Review and Join Household",
+        ctaText: "Review invitation",
         ctaUrl: "{{ inviteUrl }}",
-        footnote: "If you weren't expecting this invitation, you can safely ignore this email.",
+        footnote: "If you weren’t expecting this invitation, you can ignore this email. Kouchd does not send a text on your host’s behalf.",
       }),
   },
 

@@ -9,8 +9,23 @@ import "./production.css";
 const manrope = Manrope({ subsets: ["latin"], variable: "--font-manrope" });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://kouchd.com"),
   title: { default: "Kouchd", template: "%s | Kouchd" },
   description: "A shared stay without the awkward spreadsheet.",
+  openGraph: {
+    type: "website",
+    siteName: "Kouchd",
+    title: "Kouchd | Shared stays, made clear",
+    description: "Keep household expectations, contributions, chores, and check-ins in one shared record.",
+    url: "https://kouchd.com",
+    images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "Kouchd, a shared stay without the awkward spreadsheet" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Kouchd | Shared stays, made clear",
+    description: "Keep household expectations, contributions, chores, and check-ins in one shared record.",
+    images: ["/opengraph-image"],
+  },
   applicationName: "Kouchd",
   manifest: "/manifest.webmanifest",
   appleWebApp: {

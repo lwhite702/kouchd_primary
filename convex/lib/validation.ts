@@ -10,6 +10,7 @@ const MAX_CHORE_TITLE_LENGTH = 160;
 const MAX_ANNOUNCEMENT_TITLE_LENGTH = 160;
 const E164_PHONE = /^\+[1-9]\d{7,14}$/;
 const MAX_INVITE_LIFETIME_MS = 30 * 24 * 60 * 60 * 1_000;
+const PAYMENT_PROVIDERS = new Set(["paypal", "cashapp", "zelle", "applepay"]);
 
 export type StayTermsInput = {
   startDate: string;
@@ -221,3 +222,27 @@ export function assertHouseInfoInput(info: HouseInfoInput) {
   if (info.otherNotes && info.otherNotes.length > 2000) throw new Error("House notes must be 2,000 characters or fewer");
 }
 
+export type PaymentOptionInput = { provider: "paypal" | "cashapp" | "zelle" | "applepay"; detail: string };
+
+export function assertPaymentOptionsInput(options: PaymentOptionInput[]) {
+  if (!Array.isArray(options) || options.length > PAYMENT_PROVIDERS.size) {
+    throw new Error("Choose up to four household payment options");
+  }
+  const seen = new Set<string>();
+  for (const option of options) {
+    if (!PAYMENT_PROVIDERS.has(option.provider)) throw new Error("Unsupported payment option");
+    if (seen.has(option.provider)) throw new Error("Each payment option can be added only once");
+    seen.add(option.provider);
+    const detail = option.detail.trim();
+    if (!detail || detail.length > 250) throw new Error("Payment details must be between 1 and 250 characters");
+    if (/^[a-z][a-z0-9+.-]*:/i.test(detail)) {
+      let url: URL;
+      try {
+        url = new URL(detail);
+      } catch {
+        throw new Error("Payment links must be valid HTTPS or HTTP URLs");
+      }
+      if (!["https:", "http:"].includes(url.protocol)) throw new Error("Payment links must use HTTPS or HTTP");
+    }
+  }
+}
