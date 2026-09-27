@@ -108,24 +108,8 @@ export function LegalPageLayout({ children, activeRoute }: LegalPageLayoutProps)
       </header>
 
       {/* Main Content Area */}
-      <main
-        style={{
-          flex: 1,
-          width: "100%",
-          maxWidth: "860px",
-          margin: "2rem auto",
-          padding: "0 1.25rem",
-        }}
-      >
-        <div
-          style={{
-            background: "var(--kouchd-surface, #fffdf8)",
-            border: "1px solid var(--kouchd-line, #ded8ce)",
-            borderRadius: "20px",
-            padding: "2.5rem 2rem",
-            boxShadow: "0 12px 36px rgba(23, 37, 31, 0.04)",
-          }}
-        >
+      <main className="legal-main">
+        <div className="legal-card screen-transition">
           {children}
         </div>
       </main>

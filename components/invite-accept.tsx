@@ -8,15 +8,16 @@ import { useEffect, useRef, useState } from "react";
 
 import { api } from "@/convex/_generated/api";
 import { hashInviteToken } from "@/lib/invite";
+import { InviteSkeleton } from "@/components/skeleton-loader";
 
 export function InviteAccept({ token }: { token: string }) {
   return (
-    <main className="auth-landing">
+    <main className="auth-landing screen-transition">
       <Show when="signed-out">
         <p className="eyebrow">You&apos;ve been invited</p>
         <h1>There&apos;s a spot for you on Kouchd.</h1>
         <p>Sign in or create an account to accept the private shared-stay invitation.</p>
-        <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center", flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center", flexWrap: "wrap", width: "100%", maxWidth: "100%" }}>
           <SignUpButton mode="modal">
             <button className="button primary" type="button">
               Sign up to accept <ArrowRight size={18} />
@@ -60,20 +61,20 @@ function Accept({ token }: { token: string }) {
   }, [isAuthenticated, accept, sync, token]);
 
   if (authLoading || !isAuthenticated) {
-    return <p>{status}</p>;
+    return <InviteSkeleton />;
   }
 
   return (
-    <>
+    <div className="screen-transition" style={{ display: "flex", flexDirection: "column", alignItems: "center", width: "100%" }}>
       {done && <CheckCircle2 className="auth-success" size={42} />}
       <p className="eyebrow">Guest invitation</p>
       <h1>{done ? "You're Kouchd." : "Joining the stay"}</h1>
-      <p>{status}</p>
+      <p style={{ maxWidth: 540, lineHeight: 1.6 }}>{status}</p>
       {done && (
-        <Link className="button primary button-link" href="/">
+        <Link className="button primary button-link" href="/" style={{ marginTop: "1rem" }}>
           Open the shared stay
         </Link>
       )}
-    </>
+    </div>
   );
 }
