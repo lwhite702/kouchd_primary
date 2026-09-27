@@ -78,7 +78,7 @@ export function DashboardSkeleton({
         </div>
 
         {/* 3 Metric Cards */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16, marginBottom: 30 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 240px), 1fr))", gap: 16, marginBottom: 30 }}>
           {[1, 2, 3].map((i) => (
             <div
               key={i}

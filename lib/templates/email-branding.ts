@@ -161,22 +161,33 @@ export const NOTIFICATION_TEMPLATES = {
       }),
   },
 
-  // 2. Payment Due Reminder
+  // 2. Payment Due Reminder (Progressive multi-reminder lifecycle with urgent language & potential consequences)
   paymentDueReminder: {
     workflowKey: "payment-due-reminder",
-    subject: "Upcoming stay contribution due tomorrow ({{ stayName }})",
+    subject: "Balance reminder for {{ stayName }} — {{ periodLabel }}",
     generateHtml: () =>
       renderEmailLayout({
-        preheader: "Your scheduled stay contribution is due tomorrow.",
-        eyebrow: "Ledger Reminder",
+        preheader: "Stay contribution balance and settlement notice.",
+        eyebrow: "Ledger Notice",
         title: "Contribution due: {{ periodLabel }}",
         bodyContent: `
-          <p style="margin:0 0 14px 0;">This is a friendly reminder that your scheduled contribution for <strong>{{ stayName }}</strong> is due tomorrow ({{ dueDate }}).</p>
+          <p style="margin:0 0 14px 0;">This is an official notice regarding your scheduled contribution for <strong>{{ stayName }}</strong> (due {{ dueDate }}).</p>
           <div style="background-color:#eef6f0;border-radius:16px;padding:18px 20px;margin:18px 0;border:1px solid #b8d2c1;">
-            <div style="font-size:12px;font-weight:700;color:#59675f;text-transform:uppercase;">Scheduled Obligation</div>
+            <div style="font-size:12px;font-weight:700;color:#59675f;text-transform:uppercase;">Outstanding Balance</div>
             <div style="font-size:26px;font-weight:800;color:#184F3A;margin:4px 0;">\${{ amountDue | divided_by: 100 }}</div>
             <div style="font-size:13px;color:#59675f;">Due date: {{ dueDate }}</div>
           </div>
+          {{#if warningMessage}}
+          <div style="background-color:#fff8ed;border-radius:14px;padding:14px 18px;margin:18px 0;border:1px solid #fed7aa;color:#9a3412;font-size:14px;line-height:1.5;">
+            <strong>Notice:</strong> {{ warningMessage }}
+          </div>
+          {{/if}}
+          {{#if consequences}}
+          <div style="background-color:#fff1f2;border-radius:14px;padding:14px 18px;margin:18px 0;border:1px solid #fecdd3;color:#9f1239;font-size:13px;line-height:1.5;">
+            <div style="font-weight:800;margin-bottom:6px;text-transform:uppercase;font-size:11px;letter-spacing:0.06em;">Potential Consequences & Penalties</div>
+            <div style="white-space:pre-line;">{{ consequences }}</div>
+          </div>
+          {{/if}}
           <p style="margin:0;">Have you completed any household chores or contributions? You can redeem your earned contribution points for instant credit toward your stay balance.</p>
         `,
         ctaText: "View Your Ledger",

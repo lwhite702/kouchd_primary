@@ -1,7 +1,7 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "name": "Kouchd Help Center",
-  "description": "Guides, ledger management, house rules, and guest agreements for Kouchd.",
+  "description": "Clear, current help for hosts and guests using Kouchd.",
   "theme": "mint",
   "appearance": {
     "default": "light",
@@ -46,7 +46,8 @@
         "group": "Overview",
         "pages": [
           "help/index",
-          "help/quickstart"
+          "help/quickstart",
+          "help/using-notifications"
         ]
       },
       {
@@ -105,23 +106,24 @@
   },
   "footer": {
     "socials": {
-      "website": "https://kouchd.com",
+      "website": "https://kouchd.com"
     },
     "links": [
       {
         "header": "Product",
         "items": [
           { "label": "Kouchd App", "href": "https://kouchd.com" },
-          { "label": "Quickstart", "href": "/help/quickstart" },
-          { "label": "Host Guide", "href": "/help/hosts/getting-started" },
-          { "label": "Guest Guide", "href": "/help/guests/joining-a-stay" }
+          { "label": "Quickstart", "href": "/quickstart" },
+          { "label": "Host Guide", "href": "/hosts/getting-started" },
+          { "label": "Guest Guide", "href": "/guests/joining-a-stay" },
+          { "label": "Reminders", "href": "/using-notifications" }
         ]
       },
       {
         "header": "Trust & Privacy",
         "items": [
-          { "label": "Stay Agreements", "href": "/help/legal-trust/stay-agreements" },
-          { "label": "Privacy & Security", "href": "/help/legal-trust/privacy-and-security" }
+          { "label": "Stay Agreements", "href": "/legal-trust/stay-agreements" },
+          { "label": "Privacy & Security", "href": "/legal-trust/privacy-and-security" }
         ]
       }
     ]

@@ -68,7 +68,7 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   border: 0;
 }
 
-.app-shell { max-width: 1220px; margin: 0 auto; min-height: 100vh; }
+.app-shell { width: min(100%, 1220px); min-width: 0; max-width: 1220px; margin: 0 auto; min-height: 100vh; }
 
 .topbar {
   height: 82px;
@@ -400,6 +400,8 @@ textarea { resize: vertical; }
 
 @media (max-width: 760px) {
   .topbar { height: calc(70px + env(safe-area-inset-top, 0px)); padding: env(safe-area-inset-top, 0px) 18px 0; }
+  .tour-entry { min-width: 36px; padding: 6px !important; }
+  .tour-entry span { display: none; }
   .role-switch select { width: 112px; }
   main { padding: 34px 16px calc(110px + env(safe-area-inset-bottom, 0px)); }
   .page-heading { align-items: flex-start; flex-direction: column; gap: 16px; }
@@ -667,7 +669,7 @@ textarea { resize: vertical; }
 .landing-preview-grid,
 .landing-snapshot-row {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
   gap: 24px;
   width: 100%;
 }
@@ -804,7 +806,7 @@ textarea { resize: vertical; }
 .landing-steps-grid,
 .landing-three-steps {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
   gap: 24px;
   width: 100%;
 }
@@ -853,7 +855,7 @@ textarea { resize: vertical; }
 .landing-both-sides-grid,
 .landing-both-sides-row {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
   gap: 24px;
   width: 100%;
 }
@@ -1079,5 +1081,4 @@ textarea { resize: vertical; }
     max-width: 100%;
   }
 }
-
 
