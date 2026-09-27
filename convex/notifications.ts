@@ -2,8 +2,9 @@ import { v } from "convex/values";
 
 import { calculateObligationLedger } from "../lib/domain/obligations";
 import { addCalendarDays, calendarDateInTimezone } from "../lib/domain/dates";
-import type { Id } from "./_generated/dataModel";
+import type { Doc, Id } from "./_generated/dataModel";
 import { internalMutation, internalQuery } from "./_generated/server";
+import { getCurrentGuestTerms } from "./lib/stayTerms";
 
 export const getRecipient = internalQuery({
   args: { userId: v.id("users") },
@@ -94,6 +95,8 @@ export const reminderCandidates = internalQuery({
       query.gte("dueDate", minDate).lte("dueDate", maxDate),
     ).take(1_000);
     const ledgersByGuest = new Map<string, ReturnType<typeof calculateObligationLedger>>();
+    const termsById = new Map<string, Doc<"terms"> | null>();
+    const currentTermsByGuest = new Map<string, Doc<"terms"> | null>();
     for (const obligation of obligations) {
       const guestUserId = obligation.guestUserId;
       if (!guestUserId || obligation.voidedAt) continue;
@@ -101,14 +104,18 @@ export const reminderCandidates = internalQuery({
       if (!stay || stay.status === "ended") continue;
       const localTomorrow = addCalendarDays(calendarDateInTimezone(new Date(now), stay.timezone), 1);
       if (obligation.dueDate !== localTomorrow) continue;
-      const terms = stay?.currentTermsId ? await ctx.db.get(stay.currentTermsId) : null;
+      const guestKey = `${obligation.stayId}:${guestUserId}`;
+      let terms = currentTermsByGuest.get(guestKey);
+      if (terms === undefined && !currentTermsByGuest.has(guestKey)) {
+        terms = await getCurrentGuestTerms(ctx, obligation.stayId, guestUserId);
+        currentTermsByGuest.set(guestKey, terms);
+      }
       if (!terms) continue;
       const membership = await ctx.db.query("memberships")
         .withIndex("by_stay_user", (query) => query.eq("stayId", obligation.stayId).eq("userId", guestUserId))
         .unique();
       if (!membership || membership.status !== "active") continue;
 
-      const guestKey = `${obligation.stayId}:${obligation.guestUserId}`;
       let ledger = ledgersByGuest.get(guestKey);
       if (!ledger) {
         const [guestObligations, contributions] = await Promise.all([
@@ -120,8 +127,14 @@ export const reminderCandidates = internalQuery({
             .order("asc")
             .take(5_000),
         ]);
-        ledger = calculateObligationLedger({
-          obligations: guestObligations.map((item) => ({
+        const ledgerObligations = await Promise.all(guestObligations.map(async (item) => {
+          let obligationTerms = terms;
+          if (item.termsId) {
+            const termsKey = item.termsId.toString();
+            if (!termsById.has(termsKey)) termsById.set(termsKey, await ctx.db.get(item.termsId));
+            obligationTerms = termsById.get(termsKey) ?? terms;
+          }
+          return {
             _id: item._id,
             periodStart: item.periodStart,
             periodEnd: item.periodEnd,
@@ -131,7 +144,11 @@ export const reminderCandidates = internalQuery({
             title: item.title,
             lateFeeWaived: Boolean(item.lateFeeWaivedAt),
             voided: Boolean(item.voidedAt),
-          })),
+            terms: obligationTerms,
+          };
+        }));
+        ledger = calculateObligationLedger({
+          obligations: ledgerObligations,
           contributions: contributions
             .filter((entry) => entry.status === "confirmed" && entry.countsTowardBalance)
             .map((entry) => ({ amountCents: entry.amountCents, date: entry.date })),

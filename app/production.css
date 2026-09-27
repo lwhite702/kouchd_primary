@@ -236,6 +236,21 @@
   gap: 14px;
 }
 
+.payment-setup-card {
+  margin-top: 1.25rem;
+  padding: 1.25rem;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--surface, #fffdf8);
+}
+.payment-setup-card h3 { margin: 0 0 .35rem; color: var(--green); }
+.payment-options-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; }
+.payment-option-detail { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.payment-option-detail > strong { overflow-wrap: anywhere; }
+.payment-option-detail a { display: inline-flex; align-items: center; gap: 6px; color: var(--green); font-weight: 700; overflow-wrap: anywhere; }
+.external-payment-note { margin: .5rem 0 1.25rem; padding: 1rem 1.15rem; border: 1px solid var(--line); border-radius: 14px; background: var(--paper); color: var(--ink); font-size: .9rem; line-height: 1.5; }
+.external-payment-note strong { color: var(--green); }
+
 .house-card {
   border: 1px solid var(--line);
   border-radius: 20px;

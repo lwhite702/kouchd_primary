@@ -3,9 +3,11 @@ import { v } from "convex/values";
 import { calculateObligationLedger } from "../lib/domain/obligations";
 import { internal } from "./_generated/api";
 import { mutation, query } from "./_generated/server";
+import type { Doc } from "./_generated/dataModel";
 import { requireHost, resolveFinancialGuest } from "./lib/auth";
 import { recordActivity } from "./lib/activity";
 import { assertAdhocChargeInput, assertCalendarDate } from "./lib/validation";
+import { getAcceptedGuestTerms, getCurrentGuestTerms } from "./lib/stayTerms";
 
 const ledgerItem = v.object({
   _id: v.id("obligations"),
@@ -34,7 +36,7 @@ export const list = query({
     if (!access.guestUserId) return [];
     const stay = await ctx.db.get(stayId);
     if (!stay || !stay.currentTermsId) return [];
-    const terms = await ctx.db.get(stay.currentTermsId);
+    const terms = await getCurrentGuestTerms(ctx, stayId, access.guestUserId);
     if (!terms) return [];
 
     const [scopedObligations, scopedContributions] = await Promise.all([
@@ -52,8 +54,19 @@ export const list = query({
     const credits = contributions
       .filter((entry) => entry.status === "confirmed" && entry.countsTowardBalance)
       .map((entry) => ({ amountCents: entry.amountCents, date: entry.date }));
-    const ledger = calculateObligationLedger({
-      obligations: obligations.map((item) => ({
+    const termsById = new Map<string, Promise<Doc<"terms"> | null>>();
+    const ledgerObligations = await Promise.all(obligations.map(async (item) => {
+      let obligationTerms = terms;
+      if (item.termsId) {
+        const termsKey = item.termsId.toString();
+        let termsPromise = termsById.get(termsKey);
+        if (!termsPromise) {
+          termsPromise = ctx.db.get(item.termsId);
+          termsById.set(termsKey, termsPromise);
+        }
+        obligationTerms = (await termsPromise) ?? terms;
+      }
+      return {
         _id: item._id,
         periodStart: item.periodStart,
         periodEnd: item.periodEnd,
@@ -63,7 +76,11 @@ export const list = query({
         title: item.title,
         lateFeeWaived: Boolean(item.lateFeeWaivedAt),
         voided: Boolean(item.voidedAt),
-      })),
+        terms: obligationTerms,
+      };
+    }));
+    const ledger = calculateObligationLedger({
+      obligations: ledgerObligations,
       contributions: credits,
       asOfDate,
       terms,
@@ -105,9 +122,10 @@ export const createAdhocCharge = mutation({
     assertAdhocChargeInput(args.title, args.amountCents, args.effectiveDate, args.dueDate);
     const stay = await ctx.db.get(args.stayId);
     if (!stay || stay.status === "ended") throw new Error("Ended stays cannot add charges");
+    const terms = await getAcceptedGuestTerms(ctx, args.stayId, args.guestUserId);
     const obligationId = await ctx.db.insert("obligations", {
       stayId: args.stayId,
-      termsId: stay.currentTermsId,
+      termsId: terms?._id ?? stay.currentTermsId,
       guestUserId: args.guestUserId,
       type: "adhoc",
       title: args.title.trim(),

@@ -20,7 +20,10 @@ export async function ensureObligationsForTerms(
   if (!terms || terms.stayId !== stayId) throw new Error("Terms not found for this stay");
 
   const createdAt = Date.now();
-  const periods = buildObligationPeriods(terms);
+  const effectiveStart = terms.effectiveFrom && terms.effectiveFrom > terms.startDate
+    ? terms.effectiveFrom
+    : terms.startDate;
+  const periods = buildObligationPeriods({ ...terms, startDate: effectiveStart });
   for (const period of periods) {
     await ctx.db.insert("obligations", {
       stayId,

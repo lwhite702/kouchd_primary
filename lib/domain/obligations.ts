@@ -27,6 +27,7 @@ export interface ObligationRecord extends ObligationPeriod {
   title?: string;
   lateFeeWaived?: boolean;
   voided?: boolean;
+  terms?: ObligationTerms;
 }
 
 export interface AllocatableContribution {
@@ -84,29 +85,29 @@ export function calculateObligationLedger({
     .map((entry, index) => ({ ...entry, index, remainingCents: entry.amountCents }))
     .sort((left, right) => left.date.localeCompare(right.date) || left.index - right.index);
 
-  const discountEnabled = terms.earlyDiscountEnabled ?? terms.earlyDiscountPercentage > 0;
-  const lateFeeEnabled = terms.lateFeeEnabled ?? terms.lateFeeCents > 0;
-
   return [...obligations]
     .filter((obligation) => !obligation.voided)
     .sort((left, right) => left.dueDate.localeCompare(right.dueDate) || left.periodStart.localeCompare(right.periodStart))
     .map((obligation) => {
-      const earlyThreshold = addCalendarDays(obligation.dueDate, -terms.earlyDiscountDays);
+      const obligationTerms = obligation.terms ?? terms;
+      const discountEnabled = obligationTerms.earlyDiscountEnabled ?? obligationTerms.earlyDiscountPercentage > 0;
+      const lateFeeEnabled = obligationTerms.lateFeeEnabled ?? obligationTerms.lateFeeCents > 0;
+      const earlyThreshold = addCalendarDays(obligation.dueDate, -obligationTerms.earlyDiscountDays);
       const availableByEarlyThreshold = creditLots
         .filter((credit) => credit.date <= earlyThreshold)
         .reduce((total, credit) => total + credit.remainingCents, 0);
       const discountAmount = Math.round(
-        (obligation.baseAmountCents * terms.earlyDiscountPercentage) / 100,
+        (obligation.baseAmountCents * obligationTerms.earlyDiscountPercentage) / 100,
       );
       const discountedCharge = obligation.baseAmountCents - discountAmount;
       const qualifiesForEarlyDiscount = (obligation.type ?? "cadence") === "cadence"
         && discountEnabled
-        && terms.earlyDiscountPercentage > 0
+        && obligationTerms.earlyDiscountPercentage > 0
         && availableByEarlyThreshold >= discountedCharge;
       const earlyDiscountCents = qualifiesForEarlyDiscount ? -discountAmount : 0;
       const chargeBeforeLateFee = obligation.baseAmountCents + earlyDiscountCents;
 
-      const graceEnd = addCalendarDays(obligation.dueDate, terms.graceDays);
+      const graceEnd = addCalendarDays(obligation.dueDate, obligationTerms.graceDays);
       const isPastGrace = asOfDate > graceEnd;
       let remainingCharge = chargeBeforeLateFee;
       let creditedCents = 0;
@@ -123,12 +124,12 @@ export function calculateObligationLedger({
         }
       };
 
-      if (isPastGrace && lateFeeEnabled && terms.lateFeeCents > 0 && !obligation.lateFeeWaived) {
+      if (isPastGrace && lateFeeEnabled && obligationTerms.lateFeeCents > 0 && !obligation.lateFeeWaived) {
         let assessmentDate = addCalendarDays(graceEnd, 1);
         while (assessmentDate <= asOfDate) {
           applyCreditsThrough(assessmentDate);
           if (remainingCharge === 0) break;
-          remainingCharge += terms.lateFeeCents;
+          remainingCharge += obligationTerms.lateFeeCents;
           lateFeeOccurrences += 1;
           assessmentDate = addCalendarDays(assessmentDate, 7);
         }
@@ -136,7 +137,7 @@ export function calculateObligationLedger({
 
       applyCreditsThrough(asOfDate);
 
-      const lateFeeCents = lateFeeOccurrences * terms.lateFeeCents;
+      const lateFeeCents = lateFeeOccurrences * obligationTerms.lateFeeCents;
       const effectiveChargeCents = chargeBeforeLateFee + lateFeeCents;
       const status: ObligationStatus = remainingCharge === 0
         ? "paid"

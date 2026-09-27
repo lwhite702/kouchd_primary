@@ -32,6 +32,76 @@ async function createUser(t: ReturnType<typeof convexTest>, subject: string, nam
 }
 
 describe("shared stay authorization and audit rules", () => {
+  it("keeps guest agreements and payment options private while allowing different terms", async () => {
+    const t = convexTest(schema, modules);
+    const host = await createUser(t, "household-host", "Lee");
+    const firstGuest = await createUser(t, "household-guest-one", "Marcus");
+    const secondGuest = await createUser(t, "household-guest-two", "Riley");
+    const startDate = new Date(Date.now() + 86_400_000).toISOString().slice(0, 10);
+    const endDate = new Date(Date.now() + 15 * 86_400_000).toISOString().slice(0, 10);
+    const stayId = await host.mutation(api.stays.create, {
+      timezone: "America/New_York",
+      paymentOptions: [
+        { provider: "paypal", detail: "https://paypal.me/lee" },
+        { provider: "zelle", detail: "lee@example.com" },
+      ],
+      terms: { ...firstTerms, startDate, endDate },
+    });
+    const firstInviteHash = "1".repeat(64);
+    const secondInviteHash = "2".repeat(64);
+    await host.mutation(api.invites.create, { stayId, tokenHash: firstInviteHash, expiresAt: Date.now() + 86_400_000 });
+    await host.mutation(api.invites.create, { stayId, tokenHash: secondInviteHash, expiresAt: Date.now() + 86_400_000 });
+
+    expect(await firstGuest.query(api.invites.preview, { tokenHash: firstInviteHash })).toEqual({ valid: true, hostName: "Lee", expiresAt: expect.any(Number) });
+    await firstGuest.mutation(api.invites.accept, { tokenHash: firstInviteHash });
+    const firstMember = (await host.query(api.stays.getBundle, { stayId })).members.find((member) => member.person.name === "Marcus")!;
+    await host.mutation(api.terms.updateGuest, { stayId, guestUserId: firstMember.person.id, terms: { ...firstTerms, startDate, endDate, rateCents: 11_000 } });
+    await firstGuest.mutation(api.terms.acceptCurrent, { stayId });
+
+    await secondGuest.mutation(api.invites.accept, { tokenHash: secondInviteHash });
+    await host.mutation(api.stays.updatePaymentOptions, {
+      stayId,
+      paymentOptions: [
+        { provider: "cashapp", detail: "$LeeHouse" },
+        { provider: "applepay", detail: "https://example.com/pay/lee" },
+      ],
+    });
+    const secondMember = (await host.query(api.stays.getBundle, { stayId })).members.find((member) => member.person.name === "Riley")!;
+    await host.mutation(api.terms.updateGuest, { stayId, guestUserId: secondMember.person.id, terms: { ...firstTerms, startDate, endDate, rateCents: 32_000 } });
+    await secondGuest.mutation(api.terms.acceptCurrent, { stayId });
+
+    const hostBundle = await host.query(api.stays.getBundle, { stayId });
+    const firstBundle = await firstGuest.query(api.stays.getBundle, { stayId });
+    const secondBundle = await secondGuest.query(api.stays.getBundle, { stayId });
+    expect(hostBundle.members.find((member) => member.person.name === "Marcus")?.terms?.rateCents).toBe(11_000);
+    expect(hostBundle.members.find((member) => member.person.name === "Riley")?.terms?.rateCents).toBe(32_000);
+    expect(firstBundle.terms?.rateCents).toBe(11_000);
+    expect(secondBundle.terms?.rateCents).toBe(32_000);
+    expect(firstBundle.members.some((member) => "terms" in member)).toBe(false);
+    expect(firstBundle.stay.paymentOptions).toEqual([
+      { provider: "cashapp", detail: "$LeeHouse" },
+      { provider: "applepay", detail: "https://example.com/pay/lee" },
+    ]);
+    const publicCodePreview = await firstGuest.query(api.referral.preview, { referralCode: hostBundle.stay.referralCode! });
+    expect(publicCodePreview).not.toHaveProperty("paymentOptions");
+    expect(await firstGuest.query(api.invites.preview, { tokenHash: firstInviteHash })).toEqual({ valid: false });
+
+    const secondAcceptedTermsId = secondBundle.membership.acceptedTermsId;
+    await host.mutation(api.terms.updateGuest, { stayId, guestUserId: firstMember.person.id, terms: { ...firstTerms, startDate, endDate, rateCents: 12_000 } });
+    const revisedBundle = await host.query(api.stays.getBundle, { stayId });
+    expect(revisedBundle.stay.status).toBe("active");
+    expect(revisedBundle.members.find((member) => member.person.name === "Riley")?.membership.acceptedTermsId).toBe(secondAcceptedTermsId);
+    expect(revisedBundle.members.find((member) => member.person.name === "Marcus")?.membership.acceptedTermsId).not.toBe(revisedBundle.members.find((member) => member.person.name === "Marcus")?.terms?._id);
+    await firstGuest.mutation(api.terms.acceptCurrent, { stayId });
+
+    const asOfDate = new Date(Date.now() + 86_400_000).toISOString().slice(0, 10);
+    const firstLedger = await firstGuest.query(api.obligations.list, { stayId, asOfDate });
+    const secondLedger = await secondGuest.query(api.obligations.list, { stayId, asOfDate });
+    expect(firstLedger[0].baseAmountCents).toBe(12_000);
+    expect(secondLedger[0].baseAmountCents).toBe(32_000);
+    await expect(firstGuest.query(api.obligations.list, { stayId, asOfDate, guestUserId: secondMember.person.id })).rejects.toThrow("Guests cannot access another guest's financial record");
+  });
+
   it("saves role-specific tour progress for active household members", async () => {
     const t = convexTest(schema, modules);
     const host = await createUser(t, "guide-host", "Lee");

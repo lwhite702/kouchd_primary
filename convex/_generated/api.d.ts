@@ -18,6 +18,7 @@ import type * as knock from "../knock.js";
 import type * as lib_activity from "../lib/activity.js";
 import type * as lib_auth from "../lib/auth.js";
 import type * as lib_obligations from "../lib/obligations.js";
+import type * as lib_stayTerms from "../lib/stayTerms.js";
 import type * as lib_validation from "../lib/validation.js";
 import type * as notifications from "../notifications.js";
 import type * as obligations from "../obligations.js";
@@ -45,6 +46,7 @@ declare const fullApi: ApiFromModules<{
   "lib/activity": typeof lib_activity;
   "lib/auth": typeof lib_auth;
   "lib/obligations": typeof lib_obligations;
+  "lib/stayTerms": typeof lib_stayTerms;
   "lib/validation": typeof lib_validation;
   notifications: typeof notifications;
   obligations: typeof obligations;

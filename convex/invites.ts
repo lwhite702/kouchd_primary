@@ -1,10 +1,29 @@
 import { v } from "convex/values";
 
 import { internal } from "./_generated/api";
-import { mutation } from "./_generated/server";
+import { mutation, query } from "./_generated/server";
 import { requireCurrentUser, requireHost } from "./lib/auth";
 import { recordActivity } from "./lib/activity";
 import { assertInvite, assertInviteHash } from "./lib/validation";
+import { ensureGuestTerms } from "./lib/stayTerms";
+
+export const preview = query({
+  args: { tokenHash: v.string() },
+  returns: v.object({ valid: v.boolean(), hostName: v.optional(v.string()), expiresAt: v.optional(v.number()) }),
+  handler: async (ctx, { tokenHash }) => {
+    try {
+      assertInviteHash(tokenHash);
+    } catch {
+      return { valid: false };
+    }
+    const invite = await ctx.db.query("invites").withIndex("by_token_hash", (query) => query.eq("tokenHash", tokenHash)).unique();
+    if (!invite || invite.usedAt || invite.expiresAt <= Date.now()) return { valid: false };
+    const stay = await ctx.db.get(invite.stayId);
+    if (!stay || stay.status === "ended") return { valid: false };
+    const host = await ctx.db.get(stay.hostUserId);
+    return { valid: true, hostName: host?.name ?? "A Kouchd host", expiresAt: invite.expiresAt };
+  },
+});
 
 export const create = mutation({
   args: { stayId: v.id("stays"), tokenHash: v.string(), invitedEmail: v.optional(v.string()), inviteUrl: v.optional(v.string()), expiresAt: v.number() },
@@ -50,6 +69,9 @@ export const accept = mutation({
     if (memberCount.filter((member) => member.status === "active").length >= 20) throw new Error("This stay has reached its member limit");
     const now = Date.now();
     await ctx.db.insert("memberships", { stayId: invite.stayId, userId: user._id, role: "guest", status: "active", joinedAt: now });
+    const stay = await ctx.db.get(invite.stayId);
+    if (!stay) throw new Error("Stay not found");
+    await ensureGuestTerms(ctx, invite.stayId, user._id, stay.hostUserId);
     await ctx.db.patch(invite._id, { usedAt: now, usedBy: user._id });
     await recordActivity(ctx, { stayId: invite.stayId, actorUserId: user._id, kind: "invite", action: "accepted", detail: "Guest joined the stay", entityId: invite._id });
     return invite.stayId;

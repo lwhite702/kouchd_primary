@@ -1,7 +1,7 @@
 "use client";
 
 import { useMutation, useQuery } from "convex/react";
-import { ArrowLeft, ArrowRight, Check, CreditCard, MessageSquare, Plus, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, MessageSquare, Plus, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { FormEvent, useMemo, useState } from "react";
 
@@ -59,6 +59,7 @@ export function HostOnboardingWizard({
   const [lateEnabled, setLateEnabled] = useState(false);
   const [lateFee, setLateFee] = useState("15");
   const [graceDays, setGraceDays] = useState("2");
+  const [paymentDetails, setPaymentDetails] = useState({ paypal: "", cashapp: "", zelle: "", applepay: "" });
 
   // Step 5: Submission
   const [saving, setSaving] = useState(false);
@@ -137,6 +138,9 @@ export function HostOnboardingWizard({
       await createStay({
         timezone,
         nextCheckInDate: nextCheckInDate || undefined,
+        paymentOptions: (Object.entries(paymentDetails) as Array<[keyof typeof paymentDetails, string]>)
+          .filter(([, detail]) => detail.trim())
+          .map(([provider, detail]) => ({ provider, detail: detail.trim() })),
         terms: {
           startDate,
           endDate,
@@ -636,49 +640,24 @@ export function HostOnboardingWizard({
             )}
           </div>
 
-          {/* In-App Payments Coming Soon Section */}
-          <div className="coming-soon-card">
-            <div className="coming-soon-badge">
-              <Sparkles size={13} />
-              <span>Coming Soon</span>
+          <section className="payment-setup-card">
+            <h3>How guests can pay you</h3>
+            <p className="muted">Add any payment username, contact detail, or link you want to share. Guests pay you directly outside Kouchd.</p>
+            <div className="form-grid">
+              {([
+                ["paypal", "PayPal"],
+                ["cashapp", "Cash App"],
+                ["zelle", "Zelle"],
+                ["applepay", "Apple Pay"],
+              ] as const).map(([provider, label]) => (
+                <label className="full" key={provider}>
+                  <span>{label}</span>
+                  <input value={paymentDetails[provider]} onChange={(event) => setPaymentDetails({ ...paymentDetails, [provider]: event.target.value })} maxLength={250} placeholder="Username, phone/email, or https:// link" />
+                </label>
+              ))}
             </div>
-            <div className="coming-soon-header">
-              <div className="coming-soon-icon">
-                <CreditCard size={24} />
-              </div>
-              <div>
-                <h3>In-App Payments & Direct Bank Payouts</h3>
-                <p>
-                  Direct guest billing with instant host payouts is currently in active development.
-                </p>
-              </div>
-            </div>
-
-            <div className="coming-soon-features">
-              <div className="feature-chip">
-                <Check size={14} color="var(--green, #184f3a)" />
-                <span>Credit Card, Apple Pay & ACH</span>
-              </div>
-              <div className="feature-chip">
-                <Check size={14} color="var(--green, #184f3a)" />
-                <span>Automated direct deposit to host bank</span>
-              </div>
-              <div className="feature-chip">
-                <Check size={14} color="var(--green, #184f3a)" />
-                <span>Auto-cleared on stay ledger</span>
-              </div>
-              <div className="feature-chip">
-                <Check size={14} color="var(--green, #184f3a)" />
-                <span>Zero awkward money reminders</span>
-              </div>
-            </div>
-
-            <div className="coming-soon-notice">
-              <p>
-                <strong>How payment tracking works today:</strong> Kouchd tracks and verifies payments made via your preferred method (Venmo, Zelle, Cash App, or bank transfer). When In-App Payments launch, you will be able to enable one-click automated billing directly on this stay.
-              </p>
-            </div>
-          </div>
+            <p className="muted">Kouchd does not collect or process these payments. You can update these details later in Stay details.</p>
+          </section>
 
           <div className="dialog-actions" style={{ marginTop: "2rem" }}>
             <button className="button ghost" type="button" onClick={() => setStep(3)}>
@@ -737,7 +716,7 @@ export function HostOnboardingWizard({
                   Payment Processing
                 </span>
                 <p style={{ margin: "2px 0 0", fontWeight: 700, fontSize: "0.92rem", color: "var(--green, #184f3a)" }}>
-                  Verified Ledger · In-App Payments Soon
+                  External payments · Kouchd does not process payments
                 </p>
               </div>
             </div>
