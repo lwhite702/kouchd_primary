@@ -162,6 +162,7 @@ export default defineSchema({
     .index("by_terms", ["termsId"])
     .index("by_terms_and_guest", ["termsId", "guestUserId"])
     .index("by_stay_and_guest", ["stayId", "guestUserId"])
+    .index("by_stay_guest_and_voided", ["stayId", "guestUserId", "voidedAt"])
     .index("by_due_date", ["dueDate"]),
 
   contributions: defineTable({

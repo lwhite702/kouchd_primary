@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 
+import type { Doc } from "./_generated/dataModel";
 import { mutation } from "./_generated/server";
 import { requireHost, requireMembership } from "./lib/auth";
 import { recordActivity } from "./lib/activity";
@@ -63,10 +64,21 @@ export const acceptCurrent = mutation({
         if (terms.effectiveFrom !== effectiveBoundary) {
           await ctx.db.patch(termsId, { effectiveFrom: effectiveBoundary });
         }
-        const previousObligations = await ctx.db
-          .query("obligations")
-          .withIndex("by_stay_and_guest", (query) => query.eq("stayId", stayId).eq("guestUserId", user._id))
-          .take(1_000);
+        const previousObligations: Doc<"obligations">[] = [];
+        let cursor: string | null = null;
+        let isDone = false;
+        while (!isDone) {
+          const page = await ctx.db
+            .query("obligations")
+            .withIndex("by_stay_guest_and_voided", (query) => query
+              .eq("stayId", stayId)
+              .eq("guestUserId", user._id)
+              .eq("voidedAt", undefined))
+            .paginate({ cursor, numItems: 500 });
+          previousObligations.push(...page.page);
+          cursor = page.continueCursor;
+          isDone = page.isDone;
+        }
         for (const obligation of previousObligations) {
           if (obligation.termsId === termsId || obligation.voidedAt || obligation.type === "adhoc" || obligation.periodEnd < effectiveBoundary) continue;
 
@@ -161,12 +173,14 @@ export const updateGuest = mutation({
     assertStayTerms(terms);
     const previous = await ensureGuestTerms(ctx, stayId, guestUserId, user._id);
     const now = Date.now();
-    const effectiveFrom = calendarDateInTimezone(new Date(now), stay.timezone);
+    const effectiveFrom = guestMembership.acceptedTermsId
+      ? calendarDateInTimezone(new Date(now), stay.timezone)
+      : undefined;
     const termsId = await ctx.db.insert("terms", {
       stayId,
       guestUserId,
       version: previous.version + 1,
-      effectiveFrom,
+      ...(effectiveFrom ? { effectiveFrom } : {}),
       ...terms,
       createdBy: user._id,
       createdAt: now,
