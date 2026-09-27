@@ -1,12 +1,14 @@
 import { v } from "convex/values";
 
+import type { Doc } from "./_generated/dataModel";
 import { mutation } from "./_generated/server";
 import { requireHost, requireMembership } from "./lib/auth";
 import { recordActivity } from "./lib/activity";
 import { ensureObligationsForTerms } from "./lib/obligations";
 import { assertStayTerms } from "./lib/validation";
 import { ensureGuestTerms, getCurrentGuestTerms } from "./lib/stayTerms";
-import { calendarDateInTimezone } from "../lib/domain/dates";
+import { addCalendarDays, calendarDateInTimezone, stayDays } from "../lib/domain/dates";
+import { buildObligationPeriods } from "../lib/domain/obligations";
 
 const termsInput = {
   startDate: v.string(),
@@ -57,16 +59,62 @@ export const acceptCurrent = mutation({
     if (!existing) await ctx.db.insert("termsAcceptances", { stayId, termsId, userId: user._id, acceptedAt: Date.now() });
     if (membership.acceptedTermsId !== termsId) await ctx.db.patch(membership._id, { acceptedTermsId: termsId });
     if (membership.role === "guest") {
-      if (terms.effectiveFrom) {
-        const currentDate = calendarDateInTimezone(new Date(), stay.timezone);
-        const previousObligations = await ctx.db
-          .query("obligations")
-          .withIndex("by_stay_and_guest", (query) => query.eq("stayId", stayId).eq("guestUserId", user._id))
-          .take(1_000);
+      if (terms.effectiveFrom && membership.acceptedTermsId !== termsId) {
+        const effectiveBoundary = calendarDateInTimezone(new Date(), stay.timezone);
+        if (terms.effectiveFrom !== effectiveBoundary) {
+          await ctx.db.patch(termsId, { effectiveFrom: effectiveBoundary });
+        }
+        const previousObligations: Doc<"obligations">[] = [];
+        let cursor: string | null = null;
+        let isDone = false;
+        while (!isDone) {
+          const page = await ctx.db
+            .query("obligations")
+            .withIndex("by_stay_guest_and_voided", (query) => query
+              .eq("stayId", stayId)
+              .eq("guestUserId", user._id)
+              .eq("voidedAt", undefined))
+            .paginate({ cursor, numItems: 500 });
+          previousObligations.push(...page.page);
+          cursor = page.continueCursor;
+          isDone = page.isDone;
+        }
         for (const obligation of previousObligations) {
-          if (obligation.termsId !== termsId && !obligation.voidedAt && obligation.type !== "adhoc" && obligation.dueDate >= currentDate) {
-            await ctx.db.patch(obligation._id, { voidedAt: Date.now(), voidedBy: user._id });
+          if (obligation.termsId === termsId || obligation.voidedAt || obligation.type === "adhoc" || obligation.periodEnd < effectiveBoundary) continue;
+
+          if (obligation.periodStart < effectiveBoundary) {
+            const preservedPeriodEnd = addCalendarDays(effectiveBoundary, -1);
+            const sourceTerms = obligation.termsId
+              ? await ctx.db.get(obligation.termsId)
+              : stay.currentTermsId ? await ctx.db.get(stay.currentTermsId) : null;
+            const preservedDays = stayDays(obligation.periodStart, preservedPeriodEnd);
+            const fullPeriodDays = stayDays(obligation.periodStart, obligation.periodEnd);
+            const preservedAmount = sourceTerms
+              ? buildObligationPeriods({
+                ...sourceTerms,
+                startDate: obligation.periodStart,
+                endDate: preservedPeriodEnd,
+              })[0]?.baseAmountCents ?? 0
+              : Math.round((obligation.baseAmountCents * preservedDays) / fullPeriodDays);
+
+            if (preservedDays > 0 && preservedAmount > 0) {
+              await ctx.db.insert("obligations", {
+                stayId,
+                termsId: obligation.termsId ?? sourceTerms?._id,
+                guestUserId: user._id,
+                type: "cadence",
+                periodStart: obligation.periodStart,
+                periodEnd: preservedPeriodEnd,
+                dueDate: obligation.dueDate,
+                baseAmountCents: preservedAmount,
+                lateFeeWaivedAt: obligation.lateFeeWaivedAt,
+                lateFeeWaivedBy: obligation.lateFeeWaivedBy,
+                createdAt: Date.now(),
+              });
+            }
           }
+
+          await ctx.db.patch(obligation._id, { voidedAt: Date.now(), voidedBy: user._id });
         }
       }
       await ensureObligationsForTerms(ctx, stayId, termsId, user._id, user._id);
@@ -125,12 +173,14 @@ export const updateGuest = mutation({
     assertStayTerms(terms);
     const previous = await ensureGuestTerms(ctx, stayId, guestUserId, user._id);
     const now = Date.now();
-    const effectiveFrom = calendarDateInTimezone(new Date(now), stay.timezone);
+    const effectiveFrom = guestMembership.acceptedTermsId
+      ? calendarDateInTimezone(new Date(now), stay.timezone)
+      : undefined;
     const termsId = await ctx.db.insert("terms", {
       stayId,
       guestUserId,
       version: previous.version + 1,
-      effectiveFrom,
+      ...(effectiveFrom ? { effectiveFrom } : {}),
       ...terms,
       createdBy: user._id,
       createdAt: now,

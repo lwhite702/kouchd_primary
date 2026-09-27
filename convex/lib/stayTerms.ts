@@ -15,6 +15,20 @@ export async function getCurrentGuestTerms(ctx: DbCtx, stayId: Id<"stays">, gues
   return stay?.currentTermsId ? await ctx.db.get(stay.currentTermsId) : null;
 }
 
+export async function getAcceptedGuestTerms(ctx: DbCtx, stayId: Id<"stays">, guestUserId: Id<"users">) {
+  const membership = await ctx.db
+    .query("memberships")
+    .withIndex("by_stay_user", (query) => query.eq("stayId", stayId).eq("userId", guestUserId))
+    .unique();
+  if (membership?.acceptedTermsId) {
+    const acceptedTerms = await ctx.db.get(membership.acceptedTermsId);
+    if (acceptedTerms) return acceptedTerms;
+  }
+
+  const stay = await ctx.db.get(stayId);
+  return stay?.currentTermsId ? await ctx.db.get(stay.currentTermsId) : null;
+}
+
 export async function ensureGuestTerms(
   ctx: MutationCtx,
   stayId: Id<"stays">,
