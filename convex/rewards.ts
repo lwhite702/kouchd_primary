@@ -5,7 +5,7 @@ import { requireCurrentUser, requireHost, requireMembership, resolveFinancialGue
 import { recordActivity } from "./lib/activity";
 import { assertCalendarDate, assertContributionRuleInput, assertPointClaimInput } from "./lib/validation";
 import { pointsToCents } from "../lib/domain/rewards";
-import { getCurrentGuestTerms } from "./lib/stayTerms";
+import { getAcceptedGuestTerms } from "./lib/stayTerms";
 
 export const getSettings = query({
   args: { stayId: v.id("stays") },
@@ -22,7 +22,7 @@ export const getSettings = query({
       return { enabled: false, coinName: "Coins", centsPerPoint: 100, maxCreditPerPeriodCents: 0 };
     }
     const terms = membership.role === "guest"
-      ? await getCurrentGuestTerms(ctx, stayId, membership.userId)
+      ? await getAcceptedGuestTerms(ctx, stayId, membership.userId)
       : await ctx.db.get(stay.currentTermsId);
     return terms?.rewards ?? { enabled: false, coinName: "Coins", centsPerPoint: 100, maxCreditPerPeriodCents: 0 };
   },
@@ -122,7 +122,7 @@ export const getWallet = query({
 
     const guestUserId = access.guestUserId;
     const stay = await ctx.db.get(stayId);
-    const terms = stay?.currentTermsId ? await getCurrentGuestTerms(ctx, stayId, guestUserId) : null;
+    const terms = stay?.currentTermsId ? await getAcceptedGuestTerms(ctx, stayId, guestUserId) : null;
     const settings = terms?.rewards ?? { enabled: false, coinName: "Coins", centsPerPoint: 100, maxCreditPerPeriodCents: 0 };
 
     const claims = await ctx.db
@@ -335,7 +335,7 @@ export const redeem = mutation({
     }
     if (!stay.currentTermsId) throw new Error("Stay has no active terms");
 
-    const terms = await getCurrentGuestTerms(ctx, args.stayId, user._id);
+    const terms = await getAcceptedGuestTerms(ctx, args.stayId, user._id);
     if (!terms?.rewards?.enabled) {
       throw new Error("Contribution rewards are not enabled for this stay");
     }
