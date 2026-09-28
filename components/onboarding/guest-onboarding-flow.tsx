@@ -3,7 +3,7 @@
 import { useMutation, useQuery } from "convex/react";
 import { ArrowLeft, ArrowRight, CheckCircle2, Coins, MessageSquare, ShieldCheck } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -29,8 +29,18 @@ export function GuestOnboardingFlow({
   const [rulesAcknowledged, setRulesAcknowledged] = useState(false);
   const [phone, setPhone] = useState("");
   const [optInSms, setOptInSms] = useState(false);
+  const [selectedCadence, setSelectedCadence] = useState<"daily" | "weekly">(bundle?.terms?.cadence ?? "weekly");
+  const [paymentDayOfWeek, setPaymentDayOfWeek] = useState(bundle?.terms?.paymentDayOfWeek ?? 5);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const initializedSchedule = useRef(false);
+
+  useEffect(() => {
+    if (!bundle?.terms || initializedSchedule.current) return;
+    setSelectedCadence(bundle.terms.cadence);
+    setPaymentDayOfWeek(bundle.terms.paymentDayOfWeek ?? 5);
+    initializedSchedule.current = true;
+  }, [bundle]);
 
   if (!bundle) {
     return <div className="route-state">Loading household agreement...</div>;
@@ -40,6 +50,14 @@ export function GuestOnboardingFlow({
   const host = members.find((m: { membership: { role: string } }) => m.membership.role === "host")?.person;
   const houseRules = terms?.houseRules ?? [];
   const rewards = terms?.rewards;
+  const isInitialAcceptance = !bundle.membership.acceptedTermsId;
+  const selectedRateCents = terms
+    ? terms.cadence === selectedCadence
+      ? terms.rateCents
+      : selectedCadence === "daily"
+        ? Math.round(terms.rateCents / 7)
+        : terms.rateCents * 7
+    : 0;
 
   async function handleAccept() {
     setSubmitting(true);
@@ -61,7 +79,10 @@ export function GuestOnboardingFlow({
           smsConsentConfirmed: true,
         });
       }
-      await acceptTerms({ stayId });
+      await acceptTerms({
+        stayId,
+        ...(isInitialAcceptance ? { initialCadence: selectedCadence, ...(selectedCadence === "weekly" ? { initialPaymentDayOfWeek: paymentDayOfWeek } : {}) } : {}),
+      });
       onComplete();
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Could not accept agreement");
@@ -271,8 +292,14 @@ export function GuestOnboardingFlow({
           <p className="eyebrow onboarding-eyebrow">Step 3 of 4 · Financial Agreement <HelpTip title="Contribution terms" href="https://help.kouchd.com/hosts/pricing-and-terms">Review your rate, cadence, due dates, and any payment rules. Kouchd records contributions; payment happens through the host’s external payment options.</HelpTip></p>
           <h1>Financial Terms & Rewards</h1>
           <p className="subhead">
-            Your recurring rate and opportunities to earn points and stay credits through household tasks.
+            Choose how often you pay. Mixed and partial contributions count toward your balance; the full amount is due by each period&apos;s due date.
           </p>
+
+          {isInitialAcceptance && terms && <div className="form-grid" style={{ marginTop: "1.25rem" }}>
+            <label><span>Payment schedule</span><select value={selectedCadence} onChange={(event) => setSelectedCadence(event.target.value as "daily" | "weekly")}><option value="daily">Daily</option><option value="weekly">Weekly</option></select></label>
+            {selectedCadence === "weekly" && <label><span>Weekly payment day</span><select value={paymentDayOfWeek} onChange={(event) => setPaymentDayOfWeek(Number(event.target.value))}>{["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"].map((day, index) => <option key={day} value={index}>{day}</option>)}</select></label>}
+          </div>}
+          {isInitialAcceptance && <p className="muted small">The daily or weekly rate keeps the same approximate weekly total. Partial payments count toward the period, and the remaining balance is due by its displayed due date.</p>}
 
           <div style={{ marginTop: "1.5rem", display: "flex", flexDirection: "column", gap: "1rem" }}>
             <div
@@ -291,7 +318,8 @@ export function GuestOnboardingFlow({
                   Agreed Rate
                 </span>
                 <p style={{ margin: "2px 0 0", fontSize: "1.2rem", fontWeight: 800 }}>
-                  {money.format((terms?.rateCents ?? 0) / 100)} / {terms?.cadence === "weekly" ? "week" : "day"}
+                  {money.format((isInitialAcceptance ? selectedRateCents : terms?.rateCents ?? 0) / 100)} / {(isInitialAcceptance ? selectedCadence : terms?.cadence) === "weekly" ? "week" : "day"}
+                  {(isInitialAcceptance ? selectedCadence : terms?.cadence) === "weekly" && <span style={{ display: "block", fontSize: ".84rem", marginTop: 4 }}>Due {(["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"] as const)[isInitialAcceptance ? paymentDayOfWeek : terms?.paymentDayOfWeek ?? 0]}</span>}
                 </p>
               </div>
               <div>
@@ -307,7 +335,7 @@ export function GuestOnboardingFlow({
                   Late Fee Policy
                 </span>
                 <p style={{ margin: "2px 0 0", fontWeight: 700 }}>
-                  {terms?.lateFeeEnabled ? `${money.format(terms.lateFeeCents / 100)} after ${terms.graceDays} days grace` : "Off"}
+                  {(terms?.lateFeeEnabled ?? (terms?.lateFeeCents ?? 0) > 0) ? `${money.format(((isInitialAcceptance ? selectedCadence : terms?.cadence) === "weekly" ? 2_500 : 500) / 100)} every 7 days if the ${((isInitialAcceptance ? selectedCadence : terms?.cadence) === "weekly") ? "weekly total" : "daily amount"} remains unpaid after ${terms?.graceDays ?? 0} grace days` : "Off"}
                 </p>
               </div>
             </div>
@@ -334,7 +362,7 @@ export function GuestOnboardingFlow({
                 <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", fontSize: "0.82rem", fontWeight: 600, color: "#184f3a" }}>
                   <span>• 1 {rewards.coinName} = ${((rewards.centsPerPoint ?? 100) / 100).toFixed(2)} financial credit</span>
                   {rewards.maxCreditPerPeriodCents > 0 && (
-                    <span>• Up to ${((rewards.maxCreditPerPeriodCents ?? 0) / 100).toFixed(2)} deduction per {terms?.cadence === "weekly" ? "week" : "day"}</span>
+                    <span>• Up to ${((rewards.maxCreditPerPeriodCents ?? 0) / 100).toFixed(2)} deduction per {(isInitialAcceptance ? selectedCadence : terms?.cadence) === "weekly" ? "week" : "day"}</span>
                   )}
                 </div>
               </div>

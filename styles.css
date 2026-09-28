@@ -221,6 +221,9 @@ h2 { margin-bottom: 8px; font-size: 1.35rem; letter-spacing: -0.035em; }
 
 .section-block { margin-top: 42px; }
 .section-heading { display: flex; justify-content: space-between; align-items: end; margin-bottom: 14px; }
+.payment-schedule-card .section-heading h2 { display: flex; align-items: center; gap: 9px; }
+.payment-schedule-card .row-actions { flex-wrap: wrap; justify-content: flex-end; }
+.payment-schedule-card .muted.small { margin-top: 12px; font-size: .82rem; line-height: 1.5; }
 .activity-list, .ledger-list, .chore-list { display: grid; gap: 10px; }
 .list-row {
   display: grid;
@@ -1149,5 +1152,4 @@ textarea { resize: vertical; }
     font-size: clamp(26px, 6.5vw, 38px);
   }
 }
-
 

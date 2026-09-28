@@ -2,6 +2,14 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-09-28 — Guest payment schedule choice and approval
+
+- Added guest-selected daily or weekly billing at initial agreement acceptance, including an initial weekly payment weekday and clear rate/late-fee copy.
+- Added host-reviewed schedule change requests with a zero due-balance gate, one approved change per 14 days, and prorated obligation handoff at the approval date.
+- Added per-period weekly weekday alignment and a roadmap entry. This work is local to `codex/guest-payment-schedule`; it has not been pushed, merged, deployed, or published.
+- TypeScript check passed. No tests were added or run.
+- Linear issue association is pending: the connected workspace currently exposes only the Wrelik team, and the repository policy says not to misclassify Kouchd work under another product team.
+
 ## 2026-09-25 — WRE-145 documentation and policy refresh
 
 - Fetched `origin` and integrated the current remote `main` updates into the task branch, then fast-forwarded the branch-only Kouchd product work through `36d136d` for accurate documentation review.

@@ -62,3 +62,11 @@
 - Live `https://help.kouchd.com/help` returned HTTP 200. Mintlify-rendered page metadata reports `dateModified` 2026-09-28T04:53:09.306Z and shows the Kouchd Help Center content.
 - PR Vercel and CodeRabbit checks passed. Mintlify marks the PR-level deployment check skipped; main-source sync was verified against the live page after merge.
 - WRE-145 documentation, repository policy, and help-center publication are complete. A separate product/legal review remains advisable for unsupported legal/consequence language in reminder templates; public help omits those claims.
+
+### Guest payment schedule work (2026-09-28)
+
+- Worktree: `/Volumes/Projects/CodexWorktrees/kouchd-guest-payment-schedule`, branch `codex/guest-payment-schedule`, based on `origin/main` at task start.
+- Added daily/weekly choice at initial guest acceptance, weekly weekday selection, per-guest pending schedule requests, host approval/rejection, a $0 due-balance gate, a 14-day approved-change cooldown, and prorated obligation changes.
+- Updated the product roadmap to identify the schedule workflow as in progress. The work is not pushed, merged, deployed, or published; the public user guides and changelog have not been changed to claim availability.
+- `tsc --noEmit`, targeted ESLint, and `git diff --check` passed after the final edits. No tests were added or run.
+- Linear issue association remains unresolved because only the Wrelik team is available in the connected workspace; do not create a Kouchd issue under Wrelik.
