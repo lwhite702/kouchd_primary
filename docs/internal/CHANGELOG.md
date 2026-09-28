@@ -27,5 +27,8 @@ Internal engineering record. This file is excluded from Mintlify navigation and 
 
 - Rebasing task-only documentation commits onto current `origin/main` after the feature branch's application commits were merged separately.
 - Verified current app production deployment at Kouchd `main` commit `3b6ae85` (Vercel state `READY`). Updated public roadmap and changelog to reflect the deployed individual guest agreements and external payment options; in-app payment processing remains unavailable.
+- Current main has since advanced to `df5e214`, also deployed `READY`, with progressive payment reminder logic. Added neutral public guidance about reminder milestones, accepted terms, ledger state, channel preferences, and service availability.
 - Expanded host setup and terms guides for the shipped agreement and external payment workflows.
 - Publication was explicitly approved by the user; no live help-center changes have occurred yet.
+- The current reminder source contains some legal/consequence language that is not substantiated by the terms or enforcement code inspected. Public documentation intentionally describes only due-date/grace/ledger behavior; a separate product/legal review is recorded in the handoff.
+- Latest checks passed: `mintlify validate`, `mintlify broken-links`, root `docs.json` parsing, and `git diff --check` after correcting nested `/help/...` links.

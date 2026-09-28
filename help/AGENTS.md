@@ -13,7 +13,7 @@ Read the repository-root `AGENTS.md` first. These instructions apply to the publ
 ## Kouchd terms and voice
 
 - Use **host** for the person managing a stay, **guest** for the person joining it, **stay** for the shared living arrangement, and **contribution** for a payment or other agreed credit recorded in Kouchd.
-- Call the financial record **Contributions** when referring to the current app label; use “record” or “ledger” in explanatory text as needed.
+- Use **Ledger** for the current financial area in the web app. Use **Add contribution** for the action and “contribution” for an entry or agreed credit.
 - Use active voice, second person, sentence-case headings, and concise steps. Keep the voice warm, clear, and plainspoken. Explain unfamiliar terms in everyday language.
 - Keep the brand welcoming and homey while explaining the product directly. Use Manrope in brand/web design; use platform-native navigation and controls in iOS/Android concepts. Visual direction should favor soft curves, lived-in warmth, cream, forest green, and restrained lime.
 - Avoid hype, pressure, corporate jargon, shame, fabricated testimonials, and debt-collection language. Respect guests as people sharing a home, not as balances to collect.

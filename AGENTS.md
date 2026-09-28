@@ -36,6 +36,7 @@ This file governs agent activity in the Kouchd repository. Read it before planni
 ## Documentation and public claims
 
 - Match help steps to current Kouchd labels and behavior. Use plain language, direct steps, and a warm, matter-of-fact voice.
+- In the current web app, call the financial screen **Ledger**, the action **Add contribution**, and each saved entry a “contribution.”
 - Update the relevant user guides when a released change affects a workflow, settings, permissions, or visible product behavior. Keep the public roadmap, changelog, and internal changelog/handoff in sync.
 - Public changelog entries describe verified releases only. Mark branch-only capabilities as in development on the roadmap; do not imply availability or announce an ETA without approval.
 - Do not claim Kouchd collects, holds, transfers, enforces, or processes payments. Contribution records do not prove that money moved.

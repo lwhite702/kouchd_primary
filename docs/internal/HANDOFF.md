@@ -48,6 +48,9 @@
 
 - Rebased only the three task documentation commits onto current `origin/main`, which includes the previously separate feature changes. The task branch now contains only the documentation/policy commits plus the follow-up updates; no application code is included in this PR.
 - Vercel reports the Kouchd production deployment for main commit `3b6ae85` as `READY`. Therefore individual guest agreements and host-shared external payment options are described as available. Kouchd still does not process payments.
-- Updated the roadmap, public changelog, and host setup/pricing guides to match that deployed behavior.
+- Current main advanced to `df5e214`, also deployed `READY`, adding progressive payment reminders. Public notification help, roadmap, and changelog now describe reminder timing in relation to due dates, accepted grace periods, late-fee terms, ledger state, channel preferences, and provider availability.
+- Updated the roadmap, public changelog, and host setup/pricing guides to match deployed behavior. The app source includes legal/consequence statements in some reminder templates that are not substantiated by corresponding terms or enforcement behavior inspected; public help deliberately omits those statements pending separate product/legal review.
 - User explicitly requested publication on 2026-09-28. PR/merge and Mintlify live verification remain to be completed.
 - Follow-up route verification: `mintlify validate` passed; `mintlify broken-links` found no broken links; root `docs.json` parsed and `git diff --check` passed.
+- Fixed all overview links to use the `/help/...` prefix that Mintlify requires for nested pages. The root-level `quickstart.mdx` starter was also replaced with useful setup guidance.
+- Latest checks passed: `mintlify validate`, `mintlify broken-links`, root `docs.json` parsing, and `git diff --check`. Lint/typecheck/tests remain unavailable because dependencies are absent in this worktree; this PR changes no application code.
