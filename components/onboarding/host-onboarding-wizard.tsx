@@ -6,6 +6,7 @@ import Link from "next/link";
 import { FormEvent, useMemo, useState } from "react";
 
 import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
 import { addCalendarDays, calendarDateInTimezone } from "@/lib/domain/dates";
 import { SUGGESTED_HOUSE_RULES, HouseRuleItem } from "@/lib/domain/houseRulesCatalog";
 import { SUGGESTED_CONTRIBUTION_TASKS, SuggestedContributionTask } from "@/lib/domain/rewards";
@@ -19,7 +20,7 @@ export function HostOnboardingWizard({
   onComplete,
 }: {
   onCancel?: () => void;
-  onComplete?: () => void;
+  onComplete?: (stayId: Id<"stays">) => void;
 }) {
   const viewer = useQuery(api.users.viewer, {});
   const createStay = useMutation(api.stays.create);
@@ -135,7 +136,7 @@ export function HostOnboardingWizard({
         .map((r, i) => `${i + 1}. **${r.title}**: ${r.description}`)
         .join("\n\n");
 
-      await createStay({
+      const stayId = await createStay({
         timezone,
         nextCheckInDate: nextCheckInDate || undefined,
         paymentOptions: (Object.entries(paymentDetails) as Array<[keyof typeof paymentDetails, string]>)
@@ -168,7 +169,7 @@ export function HostOnboardingWizard({
           },
         },
       });
-      onComplete?.();
+      onComplete?.(stayId);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Could not create the stay");
       setSaving(false);

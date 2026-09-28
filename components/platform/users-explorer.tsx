@@ -5,11 +5,13 @@ import { Mail, Phone, Search, Shield, X } from "lucide-react";
 import { useState } from "react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
+import { DestructiveConfirmationDialog } from "@/components/confirmation/destructive-confirmation-dialog";
 
 export function UsersExplorer() {
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const [selectedUserId, setSelectedUserId] = useState<Id<"users"> | null>(null);
+  const [pendingAdminChange, setPendingAdminChange] = useState<{ userId: Id<"users">; userName: string; isAdmin: boolean } | null>(null);
 
   const users = useQuery(api.admin.listUsers, { searchTerm: searchTerm || undefined });
   const userDetail = useQuery(
@@ -17,6 +19,12 @@ export function UsersExplorer() {
     selectedUserId ? { userId: selectedUserId } : "skip"
   );
   const toggleAdmin = useMutation(api.admin.toggleAdmin);
+
+  async function confirmAdminChange() {
+    if (!pendingAdminChange) return;
+    await toggleAdmin({ userId: pendingAdminChange.userId, isAdmin: pendingAdminChange.isAdmin });
+    setPendingAdminChange(null);
+  }
 
   const filteredUsers = (users ?? []).filter((u) => {
     if (roleFilter === "all") return true;
@@ -241,7 +249,7 @@ export function UsersExplorer() {
                       className={`button ${userDetail.user.isAdmin ? "danger-outline" : "soft"} compact`}
                       style={{ fontSize: "0.75rem", padding: "3px 8px" }}
                       onClick={async () => {
-                        await toggleAdmin({ userId: userDetail.user._id, isAdmin: !userDetail.user.isAdmin });
+                        setPendingAdminChange({ userId: userDetail.user._id, userName: userDetail.user.name, isAdmin: !userDetail.user.isAdmin });
                       }}
                     >
                       <Shield size={12} />
@@ -316,6 +324,13 @@ export function UsersExplorer() {
           </div>
         </div>
       )}
+      {pendingAdminChange && <DestructiveConfirmationDialog
+        title={pendingAdminChange.isAdmin ? "Grant platform admin access?" : "Revoke platform admin access?"}
+        description={pendingAdminChange.isAdmin ? `${pendingAdminChange.userName} will be able to access staff-only platform tools and account data.` : `${pendingAdminChange.userName} will lose access to staff-only platform tools.`}
+        confirmLabel={pendingAdminChange.isAdmin ? "Grant access" : "Revoke access"}
+        onConfirm={confirmAdminChange}
+        onCancel={() => setPendingAdminChange(null)}
+      />}
     </div>
   );
 }

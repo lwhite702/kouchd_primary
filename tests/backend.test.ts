@@ -15,6 +15,7 @@ const firstTerms = {
   startDate: "2026-09-01",
   endDate: "2026-09-21",
   cadence: "weekly" as const,
+  paymentDayOfWeek: 1,
   rateCents: 20_000,
   earlyDiscountEnabled: true,
   earlyDiscountPercentage: 5,

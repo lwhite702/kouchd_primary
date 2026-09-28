@@ -173,7 +173,26 @@ h2 { margin-bottom: 8px; font-size: 1.35rem; letter-spacing: -0.035em; }
 .button.soft { background: #dceade; color: var(--green); }
 .button.ghost { background: transparent; color: var(--ink); }
 .button.danger-outline { margin-top: 22px; border: 1px solid #c9503b; color: #9f351f; background: transparent; }
+.confirmation-dialog .button.danger-outline { margin-top: 0; }
 .text-button { min-height: 42px; padding: 0; border: 0; background: transparent; color: var(--green-2); font-weight: 800; text-align: left; }
+
+.stay-hub { width: min(1080px, 100%); margin: 0 auto; padding: 2.5rem 1.25rem 5rem; }
+.stay-hub-setup { width: 100%; }
+.stay-hub-section { margin-top: 2.5rem; }
+.stay-hub-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 1rem; }
+.stay-hub-card { display: flex; min-height: 200px; flex-direction: column; align-items: flex-start; gap: 0.6rem; border: 1px solid var(--line); border-radius: 22px; background: var(--card); padding: 1.25rem; color: var(--ink); text-align: left; box-shadow: 0 8px 28px rgba(23, 47, 36, 0.06); cursor: pointer; transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease; }
+.stay-hub-card:hover { transform: translateY(-2px); border-color: #b8d2c1; box-shadow: 0 14px 36px rgba(23, 47, 36, 0.1); }
+.stay-hub-card > strong { font-size: 1.15rem; }
+.stay-hub-card > span:not(.status-pill):not(.stay-hub-open) { color: var(--muted); font-size: 0.88rem; }
+.stay-hub-card .status-pill { padding: 6px 10px; }
+.stay-hub-card .status-pill.ended { background: #eeeae2; color: var(--muted) !important; }
+.stay-hub-open { display: inline-flex; align-items: center; gap: 0.4rem; margin-top: auto; color: var(--green); font-size: 0.88rem; font-weight: 800; }
+.stay-hub-card.past { background: #fbfaf7; }
+.confirmation-backdrop { z-index: 80; }
+.confirmation-dialog { width: min(480px, 100%); }
+.confirmation-dialog h2 { margin-bottom: 0; }
+.confirmation-copy { margin: 1.1rem 0; line-height: 1.55; }
+.confirmation-dialog .dialog-actions { justify-content: flex-end; gap: 0.65rem; }
 
 .empty-state {
   min-height: calc(100vh - 250px);
@@ -420,6 +439,15 @@ textarea { resize: vertical; }
 .toast.show { opacity: 1; transform: translate(-50%, 0); }
 
 @media (max-width: 760px) {
+  .topbar-actions .stays-entry { width: 38px; min-width: 38px; justify-content: center; padding: 0; }
+  .topbar-actions .stays-entry span { display: none; }
+  .stay-hub { padding: 1.5rem 1rem 6rem; }
+  .stay-hub .page-heading { align-items: flex-start; flex-direction: column; gap: 1rem; }
+  .stay-hub .page-heading > .button { width: 100%; justify-content: center; }
+  .stay-hub-card { min-height: 174px; }
+  .confirmation-backdrop { align-items: end; padding: 0 0 env(safe-area-inset-bottom, 0px); }
+  .confirmation-dialog { border-radius: 26px 26px 0 0; padding: 1.25rem; }
+  .confirmation-dialog .dialog-actions > button { flex: 1; justify-content: center; }
   .topbar { height: calc(70px + env(safe-area-inset-top, 0px)); padding: env(safe-area-inset-top, 0px) 18px 0; }
   .tour-entry { min-width: 36px; padding: 6px !important; }
   .tour-entry span { display: none; }
@@ -1152,4 +1180,3 @@ textarea { resize: vertical; }
     font-size: clamp(26px, 6.5vw, 38px);
   }
 }
-

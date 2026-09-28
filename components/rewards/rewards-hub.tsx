@@ -15,12 +15,14 @@ export function RewardsHub({
   isHost,
   selectedGuestId,
   currentBalanceCents = 0,
+  readOnly = false,
   onNotify,
 }: {
   stayId: Id<"stays">;
   isHost: boolean;
   selectedGuestId?: Id<"users">;
   currentBalanceCents?: number;
+  readOnly?: boolean;
   onNotify: (msg: string) => void;
 }) {
   const wallet = useQuery(api.rewards.getWallet, { stayId, guestUserId: selectedGuestId });
@@ -165,7 +167,7 @@ export function RewardsHub({
           </div>
 
           <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-            {!isHost && (
+            {!isHost && !readOnly && (
               <>
                 <button
                   className="button soft"
@@ -189,7 +191,7 @@ export function RewardsHub({
                 </button>
               </>
             )}
-            {isHost && (
+            {isHost && !readOnly && (
               <button
                 className="button soft"
                 type="button"
@@ -203,7 +205,7 @@ export function RewardsHub({
         </div>
 
         {/* Host Approval Queue Alert */}
-        {isHost && pendingClaims.length > 0 && (
+        {isHost && !readOnly && pendingClaims.length > 0 && (
           <div
             style={{
               marginTop: "1rem",
@@ -245,7 +247,7 @@ export function RewardsHub({
                 <div className="list-value">
                   <small>{claim.date}</small>
                 </div>
-                {isHost && claim.status === "pending" && (
+                {isHost && !readOnly && claim.status === "pending" && (
                   <div className="row-actions" style={{ display: "flex", gap: "0.4rem" }}>
                     <button
                       className="mini-button"
@@ -276,7 +278,7 @@ export function RewardsHub({
             <p className="eyebrow">Rewards Catalog</p>
             <h2>Ways to Earn {coinName}</h2>
           </div>
-          {isHost && (
+          {isHost && !readOnly && (
             <button className="mini-button" type="button" onClick={() => setModal("new_rule")}>
               <Plus size={14} /> Add task
             </button>
@@ -319,7 +321,7 @@ export function RewardsHub({
                 </p>
               </div>
 
-              {isHost && (
+              {isHost && !readOnly && (
                 <div style={{ marginTop: "0.5rem", borderTop: "1px solid var(--line, #e2ded7)", paddingTop: "0.4rem", display: "flex", justifyContent: "flex-end" }}>
                   <button
                     className="text-button"
