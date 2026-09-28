@@ -54,3 +54,11 @@
 - Follow-up route verification: `mintlify validate` passed; `mintlify broken-links` found no broken links; root `docs.json` parsed and `git diff --check` passed.
 - Fixed all overview links to use the `/help/...` prefix that Mintlify requires for nested pages. The root-level `quickstart.mdx` starter was also replaced with useful setup guidance.
 - Latest checks passed: `mintlify validate`, `mintlify broken-links`, root `docs.json` parsing, and `git diff --check`. Lint/typecheck/tests remain unavailable because dependencies are absent in this worktree; this PR changes no application code.
+
+
+### Publication completed (2026-09-28)
+
+- PR [#7](https://github.com/lwhite702/kouchd_primary/pull/7) merged to `main` as `d2f74f33bef7729398ea14bbf960326849bf05e2`. This supersedes the earlier pending-publication notes above.
+- Live `https://help.kouchd.com/help` returned HTTP 200. Mintlify-rendered page metadata reports `dateModified` 2026-09-28T04:53:09.306Z and shows the Kouchd Help Center content.
+- PR Vercel and CodeRabbit checks passed. Mintlify marks the PR-level deployment check skipped; main-source sync was verified against the live page after merge.
+- WRE-145 documentation, repository policy, and help-center publication are complete. A separate product/legal review remains advisable for unsupported legal/consequence language in reminder templates; public help omits those claims.

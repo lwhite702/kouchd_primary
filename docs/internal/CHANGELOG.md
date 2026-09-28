@@ -32,3 +32,9 @@ Internal engineering record. This file is excluded from Mintlify navigation and 
 - Publication was explicitly approved by the user; no live help-center changes have occurred yet.
 - The current reminder source contains some legal/consequence language that is not substantiated by the terms or enforcement code inspected. Public documentation intentionally describes only due-date/grace/ledger behavior; a separate product/legal review is recorded in the handoff.
 - Latest checks passed: `mintlify validate`, `mintlify broken-links`, root `docs.json` parsing, and `git diff --check` after correcting nested `/help/...` links.
+
+
+### Publication completed — 2026-09-28
+
+- Merged [PR #7](https://github.com/lwhite702/kouchd_primary/pull/7) to `main` (`d2f74f33bef7729398ea14bbf960326849bf05e2`) and verified the live Help Center route returns HTTP 200 with updated Mintlify page metadata.
+- Vercel preview and CodeRabbit passed; Mintlify PR check was skipped, so publication was confirmed by reading the live page after merge.
