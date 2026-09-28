@@ -64,3 +64,30 @@ export async function resolveFinancialGuest(
   }
   return { ...result, guestUserId: target, includeLegacyUnscoped: guests.length === 1 };
 }
+
+export async function requirePlatformAdmin(ctx: AppCtx) {
+  const user = await requireCurrentUser(ctx);
+  const identity = await ctx.auth.getUserIdentity();
+  if (!identity) throw new Error("Unauthenticated");
+
+  const adminEmails = (process.env.PLATFORM_ADMIN_EMAILS ?? process.env.ADMIN_EMAILS ?? "")
+    .split(",")
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean);
+
+  const adminUserIds = (process.env.PLATFORM_ADMIN_USER_IDS ?? "")
+    .split(",")
+    .map((id) => id.trim())
+    .filter(Boolean);
+
+  const email = (user.email ?? identity.email)?.toLowerCase();
+  const hasEmailMatch = email ? adminEmails.includes(email) : false;
+  const hasIdMatch = adminUserIds.includes(user.clerkUserId) || adminUserIds.includes(identity.subject);
+  const isDbAdmin = Boolean(user.isAdmin);
+
+  if (!hasEmailMatch && !hasIdMatch && !isDbAdmin) {
+    throw new Error("Unauthorized: Platform admin grant required");
+  }
+
+  return { user, identity };
+}

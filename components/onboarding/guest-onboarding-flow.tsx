@@ -95,7 +95,7 @@ export function GuestOnboardingFlow({
       {/* Step 1: Welcome & Household Summary */}
       {step === 1 && (
         <div key="guest-step-1" className="screen-transition">
-          <p className="eyebrow">Step 1 of 4 · Welcome <HelpTip title="Your shared stay">Review who is hosting, the planned dates, and who is part of this household.</HelpTip></p>
+          <p className="eyebrow onboarding-eyebrow">Step 1 of 4 · Welcome <HelpTip title="Your shared stay" href="https://help.kouchd.com/guests/joining-a-stay">Review who is hosting, the planned dates, and who is part of this household.</HelpTip></p>
           <h1>Welcome to the household.</h1>
           <p className="subhead">
             Hosted by <strong>{host?.name ?? "Host"}</strong>. Review the terms and house rules established for this shared stay.
@@ -138,7 +138,7 @@ export function GuestOnboardingFlow({
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
+                gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 160px), 1fr))",
                 gap: "1rem",
                 borderTop: "1px solid var(--line, #e2ded7)",
                 paddingTop: "1rem",
@@ -183,7 +183,7 @@ export function GuestOnboardingFlow({
       {/* Step 2: House Rules & Living Expectations */}
       {step === 2 && (
         <div key="guest-step-2" className="screen-transition">
-          <p className="eyebrow">Step 2 of 4 · Living Expectations <HelpTip title="House rules">Read each guideline and ask your host about anything that is unclear before you accept the agreement.</HelpTip></p>
+          <p className="eyebrow onboarding-eyebrow">Step 2 of 4 · Living Expectations <HelpTip title="House rules" href="https://help.kouchd.com/legal-trust/stay-agreements">Read each guideline and ask your host about anything that is unclear before you accept the agreement.</HelpTip></p>
           <h1>Household Rules & Guidelines.</h1>
           <p className="subhead">
             The host has outlined clear expectations for the space. Acknowledge each guideline to continue.
@@ -268,7 +268,7 @@ export function GuestOnboardingFlow({
       {/* Step 3: Financial Terms & Contribution Opportunities */}
       {step === 3 && (
         <div key="guest-step-3" className="screen-transition">
-          <p className="eyebrow">Step 3 of 4 · Financial Agreement <HelpTip title="Contribution terms">Review the contribution amount and timing rules. Kouchd records contributions; in-app payments are not available yet.</HelpTip></p>
+          <p className="eyebrow onboarding-eyebrow">Step 3 of 4 · Financial Agreement <HelpTip title="Contribution terms" href="https://help.kouchd.com/hosts/pricing-and-terms">Review your rate, cadence, due dates, and any payment rules. Kouchd records contributions; payment happens through the host’s external payment options.</HelpTip></p>
           <h1>Financial Terms & Rewards</h1>
           <p className="subhead">
             Your recurring rate and opportunities to earn points and stay credits through household tasks.
@@ -278,7 +278,7 @@ export function GuestOnboardingFlow({
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+                gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 180px), 1fr))",
                 gap: "1rem",
                 border: "1px solid var(--line, #e2ded7)",
                 borderRadius: "14px",
@@ -355,7 +355,7 @@ export function GuestOnboardingFlow({
       {/* Step 4: Digital Signature & Acceptance */}
       {step === 4 && (
         <div key="guest-step-4" className="screen-transition">
-          <p className="eyebrow">Step 4 of 4 · Final Acceptance <HelpTip title="Accept the current terms">Accepting confirms that you have reviewed the current agreement and house rules. If the host updates the terms, you may need to review them again.</HelpTip></p>
+          <p className="eyebrow onboarding-eyebrow">Step 4 of 4 · Final Acceptance <HelpTip title="Accept the current terms" href="https://help.kouchd.com/legal-trust/stay-agreements">Accepting confirms that you have reviewed the current agreement and house rules. If the host updates the terms, you may need to review them again.</HelpTip></p>
           <h1>Join the Stay.</h1>
           <p className="subhead">
             By accepting, your spot in the household is confirmed, your private financial ledger is initialized, and shared chore/announcement tools become active.

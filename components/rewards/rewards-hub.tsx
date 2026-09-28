@@ -282,7 +282,7 @@ export function RewardsHub({
             </button>
           )}
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: "0.75rem" }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 280px), 1fr))", gap: "0.75rem" }}>
           {(rules ?? []).map((rule) => (
             <div
               key={rule._id}
