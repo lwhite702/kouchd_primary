@@ -52,6 +52,7 @@ export async function ensureGuestTerms(
     endDate: defaults.endDate,
     cadence: defaults.cadence,
     ...(defaults.paymentDayOfWeek !== undefined ? { paymentDayOfWeek: defaults.paymentDayOfWeek } : {}),
+    billingBasis: defaults.billingBasis ?? "continuous",
     rateCents: defaults.rateCents,
     earlyDiscountPercentage: defaults.earlyDiscountPercentage,
     earlyDiscountDays: defaults.earlyDiscountDays,

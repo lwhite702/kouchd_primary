@@ -22,6 +22,7 @@ import type * as lib_obligations from "../lib/obligations.js";
 import type * as lib_stayTerms from "../lib/stayTerms.js";
 import type * as lib_validation from "../lib/validation.js";
 import type * as notifications from "../notifications.js";
+import type * as occupancy from "../occupancy.js";
 import type * as obligations from "../obligations.js";
 import type * as paymentSchedule from "../paymentSchedule.js";
 import type * as referral from "../referral.js";
@@ -52,6 +53,7 @@ declare const fullApi: ApiFromModules<{
   "lib/stayTerms": typeof lib_stayTerms;
   "lib/validation": typeof lib_validation;
   notifications: typeof notifications;
+  occupancy: typeof occupancy;
   obligations: typeof obligations;
   paymentSchedule: typeof paymentSchedule;
   referral: typeof referral;

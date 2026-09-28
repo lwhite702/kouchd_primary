@@ -21,10 +21,21 @@ async function assertNoOutstandingDueBalance(
   const stay = await ctx.db.get(stayId);
   const terms = await getAcceptedGuestTerms(ctx, stayId, guestUserId);
   if (!stay || !terms) throw new Error("Accept your current agreement before changing payment timing");
-  const [obligations, contributions] = await Promise.all([
+  const memberships = await ctx.db.query("memberships").withIndex("by_stay", (q) => q.eq("stayId", stayId)).take(21);
+  const activeGuests = memberships.filter((item) => item.status === "active" && item.role === "guest");
+  const includeLegacy = activeGuests.length === 1 && activeGuests[0]?.userId === guestUserId;
+  const [scopedObligations, scopedContributions] = await Promise.all([
     ctx.db.query("obligations").withIndex("by_stay_and_guest", (q) => q.eq("stayId", stayId).eq("guestUserId", guestUserId)).take(1_000),
     ctx.db.query("contributions").withIndex("by_stay_guest_and_date", (q) => q.eq("stayId", stayId).eq("guestUserId", guestUserId)).order("asc").take(5_000),
   ]);
+  const [legacyObligations, legacyContributions] = includeLegacy
+    ? await Promise.all([
+      ctx.db.query("obligations").withIndex("by_stay_and_guest", (q) => q.eq("stayId", stayId).eq("guestUserId", undefined)).take(1_000),
+      ctx.db.query("contributions").withIndex("by_stay_guest_and_date", (q) => q.eq("stayId", stayId).eq("guestUserId", undefined)).order("asc").take(5_000),
+    ])
+    : [[], []];
+  const obligations = [...scopedObligations, ...legacyObligations];
+  const contributions = [...scopedContributions, ...legacyContributions];
   const ledgerTerms = new Map<string, Doc<"terms"> | null>();
   const ledgerObligations = await Promise.all(obligations.map(async (item) => {
     let itemTerms: Doc<"terms"> | null = terms;
@@ -55,7 +66,7 @@ async function assertNoOutstandingDueBalance(
   if (ledger.some((item) => item.dueDate <= today && item.balanceCents > 0)) {
     throw new Error("Bring your due balance to $0 before changing payment timing");
   }
-  return { stay, terms };
+  return { stay, terms, includeLegacy };
 }
 
 export const list = query({
@@ -151,7 +162,7 @@ export const reviewRequest = mutation({
     }
     const timezone = stay.timezone;
     const effectiveFrom = calendarDateInTimezone(new Date(now), timezone);
-    const { terms: previous } = await assertNoOutstandingDueBalance(ctx, request.stayId, request.guestUserId, effectiveFrom);
+    const { terms: previous, includeLegacy } = await assertNoOutstandingDueBalance(ctx, request.stayId, request.guestUserId, effectiveFrom);
     const recent = await ctx.db.query("paymentScheduleRequests").withIndex("by_guest_status", (q) => q.eq("guestUserId", request.guestUserId).eq("status", "approved")).order("desc").take(50);
     if (recent.some((item) => item.stayId === request.stayId && item.reviewedAt && now - item.reviewedAt < COOLDOWN_MS)) {
       throw new Error("Payment schedule changes are limited to once every 14 days");
@@ -180,6 +191,7 @@ export const reviewRequest = mutation({
       endDate: previous.endDate,
       cadence,
       ...(cadence === "weekly" ? { paymentDayOfWeek: request.requestedPaymentDayOfWeek } : {}),
+      billingBasis: previous.billingBasis ?? "continuous",
       rateCents,
       earlyDiscountEnabled: previous.earlyDiscountEnabled,
       earlyDiscountPercentage: previous.earlyDiscountPercentage,
@@ -193,10 +205,16 @@ export const reviewRequest = mutation({
       createdBy: user._id,
       createdAt: now,
     });
-    const oldObligations = await ctx.db.query("obligations").withIndex("by_stay_and_guest", (q) => q.eq("stayId", request.stayId).eq("guestUserId", request.guestUserId)).take(1_000);
+    const [scopedObligations, legacyObligations] = await Promise.all([
+      ctx.db.query("obligations").withIndex("by_stay_and_guest", (q) => q.eq("stayId", request.stayId).eq("guestUserId", request.guestUserId)).take(1_000),
+      includeLegacy
+        ? ctx.db.query("obligations").withIndex("by_stay_and_guest", (q) => q.eq("stayId", request.stayId).eq("guestUserId", undefined)).take(1_000)
+        : Promise.resolve([]),
+    ]);
+    const oldObligations = [...scopedObligations, ...legacyObligations];
     const priorTerms = new Map<string, Doc<"terms"> | null>();
     for (const obligation of oldObligations) {
-      if (obligation.voidedAt || obligation.type === "adhoc" || obligation.periodEnd < effectiveFrom) continue;
+      if (obligation.voidedAt || obligation.type === "adhoc" || obligation.type === "occupancy" || obligation.periodEnd < effectiveFrom) continue;
       if (obligation.periodStart < effectiveFrom) {
         const oldTerms = obligation.termsId
           ? (priorTerms.get(obligation.termsId.toString()) ?? await ctx.db.get(obligation.termsId))

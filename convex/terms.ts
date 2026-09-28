@@ -14,6 +14,8 @@ const termsInput = {
   startDate: v.string(),
   endDate: v.string(),
   cadence: v.union(v.literal("daily"), v.literal("weekly")),
+  paymentDayOfWeek: v.optional(v.number()),
+  billingBasis: v.optional(v.union(v.literal("continuous"), v.literal("occupied_nights"))),
   rateCents: v.number(),
   earlyDiscountEnabled: v.boolean(),
   earlyDiscountPercentage: v.number(),
@@ -106,7 +108,7 @@ export const acceptCurrent = mutation({
           isDone = page.isDone;
         }
         for (const obligation of previousObligations) {
-          if (obligation.termsId === termsId || obligation.voidedAt || obligation.type === "adhoc" || obligation.periodEnd < effectiveBoundary) continue;
+          if (obligation.termsId === termsId || obligation.voidedAt || obligation.type === "adhoc" || obligation.type === "occupancy" || obligation.periodEnd < effectiveBoundary) continue;
 
           if (obligation.periodStart < effectiveBoundary) {
             const preservedPeriodEnd = addCalendarDays(effectiveBoundary, -1);
@@ -196,6 +198,9 @@ export const updateGuest = mutation({
     if (!guestMembership || guestMembership.role !== "guest" || guestMembership.status !== "active") {
       throw new Error("Choose an active guest in this household");
     }
+    if (terms.cadence === "weekly" && (terms.paymentDayOfWeek === undefined || !Number.isInteger(terms.paymentDayOfWeek) || terms.paymentDayOfWeek < 0 || terms.paymentDayOfWeek > 6)) {
+      throw new Error("Choose a weekday for weekly guest contributions");
+    }
     assertStayTerms(terms);
     const previous = await ensureGuestTerms(ctx, stayId, guestUserId, user._id);
     const now = Date.now();
@@ -208,9 +213,7 @@ export const updateGuest = mutation({
       version: previous.version + 1,
       ...(effectiveFrom ? { effectiveFrom } : {}),
       ...terms,
-      ...(terms.cadence === "weekly" && previous.cadence === "weekly" && previous.paymentDayOfWeek !== undefined
-        ? { paymentDayOfWeek: previous.paymentDayOfWeek }
-        : {}),
+      billingBasis: terms.billingBasis ?? previous.billingBasis ?? "continuous",
       createdBy: user._id,
       createdAt: now,
     });

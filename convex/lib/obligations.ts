@@ -18,6 +18,7 @@ export async function ensureObligationsForTerms(
 
   const terms = await ctx.db.get(termsId);
   if (!terms || terms.stayId !== stayId) throw new Error("Terms not found for this stay");
+  if (terms.billingBasis === "occupied_nights") return;
 
   const createdAt = Date.now();
   const effectiveStart = terms.effectiveFrom && terms.effectiveFrom > terms.startDate

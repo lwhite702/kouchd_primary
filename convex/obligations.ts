@@ -15,7 +15,7 @@ const ledgerItem = v.object({
   periodEnd: v.string(),
   dueDate: v.string(),
   baseAmountCents: v.number(),
-  type: v.union(v.literal("cadence"), v.literal("adhoc")),
+  type: v.union(v.literal("cadence"), v.literal("adhoc"), v.literal("occupancy")),
   title: v.optional(v.string()),
   earlyDiscountCents: v.number(),
   lateFeeCents: v.number(),

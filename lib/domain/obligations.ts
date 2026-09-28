@@ -25,7 +25,7 @@ export interface ObligationPeriod {
 
 export interface ObligationRecord extends ObligationPeriod {
   _id?: string;
-  type?: "cadence" | "adhoc";
+  type?: "cadence" | "adhoc" | "occupancy";
   title?: string;
   lateFeeWaived?: boolean;
   voided?: boolean;
@@ -109,7 +109,7 @@ export function calculateObligationLedger({
         (obligation.baseAmountCents * obligationTerms.earlyDiscountPercentage) / 100,
       );
       const discountedCharge = obligation.baseAmountCents - discountAmount;
-      const qualifiesForEarlyDiscount = (obligation.type ?? "cadence") === "cadence"
+      const qualifiesForEarlyDiscount = (obligation.type ?? "cadence") !== "adhoc"
         && discountEnabled
         && obligationTerms.earlyDiscountPercentage > 0
         && availableByEarlyThreshold >= discountedCharge;

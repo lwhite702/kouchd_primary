@@ -300,6 +300,7 @@ export function GuestOnboardingFlow({
             {selectedCadence === "weekly" && <label><span>Weekly payment day</span><select value={paymentDayOfWeek} onChange={(event) => setPaymentDayOfWeek(Number(event.target.value))}>{["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"].map((day, index) => <option key={day} value={index}>{day}</option>)}</select></label>}
           </div>}
           {isInitialAcceptance && <p className="muted small">The daily or weekly rate keeps the same approximate weekly total. Partial payments count toward the period, and the remaining balance is due by its displayed due date.</p>}
+          {terms?.billingBasis === "occupied_nights" && <p className="muted small">This agreement bills only completed overnights that your host records. Each night is charged at the daily rate or as a prorated share of the weekly rate. Nights without a host record are not billed.</p>}
 
           <div style={{ marginTop: "1.5rem", display: "flex", flexDirection: "column", gap: "1rem" }}>
             <div
