@@ -43,4 +43,11 @@
 ### Follow-up: root route
 
 - The root route fix is part of the follow-up task commit; re-run Mintlify checks before handoff.
+
+### Publish preparation (2026-09-28)
+
+- Rebased only the three task documentation commits onto current `origin/main`, which includes the previously separate feature changes. The task branch now contains only the documentation/policy commits plus the follow-up updates; no application code is included in this PR.
+- Vercel reports the Kouchd production deployment for main commit `3b6ae85` as `READY`. Therefore individual guest agreements and host-shared external payment options are described as available. Kouchd still does not process payments.
+- Updated the roadmap, public changelog, and host setup/pricing guides to match that deployed behavior.
+- User explicitly requested publication on 2026-09-28. PR/merge and Mintlify live verification remain to be completed.
 - Follow-up route verification: `mintlify validate` passed; `mintlify broken-links` found no broken links; root `docs.json` parsed and `git diff --check` passed.

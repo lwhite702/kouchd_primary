@@ -22,3 +22,10 @@ Internal engineering record. This file is excluded from Mintlify navigation and 
 - `docs.json` JSON parse and `git diff --check` — passed.
 - Repository `lint`, `typecheck`, and unit tests were attempted but unavailable because this worktree has no installed npm dependencies (`eslint`, `tsc` dependency modules, and `vitest` missing). No application code changed.
 - Root route follow-up passed `mintlify validate`, `mintlify broken-links`, `docs.json` JSON parsing, and `git diff --check`.
+
+### Publish preparation — 2026-09-28
+
+- Rebasing task-only documentation commits onto current `origin/main` after the feature branch's application commits were merged separately.
+- Verified current app production deployment at Kouchd `main` commit `3b6ae85` (Vercel state `READY`). Updated public roadmap and changelog to reflect the deployed individual guest agreements and external payment options; in-app payment processing remains unavailable.
+- Expanded host setup and terms guides for the shipped agreement and external payment workflows.
+- Publication was explicitly approved by the user; no live help-center changes have occurred yet.
