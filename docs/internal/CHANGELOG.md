@@ -6,7 +6,7 @@ Internal engineering record. This file is excluded from Mintlify navigation and 
 
 - Added guest-selected daily or weekly billing at initial agreement acceptance, including an initial weekly payment weekday and clear rate/late-fee copy.
 - Added host-reviewed schedule change requests with a zero due-balance gate, one approved change per 14 days, and prorated obligation handoff at the approval date.
-- Added per-period weekly weekday alignment and a roadmap entry. This work is local to `codex/guest-payment-schedule`; it has not been pushed, merged, deployed, or published.
+- Added per-period weekly weekday alignment and a roadmap entry. Implementation commit `2cc47a3` is on `codex/guest-payment-schedule`; it is not merged, deployed, or published.
 - TypeScript check passed. No tests were added or run.
 - Linear issue association is pending: the connected workspace currently exposes only the Wrelik team, and the repository policy says not to misclassify Kouchd work under another product team.
 

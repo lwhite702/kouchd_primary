@@ -65,8 +65,8 @@
 
 ### Guest payment schedule work (2026-09-28)
 
-- Worktree: `/Volumes/Projects/CodexWorktrees/kouchd-guest-payment-schedule`, branch `codex/guest-payment-schedule`, based on `origin/main` at task start.
+- Worktree: `/Volumes/Projects/CodexWorktrees/kouchd-guest-payment-schedule`, branch `codex/guest-payment-schedule`, implementation commit `2cc47a3`, rebased onto latest `origin/main`.
 - Added daily/weekly choice at initial guest acceptance, weekly weekday selection, per-guest pending schedule requests, host approval/rejection, a $0 due-balance gate, a 14-day approved-change cooldown, and prorated obligation changes.
-- Updated the product roadmap to identify the schedule workflow as in progress. The work is not pushed, merged, deployed, or published; the public user guides and changelog have not been changed to claim availability.
+- Updated the product roadmap to identify the schedule workflow as in progress. The work is not merged, deployed, or published; the public user guides and changelog have not been changed to claim availability.
 - `tsc --noEmit`, targeted ESLint, and `git diff --check` passed after the final edits. No tests were added or run.
 - Linear issue association remains unresolved because only the Wrelik team is available in the connected workspace; do not create a Kouchd issue under Wrelik.
