@@ -1,3 +1,5 @@
+import { DashboardSkeleton } from "@/components/skeleton-loader";
+
 export default function Loading() {
-  return <div className="route-state">Making the couch presentable...</div>;
+  return <DashboardSkeleton message="Making the couch presentable..." />;
 }

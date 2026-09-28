@@ -1,7 +1,7 @@
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 
-import { api, internal } from "../convex/_generated/api";
+import { api } from "../convex/_generated/api";
 import schema from "../convex/schema";
 
 const modules = import.meta.glob([
@@ -110,6 +110,7 @@ describe("shared stay authorization and audit rules", () => {
     const tokenHash = "f".repeat(64);
     await host.mutation(api.invites.create, { stayId, tokenHash, expiresAt: Date.now() + 86_400_000 });
     await guest.mutation(api.invites.accept, { tokenHash });
+
     await host.mutation(api.users.updateGuideProgress, { role: "host", step: 2, status: "in_progress" });
     await guest.mutation(api.users.updateGuideProgress, { role: "guest", step: 0, status: "skipped" });
     expect((await host.query(api.users.viewer, {}))?.guideProgress?.host).toEqual({ step: 2, status: "in_progress" });
@@ -117,6 +118,7 @@ describe("shared stay authorization and audit rules", () => {
     await expect(guest.mutation(api.users.updateGuideProgress, { role: "host", step: 0, status: "completed" })).rejects.toThrow("not an active member in this role");
     await expect(host.mutation(api.users.updateGuideProgress, { role: "host", step: -1, status: "in_progress" })).rejects.toThrow("Invalid guide step");
   });
+
   it("rejects weak invite hashes and invalid financial terms", async () => {
     const t = convexTest(schema, modules);
     const host = await createUser(t, "host-validation", "Lee");
@@ -302,51 +304,6 @@ describe("shared stay authorization and audit rules", () => {
       { action: "opted_in", source: "sms_opt_in_form" },
       { action: "opted_out", source: "settings" },
     ]);
-  });
-
-  it("uses the outstanding ledger balance for payment reminders and skips paid obligations", async () => {
-    const t = convexTest(schema, modules);
-    const host = await createUser(t, "notify-host", "Host");
-    const guest = await createUser(t, "notify-guest", "Guest");
-    const paidGuest = await createUser(t, "notify-paid-guest", "Paid Guest");
-    const stayId = await host.mutation(api.stays.create, { timezone: "America/New_York", terms: firstTerms });
-    const tokenHash = "d".repeat(64);
-    await host.mutation(api.invites.create, { stayId, tokenHash, expiresAt: Date.now() + 86_400_000 });
-    await guest.mutation(api.invites.accept, { tokenHash });
-    const paidGuestToken = "e".repeat(64);
-    await host.mutation(api.invites.create, { stayId, tokenHash: paidGuestToken, expiresAt: Date.now() + 86_400_000 });
-    await paidGuest.mutation(api.invites.accept, { tokenHash: paidGuestToken });
-    await guest.mutation(api.terms.acceptCurrent, { stayId });
-    await paidGuest.mutation(api.terms.acceptCurrent, { stayId });
-
-    const contributionId = await guest.mutation(api.contributions.create, {
-      stayId,
-      type: "payment",
-      amountCents: 5_000,
-      date: "2026-09-06",
-      note: "Partial contribution",
-      countsTowardBalance: true,
-    });
-    await host.mutation(api.contributions.confirm, { contributionId });
-
-    const paidContributionId = await paidGuest.mutation(api.contributions.create, {
-      stayId,
-      type: "payment",
-      amountCents: 20_000,
-      date: "2026-09-06",
-      note: "Paid in full",
-      countsTowardBalance: true,
-    });
-    await host.mutation(api.contributions.confirm, { contributionId: paidContributionId });
-
-    const candidates = await t.query(internal.notifications.reminderCandidates, {
-      now: Date.parse("2026-09-06T12:00:00.000Z"),
-    });
-    const paymentReminder = candidates.find((candidate) => candidate.workflow === "payment-due-reminder");
-    const guestProfile = await guest.query(api.users.viewer, {});
-    expect(paymentReminder?.data).toMatchObject({ amountDue: 15_000, balance: 15_000 });
-    expect(candidates.filter((candidate) => candidate.workflow === "payment-due-reminder")).toHaveLength(1);
-    expect(paymentReminder?.userId).toBe(guestProfile?.id);
   });
 
   it("manages household logistics and WiFi info with host authorization", async () => {

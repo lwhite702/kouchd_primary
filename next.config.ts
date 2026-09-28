@@ -16,6 +16,18 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  async rewrites() {
+    return [
+      {
+        source: "/dashboard",
+        destination: "/",
+      },
+      {
+        source: "/dashboard/:path*",
+        destination: "/",
+      },
+    ];
+  },
 };
 
 export default nextConfig;

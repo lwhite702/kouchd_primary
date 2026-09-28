@@ -28,6 +28,9 @@ export const identifyUser = internalAction({
       name: recipient.name,
       email: recipient.email ?? null,
       phone_number: recipient.phone ?? null,
+      role: recipient.role ?? null,
+      stayStatus: recipient.stayStatus ?? null,
+      stayId: recipient.stayId ?? null,
       preferences: {
         default: {
           channel_types: {
@@ -68,6 +71,9 @@ export const triggerWorkflow = internalAction({
       name: recipient.name,
       email: recipient.email ?? null,
       phone_number: recipient.phone ?? null,
+      role: recipient.role ?? null,
+      stayStatus: recipient.stayStatus ?? null,
+      stayId: recipient.stayId ?? null,
       preferences: {
         default: {
           channel_types: {
@@ -87,6 +93,8 @@ export const triggerWorkflow = internalAction({
       stayId: args.stayId,
       workflow: args.workflow,
       entityId: args.entityId,
+      detail: typeof args.data?.detail === "string" ? args.data.detail : undefined,
+      action: typeof args.data?.action === "string" ? args.data.action : undefined,
     });
     return { status: "sent" as const, workflowRunId: response.workflow_run_id };
   },

@@ -11,3 +11,8 @@ playwright-report/
 *.log
 *.tsbuildinfo
 .DS_Store
+
+# Agent MCP configs (contain tokens)
+.cursor/mcp.json
+.codex/config.toml
+

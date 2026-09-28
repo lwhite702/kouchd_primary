@@ -7,6 +7,7 @@ import Link from "next/link";
 import React, { useEffect, useState } from "react";
 
 import { api } from "@/convex/_generated/api";
+import { FormSkeleton } from "@/components/skeleton-loader";
 
 export function SmsOptInForm() {
   const { isLoading: authLoading, isAuthenticated } = useConvexAuth();
@@ -169,7 +170,7 @@ export function SmsOptInForm() {
   }
 
   if (authLoading) {
-    return <p role="status">Checking your Kouchd account…</p>;
+    return <FormSkeleton rows={3} />;
   }
 
   if (!isAuthenticated) {
@@ -193,7 +194,7 @@ export function SmsOptInForm() {
   }
 
   if (!synced || viewer === undefined) {
-    return <p role="status">Preparing your Kouchd account…</p>;
+    return <FormSkeleton rows={3} />;
   }
 
   return (

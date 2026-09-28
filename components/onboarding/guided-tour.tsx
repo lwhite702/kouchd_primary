@@ -2,23 +2,27 @@
 
 import { useEffect, useRef } from "react";
 import { ArrowLeft, ArrowRight, Check, X } from "lucide-react";
+import Link from "next/link";
 
 export type WorkspaceScreen = "home" | "contributions" | "chores" | "stay";
 export type GuideRole = "host" | "guest";
-export type GuideStep = { screen: WorkspaceScreen; title: string; body: string };
+export type GuideStep = { screen: WorkspaceScreen; title: string; body: string; helpHref: string };
+
+const hostGuide = "https://help.kouchd.com/hosts/getting-started";
+const guestGuide = "https://help.kouchd.com/guests/joining-a-stay";
 
 export const guideSteps: Record<GuideRole, GuideStep[]> = {
   host: [
-    { screen: "home", title: "Your household at a glance", body: "Home brings together the current stay, upcoming check-in, household notes, and recent activity. If you have guests, you can switch whose private ledger you are viewing." },
-    { screen: "contributions", title: "Keep each ledger clear", body: "Choose a guest to review their private balance, scheduled charges, and logged contributions. Confirm a contribution after you have checked it. In-app payments are not available yet." },
-    { screen: "chores", title: "Share the household work", body: "Add chores, choose who is responsible, and mark them complete as the household goes. Everyone in the stay can see the shared chore board." },
-    { screen: "stay", title: "Manage the stay and invite guests", body: "Review the agreement, house rules, and access details here. Share the referral code or create a private invite when you are ready to add someone." },
+    { screen: "home", title: "Your household at a glance", body: "Home brings together the current stay, upcoming check-in, household notes, and recent activity. If you have guests, you can switch whose private ledger you are viewing.", helpHref: hostGuide },
+    { screen: "contributions", title: "Keep each ledger clear", body: "Choose a guest to review their private balance, scheduled charges, and logged contributions. Confirm a contribution after you have checked it. Kouchd does not process payments.", helpHref: "https://help.kouchd.com/hosts/ledger-management" },
+    { screen: "chores", title: "Share the household work", body: "Add chores, choose who is responsible, and mark them complete as the household goes. Everyone in the stay can see the shared chore board.", helpHref: "https://help.kouchd.com/hosts/house-rules-and-chores" },
+    { screen: "stay", title: "Manage the stay and invite guests", body: "Review the agreement, house rules, and access details here. Share the referral code or create a private invite when you are ready to add someone.", helpHref: hostGuide },
   ],
   guest: [
-    { screen: "home", title: "Your household at a glance", body: "Home shows stay updates, important household details, announcements, and recent activity shared with your household." },
-    { screen: "contributions", title: "Your private ledger", body: "Only you and your host can see your money details. Log a payment or shared expense here, then confirm entries together so the record stays clear." },
-    { screen: "chores", title: "See what needs doing", body: "The chore board shows shared household tasks, who they are assigned to, and what is complete. Mark your task complete when it is done." },
-    { screen: "stay", title: "Keep household details close", body: "Find your accepted agreement, house rules, stay dates, and household access information here. Ask your host if anything needs to change." },
+    { screen: "home", title: "Your household at a glance", body: "Home shows stay updates, important household details, announcements, and recent activity shared with your household.", helpHref: guestGuide },
+    { screen: "contributions", title: "Your private ledger", body: "Only you and your host can see your money details. Log a payment or shared expense here, then confirm entries together so the record stays clear.", helpHref: "https://help.kouchd.com/guests/logging-contributions" },
+    { screen: "chores", title: "See what needs doing", body: "The chore board shows shared household tasks, who they are assigned to, and what is complete. Mark your task complete when it is done.", helpHref: "https://help.kouchd.com/hosts/house-rules-and-chores" },
+    { screen: "stay", title: "Keep household details close", body: "Find your accepted agreement, house rules, stay dates, and household access information here. Ask your host if anything needs to change.", helpHref: "https://help.kouchd.com/legal-trust/stay-agreements" },
   ],
 };
 
@@ -86,6 +90,7 @@ export function GuidedTour({ role, step, onBack, onNext, onSkip, onClose }: Guid
         <p className="eyebrow">Step {step + 1} of {steps.length}</p>
         <h2 id="guided-tour-title" tabIndex={-1}>{current.title}</h2>
         <p className="guided-tour-copy">{current.body}</p>
+        <Link className="guided-tour-help" href={current.helpHref} target="_blank" rel="noopener noreferrer">Read the related help article <ArrowRight size={15} /></Link>
         <div className="guided-tour-actions">
           <button className="button ghost" onClick={onSkip} type="button">Skip tour</button>
           <div>

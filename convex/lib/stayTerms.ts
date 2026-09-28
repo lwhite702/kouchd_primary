@@ -21,9 +21,12 @@ export async function getAcceptedGuestTerms(ctx: DbCtx, stayId: Id<"stays">, gue
     .withIndex("by_stay_user", (query) => query.eq("stayId", stayId).eq("userId", guestUserId))
     .unique();
   if (membership?.acceptedTermsId) {
-    return await ctx.db.get(membership.acceptedTermsId);
+    const acceptedTerms = await ctx.db.get(membership.acceptedTermsId);
+    if (acceptedTerms) return acceptedTerms;
   }
-  return null;
+
+  const stay = await ctx.db.get(stayId);
+  return stay?.currentTermsId ? await ctx.db.get(stay.currentTermsId) : null;
 }
 
 export async function ensureGuestTerms(

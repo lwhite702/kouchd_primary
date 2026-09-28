@@ -10,7 +10,7 @@ Create or verify these exact Knock workflow keys. Templates should use only the 
 | --- | --- | --- |
 | `guest-invitation` | Host creates an invite with an email address | `hostName`, `stayName`, `inviteUrl`, `expiresAt` |
 | `check-in-reminder` | Daily reminder job, for the day before the stay's next check-in in that stay's timezone | `stayName`, `hostName`, `checkInDate` |
-| `payment-due-reminder` | Daily reminder job, for the day before an obligation is due in that stay's timezone; fully paid obligations are omitted | `stayName`, `amountDue`, `periodLabel`, `dueDate`, `balance` |
+| `payment-due-reminder` | Daily reminder job across progressive payment stages (upcoming, due today, grace overdue, grace final warning, compounding late fee assessed, and critical delinquency); repeats on schedule until paid in full; fully paid obligations (`balanceCents <= 0`) are omitted | `stayName`, `amountDue`, `periodLabel`, `dueDate`, `balance`, `urgencyLevel`, `stage`, `stageTitle`, `warningMessage`, `consequences`, `actionRequired`, `daysOverdue`, `graceEndDate`, `lateFeeCents` |
 | `chore-reminder` | Daily reminder job, on the chore's due date in that stay's timezone | `choreTitle`, `dueDate` |
 | `adhoc-fee-posted` | Host creates a one-off charge | `hostName`, `feeTitle`, `amount`, `dueDate` |
 
