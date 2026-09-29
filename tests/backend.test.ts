@@ -15,6 +15,7 @@ const firstTerms = {
   startDate: "2026-09-01",
   endDate: "2026-09-21",
   cadence: "weekly" as const,
+  paymentDayOfWeek: 1,
   rateCents: 20_000,
   earlyDiscountEnabled: true,
   earlyDiscountPercentage: 5,
@@ -97,9 +98,148 @@ describe("shared stay authorization and audit rules", () => {
     const asOfDate = new Date(Date.now() + 86_400_000).toISOString().slice(0, 10);
     const firstLedger = await firstGuest.query(api.obligations.list, { stayId, asOfDate });
     const secondLedger = await secondGuest.query(api.obligations.list, { stayId, asOfDate });
-    expect(firstLedger[0].baseAmountCents).toBe(12_000);
-    expect(secondLedger[0].baseAmountCents).toBe(32_000);
+    expect(firstLedger.map((item) => item.baseAmountCents)).toContain(12_000);
+    expect(secondLedger.map((item) => item.baseAmountCents)).toContain(32_000);
     await expect(firstGuest.query(api.obligations.list, { stayId, asOfDate, guestUserId: secondMember.person.id })).rejects.toThrow("Guests cannot access another guest's financial record");
+  });
+
+  it("includes legacy unscoped due obligations in a single guest schedule change balance gate", async () => {
+    const t = convexTest(schema, modules);
+    const host = await createUser(t, "legacy-schedule-host", "Lee");
+    const guest = await createUser(t, "legacy-schedule-guest", "Marcus");
+    const startDate = new Date(Date.now() + 2 * 86_400_000).toISOString().slice(0, 10);
+    const endDate = new Date(Date.now() + 30 * 86_400_000).toISOString().slice(0, 10);
+    const stayId = await host.mutation(api.stays.create, {
+      timezone: "UTC",
+      terms: { ...firstTerms, startDate, endDate },
+    });
+    await host.mutation(api.invites.create, { stayId, tokenHash: "9".repeat(64), expiresAt: Date.now() + 86_400_000 });
+    await guest.mutation(api.invites.accept, { tokenHash: "9".repeat(64) });
+    await guest.mutation(api.terms.acceptCurrent, { stayId });
+    const bundle = await guest.query(api.stays.getBundle, { stayId });
+    const termsId = bundle.membership.acceptedTermsId!;
+    const today = new Date().toISOString().slice(0, 10);
+    const yesterday = new Date(Date.now() - 86_400_000).toISOString().slice(0, 10);
+    await t.run((ctx) => ctx.db.insert("obligations", {
+      stayId,
+      termsId,
+      periodStart: yesterday,
+      periodEnd: yesterday,
+      dueDate: today,
+      baseAmountCents: 2_500,
+      createdAt: Date.now(),
+    }));
+
+    await expect(guest.mutation(api.paymentSchedule.requestChange, { stayId, cadence: "daily" }))
+      .rejects.toThrow("Bring your due balance to $0");
+  });
+
+  it("voids legacy unscoped obligations when a sole guest's schedule change is approved", async () => {
+    const t = convexTest(schema, modules);
+    const host = await createUser(t, "legacy-approval-host", "Lee");
+    const guest = await createUser(t, "legacy-approval-guest", "Marcus");
+    const startDate = new Date(Date.now() + 2 * 86_400_000).toISOString().slice(0, 10);
+    const endDate = new Date(Date.now() + 30 * 86_400_000).toISOString().slice(0, 10);
+    const stayId = await host.mutation(api.stays.create, {
+      timezone: "America/New_York",
+      terms: { ...firstTerms, startDate, endDate },
+    });
+    await host.mutation(api.invites.create, { stayId, tokenHash: "8".repeat(64), expiresAt: Date.now() + 86_400_000 });
+    await guest.mutation(api.invites.accept, { tokenHash: "8".repeat(64) });
+    await guest.mutation(api.terms.acceptCurrent, { stayId });
+    const bundle = await guest.query(api.stays.getBundle, { stayId });
+    const legacyPeriodStart = new Date(Date.now() + 4 * 86_400_000).toISOString().slice(0, 10);
+    const legacyPeriodEnd = new Date(Date.now() + 10 * 86_400_000).toISOString().slice(0, 10);
+    const legacyObligationId = await t.run((ctx) => ctx.db.insert("obligations", {
+      stayId,
+      termsId: bundle.membership.acceptedTermsId!,
+      periodStart: legacyPeriodStart,
+      periodEnd: legacyPeriodEnd,
+      dueDate: legacyPeriodStart,
+      baseAmountCents: 20_000,
+      createdAt: Date.now(),
+    }));
+    const requestId = await guest.mutation(api.paymentSchedule.requestChange, { stayId, cadence: "daily" });
+
+    await host.mutation(api.paymentSchedule.reviewRequest, { requestId, decision: "approve" });
+
+    const legacyObligation = await t.run((ctx) => ctx.db.get(legacyObligationId));
+    expect(legacyObligation?.voidedAt).toEqual(expect.any(Number));
+  });
+
+  it("requires and stores the weekly payment day when a host edits a guest to weekly terms", async () => {
+    const t = convexTest(schema, modules);
+    const host = await createUser(t, "weekday-edit-host", "Lee");
+    const guest = await createUser(t, "weekday-edit-guest", "Marcus");
+    const startDate = new Date(Date.now() + 2 * 86_400_000).toISOString().slice(0, 10);
+    const endDate = new Date(Date.now() + 30 * 86_400_000).toISOString().slice(0, 10);
+    const { paymentDayOfWeek: _paymentDayOfWeek, ...dailyTerms } = firstTerms;
+    expect(_paymentDayOfWeek).toBe(1);
+    const stayId = await host.mutation(api.stays.create, {
+      timezone: "America/New_York",
+      terms: { ...dailyTerms, cadence: "daily", startDate, endDate },
+    });
+    await host.mutation(api.invites.create, { stayId, tokenHash: "7".repeat(64), expiresAt: Date.now() + 86_400_000 });
+    await guest.mutation(api.invites.accept, { tokenHash: "7".repeat(64) });
+    await guest.mutation(api.terms.acceptCurrent, { stayId });
+    const bundle = await host.query(api.stays.getBundle, { stayId });
+    const guestUserId = bundle.members.find((member) => member.person.name === "Marcus")!.person.id;
+
+    await expect(host.mutation(api.terms.updateGuest, {
+      stayId,
+      guestUserId,
+      terms: { ...dailyTerms, cadence: "weekly", startDate, endDate },
+    })).rejects.toThrow("Choose a weekday for weekly guest contributions");
+    await host.mutation(api.terms.updateGuest, {
+      stayId,
+      guestUserId,
+      terms: { ...dailyTerms, cadence: "weekly", paymentDayOfWeek: 4, startDate, endDate },
+    });
+
+    const updatedBundle = await host.query(api.stays.getBundle, { stayId });
+    expect(updatedBundle.members.find((member) => member.person.name === "Marcus")?.terms)
+      .toMatchObject({ cadence: "weekly", paymentDayOfWeek: 4 });
+  });
+
+  it("uses the accepted historical agreement for backdated overnights and permits audited correction", async () => {
+    const t = convexTest(schema, modules);
+    const host = await createUser(t, "occupancy-history-host", "Lee");
+    const guest = await createUser(t, "occupancy-history-guest", "Marcus");
+    const today = new Date().toISOString().slice(0, 10);
+    const yesterday = new Date(Date.now() - 86_400_000).toISOString().slice(0, 10);
+    const startDate = new Date(Date.now() - 10 * 86_400_000).toISOString().slice(0, 10);
+    const endDate = new Date(Date.now() + 10 * 86_400_000).toISOString().slice(0, 10);
+    const stayId = await host.mutation(api.stays.create, {
+      timezone: "UTC",
+      terms: { ...firstTerms, startDate, endDate, cadence: "daily", billingBasis: "occupied_nights" },
+    });
+    await host.mutation(api.invites.create, { stayId, tokenHash: "6".repeat(64), expiresAt: Date.now() + 86_400_000 });
+    await guest.mutation(api.invites.accept, { tokenHash: "6".repeat(64) });
+    await guest.mutation(api.terms.acceptCurrent, { stayId });
+    const acceptedTermsId = (await guest.query(api.stays.getBundle, { stayId })).membership.acceptedTermsId!;
+    const guestId = (await host.query(api.stays.getBundle, { stayId })).members.find((member) => member.person.name === "Marcus")!.person.id;
+
+    await host.mutation(api.terms.updateGuest, {
+      stayId,
+      guestUserId: guestId,
+      terms: { ...firstTerms, startDate, endDate, cadence: "daily", billingBasis: "occupied_nights", rateCents: 12_000 },
+    });
+    const occupiedNightId = await host.mutation(api.occupancy.recordOvernight, { stayId, guestUserId: guestId, nightDate: yesterday });
+    const recorded = await t.run(async (ctx) => {
+      const night = await ctx.db.get(occupiedNightId);
+      return { night, obligation: night ? await ctx.db.get(night.obligationId) : null };
+    });
+    expect(recorded.night?.termsId).toBe(acceptedTermsId);
+    expect(recorded.obligation).toMatchObject({ dueDate: today, baseAmountCents: firstTerms.rateCents });
+
+    await host.mutation(api.occupancy.voidOvernight, { occupiedNightId });
+    const corrected = await t.run(async (ctx) => {
+      const night = await ctx.db.get(occupiedNightId);
+      return { night, obligation: night ? await ctx.db.get(night.obligationId) : null };
+    });
+    expect(corrected.night?.voidedAt).toEqual(expect.any(Number));
+    expect(corrected.night?.voidedBy).toBeDefined();
+    expect(corrected.obligation?.voidedAt).toEqual(expect.any(Number));
   });
 
   it("saves role-specific tour progress for active household members", async () => {

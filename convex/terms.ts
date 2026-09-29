@@ -14,6 +14,8 @@ const termsInput = {
   startDate: v.string(),
   endDate: v.string(),
   cadence: v.union(v.literal("daily"), v.literal("weekly")),
+  paymentDayOfWeek: v.optional(v.number()),
+  billingBasis: v.optional(v.union(v.literal("continuous"), v.literal("occupied_nights"))),
   rateCents: v.number(),
   earlyDiscountEnabled: v.boolean(),
   earlyDiscountPercentage: v.number(),
@@ -44,16 +46,42 @@ const termsInput = {
 };
 
 export const acceptCurrent = mutation({
-  args: { stayId: v.id("stays") },
+  args: {
+    stayId: v.id("stays"),
+    initialCadence: v.optional(v.union(v.literal("daily"), v.literal("weekly"))),
+    initialPaymentDayOfWeek: v.optional(v.number()),
+  },
   returns: v.union(v.literal("pending"), v.literal("active")),
-  handler: async (ctx, { stayId }) => {
+  handler: async (ctx, { stayId, initialCadence, initialPaymentDayOfWeek }) => {
     const { user, membership } = await requireMembership(ctx, stayId);
     const stay = await ctx.db.get(stayId);
     if (!stay || !stay.currentTermsId || stay.status === "ended") throw new Error("No active terms to accept");
-    const terms = membership.role === "guest"
+    let terms = membership.role === "guest"
       ? await ensureGuestTerms(ctx, stayId, user._id, stay.hostUserId)
       : await ctx.db.get(stay.currentTermsId);
     if (!terms) throw new Error("No active terms to accept");
+    if (membership.role === "guest" && !membership.acceptedTermsId && initialCadence) {
+      if (initialCadence === "weekly" && (initialPaymentDayOfWeek === undefined || !Number.isInteger(initialPaymentDayOfWeek) || initialPaymentDayOfWeek < 0 || initialPaymentDayOfWeek > 6)) {
+        throw new Error("Choose the weekday your weekly contribution is due");
+      }
+      const selectedRate = terms.cadence === initialCadence
+        ? terms.rateCents
+        : initialCadence === "daily"
+          ? Math.round(terms.rateCents / 7)
+          : terms.rateCents * 7;
+      if (!Number.isSafeInteger(selectedRate) || selectedRate < 0 || selectedRate > 100_000_000 || (terms.rateCents > 0 && selectedRate === 0)) {
+        throw new Error("That payment schedule cannot be represented at this rate. Ask your host to adjust the agreement.");
+      }
+      const selectedFee = initialCadence === "daily" ? 500 : 2_500;
+      const lateFeeEnabled = terms.lateFeeEnabled ?? terms.lateFeeCents > 0;
+      await ctx.db.patch(terms._id, {
+        cadence: initialCadence,
+        rateCents: selectedRate,
+        ...(initialCadence === "weekly" ? { paymentDayOfWeek: initialPaymentDayOfWeek } : { paymentDayOfWeek: undefined }),
+        ...(lateFeeEnabled ? { lateFeeEnabled: true, lateFeeCents: selectedFee } : {}),
+      });
+      terms = { ...terms, cadence: initialCadence, rateCents: selectedRate, paymentDayOfWeek: initialCadence === "weekly" ? initialPaymentDayOfWeek : undefined, ...(lateFeeEnabled ? { lateFeeEnabled: true, lateFeeCents: selectedFee } : {}) };
+    }
     const termsId = terms._id;
     const existing = await ctx.db.query("termsAcceptances").withIndex("by_terms_user", (query) => query.eq("termsId", termsId).eq("userId", user._id)).unique();
     if (!existing) await ctx.db.insert("termsAcceptances", { stayId, termsId, userId: user._id, acceptedAt: Date.now() });
@@ -80,7 +108,7 @@ export const acceptCurrent = mutation({
           isDone = page.isDone;
         }
         for (const obligation of previousObligations) {
-          if (obligation.termsId === termsId || obligation.voidedAt || obligation.type === "adhoc" || obligation.periodEnd < effectiveBoundary) continue;
+          if (obligation.termsId === termsId || obligation.voidedAt || obligation.type === "adhoc" || obligation.type === "occupancy" || obligation.periodEnd < effectiveBoundary) continue;
 
           if (obligation.periodStart < effectiveBoundary) {
             const preservedPeriodEnd = addCalendarDays(effectiveBoundary, -1);
@@ -170,6 +198,9 @@ export const updateGuest = mutation({
     if (!guestMembership || guestMembership.role !== "guest" || guestMembership.status !== "active") {
       throw new Error("Choose an active guest in this household");
     }
+    if (terms.cadence === "weekly" && (terms.paymentDayOfWeek === undefined || !Number.isInteger(terms.paymentDayOfWeek) || terms.paymentDayOfWeek < 0 || terms.paymentDayOfWeek > 6)) {
+      throw new Error("Choose a weekday for weekly guest contributions");
+    }
     assertStayTerms(terms);
     const previous = await ensureGuestTerms(ctx, stayId, guestUserId, user._id);
     const now = Date.now();
@@ -182,6 +213,7 @@ export const updateGuest = mutation({
       version: previous.version + 1,
       ...(effectiveFrom ? { effectiveFrom } : {}),
       ...terms,
+      billingBasis: terms.billingBasis ?? previous.billingBasis ?? "continuous",
       createdBy: user._id,
       createdAt: now,
     });

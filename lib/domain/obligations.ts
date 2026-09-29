@@ -5,6 +5,8 @@ export interface ObligationTerms {
   startDate: string;
   endDate: string;
   cadence: Cadence;
+  /** Weekday used for weekly payment due dates (0 = Sunday ... 6 = Saturday). */
+  paymentDayOfWeek?: number;
   rateCents: number;
   earlyDiscountEnabled?: boolean;
   earlyDiscountPercentage: number;
@@ -23,7 +25,7 @@ export interface ObligationPeriod {
 
 export interface ObligationRecord extends ObligationPeriod {
   _id?: string;
-  type?: "cadence" | "adhoc";
+  type?: "cadence" | "adhoc" | "occupancy";
   title?: string;
   lateFeeWaived?: boolean;
   voided?: boolean;
@@ -52,7 +54,14 @@ export function buildObligationPeriods(terms: ObligationTerms): ObligationPeriod
   let periodStart = terms.startDate;
 
   while (periodStart <= terms.endDate) {
-    const proposedEnd = terms.cadence === "weekly" ? addCalendarDays(periodStart, 6) : periodStart;
+    let proposedEnd = periodStart;
+    if (terms.cadence === "weekly") {
+      const startDay = new Date(`${periodStart}T00:00:00.000Z`).getUTCDay();
+      const daysUntilPayment = terms.paymentDayOfWeek === undefined
+        ? 6
+        : (terms.paymentDayOfWeek - startDay + 7) % 7;
+      proposedEnd = addCalendarDays(periodStart, daysUntilPayment);
+    }
     const periodEnd = proposedEnd < terms.endDate ? proposedEnd : terms.endDate;
     const periodDays = stayDays(periodStart, periodEnd);
     periods.push({
@@ -100,7 +109,7 @@ export function calculateObligationLedger({
         (obligation.baseAmountCents * obligationTerms.earlyDiscountPercentage) / 100,
       );
       const discountedCharge = obligation.baseAmountCents - discountAmount;
-      const qualifiesForEarlyDiscount = (obligation.type ?? "cadence") === "cadence"
+      const qualifiesForEarlyDiscount = (obligation.type ?? "cadence") !== "adhoc"
         && discountEnabled
         && obligationTerms.earlyDiscountPercentage > 0
         && availableByEarlyThreshold >= discountedCharge;

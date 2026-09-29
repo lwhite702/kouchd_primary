@@ -106,6 +106,8 @@ export default defineSchema({
     startDate: v.string(),
     endDate: v.string(),
     cadence: v.union(v.literal("daily"), v.literal("weekly")),
+    paymentDayOfWeek: v.optional(v.number()),
+    billingBasis: v.optional(v.union(v.literal("continuous"), v.literal("occupied_nights"))),
     rateCents: v.number(),
     earlyDiscountEnabled: v.optional(v.boolean()),
     earlyDiscountPercentage: v.number(),
@@ -149,11 +151,41 @@ export default defineSchema({
     .index("by_terms_user", ["termsId", "userId"])
     .index("by_stay_terms", ["stayId", "termsId"]),
 
+  paymentScheduleRequests: defineTable({
+    stayId: v.id("stays"),
+    guestUserId: v.id("users"),
+    sourceTermsId: v.optional(v.id("terms")),
+    requestedCadence: v.union(v.literal("daily"), v.literal("weekly")),
+    requestedPaymentDayOfWeek: v.optional(v.number()),
+    status: v.union(v.literal("pending"), v.literal("approved"), v.literal("rejected")),
+    requestedAt: v.number(),
+    reviewedAt: v.optional(v.number()),
+    reviewedBy: v.optional(v.id("users")),
+    appliedTermsId: v.optional(v.id("terms")),
+  })
+    .index("by_stay_status", ["stayId", "status"])
+    .index("by_guest_status", ["guestUserId", "status"]),
+
+  occupiedNights: defineTable({
+    stayId: v.id("stays"),
+    guestUserId: v.id("users"),
+    nightDate: v.string(),
+    termsId: v.id("terms"),
+    obligationId: v.id("obligations"),
+    amountCents: v.number(),
+    recordedBy: v.id("users"),
+    recordedAt: v.number(),
+    voidedAt: v.optional(v.number()),
+    voidedBy: v.optional(v.id("users")),
+  })
+    .index("by_stay_guest_night", ["stayId", "guestUserId", "nightDate"])
+    .index("by_obligation", ["obligationId"]),
+
   obligations: defineTable({
     stayId: v.id("stays"),
     termsId: v.optional(v.id("terms")),
     guestUserId: v.optional(v.id("users")),
-    type: v.optional(v.union(v.literal("cadence"), v.literal("adhoc"))),
+    type: v.optional(v.union(v.literal("cadence"), v.literal("adhoc"), v.literal("occupancy"))),
     title: v.optional(v.string()),
     periodStart: v.string(),
     periodEnd: v.string(),

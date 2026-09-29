@@ -62,3 +62,13 @@
 - Live `https://help.kouchd.com/help` returned HTTP 200. Mintlify-rendered page metadata reports `dateModified` 2026-09-28T04:53:09.306Z and shows the Kouchd Help Center content.
 - PR Vercel and CodeRabbit checks passed. Mintlify marks the PR-level deployment check skipped; main-source sync was verified against the live page after merge.
 - WRE-145 documentation, repository policy, and help-center publication are complete. A separate product/legal review remains advisable for unsupported legal/consequence language in reminder templates; public help omits those claims.
+
+### Guest payment schedule work (2026-09-28)
+
+- Worktree: `/Volumes/Projects/CodexWorktrees/kouchd-guest-payment-schedule`, branch `codex/guest-payment-schedule`, implementation commit `2cc47a3`, rebased onto latest `origin/main`.
+- Added daily/weekly choice at initial guest acceptance, weekly weekday selection, per-guest pending schedule requests, host approval/rejection, a $0 due-balance gate, a 14-day approved-change cooldown, and prorated obligation changes.
+- Fixed single-guest legacy obligation and contribution handling in schedule approval and its due-balance gate. Host-edited weekly agreements now require and save a payment weekday.
+- Added per-guest host-recorded overnight billing for nonconsecutive nights, with daily amounts or prorated weekly amounts grouped into ledger periods. The guest agreement and onboarding explain that only host-recorded completed overnights are billed.
+- Updated the product roadmap to identify the schedule and occupancy workflows as in progress. The work is not merged, deployed, or published; public guides and changelog do not claim availability.
+- `tsc --noEmit`, targeted ESLint, and `git diff --check` passed after final edits. No tests were added or run.
+- Linear issue association remains unresolved because only the Wrelik team is available in the connected workspace; do not create a Kouchd issue under Wrelik.
