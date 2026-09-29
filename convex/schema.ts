@@ -154,6 +154,7 @@ export default defineSchema({
   paymentScheduleRequests: defineTable({
     stayId: v.id("stays"),
     guestUserId: v.id("users"),
+    sourceTermsId: v.optional(v.id("terms")),
     requestedCadence: v.union(v.literal("daily"), v.literal("weekly")),
     requestedPaymentDayOfWeek: v.optional(v.number()),
     status: v.union(v.literal("pending"), v.literal("approved"), v.literal("rejected")),
@@ -174,6 +175,8 @@ export default defineSchema({
     amountCents: v.number(),
     recordedBy: v.id("users"),
     recordedAt: v.number(),
+    voidedAt: v.optional(v.number()),
+    voidedBy: v.optional(v.id("users")),
   })
     .index("by_stay_guest_night", ["stayId", "guestUserId", "nightDate"])
     .index("by_obligation", ["obligationId"]),

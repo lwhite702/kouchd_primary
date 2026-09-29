@@ -6,6 +6,7 @@ import { mutation, query } from "./_generated/server";
 import type { Doc } from "./_generated/dataModel";
 import { requireHost, resolveFinancialGuest } from "./lib/auth";
 import { recordActivity } from "./lib/activity";
+import { listActiveGuestObligations } from "./lib/obligations";
 import { assertAdhocChargeInput, assertCalendarDate } from "./lib/validation";
 import { getAcceptedGuestTerms, getCurrentGuestTerms } from "./lib/stayTerms";
 
@@ -40,12 +41,12 @@ export const list = query({
     if (!terms) return [];
 
     const [scopedObligations, scopedContributions] = await Promise.all([
-      ctx.db.query("obligations").withIndex("by_stay_and_guest", (query) => query.eq("stayId", stayId).eq("guestUserId", access.guestUserId)).take(1_000),
+      listActiveGuestObligations(ctx, stayId, access.guestUserId),
       ctx.db.query("contributions").withIndex("by_stay_guest_and_date", (query) => query.eq("stayId", stayId).eq("guestUserId", access.guestUserId)).order("asc").take(5_000),
     ]);
     const [legacyObligations, legacyContributions] = access.includeLegacyUnscoped
       ? await Promise.all([
-        ctx.db.query("obligations").withIndex("by_stay_and_guest", (query) => query.eq("stayId", stayId).eq("guestUserId", undefined)).take(1_000),
+        listActiveGuestObligations(ctx, stayId, undefined),
         ctx.db.query("contributions").withIndex("by_stay_guest_and_date", (query) => query.eq("stayId", stayId).eq("guestUserId", undefined)).order("asc").take(5_000),
       ])
       : [[], []];

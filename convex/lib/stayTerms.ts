@@ -1,4 +1,4 @@
-import type { Id } from "../_generated/dataModel";
+import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
 
 type DbCtx = QueryCtx | MutationCtx;
@@ -27,6 +27,33 @@ export async function getAcceptedGuestTerms(ctx: DbCtx, stayId: Id<"stays">, gue
 
   const stay = await ctx.db.get(stayId);
   return stay?.currentTermsId ? await ctx.db.get(stay.currentTermsId) : null;
+}
+
+export async function getAcceptedGuestTermsForDate(
+  ctx: DbCtx,
+  stayId: Id<"stays">,
+  guestUserId: Id<"users">,
+  date: string,
+) {
+  const termsRows: Doc<"terms">[] = await ctx.db.query("terms")
+    .withIndex("by_stay_and_guest", (query) => query.eq("stayId", stayId).eq("guestUserId", guestUserId))
+    .order("desc")
+    .take(500);
+  const possible = termsRows.filter((terms) => {
+    const effectiveFrom = terms.effectiveFrom ?? terms.startDate;
+    return effectiveFrom <= date && terms.startDate <= date && terms.endDate >= date;
+  });
+  const accepted = await Promise.all(possible.map(async (terms) => {
+    const acceptance = await ctx.db.query("termsAcceptances")
+      .withIndex("by_terms_user", (query) => query.eq("termsId", terms._id).eq("userId", guestUserId))
+      .unique();
+    return acceptance ? { terms, acceptedAt: acceptance.acceptedAt } : null;
+  }));
+  return accepted
+    .filter((item): item is NonNullable<typeof item> => item !== null)
+    .sort((left, right) => (right.terms.effectiveFrom ?? right.terms.startDate).localeCompare(left.terms.effectiveFrom ?? left.terms.startDate)
+      || right.terms.version - left.terms.version
+      || right.acceptedAt - left.acceptedAt)[0]?.terms ?? null;
 }
 
 export async function ensureGuestTerms(

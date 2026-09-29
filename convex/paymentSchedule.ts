@@ -5,7 +5,7 @@ import { mutation, query } from "./_generated/server";
 import { calculateObligationLedger, buildObligationPeriods } from "../lib/domain/obligations";
 import { addCalendarDays, calendarDateInTimezone } from "../lib/domain/dates";
 import { requireHost, requireMembership } from "./lib/auth";
-import { ensureObligationsForTerms } from "./lib/obligations";
+import { ensureObligationsForTerms, listActiveGuestObligations } from "./lib/obligations";
 import { recordActivity } from "./lib/activity";
 import { getAcceptedGuestTerms, getCurrentGuestTerms } from "./lib/stayTerms";
 
@@ -25,12 +25,12 @@ async function assertNoOutstandingDueBalance(
   const activeGuests = memberships.filter((item) => item.status === "active" && item.role === "guest");
   const includeLegacy = activeGuests.length === 1 && activeGuests[0]?.userId === guestUserId;
   const [scopedObligations, scopedContributions] = await Promise.all([
-    ctx.db.query("obligations").withIndex("by_stay_and_guest", (q) => q.eq("stayId", stayId).eq("guestUserId", guestUserId)).take(1_000),
+    listActiveGuestObligations(ctx, stayId, guestUserId),
     ctx.db.query("contributions").withIndex("by_stay_guest_and_date", (q) => q.eq("stayId", stayId).eq("guestUserId", guestUserId)).order("asc").take(5_000),
   ]);
   const [legacyObligations, legacyContributions] = includeLegacy
     ? await Promise.all([
-      ctx.db.query("obligations").withIndex("by_stay_and_guest", (q) => q.eq("stayId", stayId).eq("guestUserId", undefined)).take(1_000),
+      listActiveGuestObligations(ctx, stayId, undefined),
       ctx.db.query("contributions").withIndex("by_stay_guest_and_date", (q) => q.eq("stayId", stayId).eq("guestUserId", undefined)).order("asc").take(5_000),
     ])
     : [[], []];
@@ -119,7 +119,7 @@ export const requestChange = mutation({
     if (cadence === "daily" && paymentDayOfWeek !== undefined) throw new Error("Daily contributions do not use a weekly payment day");
     const now = Date.now();
     const stay = await ctx.db.get(stayId);
-    if (!stay) throw new Error("Stay not found");
+    if (!stay || stay.status === "ended") throw new Error("This stay has ended");
     const currentTerms = await getCurrentGuestTerms(ctx, stayId, user._id);
     if (!currentTerms || membership.acceptedTermsId !== currentTerms._id) throw new Error("Review and accept your current agreement before requesting a schedule change");
     const { terms } = await assertNoOutstandingDueBalance(ctx, stayId, user._id, calendarDateInTimezone(new Date(now), stay.timezone));
@@ -135,6 +135,7 @@ export const requestChange = mutation({
     const _id = await ctx.db.insert("paymentScheduleRequests", {
       stayId,
       guestUserId: user._id,
+      sourceTermsId: currentTerms._id,
       requestedCadence: cadence,
       ...(cadence === "weekly" ? { requestedPaymentDayOfWeek: paymentDayOfWeek } : {}),
       status: "pending",
@@ -154,12 +155,13 @@ export const reviewRequest = mutation({
     const { user } = await requireHost(ctx, request.stayId);
     const now = Date.now();
     const stay = await ctx.db.get(request.stayId);
-    if (!stay || stay.status === "ended") throw new Error("This stay has ended");
+    if (!stay) throw new Error("This stay no longer exists");
     if (decision === "reject") {
       await ctx.db.patch(requestId, { status: "rejected", reviewedAt: now, reviewedBy: user._id });
       await recordActivity(ctx, { stayId: request.stayId, actorUserId: user._id, guestUserId: request.guestUserId, kind: "terms", action: "payment_schedule_rejected", detail: "Payment schedule change request declined", entityId: requestId });
       return null;
     }
+    if (stay.status === "ended") throw new Error("This stay has ended; decline the pending request to clear it");
     const timezone = stay.timezone;
     const effectiveFrom = calendarDateInTimezone(new Date(now), timezone);
     const { terms: previous, includeLegacy } = await assertNoOutstandingDueBalance(ctx, request.stayId, request.guestUserId, effectiveFrom);
@@ -171,6 +173,9 @@ export const reviewRequest = mutation({
     if (!membership || membership.role !== "guest" || membership.status !== "active") throw new Error("Guest is no longer an active household member");
     const currentTerms = await getCurrentGuestTerms(ctx, request.stayId, request.guestUserId);
     if (!currentTerms || membership.acceptedTermsId !== currentTerms._id) throw new Error("The guest must accept their latest agreement before this schedule change can be approved");
+    if (!request.sourceTermsId || request.sourceTermsId !== currentTerms._id) {
+      throw new Error("The guest agreement changed after this request. Decline it and ask the guest to submit a new request.");
+    }
     const cadence = request.requestedCadence;
     const rateCents = previous.cadence === cadence
       ? previous.rateCents
@@ -206,9 +211,9 @@ export const reviewRequest = mutation({
       createdAt: now,
     });
     const [scopedObligations, legacyObligations] = await Promise.all([
-      ctx.db.query("obligations").withIndex("by_stay_and_guest", (q) => q.eq("stayId", request.stayId).eq("guestUserId", request.guestUserId)).take(1_000),
+      listActiveGuestObligations(ctx, request.stayId, request.guestUserId),
       includeLegacy
-        ? ctx.db.query("obligations").withIndex("by_stay_and_guest", (q) => q.eq("stayId", request.stayId).eq("guestUserId", undefined)).take(1_000)
+        ? listActiveGuestObligations(ctx, request.stayId, undefined)
         : Promise.resolve([]),
     ]);
     const oldObligations = [...scopedObligations, ...legacyObligations];

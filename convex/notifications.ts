@@ -5,6 +5,7 @@ import { addCalendarDays, calendarDateInTimezone, stayDays } from "../lib/domain
 import type { Doc, Id } from "./_generated/dataModel";
 import { internalMutation, internalQuery } from "./_generated/server";
 import { getCurrentGuestTerms } from "./lib/stayTerms";
+import { listActiveGuestObligations } from "./lib/obligations";
 
 function formatCents(cents: number): string {
   const dollars = cents / 100;
@@ -314,9 +315,7 @@ export const reminderCandidates = internalQuery({
       let ledger = ledgersByGuest.get(guestKey);
       if (!ledger) {
         const [guestObligations, contributions] = await Promise.all([
-          ctx.db.query("obligations")
-            .withIndex("by_stay_and_guest", (query) => query.eq("stayId", obligation.stayId).eq("guestUserId", guestUserId))
-            .take(1_000),
+          listActiveGuestObligations(ctx, obligation.stayId, guestUserId),
           ctx.db.query("contributions")
             .withIndex("by_stay_guest_and_date", (query) => query.eq("stayId", obligation.stayId).eq("guestUserId", guestUserId))
             .order("asc")
@@ -355,8 +354,14 @@ export const reminderCandidates = internalQuery({
       const ledgerItem = ledger.find((item) => item._id === obligation._id);
       if (!ledgerItem || ledgerItem.balanceCents <= 0) continue;
 
-      const graceDays = terms.graceDays ?? 0;
-      const lateFeeCents = (terms.lateFeeEnabled ?? true) ? (terms.lateFeeCents ?? 0) : 0;
+      let obligationTerms = terms;
+      if (obligation.termsId) {
+        const termsKey = obligation.termsId.toString();
+        if (!termsById.has(termsKey)) termsById.set(termsKey, await ctx.db.get(obligation.termsId));
+        obligationTerms = termsById.get(termsKey) ?? terms;
+      }
+      const graceDays = obligationTerms.graceDays ?? 0;
+      const lateFeeCents = (obligationTerms.lateFeeEnabled ?? true) ? (obligationTerms.lateFeeCents ?? 0) : 0;
       const graceEnd = addCalendarDays(obligation.dueDate, graceDays);
 
       let stage: PaymentReminderStage;
@@ -422,7 +427,7 @@ export const reminderCandidates = internalQuery({
         graceEnd,
         daysPastDue,
         lateFeeCents,
-        terms,
+        terms: obligationTerms,
       });
 
       candidates.push({

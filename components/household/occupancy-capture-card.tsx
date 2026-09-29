@@ -6,6 +6,7 @@ import { CalendarCheck2 } from "lucide-react";
 
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
+import { DestructiveConfirmationDialog } from "@/components/confirmation/destructive-confirmation-dialog";
 
 const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
 const date = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
@@ -16,7 +17,6 @@ export function OccupancyCaptureCard({
   guestName,
   isHost,
   canRecord,
-  cadence,
   onNotify,
 }: {
   stayId: Id<"stays">;
@@ -24,12 +24,13 @@ export function OccupancyCaptureCard({
   guestName: string;
   isHost: boolean;
   canRecord: boolean;
-  cadence: "daily" | "weekly";
   onNotify: (message: string) => void;
 }) {
   const nights = useQuery(api.occupancy.list, { stayId, guestUserId });
   const recordOvernight = useMutation(api.occupancy.recordOvernight);
+  const voidOvernight = useMutation(api.occupancy.voidOvernight);
   const [nightDate, setNightDate] = useState("");
+  const [pendingCorrection, setPendingCorrection] = useState<{ id: Id<"occupiedNights">; date: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -59,12 +60,23 @@ export function OccupancyCaptureCard({
     </form>}
     {isHost && !canRecord && <p className="muted">Recording becomes available after {guestName} accepts this agreement.</p>}
     <div className="activity-list">
-      {(nights ?? []).map((night) => <article className="list-row" key={night._id}>
+      {(nights ?? []).map((night) => <article className={`list-row${night.voidedAt ? " occupancy-row-voided" : ""}`} key={night._id}>
         <span className="list-icon"><CalendarCheck2 size={18} /></span>
-        <div className="list-copy"><strong>Overnight · {date.format(new Date(`${night.nightDate}T00:00:00Z`))}</strong><span>{cadence === "weekly" ? "Weekly rate prorated" : "Daily rate"}</span></div>
-        <div className="list-value">{money.format(night.amountCents / 100)}<small>recorded</small></div>
+        <div className="list-copy"><strong>Overnight · {date.format(new Date(`${night.nightDate}T00:00:00Z`))}</strong><span>{night.cadence === "weekly" ? "Weekly rate prorated" : "Daily rate"}{night.voidedAt ? " · corrected" : ""}</span></div>
+        <div className="list-value">{money.format(night.amountCents / 100)}<small>{night.voidedAt ? "voided" : "recorded"}</small></div>
+        {isHost && canRecord && !night.voidedAt && <button className="button ghost small" type="button" onClick={() => setPendingCorrection({ id: night._id, date: night.nightDate })}>Correct record</button>}
       </article>)}
       {nights?.length === 0 && <p className="muted">No overnights recorded yet.</p>}
     </div>
+    {pendingCorrection && <DestructiveConfirmationDialog
+      title="Correct this overnight record?"
+      description="This will void the recorded night and adjust its linked ledger charge. The audit record will remain visible to the household."
+      confirmLabel="Void overnight"
+      onConfirm={async () => {
+        await voidOvernight({ occupiedNightId: pendingCorrection.id });
+        onNotify("Overnight record corrected and linked charge adjusted.");
+      }}
+      onCancel={() => setPendingCorrection(null)}
+    />}
   </section>;
 }

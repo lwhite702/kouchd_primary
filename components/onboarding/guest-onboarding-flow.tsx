@@ -58,6 +58,10 @@ export function GuestOnboardingFlow({
         ? Math.round(terms.rateCents / 7)
         : terms.rateCents * 7
     : 0;
+  const displayedCadence = isInitialAcceptance ? selectedCadence : terms?.cadence;
+  const displayedLateFeeCents = isInitialAcceptance
+    ? displayedCadence === "weekly" ? 2_500 : 500
+    : terms?.lateFeeCents ?? 0;
 
   async function handleAccept() {
     setSubmitting(true);
@@ -336,7 +340,7 @@ export function GuestOnboardingFlow({
                   Late Fee Policy
                 </span>
                 <p style={{ margin: "2px 0 0", fontWeight: 700 }}>
-                  {(terms?.lateFeeEnabled ?? (terms?.lateFeeCents ?? 0) > 0) ? `${money.format(((isInitialAcceptance ? selectedCadence : terms?.cadence) === "weekly" ? 2_500 : 500) / 100)} every 7 days if the ${((isInitialAcceptance ? selectedCadence : terms?.cadence) === "weekly") ? "weekly total" : "daily amount"} remains unpaid after ${terms?.graceDays ?? 0} grace days` : "Off"}
+                  {(terms?.lateFeeEnabled ?? (terms?.lateFeeCents ?? 0) > 0) ? `${money.format(displayedLateFeeCents / 100)} every 7 days if the ${displayedCadence === "weekly" ? "weekly total" : "daily amount"} remains unpaid after ${terms?.graceDays ?? 0} grace days` : "Off"}
                 </p>
               </div>
             </div>
