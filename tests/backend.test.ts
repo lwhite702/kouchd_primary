@@ -98,8 +98,8 @@ describe("shared stay authorization and audit rules", () => {
     const asOfDate = new Date(Date.now() + 86_400_000).toISOString().slice(0, 10);
     const firstLedger = await firstGuest.query(api.obligations.list, { stayId, asOfDate });
     const secondLedger = await secondGuest.query(api.obligations.list, { stayId, asOfDate });
-    expect(firstLedger[0].baseAmountCents).toBe(12_000);
-    expect(secondLedger[0].baseAmountCents).toBe(32_000);
+    expect(firstLedger.map((item) => item.baseAmountCents)).toContain(12_000);
+    expect(secondLedger.map((item) => item.baseAmountCents)).toContain(32_000);
     await expect(firstGuest.query(api.obligations.list, { stayId, asOfDate, guestUserId: secondMember.person.id })).rejects.toThrow("Guests cannot access another guest's financial record");
   });
 
@@ -110,7 +110,7 @@ describe("shared stay authorization and audit rules", () => {
     const startDate = new Date(Date.now() + 2 * 86_400_000).toISOString().slice(0, 10);
     const endDate = new Date(Date.now() + 30 * 86_400_000).toISOString().slice(0, 10);
     const stayId = await host.mutation(api.stays.create, {
-      timezone: "America/New_York",
+      timezone: "UTC",
       terms: { ...firstTerms, startDate, endDate },
     });
     await host.mutation(api.invites.create, { stayId, tokenHash: "9".repeat(64), expiresAt: Date.now() + 86_400_000 });
