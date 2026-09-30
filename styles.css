@@ -439,8 +439,6 @@ textarea { resize: vertical; }
 .toast.show { opacity: 1; transform: translate(-50%, 0); }
 
 @media (max-width: 760px) {
-  .topbar-actions .stays-entry { width: 38px; min-width: 38px; justify-content: center; padding: 0; }
-  .topbar-actions .stays-entry span { display: none; }
   .stay-hub { padding: 1.5rem 1rem 6rem; }
   .stay-hub .page-heading { align-items: flex-start; flex-direction: column; gap: 1rem; }
   .stay-hub .page-heading > .button { width: 100%; justify-content: center; }
@@ -448,10 +446,9 @@ textarea { resize: vertical; }
   .confirmation-backdrop { align-items: end; padding: 0 0 env(safe-area-inset-bottom, 0px); }
   .confirmation-dialog { border-radius: 26px 26px 0 0; padding: 1.25rem; }
   .confirmation-dialog .dialog-actions > button { flex: 1; justify-content: center; }
-  .topbar { height: calc(70px + env(safe-area-inset-top, 0px)); padding: env(safe-area-inset-top, 0px) 18px 0; }
-  .tour-entry { min-width: 36px; padding: 6px !important; }
-  .tour-entry span { display: none; }
-  .role-switch select { width: 112px; }
+  .topbar { height: calc(70px + env(safe-area-inset-top, 0px)); padding: env(safe-area-inset-top, 0px) 14px 0; justify-content: space-between; }
+  .topbar .brand { flex: 0 0 auto; min-width: max-content; }
+  .role-switch select { width: 100px; font-size: 0.8rem; }
   main { padding: 34px 16px calc(110px + env(safe-area-inset-bottom, 0px)); }
   .page-heading { align-items: flex-start; flex-direction: column; gap: 16px; }
   .page-heading .button { width: 100%; }
