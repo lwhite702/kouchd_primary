@@ -3,6 +3,7 @@ import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import { mutation, query } from "./_generated/server";
 import { requireCurrentUser } from "./lib/auth";
+import { resolveMemberName } from "./lib/names";
 import { assertPhone } from "./lib/validation";
 
 const guideStateValidator = v.object({
@@ -15,9 +16,13 @@ const guideProgressValidator = v.object({
 });
 
 export const syncCurrent = mutation({
-  args: {},
+  args: {
+    name: v.optional(v.string()),
+    email: v.optional(v.string()),
+    imageUrl: v.optional(v.string()),
+  },
   returns: v.id("users"),
-  handler: async (ctx) => {
+  handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) throw new Error("Unauthenticated");
     const now = Date.now();
@@ -25,9 +30,18 @@ export const syncCurrent = mutation({
       .query("users")
       .withIndex("by_clerk_user_id", (query) => query.eq("clerkUserId", identity.subject))
       .unique();
-    const name = identity.name ?? identity.nickname ?? "Kouchd member";
-    const email = identity.email;
-    const imageUrl = identity.pictureUrl;
+    const name = resolveMemberName({
+      explicitName: args.name,
+      identityName: identity.name,
+      givenName: identity.givenName,
+      familyName: identity.familyName,
+      nickname: identity.nickname,
+      preferredUsername: identity.preferredUsername,
+      email: args.email ?? identity.email,
+      existingName: existing?.name,
+    });
+    const email = args.email?.trim() || identity.email || existing?.email;
+    const imageUrl = args.imageUrl || identity.pictureUrl || existing?.imageUrl;
     let userId = existing?._id;
     if (existing) {
       await ctx.db.patch(existing._id, { name, email, imageUrl, updatedAt: now });
@@ -41,6 +55,21 @@ export const syncCurrent = mutation({
   },
 });
 
+export const updateProfile = mutation({
+  args: {
+    name: v.string(),
+  },
+  returns: v.null(),
+  handler: async (ctx, { name }) => {
+    const user = await requireCurrentUser(ctx);
+    const trimmed = name.trim();
+    if (!trimmed) throw new Error("Name cannot be blank");
+    await ctx.db.patch(user._id, { name: trimmed, updatedAt: Date.now() });
+    await ctx.scheduler.runAfter(0, internal.knock.identifyUser, { userId: user._id });
+    return null;
+  },
+});
+
 export const viewer = query({
   args: {},
   returns: v.union(v.null(), v.object({ id: v.id("users"), name: v.string(), email: v.optional(v.string()), phone: v.optional(v.string()), imageUrl: v.optional(v.string()), notifyEmail: v.boolean(), notifySms: v.boolean(), guideProgress: v.optional(guideProgressValidator) })),
@@ -48,7 +77,26 @@ export const viewer = query({
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return null;
     const user = await ctx.db.query("users").withIndex("by_clerk_user_id", (query) => query.eq("clerkUserId", identity.subject)).unique();
-    return user ? { id: user._id, name: user.name, email: user.email, phone: user.phone, imageUrl: user.imageUrl, notifyEmail: user.notifyEmail ?? true, notifySms: user.notifySms ?? false, guideProgress: user.guideProgress } : null;
+    if (!user) return null;
+    const displayName = resolveMemberName({
+      identityName: identity.name,
+      givenName: identity.givenName,
+      familyName: identity.familyName,
+      nickname: identity.nickname,
+      preferredUsername: identity.preferredUsername,
+      email: user.email,
+      existingName: user.name,
+    });
+    return {
+      id: user._id,
+      name: displayName,
+      email: user.email,
+      phone: user.phone,
+      imageUrl: user.imageUrl,
+      notifyEmail: user.notifyEmail ?? true,
+      notifySms: user.notifySms ?? false,
+      guideProgress: user.guideProgress,
+    };
   },
 });
 
@@ -81,6 +129,7 @@ export const updateGuideProgress = mutation({
 
 export const updatePreferences = mutation({
   args: {
+    name: v.optional(v.string()),
     phone: v.optional(v.string()),
     notifyEmail: v.boolean(),
     notifySms: v.boolean(),
@@ -129,7 +178,14 @@ export const updatePreferences = mutation({
       });
     }
 
-    await ctx.db.patch(user._id, { phone, notifyEmail: args.notifyEmail, notifySms: args.notifySms, updatedAt: now });
+    const updatedName = args.name?.trim() || undefined;
+    await ctx.db.patch(user._id, {
+      ...(updatedName ? { name: updatedName } : {}),
+      phone,
+      notifyEmail: args.notifyEmail,
+      notifySms: args.notifySms,
+      updatedAt: now,
+    });
     await ctx.scheduler.runAfter(0, internal.knock.identifyUser, { userId: user._id });
     return null;
   },

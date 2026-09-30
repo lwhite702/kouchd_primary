@@ -1,6 +1,6 @@
 "use client";
 
-import { SignInButton, SignUpButton, useAuth } from "@clerk/nextjs";
+import { SignInButton, SignUpButton, useAuth, useUser } from "@clerk/nextjs";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { CheckCircle2, MessageSquare, ShieldCheck, AlertCircle } from "lucide-react";
 import Link from "next/link";
@@ -12,6 +12,7 @@ import { FormSkeleton } from "@/components/skeleton-loader";
 export function SmsOptInForm() {
   const { isLoading: authLoading, isAuthenticated } = useConvexAuth();
   const { userId } = useAuth();
+  const { user: clerkUser } = useUser();
   const syncCurrent = useMutation(api.users.syncCurrent);
   const [syncedUserId, setSyncedUserId] = useState<string | null>(null);
   const [syncError, setSyncError] = useState("");
@@ -25,13 +26,21 @@ export function SmsOptInForm() {
 
   useEffect(() => {
     if (!isAuthenticated || !userId || syncedUserId === userId) return;
-    void syncCurrent({})
+    const resolvedName = clerkUser?.fullName
+      || [clerkUser?.firstName, clerkUser?.lastName].filter(Boolean).join(" ").trim()
+      || clerkUser?.username
+      || undefined;
+    void syncCurrent({
+      name: resolvedName,
+      email: clerkUser?.primaryEmailAddress?.emailAddress,
+      imageUrl: clerkUser?.imageUrl,
+    })
       .then(() => {
         setSyncedUserId(userId);
         setSyncError("");
       })
       .catch(() => setSyncError("We could not prepare your Kouchd account. Please reload and try again."));
-  }, [isAuthenticated, syncCurrent, syncedUserId, userId]);
+  }, [isAuthenticated, syncCurrent, syncedUserId, userId, clerkUser]);
 
   function formatToE164(raw: string): string {
     const trimmed = raw.trim();
@@ -76,6 +85,7 @@ export function SmsOptInForm() {
     try {
       if (!isAuthenticated || !synced) throw new Error("Sign in before enrolling in SMS alerts.");
       await updatePreferences({
+        name: submittedName,
         phone: formattedPhone,
         notifyEmail: viewer?.notifyEmail ?? true,
         notifySms: true,
@@ -231,7 +241,7 @@ export function SmsOptInForm() {
           id="sms-optin-name"
           name="name"
           type="text"
-          defaultValue={viewer?.name ?? ""}
+          defaultValue={viewer?.name && viewer.name !== "Kouchd member" ? viewer.name : (clerkUser?.fullName || "")}
           placeholder="Jane Doe"
           required
           style={{

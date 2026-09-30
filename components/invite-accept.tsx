@@ -1,6 +1,6 @@
 "use client";
 
-import { Show, SignInButton, SignUpButton } from "@clerk/nextjs";
+import { Show, SignInButton, SignUpButton, useUser } from "@clerk/nextjs";
 import { useConvexAuth, useMutation } from "convex/react";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
@@ -39,6 +39,7 @@ export function InviteAccept({ token }: { token: string }) {
 
 function Accept({ token }: { token: string }) {
   const { isLoading: authLoading, isAuthenticated } = useConvexAuth();
+  const { user: clerkUser } = useUser();
   const sync = useMutation(api.users.syncCurrent);
   const accept = useMutation(api.invites.accept);
   const started = useRef(false);
@@ -50,7 +51,15 @@ function Accept({ token }: { token: string }) {
     started.current = true;
     void (async () => {
       try {
-        await sync({});
+        const resolvedName = clerkUser?.fullName
+          || [clerkUser?.firstName, clerkUser?.lastName].filter(Boolean).join(" ").trim()
+          || clerkUser?.username
+          || undefined;
+        await sync({
+          name: resolvedName,
+          email: clerkUser?.primaryEmailAddress?.emailAddress,
+          imageUrl: clerkUser?.imageUrl,
+        });
         await accept({ tokenHash: await hashInviteToken(token) });
         setDone(true);
         setStatus("You joined the stay. The current terms are ready for your review.");
@@ -58,7 +67,7 @@ function Accept({ token }: { token: string }) {
         setStatus(reason instanceof Error ? reason.message : "This invitation could not be accepted.");
       }
     })();
-  }, [isAuthenticated, accept, sync, token]);
+  }, [isAuthenticated, accept, sync, token, clerkUser]);
 
   if (authLoading || !isAuthenticated) {
     return <InviteSkeleton />;
