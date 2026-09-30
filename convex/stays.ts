@@ -8,6 +8,7 @@ import { assertCalendarDate, assertHouseInfoInput, assertPaymentOptionsInput, as
 import { generateReferralCode } from "../lib/referral";
 import { SUGGESTED_CONTRIBUTION_TASKS } from "../lib/domain/rewards";
 import { getCurrentGuestTerms } from "./lib/stayTerms";
+import { resolveMemberName } from "./lib/names";
 
 const houseInfoInput = {
   wifiNetwork: v.optional(v.string()),
@@ -174,9 +175,14 @@ export const getBundle = query({
         const guestTerms = membership.role === "host"
           ? item.role === "guest" ? await getCurrentGuestTerms(ctx, stayId, item.userId) : terms
           : null;
+        const displayName = resolveMemberName({
+          existingName: person.name,
+          email: person.email,
+          role: item.role,
+        });
         members.push({
           membership: item,
-          person: { id: person._id, name: person.name, imageUrl: person.imageUrl },
+          person: { id: person._id, name: displayName, imageUrl: person.imageUrl },
           ...(membership.role === "host" ? { terms: guestTerms } : {}),
         });
       }

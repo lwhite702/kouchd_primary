@@ -1,6 +1,6 @@
 "use client";
 
-import { Show, UserButton } from "@clerk/nextjs";
+import { Show, UserButton, useUser } from "@clerk/nextjs";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { ArrowRight, Bell, BookOpen, Check, ClipboardList, Copy, Home, KeyRound, Landmark, Megaphone, Plus, ReceiptText, Settings, Sparkles, Users } from "lucide-react";
 import Link from "next/link";
@@ -32,6 +32,7 @@ import { GuidedTour, guideSteps } from "@/components/onboarding/guided-tour";
 import type { GuideRole } from "@/components/onboarding/guided-tour";
 import { DashboardNotificationFeed, NotificationBellMenu } from "@/components/notifications/dashboard-notifications";
 import type { NotificationItem } from "@/components/notifications/dashboard-notifications";
+import { MobileHeaderMenu } from "@/components/navigation/header-menu";
 
 const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
 const date = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
@@ -80,22 +81,36 @@ export function AuthenticatedHome() {
 
 function SyncedWorkspace() {
   const { isLoading: authLoading, isAuthenticated } = useConvexAuth();
+  const { user: clerkUser } = useUser();
   const syncCurrent = useMutation(api.users.syncCurrent);
-  const started = useRef(false);
+  const syncedNameRef = useRef<string | null>(null);
   const [synced, setSynced] = useState(false);
   const [syncError, setSyncError] = useState("");
   const [selectedStayId, setSelectedStayId] = useState<Id<"stays"> | null>(null);
 
   useEffect(() => {
-    if (!isAuthenticated || started.current) return;
-    started.current = true;
-    void syncCurrent({})
+    if (!isAuthenticated) return;
+    const resolvedName = clerkUser?.fullName
+      || [clerkUser?.firstName, clerkUser?.lastName].filter(Boolean).join(" ").trim()
+      || clerkUser?.username
+      || undefined;
+
+    if (syncedNameRef.current !== null && (syncedNameRef.current === (resolvedName ?? "") || !resolvedName)) {
+      return;
+    }
+    syncedNameRef.current = resolvedName ?? "";
+
+    void syncCurrent({
+      name: resolvedName,
+      email: clerkUser?.primaryEmailAddress?.emailAddress,
+      imageUrl: clerkUser?.imageUrl,
+    })
       .then(() => setSynced(true))
       .catch((err) => {
         console.error("Workspace sync error:", err);
         setSyncError("We could not prepare your private workspace.");
       });
-  }, [isAuthenticated, syncCurrent]);
+  }, [isAuthenticated, clerkUser, syncCurrent]);
 
   const stays = useQuery(api.stays.listMine, synced ? {} : "skip") as Array<{ stay: Doc<"stays">; membership: Doc<"memberships"> }> | undefined;
 
@@ -109,9 +124,17 @@ function SyncedWorkspace() {
           type="button"
           style={{ marginTop: "1rem" }}
           onClick={() => {
-            started.current = false;
+            syncedNameRef.current = null;
             setSyncError("");
-            void syncCurrent({})
+            const resolvedName = clerkUser?.fullName
+              || [clerkUser?.firstName, clerkUser?.lastName].filter(Boolean).join(" ").trim()
+              || clerkUser?.username
+              || undefined;
+            void syncCurrent({
+              name: resolvedName,
+              email: clerkUser?.primaryEmailAddress?.emailAddress,
+              imageUrl: clerkUser?.imageUrl,
+            })
               .then(() => setSynced(true))
               .catch((err) => {
                 console.error("Workspace sync retry error:", err);
@@ -167,32 +190,82 @@ function AccountHeader({
   return (
     <header className="topbar">
       <Link className="brand" href="/" style={{ textDecoration: "none" }}>
-        <KouchdWordmark size="md" />
+        <KouchdWordmark size="md" className="topbar-wordmark" />
       </Link>
       <div className="topbar-actions">
-        {onTakeTour && <button aria-label="Take the guided tour" className="button soft compact tour-entry" onClick={onTakeTour} title="Take the guided tour" type="button"><Sparkles size={15} /><span>Tour</span></button>}
+        {/* Desktop-only direct utility buttons with clear labels */}
+        <div className="topbar-desktop-only">
+          {onTakeTour && (
+            <button
+              aria-label="Take the guided tour"
+              className="button soft compact tour-entry"
+              onClick={onTakeTour}
+              title="Take the guided tour"
+              type="button"
+            >
+              <Sparkles size={15} />
+              <span>Tour</span>
+            </button>
+          )}
+          {onStays && (
+            <button
+              className="button soft compact stays-entry"
+              type="button"
+              onClick={onStays}
+              title="Switch or view stays"
+            >
+              <Users size={15} />
+              <span>All stays</span>
+            </button>
+          )}
+          <a
+            className="button ghost compact docs-entry"
+            href="https://help.kouchd.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ fontSize: "0.8rem", padding: "4px 10px", color: "var(--muted)", textDecoration: "none" }}
+            title="Guides & Documentation"
+          >
+            <BookOpen size={15} /> Docs
+          </a>
+          {onJoinCode && (
+            <button
+              aria-label="Join with code"
+              className="button soft compact join-code-entry"
+              type="button"
+              onClick={onJoinCode}
+              style={{ fontSize: "0.8rem", padding: "4px 10px" }}
+              title="Join household with referral code"
+            >
+              <KeyRound size={15} />
+              <span>Join with code</span>
+            </button>
+          )}
+          {onSettings && (
+            <button
+              className="icon-button compact settings-entry"
+              type="button"
+              onClick={onSettings}
+              aria-label="Notification settings"
+              title="Notification delivery preferences"
+            >
+              <Settings size={19} />
+            </button>
+          )}
+        </div>
+
+        {/* Prominent notification bell */}
         <NotificationBellMenu notifications={notifications ?? []} onOpenSettings={onSettings} />
-        {onStays && <button className="button soft compact stays-entry" type="button" onClick={onStays}><Users size={15} /><span>All stays</span></button>}
-        <a
-          className="button ghost compact"
-          href="https://help.kouchd.com"
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{ fontSize: "0.8rem", padding: "4px 10px", color: "var(--muted)", textDecoration: "none" }}
-          title="Guides & Documentation"
-        >
-          <BookOpen size={15} /> Docs
-        </a>
-        {onJoinCode && (
-          <button aria-label="Join with code" className="button soft compact join-code-entry" type="button" onClick={onJoinCode} style={{ fontSize: "0.8rem", padding: "4px 10px" }}>
-            <KeyRound size={15} /><span>Join with code</span>
-          </button>
-        )}
-        {onSettings && (
-          <button className="icon-button compact" type="button" onClick={onSettings} aria-label="Notification settings" title="Notification delivery preferences">
-            <Settings size={19} />
-          </button>
-        )}
+
+        {/* Mobile menu with clear icon, title, and descriptive subtitles */}
+        <MobileHeaderMenu
+          onTakeTour={onTakeTour}
+          onStays={onStays}
+          onJoinCode={onJoinCode}
+          onSettings={onSettings}
+          docsHref="https://help.kouchd.com"
+        />
+
         <UserButton />
       </div>
     </header>
@@ -276,6 +349,7 @@ function StayHub({ stays, onSelectStay, onHostStayCreated }: { stays: StayMember
 }
 
 function LiveStay({ stayId, onBackToHub }: { stayId: Id<"stays">; onBackToHub: () => void }) {
+  const { user: clerkUser } = useUser();
   const bundle = useQuery(api.stays.getBundle, { stayId }) as StayBundle | undefined;
   const viewer = useQuery(api.users.viewer, {}) as Viewer | null | undefined;
   const chores = useQuery(api.chores.list, { stayId }) as Doc<"chores">[] | undefined;
@@ -426,7 +500,8 @@ function LiveStay({ stayId, onBackToHub }: { stayId: Id<"stays">; onBackToHub: (
         (c) => c.status === "pending" && c.createdBy !== bundle?.membership.userId
       );
       for (const item of pendingForHost) {
-        const guestName = guestMembers.find((g) => g.person.id === item.guestUserId)?.person.name ?? "A guest";
+        const guestMember = guestMembers.find((g) => g.person.id === item.guestUserId);
+        const guestName = guestMember?.person.name && guestMember.person.name !== "Kouchd member" ? guestMember.person.name : "A guest";
         list.push({
           id: `pending_contrib_${item._id}`,
           type: "payment",
@@ -597,8 +672,13 @@ function LiveStay({ stayId, onBackToHub }: { stayId: Id<"stays">; onBackToHub: (
     event.preventDefault(); const form = new FormData(event.currentTarget);
     setIsSubmittingModal(true);
     try {
-      await updatePreferences({ phone: value(form, "phone") || undefined, notifyEmail: form.get("notifyEmail") === "on", notifySms: form.get("notifySms") === "on" });
-      setPanel(null); notify("Reminder preferences saved.");
+      await updatePreferences({
+        name: value(form, "name") || undefined,
+        phone: value(form, "phone") || undefined,
+        notifyEmail: form.get("notifyEmail") === "on",
+        notifySms: form.get("notifySms") === "on"
+      });
+      setPanel(null); notify("Profile and reminder preferences saved.");
     } finally {
       setIsSubmittingModal(false);
     }
@@ -657,7 +737,8 @@ function LiveStay({ stayId, onBackToHub }: { stayId: Id<"stays">; onBackToHub: (
     }
   }
 
-  const ledgerLabel = isHost ? `${selectedGuest?.name ?? "Guest"}'s private ledger` : "Your private ledger";
+  const guestDisplayName = selectedGuest?.name && selectedGuest.name !== "Kouchd member" ? selectedGuest.name : "Guest";
+  const ledgerLabel = isHost ? `${guestDisplayName}'s private ledger` : "Your private ledger";
   return <div className="app-shell production-shell"><AccountHeader notifications={notifications} onSettings={() => setPanel("settings")} onJoinCode={() => setJoinModalOpen(true)} onTakeTour={canShowTour ? openTour : undefined} onStays={onBackToHub} /><main>
     {isEnded && <div className="agreement-callout ended-stay-notice"><div><Users size={21} /><div><strong>This stay has ended.</strong><span>You’re viewing its history. Records are read-only.</span></div></div><span className="accepted-pill">Past stay</span></div>}
     <KouchdGuideBanner guideKey="household-notice-banner" />
@@ -677,19 +758,20 @@ function LiveStay({ stayId, onBackToHub }: { stayId: Id<"stays">; onBackToHub: (
         </button>
       </div>
     )}
-    {visibleScreen === "home" && <div key="home" className="screen-transition"><DashboardNotificationFeed notifications={notifications} onOpenSettings={() => setPanel("settings")} /><div className="page-heading dashboard-heading"><div><p className="eyebrow">Shared and current</p><h1>Here&apos;s the household at a glance.</h1><HelpTip title="Home overview" href="https://help.kouchd.com/quickstart">See your current stay, next check-in, household details, announcements, and recent activity in one place.</HelpTip></div><button className="button soft desktop-action" type="button" onClick={() => setPanel("contribution")} disabled={isEnded || !financialGuestId}><Plus size={18} /> Add contribution</button></div><article className="stay-card"><div><p className="overline">Current stay</p><h2>{members.map((item) => item.person.name).join(" + ")}</h2><p className="muted">{terms ? `${formatDate(terms.startDate)} to ${formatDate(terms.endDate)}` : "Terms pending"}</p></div><span className="status-pill">{bundle.stay.status}</span><div className="progress-block"><div className="progress-copy"><span>Confirmed contributions</span><strong>{formatMoney(credits)} of {formatMoney(charge)} covered</strong></div><div className="progress-track" role="progressbar" aria-label="Confirmed contribution progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={charge > 0 ? Math.min(100, Math.round((credits / charge) * 100)) : 0}><span style={{ width: `${charge > 0 ? Math.min(100, Math.max(0, (credits / charge) * 100)) : 0}%` }} /></div></div></article>{isHost && guestMembers.length > 0 && <GuestTabs guests={guestMembers} selected={financialGuestId} onSelect={setSelectedGuestId} />}<div className="metric-grid"><article className="metric-card balance-card"><p className="overline">{ledgerLabel}</p><p className="metric">{formatMoney(balance)}</p><p className="muted">{formatMoney(credits)} confirmed toward {formatMoney(charge)}</p><button className="text-button" type="button" onClick={() => setScreen("contributions")}>View breakdown</button></article><article className="metric-card"><p className="overline">Chores</p><p className="metric">{openChores.length} <small>open</small></p><p className="muted">{openChores[0]?.title ?? "Nothing hanging over anyone."}</p><button className="text-button" type="button" onClick={() => setScreen("chores")}>See chore board</button></article><article className="metric-card"><p className="overline">Next check-in</p><p className="metric date-metric">{bundle.stay.nextCheckInDate ? formatDate(bundle.stay.nextCheckInDate) : "Not set"}</p><p className="muted">Email and SMS follow your reminder settings.</p></article></div><HouseholdLogisticsCard houseInfo={bundle.stay.houseInfo} isHost={Boolean(isHost && !isEnded)} onEdit={() => setPanel("houseInfo")} onNotify={notify} /><section className="section-block"><div className="section-heading"><div><p className="eyebrow">House notes</p><h2>Announcements</h2></div>{isHost && !isEnded && <button className="mini-button" type="button" onClick={() => setPanel("announcement")}><Megaphone size={16} /> Add</button>}</div><div className="activity-list">{announcements.map((item) => <article className="list-row" key={item._id}><span className="list-icon"><Megaphone size={19} /></span><div className="list-copy"><strong>{item.title}</strong><span>{item.body}</span></div></article>)}{announcements.length === 0 && <p className="muted">No announcements yet.</p>}</div></section><section className="section-block"><div className="section-heading"><div><p className="eyebrow">Shared record</p><h2>Recent activity</h2></div></div><div className="activity-list">{recent.map((item) => <article className="list-row" key={item._id}><span className="list-icon"><ReceiptText size={19} /></span><div className="list-copy"><strong>{item.action.replaceAll("_", " ")}</strong><span>{item.detail}</span></div><div className="list-value"><small>{new Date(item.createdAt).toLocaleDateString()}</small></div></article>)}</div></section></div>}
+    {visibleScreen === "home" && <div key="home" className="screen-transition"><DashboardNotificationFeed notifications={notifications} onOpenSettings={() => setPanel("settings")} /><div className="page-heading dashboard-heading"><div><p className="eyebrow">Good to see you{viewer?.name && viewer.name !== "Kouchd member" ? `, ${viewer.name.split(" ")[0]}` : ""}</p><h1>Here&apos;s the household at a glance.</h1><HelpTip title="Home overview" href="https://help.kouchd.com/quickstart">See your current stay, next check-in, household details, announcements, and recent activity in one place.</HelpTip></div><button className="button soft desktop-action" type="button" onClick={() => setPanel("contribution")} disabled={isEnded || !financialGuestId}><Plus size={18} /> Add contribution</button></div><article className="stay-card"><div><p className="overline">Current stay</p><h2>{members.map((item) => (item.person.name && item.person.name !== "Kouchd member" ? item.person.name : (item.membership.role === "host" ? "Host" : "Guest"))).join(" + ")}</h2><p className="muted">{terms ? `${formatDate(terms.startDate)} to ${formatDate(terms.endDate)}` : "Terms pending"}</p></div><span className="status-pill">{bundle.stay.status}</span><div className="progress-block"><div className="progress-copy"><span>Confirmed contributions</span><strong>{formatMoney(credits)} of {formatMoney(charge)} covered</strong></div><div className="progress-track" role="progressbar" aria-label="Confirmed contribution progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={charge > 0 ? Math.min(100, Math.round((credits / charge) * 100)) : 0}><span style={{ width: `${charge > 0 ? Math.min(100, Math.max(0, (credits / charge) * 100)) : 0}%` }} /></div></div></article>{isHost && guestMembers.length > 0 && <GuestTabs guests={guestMembers} selected={financialGuestId} onSelect={setSelectedGuestId} />}<div className="metric-grid"><article className="metric-card balance-card"><p className="overline">{ledgerLabel}</p><p className="metric">{formatMoney(balance)}</p><p className="muted">{formatMoney(credits)} confirmed toward {formatMoney(charge)}</p><button className="text-button" type="button" onClick={() => setScreen("contributions")}>View breakdown</button></article><article className="metric-card"><p className="overline">Chores</p><p className="metric">{openChores.length} <small>open</small></p><p className="muted">{openChores[0]?.title ?? "Nothing hanging over anyone."}</p><button className="text-button" type="button" onClick={() => setScreen("chores")}>See chore board</button></article><article className="metric-card"><p className="overline">Next check-in</p><p className="metric date-metric">{bundle.stay.nextCheckInDate ? formatDate(bundle.stay.nextCheckInDate) : "Not set"}</p><p className="muted">Email and SMS follow your reminder settings.</p></article></div><HouseholdLogisticsCard houseInfo={bundle.stay.houseInfo} isHost={Boolean(isHost && !isEnded)} onEdit={() => setPanel("houseInfo")} onNotify={notify} /><section className="section-block"><div className="section-heading"><div><p className="eyebrow">House notes</p><h2>Announcements</h2></div>{isHost && !isEnded && <button className="mini-button" type="button" onClick={() => setPanel("announcement")}><Megaphone size={16} /> Add</button>}</div><div className="activity-list">{announcements.map((item) => <article className="list-row" key={item._id}><span className="list-icon"><Megaphone size={19} /></span><div className="list-copy"><strong>{item.title}</strong><span>{item.body}</span></div></article>)}{announcements.length === 0 && <p className="muted">No announcements yet.</p>}</div></section><section className="section-block"><div className="section-heading"><div><p className="eyebrow">Shared record</p><h2>Recent activity</h2></div></div><div className="activity-list">{recent.map((item) => <article className="list-row" key={item._id}><span className="list-icon"><ReceiptText size={19} /></span><div className="list-copy"><strong>{item.action.replaceAll("_", " ")}</strong><span>{item.detail}</span></div><div className="list-value"><small>{new Date(item.createdAt).toLocaleDateString()}</small></div></article>)}</div></section></div>}
     {visibleScreen === "contributions" && <div key="contributions" className="screen-transition"><div className="page-heading"><div><p className="eyebrow">Private by guest</p><h1>{ledgerLabel}</h1><p className="subhead">Your money tab is completely private between you and your host.</p><HelpTip title="Contribution ledger" href={isHost ? "https://help.kouchd.com/hosts/ledger-management" : "https://help.kouchd.com/guests/logging-contributions"}>Review charges and contributions here. Hosts can switch between guests; guests only see their own private ledger.</HelpTip></div><div className="heading-actions">{!isEnded && <><button className="button primary" type="button" onClick={() => setPanel("contribution")} disabled={!financialGuestId}><Plus size={18} /> Add contribution</button>{isHost && <button className="button soft" type="button" onClick={() => setPanel("adhoc")} disabled={!financialGuestId}><ReceiptText size={18} /> Add charge</button>}</>}</div></div>{isHost && guestMembers.length > 0 && <GuestTabs guests={guestMembers} selected={financialGuestId} onSelect={setSelectedGuestId} />}<div className="external-payment-note"><strong>Payments happen outside Kouchd.</strong> Use the host options in Stay details, then log completed contributions here. Kouchd does not collect or process payments. <button className="text-button" type="button" onClick={() => setScreen("stay")}>View payment options</button></div><div className="summary-strip"><div className="summary-item"><span>Total charges</span><strong>{formatMoney(charge)}</strong></div><div className="summary-item"><span>Confirmed credit</span><strong>{formatMoney(credits)}</strong></div><div className="summary-item"><span>Balance</span><strong>{formatMoney(balance)}</strong></div></div><section className="section-block"><div className="section-heading"><div><p className="eyebrow">Payment order</p><h2>Oldest shares are credited first</h2></div></div><div className="ledger-list">{obligations.map((item, index) => <article className="list-row contribution-row" key={item._id}><span className="list-icon"><ReceiptText size={19} /></span><div className="list-copy"><strong>{item.title ?? `Period ${index + 1}`} · due {formatDate(item.dueDate)}</strong><span>{formatMoney(item.baseAmountCents)} base{item.earlyDiscountCents ? ` · ${formatMoney(-item.earlyDiscountCents)} early discount` : ""}{item.lateFeeCents ? ` · ${formatMoney(item.lateFeeCents)} across ${item.lateFeeOccurrences} late-fee cycle${item.lateFeeOccurrences === 1 ? "" : "s"}` : ""}{item.lateFeeWaived ? " · fee waived" : ""}</span><span className="obligation-progress-copy">{formatMoney(item.creditedCents)} confirmed of {formatMoney(item.effectiveChargeCents)} due</span><span className="obligation-progress-track" role="progressbar" aria-label={`${item.title ?? `Period ${index + 1}`} payment progress`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={item.effectiveChargeCents > 0 ? Math.min(100, Math.round((item.creditedCents / item.effectiveChargeCents) * 100)) : 0}><span style={{ width: `${item.effectiveChargeCents > 0 ? Math.min(100, Math.max(0, (item.creditedCents / item.effectiveChargeCents) * 100)) : 0}%` }} /></span></div><div className="list-value">{formatMoney(item.balanceCents)}<small>{item.status}</small></div>{isHost && <div className="row-actions">{!isEnded && item.lateFeeCents > 0 && !item.lateFeeWaived && <button className="mini-button" type="button" onClick={() => void waiveLateFee({ obligationId: item._id }).then(() => notify("Late fee waived and updated."))}>Waive fee</button>}{!isEnded && item.type === "adhoc" && <button className="mini-button danger" type="button" onClick={() => setDestructiveAction({ type: "cancelCharge", obligationId: item._id, title: item.title ?? "One-off charge" })}>Cancel charge</button>}</div>}</article>)}{obligations.length === 0 && <p className="muted">Choose a guest, then activate terms or add a one-off charge.</p>}</div></section><RewardsHub stayId={stayId} isHost={Boolean(isHost && !isEnded)} readOnly={isEnded} selectedGuestId={financialGuestId} currentBalanceCents={balance} onNotify={notify} /><section className="section-block"><div className="section-heading"><div><p className="eyebrow">Transactions</p><h2>Contribution entries</h2></div></div><div className="ledger-list">{activeContributions.map((item) => <article className="list-row contribution-row" key={item._id}><span className="list-icon payment"><Landmark size={19} /></span><div className="list-copy"><strong>{item.type.replaceAll("_", " ")}</strong><span>{item.note || "No note"} · {item.status}</span></div><div className="list-value">{formatMoney(item.amountCents)}<small>{formatDate(item.date)}</small></div>{!isEnded && item.status === "pending" && item.createdBy !== bundle.membership.userId && <div className="row-actions"><button className="mini-button" type="button" onClick={() => void confirmContribution({ contributionId: item._id })}>Confirm</button></div>}</article>)}</div></section></div>}
-    {visibleScreen === "chores" && <div key="chores" className="screen-transition"><div className="page-heading"><div><p className="eyebrow">Shared across the house</p><h1>Chore board</h1><p className="subhead">Household coordination stays shared while financial records stay private.</p><HelpTip title="Shared chores" href="https://help.kouchd.com/hosts/house-rules-and-chores">Everyone in the stay can see tasks, assignments, and completion. Use the chore form to add a task and set a due date.</HelpTip></div>{!isEnded && <button className="button primary" type="button" onClick={() => setPanel("chore")}><Plus size={18} /> Add chore</button>}</div><div className="chore-list">{chores.filter((item) => !item.voidedAt).map((item) => <article className={`list-row chore-row ${item.completedAt ? "done" : ""}`} key={item._id}>{!isEnded ? <button className={`chore-check ${item.completedAt ? "checked" : ""}`} type="button" onClick={() => void toggleChore({ choreId: item._id })} aria-label={`${item.completedAt ? "Reopen" : "Complete"} ${item.title}`}>{item.completedAt && <Check size={18} />}</button> : <span className={`chore-check ${item.completedAt ? "checked" : ""}`} aria-hidden="true">{item.completedAt && <Check size={18} />}</span>}<div className="list-copy"><strong>{item.title}</strong><span>{item.note || `Due ${formatDate(item.dueDate)}`}</span><span className="badge">{item.assigneeUserId ? members.find((member) => member.person.id === item.assigneeUserId)?.person.name ?? "Guest" : item.assignee}</span></div></article>)}</div></div>}
-    {visibleScreen === "stay" && <div key="stay" className="screen-transition"><div className="page-heading"><div><p className="eyebrow">The agreement</p><h1>Stay details</h1><p className="subhead">Everyone sees shared house guidelines, while guest money details stay private.</p><HelpTip title="Stay details" href="https://help.kouchd.com/legal-trust/stay-agreements">Find the current terms, house rules, and household access information here.</HelpTip></div>{!isEnded && !hasAccepted && <button className="button primary" type="button" onClick={() => setGuestOnboardingOpen(true)}>Review & accept agreement</button>}</div>{isHost && guestMembers.length > 0 && <GuestTabs guests={guestMembers} selected={financialGuestId} onSelect={setSelectedGuestId} />}<div className="agreement-callout"><div><Users size={22} /><div><strong>Terms version {displayedAgreementTerms?.version ?? 1}</strong><span>{displayedAgreementAccepted ? (isHost ? `${selectedGuest?.name ?? "Guest"} accepted this agreement` : "You accepted this agreement") : (isHost ? `${selectedGuest?.name ?? "Guest"} needs to review this agreement` : "Your agreement needs review")}</span></div></div><span className="accepted-pill">{bundle.stay.status}</span></div>{displayedAgreementTerms && <div className="details-grid"><article className="details-card" style={{ gridColumn: "1 / -1", background: "#f8fbf9", border: "1px dashed var(--green, #184f3a)" }}><div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.75rem" }}><div><p className="overline" style={{ margin: 0 }}>Household Referral Code</p><strong style={{ fontSize: "1.3rem", letterSpacing: "1.5px", color: "var(--green, #184f3a)" }}>{bundle.stay.referralCode ?? "KCH-SHARED"}</strong><p className="muted" style={{ margin: "3px 0 0", fontSize: "0.8rem" }}>Members can join this stay directly by entering this code on Kouchd.</p></div><button className="button soft compact" type="button" onClick={() => { void navigator.clipboard.writeText(bundle.stay.referralCode ?? ""); notify("Referral code copied!"); }}><Copy size={15} /> Copy code</button></div></article><article className="details-card"><p className="overline">Dates</p><p>{formatDate(displayedAgreementTerms.startDate)} to {formatDate(displayedAgreementTerms.endDate)}</p></article><article className="details-card"><p className="overline">Contribution plan</p><p>{formatMoney(displayedAgreementTerms.rateCents)} per {displayedAgreementTerms.cadence === "weekly" ? "week" : "day"}</p></article><article className="details-card"><p className="overline">Billable dates</p><p>{displayedAgreementTerms.billingBasis === "occupied_nights" ? "Only completed overnights recorded by the host" : "Every day within the agreement dates"}</p></article><article className="details-card"><p className="overline">Early rule</p><p>{displayedAgreementTerms.earlyDiscountEnabled ?? displayedAgreementTerms.earlyDiscountPercentage > 0 ? `${displayedAgreementTerms.earlyDiscountPercentage}% off when complete ${displayedAgreementTerms.earlyDiscountDays} days early` : "Off"}</p></article><article className="details-card"><p className="overline">Late rule</p><p>{displayedAgreementTerms.lateFeeEnabled ?? displayedAgreementTerms.lateFeeCents > 0 ? `${formatMoney(displayedAgreementTerms.lateFeeCents)} weekly after ${displayedAgreementTerms.graceDays} grace days` : "Off"}</p></article></div>}<HouseholdLogisticsCard houseInfo={bundle.stay.houseInfo} isHost={Boolean(isHost && !isEnded)} onEdit={() => setPanel("houseInfo")} onNotify={notify} />
+    {visibleScreen === "chores" && <div key="chores" className="screen-transition"><div className="page-heading"><div><p className="eyebrow">Shared across the house</p><h1>Chore board</h1><p className="subhead">Household coordination stays shared while financial records stay private.</p><HelpTip title="Shared chores" href="https://help.kouchd.com/hosts/house-rules-and-chores">Everyone in the stay can see tasks, assignments, and completion. Use the chore form to add a task and set a due date.</HelpTip></div>{!isEnded && <button className="button primary" type="button" onClick={() => setPanel("chore")}><Plus size={18} /> Add chore</button>}</div><div className="chore-list">{chores.filter((item) => !item.voidedAt).map((item) => <article className={`list-row chore-row ${item.completedAt ? "done" : ""}`} key={item._id}>{!isEnded ? <button className={`chore-check ${item.completedAt ? "checked" : ""}`} type="button" onClick={() => void toggleChore({ choreId: item._id })} aria-label={`${item.completedAt ? "Reopen" : "Complete"} ${item.title}`}>{item.completedAt && <Check size={18} />}</button> : <span className={`chore-check ${item.completedAt ? "checked" : ""}`} aria-hidden="true">{item.completedAt && <Check size={18} />}</span>}<div className="list-copy"><strong>{item.title}</strong><span>{item.note || `Due ${formatDate(item.dueDate)}`}</span><span className="badge">{item.assigneeUserId ? (members.find((member) => member.person.id === item.assigneeUserId)?.person.name && members.find((member) => member.person.id === item.assigneeUserId)!.person.name !== "Kouchd member" ? members.find((member) => member.person.id === item.assigneeUserId)!.person.name : "Guest") : item.assignee}</span></div></article>)}</div></div>}
+    {visibleScreen === "stay" && <div key="stay" className="screen-transition"><div className="page-heading"><div><p className="eyebrow">The agreement</p><h1>Stay details</h1><p className="subhead">Everyone sees shared house guidelines, while guest money details stay private.</p><HelpTip title="Stay details" href="https://help.kouchd.com/legal-trust/stay-agreements">Find the current terms, house rules, and household access information here.</HelpTip></div>{!isEnded && !hasAccepted && <button className="button primary" type="button" onClick={() => setGuestOnboardingOpen(true)}>Review & accept agreement</button>}</div>{isHost && guestMembers.length > 0 && <GuestTabs guests={guestMembers} selected={financialGuestId} onSelect={setSelectedGuestId} />}<div className="agreement-callout"><div><Users size={22} /><div><strong>Terms version {displayedAgreementTerms?.version ?? 1}</strong><span>{displayedAgreementAccepted ? (isHost ? `${guestDisplayName} accepted this agreement` : "You accepted this agreement") : (isHost ? `${guestDisplayName} needs to review this agreement` : "Your agreement needs review")}</span></div></div><span className="accepted-pill">{bundle.stay.status}</span></div>{displayedAgreementTerms && <div className="details-grid"><article className="details-card" style={{ gridColumn: "1 / -1", background: "#f8fbf9", border: "1px dashed var(--green, #184f3a)" }}><div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.75rem" }}><div><p className="overline" style={{ margin: 0 }}>Household Referral Code</p><strong style={{ fontSize: "1.3rem", letterSpacing: "1.5px", color: "var(--green, #184f3a)" }}>{bundle.stay.referralCode ?? "KCH-SHARED"}</strong><p className="muted" style={{ margin: "3px 0 0", fontSize: "0.8rem" }}>Members can join this stay directly by entering this code on Kouchd.</p></div><button className="button soft compact" type="button" onClick={() => { void navigator.clipboard.writeText(bundle.stay.referralCode ?? ""); notify("Referral code copied!"); }}><Copy size={15} /> Copy code</button></div></article><article className="details-card"><p className="overline">Dates</p><p>{formatDate(displayedAgreementTerms.startDate)} to {formatDate(displayedAgreementTerms.endDate)}</p></article><article className="details-card"><p className="overline">Contribution plan</p><p>{formatMoney(displayedAgreementTerms.rateCents)} per {displayedAgreementTerms.cadence === "weekly" ? "week" : "day"}</p></article><article className="details-card"><p className="overline">Billable dates</p><p>{displayedAgreementTerms.billingBasis === "occupied_nights" ? "Only completed overnights recorded by the host" : "Every day within the agreement dates"}</p></article><article className="details-card"><p className="overline">Early rule</p><p>{displayedAgreementTerms.earlyDiscountEnabled ?? displayedAgreementTerms.earlyDiscountPercentage > 0 ? `${displayedAgreementTerms.earlyDiscountPercentage}% off when complete ${displayedAgreementTerms.earlyDiscountDays} days early` : "Off"}</p></article><article className="details-card"><p className="overline">Late rule</p><p>{displayedAgreementTerms.lateFeeEnabled ?? displayedAgreementTerms.lateFeeCents > 0 ? `${formatMoney(displayedAgreementTerms.lateFeeCents)} weekly after ${displayedAgreementTerms.graceDays} grace days` : "Off"}</p></article></div>}<HouseholdLogisticsCard houseInfo={bundle.stay.houseInfo} isHost={Boolean(isHost && !isEnded)} onEdit={() => setPanel("houseInfo")} onNotify={notify} />
     <PaymentOptionsCard paymentOptions={bundle.stay.paymentOptions} isHost={Boolean(isHost && !isEnded)} onEdit={() => setPanel("paymentOptions")} onNotify={notify} />
         {terms && <PaymentScheduleCard key={`${financialGuestId ?? "host"}-${terms.cadence}`} stayId={stayId} isHost={isHost} hasAccepted={hasAccepted} cadence={terms.cadence} paymentDayOfWeek={terms.paymentDayOfWeek} ended={isEnded} onNotify={notify} />}
-        {selectedGuestTerms?.billingBasis === "occupied_nights" && financialGuestId && <OccupancyCaptureCard stayId={stayId} guestUserId={financialGuestId} guestName={selectedGuest?.name ?? "Guest"} isHost={Boolean(isHost && !isEnded)} canRecord={!isEnded && (isHost ? guestMembers.find((item) => item.person.id === financialGuestId)?.membership.acceptedTermsId === selectedGuestTerms._id : hasAccepted)} onNotify={notify} />}
+        {selectedGuestTerms?.billingBasis === "occupied_nights" && financialGuestId && <OccupancyCaptureCard stayId={stayId} guestUserId={financialGuestId} guestName={guestDisplayName} isHost={Boolean(isHost && !isEnded)} canRecord={!isEnded && (isHost ? guestMembers.find((item) => item.person.id === financialGuestId)?.membership.acceptedTermsId === selectedGuestTerms._id : hasAccepted)} onNotify={notify} />}
         {isHost && !isEnded && <section className="section-block">
           <div className="section-heading"><div><p className="eyebrow">Individual agreements</p><h2>Guest terms</h2></div></div>
           {guestMembers.length ? <div className="ledger-list">{guestMembers.map((guest) => {
             const guestTerms = guest.terms ?? terms;
+            const currentGuestName = guest.person.name && guest.person.name !== "Kouchd member" ? guest.person.name : "Guest";
             return <article className="list-row" key={guest.person.id}>
-              <div className="list-copy"><strong>{guest.person.name}</strong><span>{guestTerms ? `${formatMoney(guestTerms.rateCents)} per ${guestTerms.cadence === "weekly" ? "week" : "day"} · ${guest.membership.acceptedTermsId === guestTerms._id ? "accepted" : "needs acceptance"}` : "Agreement not available"}</span></div>
+              <div className="list-copy"><strong>{currentGuestName}</strong><span>{guestTerms ? `${formatMoney(guestTerms.rateCents)} per ${guestTerms.cadence === "weekly" ? "week" : "day"} · ${guest.membership.acceptedTermsId === guestTerms._id ? "accepted" : "needs acceptance"}` : "Agreement not available"}</span></div>
               <button className="mini-button" type="button" disabled={!guestTerms} onClick={() => { setEditingGuestId(guest.person.id); setPanel("guestTerms"); }}>Edit agreement</button>
             </article>;
           })}</div> : <p className="muted">Guest agreements appear here when someone joins.</p>}
@@ -746,16 +828,17 @@ function LiveStay({ stayId, onBackToHub }: { stayId: Id<"stays">; onBackToHub: (
   {panel && !isEnded && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setPanel(null); }}><section className="modal-card" role="dialog" aria-modal="true"><div className="dialog-heading"><div><p className="eyebrow">Kouchd</p><h2>{panelTitle(panel)}</h2>{panel === "contribution" && <HelpTip title="Logging a contribution" href={isHost ? "https://help.kouchd.com/hosts/ledger-management" : "https://help.kouchd.com/guests/logging-contributions"}>This records money or a shared expense for the ledger. Kouchd does not process payments yet.</HelpTip>}{panel === "invite" && <HelpTip title="Private invitations" href="https://help.kouchd.com/hosts/getting-started">A private link expires after one week. You can also share the household referral code from Stay details.</HelpTip>}{panel === "settings" && <HelpTip title="Reminder preferences" href="https://help.kouchd.com/using-notifications">Choose the channels where you want household reminders. SMS is optional and requires a phone number.</HelpTip>}</div><button className="icon-button compact" type="button" onClick={() => setPanel(null)} aria-label="Close">×</button></div>
     {panel === "contribution" && <form onSubmit={addContribution}><div className="form-grid"><label><span>Type</span><select name="type"><option value="payment">Payment</option><option value="groceries">Groceries</option><option value="supplies">Supplies</option><option value="house_work">House work</option><option value="other">Other</option></select></label><label><span>Value</span><div className="money-input"><span>$</span><input name="amount" type="number" min="0.01" step="0.01" required /></div></label><label><span>Transaction date</span><input name="date" type="date" defaultValue={asOfDate ?? undefined} required /></label><label className="full"><span>Note</span><input name="note" placeholder="Backdated payments are supported" /></label><label className="check full"><input name="counts" type="checkbox" defaultChecked /><span>Count toward this guest&apos;s balance</span></label></div><ModalActions close={() => setPanel(null)} action="Add contribution" submitting={isSubmittingModal} /></form>}
     {panel === "adhoc" && <form onSubmit={addCharge}><div className="form-grid"><label className="full"><span>Charge title</span><input name="title" required placeholder="August electric split" /></label><label><span>Amount</span><div className="money-input"><span>$</span><input name="amount" type="number" min="0.01" step="0.01" required /></div></label><label><span>Effective date</span><input name="effectiveDate" type="date" defaultValue={asOfDate ?? undefined} required /></label><label><span>Due date</span><input name="dueDate" type="date" defaultValue={asOfDate ?? undefined} required /></label></div><ModalActions close={() => setPanel(null)} action="Add charge" submitting={isSubmittingModal} /></form>}
-    {panel === "chore" && <form onSubmit={addChore}><div className="form-grid"><label className="full"><span>Chore</span><input name="title" required /></label><label><span>Assigned to</span><select name="assigneeUserId"><option value="">Everyone</option>{members.map((member) => <option value={member.person.id} key={member.person.id}>{member.person.name}</option>)}</select></label><label><span>Due date</span><input name="dueDate" type="date" defaultValue={asOfDate ? addCalendarDays(asOfDate, 2) : undefined} required /></label><label className="full"><span>Details</span><input name="note" /></label></div><ModalActions close={() => setPanel(null)} action="Add chore" submitting={isSubmittingModal} /></form>}
+    {panel === "chore" && <form onSubmit={addChore}><div className="form-grid"><label className="full"><span>Chore</span><input name="title" required /></label><label><span>Assigned to</span><select name="assigneeUserId"><option value="">Everyone</option>{members.map((member) => <option value={member.person.id} key={member.person.id}>{member.person.name && member.person.name !== "Kouchd member" ? member.person.name : (member.membership.role === "host" ? "Host" : "Guest")}</option>)}</select></label><label><span>Due date</span><input name="dueDate" type="date" defaultValue={asOfDate ? addCalendarDays(asOfDate, 2) : undefined} required /></label><label className="full"><span>Details</span><input name="note" /></label></div><ModalActions close={() => setPanel(null)} action="Add chore" submitting={isSubmittingModal} /></form>}
     {panel === "announcement" && <form onSubmit={addAnnouncement}><div className="form-grid"><label className="full"><span>Title</span><input name="title" required /></label><label className="full"><span>Announcement</span><textarea name="body" rows={4} required /></label><label><span>Pin until</span><input name="pinnedUntil" type="date" /></label></div><ModalActions close={() => setPanel(null)} action="Share announcement" submitting={isSubmittingModal} /></form>}
-    {panel === "settings" && <form onSubmit={savePreferences}><div className="settings-summary"><Bell size={22} /><div><strong>Reminder delivery</strong><span>Knock routes enabled channels from one preference set.</span></div></div><div className="form-grid settings-fields"><label className="full"><span>Mobile number for SMS</span><input name="phone" type="tel" defaultValue={viewer.phone} placeholder="+15551234567" /></label><label className="check full"><input name="notifyEmail" type="checkbox" defaultChecked={viewer.notifyEmail} /><span>Email reminders</span></label><label className="check full"><input name="notifySms" type="checkbox" defaultChecked={viewer.notifySms} /><span>SMS reminders (Wrelik Brands LLC &middot; Kouchd)</span></label></div><div style={{ margin: "0.85rem 0", padding: "0.85rem", background: "#faf8f5", borderRadius: "10px", border: "1px solid var(--line)", fontSize: "0.78rem", color: "var(--muted)", lineHeight: 1.5 }}><p style={{ margin: "0 0 0.35rem" }}>By enabling SMS reminders, you agree to receive transactional text messages from <strong>Wrelik Brands LLC</strong> (operating <strong>Kouchd</strong>). <strong>Message and data rates may apply.</strong> Message frequency varies. Text STOP to cancel, HELP for help.</p><p style={{ margin: "0 0 0.35rem" }}>We do not sell or share your SMS opt-in data or personal information with third parties for marketing purposes.</p><p style={{ margin: 0 }}><Link href="/terms" target="_blank" style={{ color: "var(--green)", fontWeight: 700, textDecoration: "underline" }}>Terms &amp; Conditions</Link> &middot; <Link href="/privacy" target="_blank" style={{ color: "var(--green)", fontWeight: 700, textDecoration: "underline" }}>Privacy Policy</Link> &middot; <Link href="/sms-opt-in" target="_blank" style={{ color: "var(--green)", fontWeight: 700, textDecoration: "underline" }}>SMS Terms Details</Link></p></div><ModalActions close={() => setPanel(null)} action="Save preferences" submitting={isSubmittingModal} /></form>}
+    {panel === "settings" && <form onSubmit={savePreferences}><div className="settings-summary"><Bell size={22} /><div><strong>Profile &amp; reminder delivery</strong><span>Set your display name and notification channels.</span></div></div><div className="form-grid settings-fields"><label className="full"><span>Your display name</span><input name="name" type="text" defaultValue={viewer.name && viewer.name !== "Kouchd member" ? viewer.name : (clerkUser?.fullName || "")} placeholder="e.g. Lee White" maxLength={60} /></label><label className="full"><span>Mobile number for SMS</span><input name="phone" type="tel" defaultValue={viewer.phone} placeholder="+15551234567" /></label><label className="check full"><input name="notifyEmail" type="checkbox" defaultChecked={viewer.notifyEmail} /><span>Email reminders</span></label><label className="check full"><input name="notifySms" type="checkbox" defaultChecked={viewer.notifySms} /><span>SMS reminders (Wrelik Brands LLC &middot; Kouchd)</span></label></div><div style={{ margin: "0.85rem 0", padding: "0.85rem", background: "#faf8f5", borderRadius: "10px", border: "1px solid var(--line)", fontSize: "0.78rem", color: "var(--muted)", lineHeight: 1.5 }}><p style={{ margin: "0 0 0.35rem" }}>By enabling SMS reminders, you agree to receive transactional text messages from <strong>Wrelik Brands LLC</strong> (operating <strong>Kouchd</strong>). <strong>Message and data rates may apply.</strong> Message frequency varies. Text STOP to cancel, HELP for help.</p><p style={{ margin: "0 0 0.35rem" }}>We do not sell or share your SMS opt-in data or personal information with third parties for marketing purposes.</p><p style={{ margin: 0 }}><Link href="/terms" target="_blank" style={{ color: "var(--green)", fontWeight: 700, textDecoration: "underline" }}>Terms &amp; Conditions</Link> &middot; <Link href="/privacy" target="_blank" style={{ color: "var(--green)", fontWeight: 700, textDecoration: "underline" }}>Privacy Policy</Link> &middot; <Link href="/sms-opt-in" target="_blank" style={{ color: "var(--green)", fontWeight: 700, textDecoration: "underline" }}>SMS Terms Details</Link></p></div><ModalActions close={() => setPanel(null)} action="Save preferences" submitting={isSubmittingModal} /></form>}
     {panel === "houseInfo" && <HouseInfoForm initialInfo={bundle.stay.houseInfo} onSubmit={saveHouseInfo} onCancel={() => setPanel(null)} />}
     {panel === "paymentOptions" && <PaymentOptionsForm initialOptions={bundle.stay.paymentOptions} onSubmit={savePaymentOptions} onCancel={() => setPanel(null)} />}
     {panel === "guestTerms" && editingGuestId && (() => {
       const guest = guestMembers.find((item) => item.person.id === editingGuestId);
       const guestTerms = guest?.terms ?? terms;
+      const currentGuestName = guest?.person.name && guest.person.name !== "Kouchd member" ? guest.person.name : "Guest";
       return guest && guestTerms
-        ? <GuestAgreementForm terms={guestTerms} guestName={guest.person.name} onSubmit={saveGuestAgreement} onCancel={() => setPanel(null)} />
+        ? <GuestAgreementForm terms={guestTerms} guestName={currentGuestName} onSubmit={saveGuestAgreement} onCancel={() => setPanel(null)} />
         : <p className="muted">This guest agreement is not available.</p>;
     })()}
     {panel === "invite" && <><div style={{ border: "1px dashed var(--line)", borderRadius: "12px", padding: "1rem", background: "#faf8f5", marginBottom: "1rem" }}><span style={{ fontSize: "0.75rem", textTransform: "uppercase", color: "var(--muted)", fontWeight: 700 }}>Household Referral Code</span><div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "0.25rem" }}><strong style={{ fontSize: "1.2rem", letterSpacing: "1px", color: "var(--green)" }}>{bundle.stay.referralCode ?? "KCH-SHARED"}</strong><button className="button soft compact" type="button" onClick={() => { void navigator.clipboard.writeText(bundle.stay.referralCode ?? ""); notify("Referral code copied!"); }}><Copy size={15} /> Copy Code</button></div></div>{inviteUrl ? <div><p className="muted">{inviteMode === "email" ? "The email invitation was sent. You can also copy this private link." : "Copy this private link, paste it into a message on your phone, and send it yourself."} It expires in seven days.</p><div className="invite-output"><input readOnly value={inviteUrl} aria-label="Guest invitation link" /><button className="button soft" type="button" onClick={() => void navigator.clipboard.writeText(inviteUrl).then(() => notify("Invite link copied. Paste it into your phone message."))}><Copy size={17} /> Copy link</button></div></div> : <form onSubmit={makeInvite}><div className="form-grid"><label className="full"><span>Guest email (for email invite only)</span><input name="email" type="email" placeholder="guest@example.com" /></label></div><p className="muted modal-note">For text, choose “Create link to copy” and send it from your phone’s messaging app. Kouchd will not send a text or access your contacts. This invite link expires in seven days. Households support up to 20 active members including the host.</p>{inviteError && <p className="form-error" role="alert">{inviteError}</p>}<div className="dialog-actions"><button className="button ghost" type="button" onClick={() => setPanel(null)}>Cancel</button><button className="button soft" type="submit" name="delivery" value="text" disabled={isSubmittingModal}>{isSubmittingModal ? "Creating..." : "Create link to copy"}</button><button className="button primary" type="submit" name="delivery" value="email" disabled={isSubmittingModal}>{isSubmittingModal ? "Creating..." : "Send email invite"}</button></div></form>}</>}
@@ -798,7 +881,7 @@ function LiveStay({ stayId, onBackToHub }: { stayId: Id<"stays">; onBackToHub: (
 }
 
 function GuestTabs({ guests, selected, onSelect }: { guests: Member[]; selected?: Id<"users">; onSelect: (id: Id<"users">) => void }) {
-  return <div className="guest-tabs" aria-label="Choose a guest ledger">{guests.map((guest) => <button className={selected === guest.person.id ? "active" : ""} type="button" key={guest.person.id} onClick={() => onSelect(guest.person.id)}>{guest.person.name}</button>)}</div>;
+  return <div className="guest-tabs" aria-label="Choose a guest ledger">{guests.map((guest) => <button className={selected === guest.person.id ? "active" : ""} type="button" key={guest.person.id} onClick={() => onSelect(guest.person.id)}>{guest.person.name && guest.person.name !== "Kouchd member" ? guest.person.name : "Guest"}</button>)}</div>;
 }
 
 function ModalActions({ close, action, submitting }: { close: () => void; action: string; submitting?: boolean }) {
@@ -818,7 +901,7 @@ function panelTitle(panel: Exclude<Panel, null>) {
     chore: "Add a chore",
     adhoc: "Add one-off charge",
     announcement: "New announcement",
-    settings: "Reminder settings",
+    settings: "Profile & reminder settings",
     invite: "Invite a guest",
     houseInfo: "Household Guide & Essentials",
     paymentOptions: "Payment options",

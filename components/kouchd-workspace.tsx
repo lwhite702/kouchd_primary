@@ -23,6 +23,7 @@ import { DestructiveConfirmationDialog } from "@/components/confirmation/destruc
 import { DashboardNotificationFeed, NotificationBellMenu } from "@/components/notifications/dashboard-notifications";
 import type { NotificationItem } from "@/components/notifications/dashboard-notifications";
 import { GuidedTour, guideSteps } from "@/components/onboarding/guided-tour";
+import { MobileHeaderMenu } from "@/components/navigation/header-menu";
 
 type Screen = "home" | "contributions" | "chores" | "stay";
 type Role = "host" | "guest";
@@ -252,35 +253,39 @@ export function KouchdWorkspace({ servicesConfigured }: { servicesConfigured: bo
       <div className="desktop-main-area app-shell has-sidebar">
         <header className="topbar">
           <button className="brand brand-button" type="button" onClick={() => setScreen("home")} aria-label="Kouchd dashboard">
-            <KouchdWordmark size="sm" />
+            <KouchdWordmark size="sm" className="topbar-wordmark" />
           </button>
-          <div className="top-actions">
-            <button
-              aria-label="Take the guided tour"
-              className="button soft compact tour-entry"
-              onClick={() => {
-                setTourStep(0);
-                setScreen("home");
-                setTourOpen(true);
-              }}
-              title="Take the guided tour"
-              type="button"
-            >
-              <Sparkles size={15} />
-              <span>Tour</span>
-            </button>
+          <div className="topbar-actions top-actions">
+            <div className="topbar-desktop-only">
+              <button
+                aria-label="Take the guided tour"
+                className="button soft compact tour-entry"
+                onClick={() => {
+                  setTourStep(0);
+                  setScreen("home");
+                  setTourOpen(true);
+                }}
+                title="Take the guided tour"
+                type="button"
+              >
+                <Sparkles size={15} />
+                <span>Tour</span>
+              </button>
+            </div>
             <NotificationBellMenu notifications={notifications} onOpenSettings={() => setModal("agreement")} />
-            <a
-              className="button ghost compact"
-              href="https://help.kouchd.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ fontSize: "0.8rem", padding: "4px 10px", color: "var(--kouchd-muted)", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 4 }}
-              title="Guides & Documentation"
-            >
-              <BookOpen size={15} /> Docs
-            </a>
-            {!servicesConfigured && <span className="mode-pill"><Sparkles size={14} /> Preview data</span>}
+            <div className="topbar-desktop-only">
+              <a
+                className="button ghost compact docs-entry"
+                href="https://help.kouchd.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ fontSize: "0.8rem", padding: "4px 10px", color: "var(--kouchd-muted)", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 4 }}
+                title="Guides & Documentation"
+              >
+                <BookOpen size={15} /> Docs
+              </a>
+              {!servicesConfigured && <span className="mode-pill"><Sparkles size={14} /> Preview data</span>}
+            </div>
             <label className="role-switch">
               <span className="sr-only">View as</span>
               <select value={role} onChange={(event) => setRole(event.target.value as Role)} aria-label="View as host or guest">
@@ -288,6 +293,15 @@ export function KouchdWorkspace({ servicesConfigured }: { servicesConfigured: bo
                 <option value="guest">Guest view</option>
               </select>
             </label>
+            <MobileHeaderMenu
+              onTakeTour={() => {
+                setTourStep(0);
+                setScreen("home");
+                setTourOpen(true);
+              }}
+              onSettings={() => setModal("agreement")}
+              docsHref="https://help.kouchd.com"
+            />
             <button className="avatar" type="button" onClick={() => setModal("agreement")} aria-label="Open stay settings">
               {role === "host" ? "L" : "M"}
             </button>
