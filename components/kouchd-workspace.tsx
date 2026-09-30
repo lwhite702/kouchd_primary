@@ -13,13 +13,16 @@ import {
   Users,
   X,
 } from "lucide-react";
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useCallback, useMemo, useState } from "react";
 
 import { calculateStayChargeCents, confirmedCreditCents } from "@/lib/domain/pricing";
 
 import { KouchdWordmark } from "@/components/brand/kouchd-logo";
 import { HomeNavIcon, ContributionsNavIcon, ChoresNavIcon, StayNavIcon } from "@/components/brand/nav-icons";
 import { DestructiveConfirmationDialog } from "@/components/confirmation/destructive-confirmation-dialog";
+import { DashboardNotificationFeed, NotificationBellMenu } from "@/components/notifications/dashboard-notifications";
+import type { NotificationItem } from "@/components/notifications/dashboard-notifications";
+import { GuidedTour, guideSteps } from "@/components/onboarding/guided-tour";
 
 type Screen = "home" | "contributions" | "chores" | "stay";
 type Role = "host" | "guest";
@@ -86,6 +89,53 @@ export function KouchdWorkspace({ servicesConfigured }: { servicesConfigured: bo
   const [chores, setChores] = useState(initialChores);
   const [ended, setEnded] = useState(false);
   const [confirmEnd, setConfirmEnd] = useState(false);
+  const [tourOpen, setTourOpen] = useState(false);
+  const [tourStep, setTourStep] = useState(0);
+
+  const notify = useCallback((message: string) => {
+    setToast(message);
+    window.setTimeout(() => setToast(""), 2400);
+  }, []);
+
+  const confirmContribution = useCallback((id: string) => {
+    setContributions((items) => items.map((item) => item.id === id ? { ...item, status: "confirmed" } : item));
+    notify("Contribution confirmed.");
+  }, [notify]);
+
+  const notifications: NotificationItem[] = useMemo(() => {
+    const list: NotificationItem[] = [];
+    const pendingContrib = contributions.find((c) => c.status === "pending");
+    if (pendingContrib) {
+      list.push({
+        id: "preview_contrib_pending",
+        type: "payment",
+        urgency: "notice",
+        title: role === "host" ? "Contribution requires confirmation" : "Contribution awaiting review",
+        description: role === "host"
+          ? `Marcus recorded ${money(pendingContrib.amountCents)} for ${pendingContrib.type} (${pendingContrib.note}).`
+          : `Your ${money(pendingContrib.amountCents)} ${pendingContrib.type} entry was recorded and is awaiting host confirmation.`,
+        confirmLabel: role === "host" ? "Confirm" : undefined,
+        confirmAction: role === "host" ? () => confirmContribution(pendingContrib.id) : undefined,
+        actionLabel: "View ledger",
+        onAction: () => setScreen("contributions"),
+      });
+    }
+
+    const nextChore = chores.find((c) => !c.done);
+    if (nextChore) {
+      list.push({
+        id: "preview_chore_due",
+        type: "chore",
+        urgency: "info",
+        title: `Upcoming chore: ${nextChore.title}`,
+        description: `Assigned to ${nextChore.assignee} · due ${formatDate(nextChore.dueDate)}.`,
+        actionLabel: "See chore board",
+        onAction: () => setScreen("chores"),
+      });
+    }
+
+    return list;
+  }, [contributions, role, chores, confirmContribution]);
 
   const chargeCents = calculateStayChargeCents({
     startDate: "2026-09-01",
@@ -114,11 +164,6 @@ export function KouchdWorkspace({ servicesConfigured }: { servicesConfigured: bo
     }));
     return [...contributionItems, ...choreItems].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 4);
   }, [chores, contributions]);
-
-  function notify(message: string) {
-    setToast(message);
-    window.setTimeout(() => setToast(""), 2400);
-  }
 
   function addContribution(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -149,11 +194,6 @@ export function KouchdWorkspace({ servicesConfigured }: { servicesConfigured: bo
     }, ...items]);
     setModal(null);
     notify("Chore added. Diplomacy preserved.");
-  }
-
-  function confirmContribution(id: string) {
-    setContributions((items) => items.map((item) => item.id === id ? { ...item, status: "confirmed" } : item));
-    notify("Contribution confirmed.");
   }
 
   function toggleChore(id: string) {
@@ -215,6 +255,21 @@ export function KouchdWorkspace({ servicesConfigured }: { servicesConfigured: bo
             <KouchdWordmark size="sm" />
           </button>
           <div className="top-actions">
+            <button
+              aria-label="Take the guided tour"
+              className="button soft compact tour-entry"
+              onClick={() => {
+                setTourStep(0);
+                setScreen("home");
+                setTourOpen(true);
+              }}
+              title="Take the guided tour"
+              type="button"
+            >
+              <Sparkles size={15} />
+              <span>Tour</span>
+            </button>
+            <NotificationBellMenu notifications={notifications} onOpenSettings={() => setModal("agreement")} />
             <a
               className="button ghost compact"
               href="https://help.kouchd.com"
@@ -241,6 +296,7 @@ export function KouchdWorkspace({ servicesConfigured }: { servicesConfigured: bo
 
         <main tabIndex={-1}>
           {screen === "home" && <div key="home" className="screen-transition">
+            <DashboardNotificationFeed notifications={notifications} onOpenSettings={() => setModal("agreement")} />
             <div className="page-heading dashboard-heading">
               <div><p className="eyebrow">Good to see you, Lee</p><h1>Here&apos;s the stay at a glance.</h1></div>
             {!ended && <button className="button soft desktop-action" type="button" onClick={() => setModal("contribution")}><Plus size={18} /> Add contribution</button>}
@@ -294,6 +350,28 @@ export function KouchdWorkspace({ servicesConfigured }: { servicesConfigured: bo
 
       {confirmEnd && <DestructiveConfirmationDialog title="End this stay?" description="The stay will close and its full record will remain available for reference." confirmLabel="End stay" onConfirm={async () => { setEnded(true); notify("Stay ended. The full record is still here."); }} onCancel={() => setConfirmEnd(false)} />}
       <div className={`toast ${toast ? "show" : ""}`} role="status" aria-live="polite">{toast}</div>
+      {tourOpen && (
+        <GuidedTour
+          role={role}
+          step={tourStep}
+          onBack={() => {
+            const prev = Math.max(0, tourStep - 1);
+            setTourStep(prev);
+            setScreen(guideSteps[role][prev].screen);
+          }}
+          onNext={() => {
+            if (tourStep >= guideSteps[role].length - 1) {
+              setTourOpen(false);
+            } else {
+              const next = tourStep + 1;
+              setTourStep(next);
+              setScreen(guideSteps[role][next].screen);
+            }
+          }}
+          onSkip={() => setTourOpen(false)}
+          onClose={() => setTourOpen(false)}
+        />
+      )}
       </div>
     </div>
   );

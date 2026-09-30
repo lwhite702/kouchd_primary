@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { ArrowLeft, ArrowRight, Check, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ArrowLeft, ArrowRight, Check, ChevronDown, ChevronUp, Sparkles, X } from "lucide-react";
 import Link from "next/link";
 
 export type WorkspaceScreen = "home" | "contributions" | "chores" | "stay";
@@ -38,6 +38,7 @@ type GuidedTourProps = {
 export function GuidedTour({ role, step, onBack, onNext, onSkip, onClose }: GuidedTourProps) {
   const cardRef = useRef<HTMLElement>(null);
   const onCloseRef = useRef(onClose);
+  const [isMinimized, setIsMinimized] = useState(false);
   const steps = guideSteps[role];
   const current = steps[step] ?? steps[0];
 
@@ -47,14 +48,16 @@ export function GuidedTour({ role, step, onBack, onNext, onSkip, onClose }: Guid
 
   useEffect(() => {
     const previouslyFocused = document.activeElement as HTMLElement | null;
-    cardRef.current?.querySelector<HTMLElement>("#guided-tour-title")?.focus();
+    if (!isMinimized) {
+      cardRef.current?.querySelector<HTMLElement>("#guided-tour-title")?.focus();
+    }
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         event.preventDefault();
         onCloseRef.current();
       }
       if (event.key !== "Tab" || !cardRef.current) return;
-      const controls = Array.from(cardRef.current.querySelectorAll<HTMLElement>('button:not([disabled])'));
+      const controls = Array.from(cardRef.current.querySelectorAll<HTMLElement>("button:not([disabled])"));
       if (controls.length === 0) return;
       const first = controls[0];
       const last = controls[controls.length - 1];
@@ -75,14 +78,82 @@ export function GuidedTour({ role, step, onBack, onNext, onSkip, onClose }: Guid
       document.removeEventListener("keydown", handleKeyDown);
       previouslyFocused?.focus();
     };
-  }, []);
+  }, [isMinimized]);
+
+  if (isMinimized) {
+    return (
+      <div className="guided-tour-backdrop">
+        <aside
+          aria-label="Guided tour assistant"
+          className="guided-tour-card is-minimized"
+          ref={cardRef}
+        >
+          <div className="guided-tour-minimized-content">
+            <Sparkles size={16} color="var(--green, #184f3a)" />
+            <span>{role === "host" ? "Host Tour" : "Guest Tour"} · Step {step + 1} of {steps.length}</span>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <button
+              aria-label="Expand tour"
+              className="button soft compact"
+              onClick={() => setIsMinimized(false)}
+              type="button"
+              style={{ padding: "4px 10px", fontSize: "0.78rem" }}
+            >
+              <ChevronUp size={14} /> Expand
+            </button>
+            <button
+              aria-label="Next step"
+              className="button primary compact"
+              onClick={onNext}
+              type="button"
+              style={{ padding: "4px 10px", fontSize: "0.78rem" }}
+            >
+              {step === steps.length - 1 ? <Check size={14} /> : <ArrowRight size={14} />}
+            </button>
+            <button
+              aria-label="Pause tour"
+              className="guided-tour-close"
+              onClick={onClose}
+              type="button"
+              style={{ width: 28, height: 28 }}
+            >
+              <X size={16} />
+            </button>
+          </div>
+        </aside>
+      </div>
+    );
+  }
 
   return (
-    <div className="modal-backdrop guided-tour-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
-      <section aria-labelledby="guided-tour-title" aria-modal="true" className="guided-tour-card" ref={cardRef} role="dialog">
+    <div className="guided-tour-backdrop">
+      <section aria-labelledby="guided-tour-title" className="guided-tour-card" ref={cardRef} role="region">
         <div className="guided-tour-topline">
-          <span>{role === "host" ? "Host tour" : "Guest tour"}</span>
-          <button aria-label="Pause tour" className="guided-tour-close" onClick={onClose} type="button"><X size={19} /></button>
+          <span style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <Sparkles size={14} color="var(--green, #184f3a)" />
+            {role === "host" ? "Host tour" : "Guest tour"}
+          </span>
+          <div className="guided-tour-topline-actions">
+            <button
+              aria-label="Minimize tour card"
+              className="guided-tour-minimize"
+              onClick={() => setIsMinimized(true)}
+              title="Minimize tour"
+              type="button"
+            >
+              <ChevronDown size={18} />
+            </button>
+            <button
+              aria-label="Pause tour"
+              className="guided-tour-close"
+              onClick={onClose}
+              title="Close tour"
+              type="button"
+            >
+              <X size={18} />
+            </button>
+          </div>
         </div>
         <div aria-label={`Step ${step + 1} of ${steps.length}`} className="guided-tour-progress">
           {steps.map((item, index) => <span aria-hidden="true" className={index <= step ? "active" : ""} key={item.title} />)}
