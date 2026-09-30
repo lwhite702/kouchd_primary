@@ -30,6 +30,8 @@ import { DestructiveConfirmationDialog } from "@/components/confirmation/destruc
 import { HelpTip } from "@/components/onboarding/help-tip";
 import { GuidedTour, guideSteps } from "@/components/onboarding/guided-tour";
 import type { GuideRole } from "@/components/onboarding/guided-tour";
+import { DashboardNotificationFeed, NotificationBellMenu } from "@/components/notifications/dashboard-notifications";
+import type { NotificationItem } from "@/components/notifications/dashboard-notifications";
 
 const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
 const date = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
@@ -149,7 +151,19 @@ function SyncedWorkspace() {
   );
 }
 
-function AccountHeader({ onSettings, onJoinCode, onTakeTour, onStays }: { onSettings?: () => void; onJoinCode?: () => void; onTakeTour?: () => void; onStays?: () => void }) {
+function AccountHeader({
+  notifications,
+  onSettings,
+  onJoinCode,
+  onTakeTour,
+  onStays,
+}: {
+  notifications?: NotificationItem[];
+  onSettings?: () => void;
+  onJoinCode?: () => void;
+  onTakeTour?: () => void;
+  onStays?: () => void;
+}) {
   return (
     <header className="topbar">
       <Link className="brand" href="/" style={{ textDecoration: "none" }}>
@@ -157,6 +171,7 @@ function AccountHeader({ onSettings, onJoinCode, onTakeTour, onStays }: { onSett
       </Link>
       <div className="topbar-actions">
         {onTakeTour && <button aria-label="Take the guided tour" className="button soft compact tour-entry" onClick={onTakeTour} title="Take the guided tour" type="button"><Sparkles size={15} /><span>Tour</span></button>}
+        <NotificationBellMenu notifications={notifications ?? []} onOpenSettings={onSettings} />
         {onStays && <button className="button soft compact stays-entry" type="button" onClick={onStays}><Users size={15} /><span>All stays</span></button>}
         <a
           className="button ghost compact"
@@ -174,7 +189,7 @@ function AccountHeader({ onSettings, onJoinCode, onTakeTour, onStays }: { onSett
           </button>
         )}
         {onSettings && (
-          <button className="icon-button compact" type="button" onClick={onSettings} aria-label="Notification settings">
+          <button className="icon-button compact" type="button" onClick={onSettings} aria-label="Notification settings" title="Notification delivery preferences">
             <Settings size={19} />
           </button>
         )}
@@ -399,10 +414,129 @@ function LiveStay({ stayId, onBackToHub }: { stayId: Id<"stays">; onBackToHub: (
     setScreen(guideSteps[guideRole][nextStep].screen);
     persistTourProgress(guideRole, nextStep, "in_progress");
   }, [guideRole, persistTourProgress, visibleTourStep]);
-  if (!bundle || !viewer || !chores || !activities || !announcements || !contributions || !obligations) return <DashboardSkeleton message="Pulling the shared record together..." />;
-  const isEnded = bundle.stay.status === "ended";
 
   function notify(message: string) { setNotice(message); window.setTimeout(() => setNotice(""), 2600); }
+
+  const notifications: NotificationItem[] = useMemo(() => {
+    const list: NotificationItem[] = [];
+
+    // 1. Pending contributions (Host confirms)
+    if (isHost && contributions) {
+      const pendingForHost = contributions.filter(
+        (c) => c.status === "pending" && c.createdBy !== bundle?.membership.userId
+      );
+      for (const item of pendingForHost) {
+        const guestName = guestMembers.find((g) => g.person.id === item.guestUserId)?.person.name ?? "A guest";
+        list.push({
+          id: `pending_contrib_${item._id}`,
+          type: "payment",
+          urgency: "notice",
+          title: "Contribution needs confirmation",
+          description: `${guestName} recorded a ${formatMoney(item.amountCents)} ${item.type.replaceAll("_", " ")} contribution (${item.note || "No note"}).`,
+          confirmLabel: "Confirm",
+          confirmAction: () => {
+            void confirmContribution({ contributionId: item._id }).then(() => notify("Contribution confirmed."));
+          },
+          actionLabel: "View Ledger",
+          onAction: () => setScreen("contributions"),
+        });
+      }
+    }
+
+    // 2. Pending contributions recorded by guest (Guest view)
+    if (!isHost && contributions) {
+      const myPending = contributions.filter(
+        (c) => c.status === "pending" && c.createdBy === bundle?.membership.userId
+      );
+      for (const item of myPending) {
+        list.push({
+          id: `guest_pending_${item._id}`,
+          type: "payment",
+          urgency: "info",
+          title: "Contribution awaiting confirmation",
+          description: `Your ${formatMoney(item.amountCents)} ${item.type.replaceAll("_", " ")} entry is logged and awaiting host review.`,
+          actionLabel: "View Ledger",
+          onAction: () => setScreen("contributions"),
+        });
+      }
+    }
+
+    // 3. Agreement needing review (Guest view)
+    if (!isHost && !hasAccepted) {
+      list.push({
+        id: `agreement_pending_${terms?._id ?? "terms"}`,
+        type: "agreement",
+        urgency: "urgent",
+        title: "Household agreement requires review",
+        description: "The host has set household rules and stay guidelines. Review and accept the agreement.",
+        actionLabel: "Review Agreement",
+        onAction: () => setGuestOnboardingOpen(true),
+      });
+    }
+
+    // 4. Overdue or due today obligations
+    if (obligations) {
+      const overdueOrDue = obligations.filter((o) => (o.status === "late" || o.status === "due") && o.balanceCents > 0);
+      for (const item of overdueOrDue) {
+        list.push({
+          id: `obligation_${item._id}`,
+          type: "payment",
+          urgency: item.status === "late" ? "urgent" : "notice",
+          title: item.status === "late" ? `Overdue payment (${formatMoney(item.balanceCents)})` : `Payment due today (${formatMoney(item.balanceCents)})`,
+          description: `${item.title ?? "Scheduled contribution"} due ${formatDate(item.dueDate)}. ${item.lateFeeCents > 0 && !item.lateFeeWaived ? `Late fee applied.` : ""}`,
+          actionLabel: "View Breakdown",
+          onAction: () => setScreen("contributions"),
+        });
+      }
+    }
+
+    // 5. Chores due today or overdue
+    if (chores && asOfDate) {
+      const urgentChores = chores.filter((c) => !c.completedAt && !c.voidedAt && c.dueDate <= asOfDate);
+      if (urgentChores.length > 0) {
+        list.push({
+          id: `chores_due_${asOfDate}`,
+          type: "chore",
+          urgency: "notice",
+          title: `${urgentChores.length} chore${urgentChores.length === 1 ? "" : "s"} due today`,
+          description: urgentChores.map((c) => c.title).slice(0, 2).join(", ") + (urgentChores.length > 2 ? ` and ${urgentChores.length - 2} more.` : "."),
+          actionLabel: "Open Chore Board",
+          onAction: () => setScreen("chores"),
+        });
+      }
+    }
+
+    // 6. Recent announcements
+    if (announcements && announcements.length > 0) {
+      const latest = announcements[0];
+      list.push({
+        id: `announcement_${latest._id}`,
+        type: "announcement",
+        urgency: "info",
+        title: `Announcement: ${latest.title}`,
+        description: latest.body,
+        actionLabel: "View Notes",
+        onAction: () => setScreen("home"),
+      });
+    }
+
+    return list;
+  }, [
+    isHost,
+    contributions,
+    bundle?.membership.userId,
+    guestMembers,
+    confirmContribution,
+    hasAccepted,
+    terms?._id,
+    obligations,
+    chores,
+    asOfDate,
+    announcements,
+  ]);
+
+  if (!bundle || !viewer || !chores || !activities || !announcements || !contributions || !obligations) return <DashboardSkeleton message="Pulling the shared record together..." />;
+  const isEnded = bundle.stay.status === "ended";
   async function makeInvite(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); const form = new FormData(event.currentTarget); const delivery = String((event.nativeEvent as SubmitEvent).submitter?.getAttribute("value") ?? "text"); const email = value(form, "email");
     if (delivery === "email" && !email) { setInviteError("Enter the guest’s email address to send an email invitation."); return; }
@@ -524,7 +658,7 @@ function LiveStay({ stayId, onBackToHub }: { stayId: Id<"stays">; onBackToHub: (
   }
 
   const ledgerLabel = isHost ? `${selectedGuest?.name ?? "Guest"}'s private ledger` : "Your private ledger";
-  return <div className="app-shell production-shell"><AccountHeader onSettings={() => setPanel("settings")} onJoinCode={() => setJoinModalOpen(true)} onTakeTour={canShowTour ? openTour : undefined} onStays={onBackToHub} /><main>
+  return <div className="app-shell production-shell"><AccountHeader notifications={notifications} onSettings={() => setPanel("settings")} onJoinCode={() => setJoinModalOpen(true)} onTakeTour={canShowTour ? openTour : undefined} onStays={onBackToHub} /><main>
     {isEnded && <div className="agreement-callout ended-stay-notice"><div><Users size={21} /><div><strong>This stay has ended.</strong><span>You’re viewing its history. Records are read-only.</span></div></div><span className="accepted-pill">Past stay</span></div>}
     <KouchdGuideBanner guideKey="household-notice-banner" />
     {balance > 0 && <KouchdGuideBanner guideKey="payment-grace-banner" />}
@@ -543,7 +677,7 @@ function LiveStay({ stayId, onBackToHub }: { stayId: Id<"stays">; onBackToHub: (
         </button>
       </div>
     )}
-    {visibleScreen === "home" && <div key="home" className="screen-transition"><div className="page-heading dashboard-heading"><div><p className="eyebrow">Shared and current</p><h1>Here&apos;s the household at a glance.</h1><HelpTip title="Home overview" href="https://help.kouchd.com/quickstart">See your current stay, next check-in, household details, announcements, and recent activity in one place.</HelpTip></div><button className="button soft desktop-action" type="button" onClick={() => setPanel("contribution")} disabled={isEnded || !financialGuestId}><Plus size={18} /> Add contribution</button></div><article className="stay-card"><div><p className="overline">Current stay</p><h2>{members.map((item) => item.person.name).join(" + ")}</h2><p className="muted">{terms ? `${formatDate(terms.startDate)} to ${formatDate(terms.endDate)}` : "Terms pending"}</p></div><span className="status-pill">{bundle.stay.status}</span><div className="progress-block"><div className="progress-copy"><span>Confirmed contributions</span><strong>{formatMoney(credits)} of {formatMoney(charge)} covered</strong></div><div className="progress-track" role="progressbar" aria-label="Confirmed contribution progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={charge > 0 ? Math.min(100, Math.round((credits / charge) * 100)) : 0}><span style={{ width: `${charge > 0 ? Math.min(100, Math.max(0, (credits / charge) * 100)) : 0}%` }} /></div></div></article>{isHost && guestMembers.length > 0 && <GuestTabs guests={guestMembers} selected={financialGuestId} onSelect={setSelectedGuestId} />}<div className="metric-grid"><article className="metric-card balance-card"><p className="overline">{ledgerLabel}</p><p className="metric">{formatMoney(balance)}</p><p className="muted">{formatMoney(credits)} confirmed toward {formatMoney(charge)}</p><button className="text-button" type="button" onClick={() => setScreen("contributions")}>View breakdown</button></article><article className="metric-card"><p className="overline">Chores</p><p className="metric">{openChores.length} <small>open</small></p><p className="muted">{openChores[0]?.title ?? "Nothing hanging over anyone."}</p><button className="text-button" type="button" onClick={() => setScreen("chores")}>See chore board</button></article><article className="metric-card"><p className="overline">Next check-in</p><p className="metric date-metric">{bundle.stay.nextCheckInDate ? formatDate(bundle.stay.nextCheckInDate) : "Not set"}</p><p className="muted">Email and SMS follow your reminder settings.</p></article></div><HouseholdLogisticsCard houseInfo={bundle.stay.houseInfo} isHost={Boolean(isHost && !isEnded)} onEdit={() => setPanel("houseInfo")} onNotify={notify} /><section className="section-block"><div className="section-heading"><div><p className="eyebrow">House notes</p><h2>Announcements</h2></div>{isHost && !isEnded && <button className="mini-button" type="button" onClick={() => setPanel("announcement")}><Megaphone size={16} /> Add</button>}</div><div className="activity-list">{announcements.map((item) => <article className="list-row" key={item._id}><span className="list-icon"><Megaphone size={19} /></span><div className="list-copy"><strong>{item.title}</strong><span>{item.body}</span></div></article>)}{announcements.length === 0 && <p className="muted">No announcements yet.</p>}</div></section><section className="section-block"><div className="section-heading"><div><p className="eyebrow">Shared record</p><h2>Recent activity</h2></div></div><div className="activity-list">{recent.map((item) => <article className="list-row" key={item._id}><span className="list-icon"><ReceiptText size={19} /></span><div className="list-copy"><strong>{item.action.replaceAll("_", " ")}</strong><span>{item.detail}</span></div><div className="list-value"><small>{new Date(item.createdAt).toLocaleDateString()}</small></div></article>)}</div></section></div>}
+    {visibleScreen === "home" && <div key="home" className="screen-transition"><DashboardNotificationFeed notifications={notifications} onOpenSettings={() => setPanel("settings")} /><div className="page-heading dashboard-heading"><div><p className="eyebrow">Shared and current</p><h1>Here&apos;s the household at a glance.</h1><HelpTip title="Home overview" href="https://help.kouchd.com/quickstart">See your current stay, next check-in, household details, announcements, and recent activity in one place.</HelpTip></div><button className="button soft desktop-action" type="button" onClick={() => setPanel("contribution")} disabled={isEnded || !financialGuestId}><Plus size={18} /> Add contribution</button></div><article className="stay-card"><div><p className="overline">Current stay</p><h2>{members.map((item) => item.person.name).join(" + ")}</h2><p className="muted">{terms ? `${formatDate(terms.startDate)} to ${formatDate(terms.endDate)}` : "Terms pending"}</p></div><span className="status-pill">{bundle.stay.status}</span><div className="progress-block"><div className="progress-copy"><span>Confirmed contributions</span><strong>{formatMoney(credits)} of {formatMoney(charge)} covered</strong></div><div className="progress-track" role="progressbar" aria-label="Confirmed contribution progress" aria-valuemin={0} aria-valuemax={100} aria-valuenow={charge > 0 ? Math.min(100, Math.round((credits / charge) * 100)) : 0}><span style={{ width: `${charge > 0 ? Math.min(100, Math.max(0, (credits / charge) * 100)) : 0}%` }} /></div></div></article>{isHost && guestMembers.length > 0 && <GuestTabs guests={guestMembers} selected={financialGuestId} onSelect={setSelectedGuestId} />}<div className="metric-grid"><article className="metric-card balance-card"><p className="overline">{ledgerLabel}</p><p className="metric">{formatMoney(balance)}</p><p className="muted">{formatMoney(credits)} confirmed toward {formatMoney(charge)}</p><button className="text-button" type="button" onClick={() => setScreen("contributions")}>View breakdown</button></article><article className="metric-card"><p className="overline">Chores</p><p className="metric">{openChores.length} <small>open</small></p><p className="muted">{openChores[0]?.title ?? "Nothing hanging over anyone."}</p><button className="text-button" type="button" onClick={() => setScreen("chores")}>See chore board</button></article><article className="metric-card"><p className="overline">Next check-in</p><p className="metric date-metric">{bundle.stay.nextCheckInDate ? formatDate(bundle.stay.nextCheckInDate) : "Not set"}</p><p className="muted">Email and SMS follow your reminder settings.</p></article></div><HouseholdLogisticsCard houseInfo={bundle.stay.houseInfo} isHost={Boolean(isHost && !isEnded)} onEdit={() => setPanel("houseInfo")} onNotify={notify} /><section className="section-block"><div className="section-heading"><div><p className="eyebrow">House notes</p><h2>Announcements</h2></div>{isHost && !isEnded && <button className="mini-button" type="button" onClick={() => setPanel("announcement")}><Megaphone size={16} /> Add</button>}</div><div className="activity-list">{announcements.map((item) => <article className="list-row" key={item._id}><span className="list-icon"><Megaphone size={19} /></span><div className="list-copy"><strong>{item.title}</strong><span>{item.body}</span></div></article>)}{announcements.length === 0 && <p className="muted">No announcements yet.</p>}</div></section><section className="section-block"><div className="section-heading"><div><p className="eyebrow">Shared record</p><h2>Recent activity</h2></div></div><div className="activity-list">{recent.map((item) => <article className="list-row" key={item._id}><span className="list-icon"><ReceiptText size={19} /></span><div className="list-copy"><strong>{item.action.replaceAll("_", " ")}</strong><span>{item.detail}</span></div><div className="list-value"><small>{new Date(item.createdAt).toLocaleDateString()}</small></div></article>)}</div></section></div>}
     {visibleScreen === "contributions" && <div key="contributions" className="screen-transition"><div className="page-heading"><div><p className="eyebrow">Private by guest</p><h1>{ledgerLabel}</h1><p className="subhead">Your money tab is completely private between you and your host.</p><HelpTip title="Contribution ledger" href={isHost ? "https://help.kouchd.com/hosts/ledger-management" : "https://help.kouchd.com/guests/logging-contributions"}>Review charges and contributions here. Hosts can switch between guests; guests only see their own private ledger.</HelpTip></div><div className="heading-actions">{!isEnded && <><button className="button primary" type="button" onClick={() => setPanel("contribution")} disabled={!financialGuestId}><Plus size={18} /> Add contribution</button>{isHost && <button className="button soft" type="button" onClick={() => setPanel("adhoc")} disabled={!financialGuestId}><ReceiptText size={18} /> Add charge</button>}</>}</div></div>{isHost && guestMembers.length > 0 && <GuestTabs guests={guestMembers} selected={financialGuestId} onSelect={setSelectedGuestId} />}<div className="external-payment-note"><strong>Payments happen outside Kouchd.</strong> Use the host options in Stay details, then log completed contributions here. Kouchd does not collect or process payments. <button className="text-button" type="button" onClick={() => setScreen("stay")}>View payment options</button></div><div className="summary-strip"><div className="summary-item"><span>Total charges</span><strong>{formatMoney(charge)}</strong></div><div className="summary-item"><span>Confirmed credit</span><strong>{formatMoney(credits)}</strong></div><div className="summary-item"><span>Balance</span><strong>{formatMoney(balance)}</strong></div></div><section className="section-block"><div className="section-heading"><div><p className="eyebrow">Payment order</p><h2>Oldest shares are credited first</h2></div></div><div className="ledger-list">{obligations.map((item, index) => <article className="list-row contribution-row" key={item._id}><span className="list-icon"><ReceiptText size={19} /></span><div className="list-copy"><strong>{item.title ?? `Period ${index + 1}`} · due {formatDate(item.dueDate)}</strong><span>{formatMoney(item.baseAmountCents)} base{item.earlyDiscountCents ? ` · ${formatMoney(-item.earlyDiscountCents)} early discount` : ""}{item.lateFeeCents ? ` · ${formatMoney(item.lateFeeCents)} across ${item.lateFeeOccurrences} late-fee cycle${item.lateFeeOccurrences === 1 ? "" : "s"}` : ""}{item.lateFeeWaived ? " · fee waived" : ""}</span><span className="obligation-progress-copy">{formatMoney(item.creditedCents)} confirmed of {formatMoney(item.effectiveChargeCents)} due</span><span className="obligation-progress-track" role="progressbar" aria-label={`${item.title ?? `Period ${index + 1}`} payment progress`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={item.effectiveChargeCents > 0 ? Math.min(100, Math.round((item.creditedCents / item.effectiveChargeCents) * 100)) : 0}><span style={{ width: `${item.effectiveChargeCents > 0 ? Math.min(100, Math.max(0, (item.creditedCents / item.effectiveChargeCents) * 100)) : 0}%` }} /></span></div><div className="list-value">{formatMoney(item.balanceCents)}<small>{item.status}</small></div>{isHost && <div className="row-actions">{!isEnded && item.lateFeeCents > 0 && !item.lateFeeWaived && <button className="mini-button" type="button" onClick={() => void waiveLateFee({ obligationId: item._id }).then(() => notify("Late fee waived and updated."))}>Waive fee</button>}{!isEnded && item.type === "adhoc" && <button className="mini-button danger" type="button" onClick={() => setDestructiveAction({ type: "cancelCharge", obligationId: item._id, title: item.title ?? "One-off charge" })}>Cancel charge</button>}</div>}</article>)}{obligations.length === 0 && <p className="muted">Choose a guest, then activate terms or add a one-off charge.</p>}</div></section><RewardsHub stayId={stayId} isHost={Boolean(isHost && !isEnded)} readOnly={isEnded} selectedGuestId={financialGuestId} currentBalanceCents={balance} onNotify={notify} /><section className="section-block"><div className="section-heading"><div><p className="eyebrow">Transactions</p><h2>Contribution entries</h2></div></div><div className="ledger-list">{activeContributions.map((item) => <article className="list-row contribution-row" key={item._id}><span className="list-icon payment"><Landmark size={19} /></span><div className="list-copy"><strong>{item.type.replaceAll("_", " ")}</strong><span>{item.note || "No note"} · {item.status}</span></div><div className="list-value">{formatMoney(item.amountCents)}<small>{formatDate(item.date)}</small></div>{!isEnded && item.status === "pending" && item.createdBy !== bundle.membership.userId && <div className="row-actions"><button className="mini-button" type="button" onClick={() => void confirmContribution({ contributionId: item._id })}>Confirm</button></div>}</article>)}</div></section></div>}
     {visibleScreen === "chores" && <div key="chores" className="screen-transition"><div className="page-heading"><div><p className="eyebrow">Shared across the house</p><h1>Chore board</h1><p className="subhead">Household coordination stays shared while financial records stay private.</p><HelpTip title="Shared chores" href="https://help.kouchd.com/hosts/house-rules-and-chores">Everyone in the stay can see tasks, assignments, and completion. Use the chore form to add a task and set a due date.</HelpTip></div>{!isEnded && <button className="button primary" type="button" onClick={() => setPanel("chore")}><Plus size={18} /> Add chore</button>}</div><div className="chore-list">{chores.filter((item) => !item.voidedAt).map((item) => <article className={`list-row chore-row ${item.completedAt ? "done" : ""}`} key={item._id}>{!isEnded ? <button className={`chore-check ${item.completedAt ? "checked" : ""}`} type="button" onClick={() => void toggleChore({ choreId: item._id })} aria-label={`${item.completedAt ? "Reopen" : "Complete"} ${item.title}`}>{item.completedAt && <Check size={18} />}</button> : <span className={`chore-check ${item.completedAt ? "checked" : ""}`} aria-hidden="true">{item.completedAt && <Check size={18} />}</span>}<div className="list-copy"><strong>{item.title}</strong><span>{item.note || `Due ${formatDate(item.dueDate)}`}</span><span className="badge">{item.assigneeUserId ? members.find((member) => member.person.id === item.assigneeUserId)?.person.name ?? "Guest" : item.assignee}</span></div></article>)}</div></div>}
     {visibleScreen === "stay" && <div key="stay" className="screen-transition"><div className="page-heading"><div><p className="eyebrow">The agreement</p><h1>Stay details</h1><p className="subhead">Everyone sees shared house guidelines, while guest money details stay private.</p><HelpTip title="Stay details" href="https://help.kouchd.com/legal-trust/stay-agreements">Find the current terms, house rules, and household access information here.</HelpTip></div>{!isEnded && !hasAccepted && <button className="button primary" type="button" onClick={() => setGuestOnboardingOpen(true)}>Review & accept agreement</button>}</div>{isHost && guestMembers.length > 0 && <GuestTabs guests={guestMembers} selected={financialGuestId} onSelect={setSelectedGuestId} />}<div className="agreement-callout"><div><Users size={22} /><div><strong>Terms version {displayedAgreementTerms?.version ?? 1}</strong><span>{displayedAgreementAccepted ? (isHost ? `${selectedGuest?.name ?? "Guest"} accepted this agreement` : "You accepted this agreement") : (isHost ? `${selectedGuest?.name ?? "Guest"} needs to review this agreement` : "Your agreement needs review")}</span></div></div><span className="accepted-pill">{bundle.stay.status}</span></div>{displayedAgreementTerms && <div className="details-grid"><article className="details-card" style={{ gridColumn: "1 / -1", background: "#f8fbf9", border: "1px dashed var(--green, #184f3a)" }}><div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.75rem" }}><div><p className="overline" style={{ margin: 0 }}>Household Referral Code</p><strong style={{ fontSize: "1.3rem", letterSpacing: "1.5px", color: "var(--green, #184f3a)" }}>{bundle.stay.referralCode ?? "KCH-SHARED"}</strong><p className="muted" style={{ margin: "3px 0 0", fontSize: "0.8rem" }}>Members can join this stay directly by entering this code on Kouchd.</p></div><button className="button soft compact" type="button" onClick={() => { void navigator.clipboard.writeText(bundle.stay.referralCode ?? ""); notify("Referral code copied!"); }}><Copy size={15} /> Copy code</button></div></article><article className="details-card"><p className="overline">Dates</p><p>{formatDate(displayedAgreementTerms.startDate)} to {formatDate(displayedAgreementTerms.endDate)}</p></article><article className="details-card"><p className="overline">Contribution plan</p><p>{formatMoney(displayedAgreementTerms.rateCents)} per {displayedAgreementTerms.cadence === "weekly" ? "week" : "day"}</p></article><article className="details-card"><p className="overline">Billable dates</p><p>{displayedAgreementTerms.billingBasis === "occupied_nights" ? "Only completed overnights recorded by the host" : "Every day within the agreement dates"}</p></article><article className="details-card"><p className="overline">Early rule</p><p>{displayedAgreementTerms.earlyDiscountEnabled ?? displayedAgreementTerms.earlyDiscountPercentage > 0 ? `${displayedAgreementTerms.earlyDiscountPercentage}% off when complete ${displayedAgreementTerms.earlyDiscountDays} days early` : "Off"}</p></article><article className="details-card"><p className="overline">Late rule</p><p>{displayedAgreementTerms.lateFeeEnabled ?? displayedAgreementTerms.lateFeeCents > 0 ? `${formatMoney(displayedAgreementTerms.lateFeeCents)} weekly after ${displayedAgreementTerms.graceDays} grace days` : "Off"}</p></article></div>}<HouseholdLogisticsCard houseInfo={bundle.stay.houseInfo} isHost={Boolean(isHost && !isEnded)} onEdit={() => setPanel("houseInfo")} onNotify={notify} />
