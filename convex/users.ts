@@ -17,7 +17,7 @@ const guideProgressValidator = v.object({
 
 export const syncCurrent = mutation({
   args: {
-    name: v.optional(v.string()),
+    clerkName: v.optional(v.string()),
     email: v.optional(v.string()),
     imageUrl: v.optional(v.string()),
   },
@@ -30,15 +30,18 @@ export const syncCurrent = mutation({
       .query("users")
       .withIndex("by_clerk_user_id", (query) => query.eq("clerkUserId", identity.subject))
       .unique();
+    const clerkName = args.clerkName?.trim();
+    if (args.clerkName !== undefined && (!clerkName || clerkName.length > 80)) {
+      throw new Error("Name must be between 1 and 80 characters");
+    }
     const name = resolveMemberName({
-      explicitName: args.name,
+      explicitName: clerkName,
       identityName: identity.name,
       givenName: identity.givenName,
       familyName: identity.familyName,
       nickname: identity.nickname,
       preferredUsername: identity.preferredUsername,
       email: args.email ?? identity.email,
-      existingName: existing?.name,
     });
     const email = args.email?.trim() || identity.email || existing?.email;
     const imageUrl = args.imageUrl || identity.pictureUrl || existing?.imageUrl;
@@ -55,21 +58,6 @@ export const syncCurrent = mutation({
   },
 });
 
-export const updateProfile = mutation({
-  args: {
-    name: v.string(),
-  },
-  returns: v.null(),
-  handler: async (ctx, { name }) => {
-    const user = await requireCurrentUser(ctx);
-    const trimmed = name.trim();
-    if (!trimmed) throw new Error("Name cannot be blank");
-    await ctx.db.patch(user._id, { name: trimmed, updatedAt: Date.now() });
-    await ctx.scheduler.runAfter(0, internal.knock.identifyUser, { userId: user._id });
-    return null;
-  },
-});
-
 export const viewer = query({
   args: {},
   returns: v.union(v.null(), v.object({ id: v.id("users"), name: v.string(), email: v.optional(v.string()), phone: v.optional(v.string()), imageUrl: v.optional(v.string()), notifyEmail: v.boolean(), notifySms: v.boolean(), guideProgress: v.optional(guideProgressValidator) })),
@@ -78,18 +66,10 @@ export const viewer = query({
     if (!identity) return null;
     const user = await ctx.db.query("users").withIndex("by_clerk_user_id", (query) => query.eq("clerkUserId", identity.subject)).unique();
     if (!user) return null;
-    const displayName = resolveMemberName({
-      identityName: identity.name,
-      givenName: identity.givenName,
-      familyName: identity.familyName,
-      nickname: identity.nickname,
-      preferredUsername: identity.preferredUsername,
-      email: user.email,
-      existingName: user.name,
-    });
     return {
       id: user._id,
-      name: displayName,
+      // syncCurrent mirrors the Clerk profile into Convex for household queries.
+      name: user.name,
       email: user.email,
       phone: user.phone,
       imageUrl: user.imageUrl,
@@ -129,7 +109,6 @@ export const updateGuideProgress = mutation({
 
 export const updatePreferences = mutation({
   args: {
-    name: v.optional(v.string()),
     phone: v.optional(v.string()),
     notifyEmail: v.boolean(),
     notifySms: v.boolean(),
@@ -178,9 +157,7 @@ export const updatePreferences = mutation({
       });
     }
 
-    const updatedName = args.name?.trim() || undefined;
     await ctx.db.patch(user._id, {
-      ...(updatedName ? { name: updatedName } : {}),
       phone,
       notifyEmail: args.notifyEmail,
       notifySms: args.notifySms,

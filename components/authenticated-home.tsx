@@ -101,7 +101,7 @@ function SyncedWorkspace() {
     syncedNameRef.current = resolvedName ?? "";
 
     void syncCurrent({
-      name: resolvedName,
+      clerkName: resolvedName,
       email: clerkUser?.primaryEmailAddress?.emailAddress,
       imageUrl: clerkUser?.imageUrl,
     })
@@ -131,7 +131,7 @@ function SyncedWorkspace() {
               || clerkUser?.username
               || undefined;
             void syncCurrent({
-              name: resolvedName,
+              clerkName: resolvedName,
               email: clerkUser?.primaryEmailAddress?.emailAddress,
               imageUrl: clerkUser?.imageUrl,
             })
@@ -406,6 +406,7 @@ function LiveStay({ stayId, onBackToHub }: { stayId: Id<"stays">; onBackToHub: (
   const waiveLateFee = useMutation(api.obligations.waiveLateFee);
   const createInvite = useMutation(api.invites.create);
   const updatePreferences = useMutation(api.users.updatePreferences);
+  const syncCurrent = useMutation(api.users.syncCurrent);
   const updateGuideProgress = useMutation(api.users.updateGuideProgress);
   const updateHouseInfo = useMutation(api.stays.updateHouseInfo);
   const updatePaymentOptions = useMutation(api.stays.updatePaymentOptions);
@@ -672,13 +673,24 @@ function LiveStay({ stayId, onBackToHub }: { stayId: Id<"stays">; onBackToHub: (
     event.preventDefault(); const form = new FormData(event.currentTarget);
     setIsSubmittingModal(true);
     try {
+      const displayName = value(form, "name");
+      if (!displayName) throw new Error("Enter your name before saving.");
+      if (!clerkUser) throw new Error("Your Clerk profile is still loading. Try again in a moment.");
+      const [firstName, ...lastNameParts] = displayName.split(/\s+/);
+      const updatedClerkUser = await clerkUser.update({ firstName, lastName: lastNameParts.join(" ") });
+      await syncCurrent({
+        clerkName: updatedClerkUser.fullName || displayName,
+        email: updatedClerkUser.primaryEmailAddress?.emailAddress,
+        imageUrl: updatedClerkUser.imageUrl,
+      });
       await updatePreferences({
-        name: value(form, "name") || undefined,
         phone: value(form, "phone") || undefined,
         notifyEmail: form.get("notifyEmail") === "on",
         notifySms: form.get("notifySms") === "on"
       });
       setPanel(null); notify("Profile and reminder preferences saved.");
+    } catch (error) {
+      notify(error instanceof Error ? error.message : "Could not save your profile and reminder preferences.");
     } finally {
       setIsSubmittingModal(false);
     }
@@ -830,7 +842,7 @@ function LiveStay({ stayId, onBackToHub }: { stayId: Id<"stays">; onBackToHub: (
     {panel === "adhoc" && <form onSubmit={addCharge}><div className="form-grid"><label className="full"><span>Charge title</span><input name="title" required placeholder="August electric split" /></label><label><span>Amount</span><div className="money-input"><span>$</span><input name="amount" type="number" min="0.01" step="0.01" required /></div></label><label><span>Effective date</span><input name="effectiveDate" type="date" defaultValue={asOfDate ?? undefined} required /></label><label><span>Due date</span><input name="dueDate" type="date" defaultValue={asOfDate ?? undefined} required /></label></div><ModalActions close={() => setPanel(null)} action="Add charge" submitting={isSubmittingModal} /></form>}
     {panel === "chore" && <form onSubmit={addChore}><div className="form-grid"><label className="full"><span>Chore</span><input name="title" required /></label><label><span>Assigned to</span><select name="assigneeUserId"><option value="">Everyone</option>{members.map((member) => <option value={member.person.id} key={member.person.id}>{member.person.name && member.person.name !== "Kouchd member" ? member.person.name : (member.membership.role === "host" ? "Host" : "Guest")}</option>)}</select></label><label><span>Due date</span><input name="dueDate" type="date" defaultValue={asOfDate ? addCalendarDays(asOfDate, 2) : undefined} required /></label><label className="full"><span>Details</span><input name="note" /></label></div><ModalActions close={() => setPanel(null)} action="Add chore" submitting={isSubmittingModal} /></form>}
     {panel === "announcement" && <form onSubmit={addAnnouncement}><div className="form-grid"><label className="full"><span>Title</span><input name="title" required /></label><label className="full"><span>Announcement</span><textarea name="body" rows={4} required /></label><label><span>Pin until</span><input name="pinnedUntil" type="date" /></label></div><ModalActions close={() => setPanel(null)} action="Share announcement" submitting={isSubmittingModal} /></form>}
-    {panel === "settings" && <form onSubmit={savePreferences}><div className="settings-summary"><Bell size={22} /><div><strong>Profile &amp; reminder delivery</strong><span>Set your display name and notification channels.</span></div></div><div className="form-grid settings-fields"><label className="full"><span>Your display name</span><input name="name" type="text" defaultValue={viewer.name && viewer.name !== "Kouchd member" ? viewer.name : (clerkUser?.fullName || "")} placeholder="e.g. Lee White" maxLength={60} /></label><label className="full"><span>Mobile number for SMS</span><input name="phone" type="tel" defaultValue={viewer.phone} placeholder="+15551234567" /></label><label className="check full"><input name="notifyEmail" type="checkbox" defaultChecked={viewer.notifyEmail} /><span>Email reminders</span></label><label className="check full"><input name="notifySms" type="checkbox" defaultChecked={viewer.notifySms} /><span>SMS reminders (Wrelik Brands LLC &middot; Kouchd)</span></label></div><div style={{ margin: "0.85rem 0", padding: "0.85rem", background: "#faf8f5", borderRadius: "10px", border: "1px solid var(--line)", fontSize: "0.78rem", color: "var(--muted)", lineHeight: 1.5 }}><p style={{ margin: "0 0 0.35rem" }}>By enabling SMS reminders, you agree to receive transactional text messages from <strong>Wrelik Brands LLC</strong> (operating <strong>Kouchd</strong>). <strong>Message and data rates may apply.</strong> Message frequency varies. Text STOP to cancel, HELP for help.</p><p style={{ margin: "0 0 0.35rem" }}>We do not sell or share your SMS opt-in data or personal information with third parties for marketing purposes.</p><p style={{ margin: 0 }}><Link href="/terms" target="_blank" style={{ color: "var(--green)", fontWeight: 700, textDecoration: "underline" }}>Terms &amp; Conditions</Link> &middot; <Link href="/privacy" target="_blank" style={{ color: "var(--green)", fontWeight: 700, textDecoration: "underline" }}>Privacy Policy</Link> &middot; <Link href="/sms-opt-in" target="_blank" style={{ color: "var(--green)", fontWeight: 700, textDecoration: "underline" }}>SMS Terms Details</Link></p></div><ModalActions close={() => setPanel(null)} action="Save preferences" submitting={isSubmittingModal} /></form>}
+    {panel === "settings" && <form onSubmit={savePreferences}><div className="settings-summary"><Bell size={22} /><div><strong>Profile &amp; reminder delivery</strong><span>Set your display name and notification channels.</span></div></div><div className="form-grid settings-fields"><label className="full"><span>Your display name</span><input name="name" type="text" defaultValue={clerkUser?.fullName || ""} placeholder="e.g. Lee White" maxLength={80} /><small>Your name is saved to your Clerk profile and shared with your household.</small></label><label className="full"><span>Mobile number for SMS</span><input name="phone" type="tel" defaultValue={viewer.phone} placeholder="+15551234567" /></label><label className="check full"><input name="notifyEmail" type="checkbox" defaultChecked={viewer.notifyEmail} /><span>Email reminders</span></label><label className="check full"><input name="notifySms" type="checkbox" defaultChecked={viewer.notifySms} /><span>SMS reminders (Wrelik Brands LLC &middot; Kouchd)</span></label></div><div style={{ margin: "0.85rem 0", padding: "0.85rem", background: "#faf8f5", borderRadius: "10px", border: "1px solid var(--line)", fontSize: "0.78rem", color: "var(--muted)", lineHeight: 1.5 }}><p style={{ margin: "0 0 0.35rem" }}>By enabling SMS reminders, you agree to receive transactional text messages from <strong>Wrelik Brands LLC</strong> (operating <strong>Kouchd</strong>). <strong>Message and data rates may apply.</strong> Message frequency varies. Text STOP to cancel, HELP for help.</p><p style={{ margin: "0 0 0.35rem" }}>We do not sell or share your SMS opt-in data or personal information with third parties for marketing purposes.</p><p style={{ margin: 0 }}><Link href="/terms" target="_blank" style={{ color: "var(--green)", fontWeight: 700, textDecoration: "underline" }}>Terms &amp; Conditions</Link> &middot; <Link href="/privacy" target="_blank" style={{ color: "var(--green)", fontWeight: 700, textDecoration: "underline" }}>Privacy Policy</Link> &middot; <Link href="/sms-opt-in" target="_blank" style={{ color: "var(--green)", fontWeight: 700, textDecoration: "underline" }}>SMS Terms Details</Link></p></div><ModalActions close={() => setPanel(null)} action="Save preferences" submitting={isSubmittingModal} /></form>}
     {panel === "houseInfo" && <HouseInfoForm initialInfo={bundle.stay.houseInfo} onSubmit={saveHouseInfo} onCancel={() => setPanel(null)} />}
     {panel === "paymentOptions" && <PaymentOptionsForm initialOptions={bundle.stay.paymentOptions} onSubmit={savePaymentOptions} onCancel={() => setPanel(null)} />}
     {panel === "guestTerms" && editingGuestId && (() => {

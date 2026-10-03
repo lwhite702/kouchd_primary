@@ -31,7 +31,7 @@ export function SmsOptInForm() {
       || clerkUser?.username
       || undefined;
     void syncCurrent({
-      name: resolvedName,
+      clerkName: resolvedName,
       email: clerkUser?.primaryEmailAddress?.emailAddress,
       imageUrl: clerkUser?.imageUrl,
     })
@@ -84,8 +84,15 @@ export function SmsOptInForm() {
     setSubmitting(true);
     try {
       if (!isAuthenticated || !synced) throw new Error("Sign in before enrolling in SMS alerts.");
+      if (!clerkUser) throw new Error("Your Clerk profile is still loading. Try again in a moment.");
+      const [firstName, ...lastNameParts] = submittedName.split(/\s+/);
+      const updatedClerkUser = await clerkUser.update({ firstName, lastName: lastNameParts.join(" ") });
+      await syncCurrent({
+        clerkName: updatedClerkUser.fullName || submittedName,
+        email: updatedClerkUser.primaryEmailAddress?.emailAddress,
+        imageUrl: updatedClerkUser.imageUrl,
+      });
       await updatePreferences({
-        name: submittedName,
         phone: formattedPhone,
         notifyEmail: viewer?.notifyEmail ?? true,
         notifySms: true,
@@ -241,7 +248,7 @@ export function SmsOptInForm() {
           id="sms-optin-name"
           name="name"
           type="text"
-          defaultValue={viewer?.name && viewer.name !== "Kouchd member" ? viewer.name : (clerkUser?.fullName || "")}
+          defaultValue={clerkUser?.fullName || ""}
           placeholder="Jane Doe"
           required
           style={{

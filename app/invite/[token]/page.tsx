@@ -44,5 +44,6 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
   if (!process.env.NEXT_PUBLIC_CONVEX_URL || !process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) {
     return <main className="route-state"><h1>Invitations are not connected yet.</h1><p className="muted">Kouchd invitations are temporarily unavailable. Please ask your host to share a new link later.</p></main>;
   }
-  return <InviteAccept token={token} />;
+  const tokenHash = createHash("sha256").update(token).digest("hex");
+  return <InviteAccept token={token} tokenHash={tokenHash} />;
 }
