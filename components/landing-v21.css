@@ -12,6 +12,10 @@
   background: var(--v21-paper);
   font-family: var(--font-manrope), Manrope, sans-serif;
   overflow: hidden;
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 0;
 }
 .landing-v21 * { box-sizing: border-box; }
 .v21-header { width: min(1240px, calc(100% - 64px)); min-height: 84px; margin: auto; display: flex; align-items: center; justify-content: space-between; gap: 26px; }
