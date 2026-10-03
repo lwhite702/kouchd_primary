@@ -90,11 +90,11 @@ describe("Member name resolution unit tests", () => {
 });
 
 describe("Convex user sync and member name persistence", () => {
-  it("syncs user with explicit name provided by client SDK", async () => {
+  it("syncs the current Clerk profile name into the Convex member projection", async () => {
     const t = convexTest(schema, modules);
     const actor = t.withIdentity({ subject: "user-123" });
     await actor.mutation(api.users.syncCurrent, {
-      name: "Lee White",
+      clerkName: "Lee White",
       email: "lee@wrelik.com",
     });
 
@@ -112,33 +112,27 @@ describe("Convex user sync and member name persistence", () => {
     expect(v?.name).toBe("Jordan Belfort");
   });
 
-  it("does not overwrite an established user name with 'Kouchd member'", async () => {
+  it("does not preserve a stale Convex-only name during a later sync", async () => {
     const t = convexTest(schema, modules);
-    const actor = t.withIdentity({ subject: "user-789" });
-    await actor.mutation(api.users.syncCurrent, { name: "Established Name" });
+    const actor = t.withIdentity({ subject: "user-789", email: "casey.guest@example.com" });
+    await actor.mutation(api.users.syncCurrent, { clerkName: "Stale Convex Name" });
 
-    // Subsequent sync without name
     await actor.mutation(api.users.syncCurrent, {});
     const v = await actor.query(api.users.viewer, {});
-    expect(v?.name).toBe("Established Name");
+    expect(v?.name).toBe("Casey Guest");
   });
 
-  it("allows updating profile name directly via updateProfile and updatePreferences", async () => {
+  it("keeps reminder preference updates separate from profile names", async () => {
     const t = convexTest(schema, modules);
-    const actor = t.withIdentity({ subject: "user-update" });
-    await actor.mutation(api.users.syncCurrent, { name: "Initial Name" });
-
-    await actor.mutation(api.users.updateProfile, { name: "Updated via Profile" });
-    let v = await actor.query(api.users.viewer, {});
-    expect(v?.name).toBe("Updated via Profile");
+    const actor = t.withIdentity({ subject: "user-update", name: "Clerk Profile Name" });
+    await actor.mutation(api.users.syncCurrent, { clerkName: "Clerk Profile Name" });
 
     await actor.mutation(api.users.updatePreferences, {
-      name: "Updated via Settings",
       notifyEmail: true,
       notifySms: false,
     });
-    v = await actor.query(api.users.viewer, {});
-    expect(v?.name).toBe("Updated via Settings");
+    const v = await actor.query(api.users.viewer, {});
+    expect(v?.name).toBe("Clerk Profile Name");
   });
 
   it("returns human-readable names for stay members in getBundle", async () => {

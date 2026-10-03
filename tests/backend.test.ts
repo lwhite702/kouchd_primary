@@ -33,6 +33,38 @@ async function createUser(t: ReturnType<typeof convexTest>, subject: string, nam
 }
 
 describe("shared stay authorization and audit rules", () => {
+  it("keeps invite previews read-only and carries the guest name into membership", async () => {
+    const t = convexTest(schema, modules);
+    const host = await createUser(t, "invite-preview-host", "Lee");
+    const guest = await createUser(t, "invite-preview-guest", "Kouchd member");
+    const stayId = await host.mutation(api.stays.create, { timezone: "America/New_York", terms: firstTerms });
+    const tokenHash = "9".repeat(64);
+    await host.mutation(api.invites.create, { stayId, tokenHash, expiresAt: Date.now() + 86_400_000 });
+    const stay = await host.query(api.stays.getBundle, { stayId });
+
+    const preview = await guest.query(api.invites.preview, { tokenHash });
+    expect(preview).toEqual({ valid: true, hostName: "Lee", referralCode: stay.stay.referralCode, expiresAt: expect.any(Number) });
+    expect(stay.members).toHaveLength(1);
+
+    await expect(guest.mutation(api.users.syncCurrent, { clerkName: "   " })).rejects.toThrow("Name must be between 1 and 80 characters");
+    await guest.mutation(api.users.syncCurrent, { clerkName: "Jordan Rivera" });
+    expect((await guest.query(api.users.viewer, {}))?.name).toBe("Jordan Rivera");
+    await guest.mutation(api.users.syncCurrent, { clerkName: "Jordan Rivera" });
+    expect((await guest.query(api.users.viewer, {}))?.name).toBe("Jordan Rivera");
+    await guest.mutation(api.invites.accept, { tokenHash });
+    await guest.mutation(api.users.updatePreferences, { notifyEmail: true, notifySms: false });
+    await guest.mutation(api.users.syncCurrent, { clerkName: "Jordan R." });
+
+    const joinedStay = await host.query(api.stays.getBundle, { stayId });
+    expect(joinedStay.members.some((member) => member.person.name === "Jordan R.")).toBe(true);
+    expect(await guest.query(api.invites.preview, { tokenHash })).toEqual({ valid: false, status: "used" });
+
+    const profileOwner = await createUser(t, "profile-name-owner", "Clerk Full Name");
+    await profileOwner.mutation(api.users.syncCurrent, { clerkName: "Preferred Display Name" });
+    await profileOwner.mutation(api.users.syncCurrent, { clerkName: "Clerk Full Name" });
+    expect((await profileOwner.query(api.users.viewer, {}))?.name).toBe("Clerk Full Name");
+  });
+
   it("keeps guest agreements and payment options private while allowing different terms", async () => {
     const t = convexTest(schema, modules);
     const host = await createUser(t, "household-host", "Lee");
@@ -53,7 +85,8 @@ describe("shared stay authorization and audit rules", () => {
     await host.mutation(api.invites.create, { stayId, tokenHash: firstInviteHash, expiresAt: Date.now() + 86_400_000 });
     await host.mutation(api.invites.create, { stayId, tokenHash: secondInviteHash, expiresAt: Date.now() + 86_400_000 });
 
-    expect(await firstGuest.query(api.invites.preview, { tokenHash: firstInviteHash })).toEqual({ valid: true, hostName: "Lee", expiresAt: expect.any(Number) });
+    const preview = await firstGuest.query(api.invites.preview, { tokenHash: firstInviteHash });
+    expect(preview).toEqual({ valid: true, hostName: "Lee", referralCode: expect.any(String), expiresAt: expect.any(Number) });
     await firstGuest.mutation(api.invites.accept, { tokenHash: firstInviteHash });
     const firstMember = (await host.query(api.stays.getBundle, { stayId })).members.find((member) => member.person.name === "Marcus")!;
     await host.mutation(api.terms.updateGuest, { stayId, guestUserId: firstMember.person.id, terms: { ...firstTerms, startDate, endDate, rateCents: 11_000 } });
@@ -85,7 +118,7 @@ describe("shared stay authorization and audit rules", () => {
     ]);
     const publicCodePreview = await firstGuest.query(api.referral.preview, { referralCode: hostBundle.stay.referralCode! });
     expect(publicCodePreview).not.toHaveProperty("paymentOptions");
-    expect(await firstGuest.query(api.invites.preview, { tokenHash: firstInviteHash })).toEqual({ valid: false });
+    expect(await firstGuest.query(api.invites.preview, { tokenHash: firstInviteHash })).toEqual({ valid: false, status: "used" });
 
     const secondAcceptedTermsId = secondBundle.membership.acceptedTermsId;
     await host.mutation(api.terms.updateGuest, { stayId, guestUserId: firstMember.person.id, terms: { ...firstTerms, startDate, endDate, rateCents: 12_000 } });

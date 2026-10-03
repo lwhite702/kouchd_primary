@@ -9,19 +9,32 @@ import { ensureGuestTerms } from "./lib/stayTerms";
 
 export const preview = query({
   args: { tokenHash: v.string() },
-  returns: v.object({ valid: v.boolean(), hostName: v.optional(v.string()), expiresAt: v.optional(v.number()) }),
+  returns: v.object({
+    valid: v.boolean(),
+    status: v.optional(v.union(v.literal("invalid"), v.literal("used"))),
+    hostName: v.optional(v.string()),
+    referralCode: v.optional(v.string()),
+    expiresAt: v.optional(v.number()),
+  }),
   handler: async (ctx, { tokenHash }) => {
     try {
       assertInviteHash(tokenHash);
     } catch {
-      return { valid: false };
+      return { valid: false, status: "invalid" as const };
     }
     const invite = await ctx.db.query("invites").withIndex("by_token_hash", (query) => query.eq("tokenHash", tokenHash)).unique();
-    if (!invite || invite.usedAt || invite.expiresAt <= Date.now()) return { valid: false };
+    if (!invite) return { valid: false, status: "invalid" as const };
+    if (invite.usedAt) return { valid: false, status: "used" as const };
+    if (invite.expiresAt <= Date.now()) return { valid: false, status: "invalid" as const };
     const stay = await ctx.db.get(invite.stayId);
-    if (!stay || stay.status === "ended") return { valid: false };
+    if (!stay || stay.status === "ended") return { valid: false, status: "invalid" as const };
     const host = await ctx.db.get(stay.hostUserId);
-    return { valid: true, hostName: host?.name ?? "A Kouchd host", expiresAt: invite.expiresAt };
+    return {
+      valid: true,
+      hostName: host?.name ?? "A Kouchd host",
+      referralCode: stay.referralCode,
+      expiresAt: invite.expiresAt,
+    };
   },
 });
 

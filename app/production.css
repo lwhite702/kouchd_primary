@@ -2,6 +2,22 @@
   font-family: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
 }
 
+.invite-registration-card { width: min(100%, 560px); margin: 12px auto; border: 1px solid var(--line); border-radius: 24px; background: var(--card); padding: clamp(20px, 4vw, 32px); box-shadow: var(--shadow); text-align: left; }
+.invite-registration-card h1,
+.invite-registration-card h2 { margin: 0 0 10px; color: var(--ink); }
+.invite-registration-card .subhead { margin: 0; color: var(--muted); line-height: 1.55; }
+.invite-registration-details { display: grid; gap: 14px; margin-top: 20px; padding: 16px; border-radius: 16px; background: #f3f6f1; }
+.invite-registration-detail { display: flex; align-items: flex-start; gap: 10px; color: var(--green); }
+.invite-registration-detail > div { flex: 1; min-width: 0; }
+.invite-registration-detail input { width: 100%; min-width: 0; margin-top: 5px; border: 1px solid var(--line); border-radius: 10px; background: white; padding: 10px 12px; color: var(--green); font-weight: 800; letter-spacing: 0.06em; }
+.invite-expiry { display: flex; align-items: center; gap: 6px; margin: 0; color: var(--muted); font-size: 0.82rem; }
+.invite-name-form { display: grid; gap: 16px; margin-top: 12px; }
+.invite-name-form label { display: grid; gap: 6px; color: var(--ink); font-size: 0.88rem; font-weight: 700; }
+.invite-name-form input { width: 100%; min-width: 0; border: 1px solid var(--line); border-radius: 10px; background: white; padding: 12px 14px; }
+.invite-auth-switch { margin: 18px 0 0; color: var(--muted); font-size: 0.88rem; text-align: center; }
+.invite-auth-switch a { color: var(--green); font-weight: 800; }
+.invite-success { color: var(--green); line-height: 1.5; }
+
 .brand-button {
   border: 0;
   background: transparent;
@@ -2029,6 +2045,5 @@ body {
     -webkit-backdrop-filter: blur(2px);
   }
 }
-
 
 
