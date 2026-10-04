@@ -24,9 +24,10 @@ if (mode === "prepare") {
   writeFileSync(versionPath, `${version}\n`);
   writeFileSync(packagePath, `${JSON.stringify(packageJson, null, 2)}\n`);
   writeFileSync(lockPath, `${JSON.stringify(lockJson, null, 2)}\n`);
-  if (existsSync(iosYamlPath)) {
-    const yaml = readFileSync(iosYamlPath, "utf8");
-    writeFileSync(iosYamlPath, yaml.replace(/(MARKETING_VERSION:\s*)[^\s]+/g, (_, prefix) => `${prefix}${version}`));
+  for (const path of [iosYamlPath, iosProjectPath]) {
+    if (!existsSync(path)) continue;
+    const content = readFileSync(path, "utf8");
+    writeFileSync(path, content.replace(/(MARKETING_VERSION\s*[:=]\s*)[0-9A-Za-z.-]+/g, (_, prefix) => `${prefix}${version}`));
   }
   console.log(`Prepared ${version}. Changelog and release approval remain separate.`);
 } else if (mode === "check") {
