@@ -34,9 +34,10 @@ export function InviteAccept({ token, tokenHash }: { token: string; tokenHash: s
     );
   }
 
+  const details = "hostName" in preview ? preview : null;
   return (
     <main className="auth-landing screen-transition">
-      <InviteDetails hostName={preview.hostName ?? "A Kouchd host"} referralCode={preview.referralCode} expiresAt={preview.expiresAt} />
+      <InviteDetails hostName={details?.hostName ?? "A Kouchd host"} referralCode={details?.referralCode} expiresAt={details?.expiresAt} />
       <Show when="signed-out">
         <Registration token={token} tokenHash={tokenHash} />
       </Show>

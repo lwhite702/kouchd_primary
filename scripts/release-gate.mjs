@@ -7,7 +7,15 @@ const changelog = read("CHANGELOG.md");
 const unreleased = changelog.split(/^## \[Unreleased\]/m)[1]?.split(/^## \[/m)[0]?.trim();
 if (!unreleased || unreleased.length < 60) throw new Error("A substantive [Unreleased] changelog entry is required");
 
-const base = process.env.RELEASE_BASE_REF || (process.env.GITHUB_BASE_REF ? `origin/${process.env.GITHUB_BASE_REF}` : process.env.GITHUB_EVENT_NAME === "push" ? "HEAD^" : "main");
+const hasRemoteMain = (() => {
+  try {
+    execFileSync("git", ["rev-parse", "--verify", "origin/main"], { stdio: "ignore" });
+    return true;
+  } catch { return false; }
+})();
+const base = process.env.RELEASE_BASE_REF || (process.env.GITHUB_BASE_REF
+  ? `origin/${process.env.GITHUB_BASE_REF}`
+  : process.env.GITHUB_EVENT_NAME === "push" ? "HEAD^" : hasRemoteMain ? "origin/main" : "main");
 let baseVersion;
 let changed = [];
 try {
