@@ -1,0 +1,96 @@
+require "json"
+require "fileutils"
+require "shellwords"
+require "time"
+
+ROOT = File.expand_path("../..", __dir__)
+BUNDLE_ID = "com.wrelikbrands.kouchd"
+APPLE_TEAM = "LG7W94ZD3B"
+
+def connect_key
+  app_store_connect_api_key(
+    key_id: ENV.fetch("ASC_KEY_ID"),
+    issuer_id: ENV.fetch("ASC_ISSUER_ID"),
+    key_filepath: ENV.fetch("ASC_KEY_FILE"),
+    in_house: false
+  )
+end
+
+def next_build_number
+  app = Spaceship::ConnectAPI::App.find(BUNDLE_ID)
+  UI.user_error!("Create the Kouchd App Store Connect record before archiving") unless app
+  # Include processing and failed builds across every version; they can reserve numbers.
+  builds = Spaceship::ConnectAPI::Build.all(app_id: app.id, platform: "IOS", limit: 200)
+  numbers = builds.map(&:version)
+  UI.user_error!("Existing non-integer build numbers need a reviewed migration") unless numbers.all? { |n| n.match?(/\A\d+\z/) }
+  numbers.map(&:to_i).max.to_i + 1
+end
+
+def release_evidence(build)
+  {
+    version: File.read(File.join(ROOT, "VERSION")).strip,
+    build: build,
+    commit: `git -C #{ROOT.shellescape} rev-parse HEAD`.strip,
+    bundle_id: BUNDLE_ID,
+    team: APPLE_TEAM,
+    recorded_at: Time.now.utc.iso8601
+  }
+end
+
+def clean_release_source
+  status = sh("git", "-C", ROOT, "status", "--porcelain", log: false)
+  UI.user_error!("Archive a clean, reviewed source commit") unless status.strip.empty?
+  Dir.chdir(ROOT) { sh("npm", "run", "version:check") }
+end
+
+def production_archive(build)
+  build_app(
+    project: File.join(ROOT, "ios/Kouchd.xcodeproj"), scheme: "Kouchd",
+    configuration: "Release", export_method: "app-store", export_team_id: APPLE_TEAM,
+    xcargs: "CURRENT_PROJECT_VERSION=#{build}",
+    output_directory: File.join(ROOT, "ios/artifacts"), output_name: "Kouchd.ipa"
+  )
+end
+
+def write_evidence(name, evidence)
+  path = File.join(ROOT, "ios/artifacts")
+  FileUtils.mkdir_p(path)
+  File.write(File.join(path, name), JSON.pretty_generate(evidence) + "\n")
+end
+
+default_platform(:ios)
+platform :ios do
+  desc "Read the next increasing App Store Connect build number without uploading"
+  lane :next_build do
+    connect_key
+    UI.success("Next available build number: #{next_build_number}")
+  end
+
+  desc "Archive production settings after querying App Store Connect; no upload"
+  lane :archive do
+    clean_release_source
+    connect_key
+    build = next_build_number
+    production_archive(build)
+    write_evidence("archive.json", release_evidence(build).merge(state: "archived_not_uploaded"))
+  end
+
+  desc "After action-time approval and verified release gates, archive and upload to TestFlight"
+  lane :upload do
+    UI.user_error!("Record action-time approval before running this lane") unless ENV["KOUCHD_UPLOAD_APPROVED"] == "yes"
+    clean_release_source
+    key = connect_key
+    build = next_build_number
+    production_archive(build)
+    # Recheck immediately before upload to catch another uploader reserving the number.
+    UI.user_error!("Another build reserved this number; rerun to archive with a higher number") unless next_build_number == build
+    upload_to_testflight(api_key: key, app_identifier: BUNDLE_ID,
+                        ipa: File.join(ROOT, "ios/artifacts/Kouchd.ipa"),
+                        skip_waiting_for_build_processing: false,
+                        distribute_external: false, skip_submission: true)
+    write_evidence("upload.json", release_evidence(build).merge(
+      state: "processed_not_distribution_verified",
+      real_device_installation: "pending", testflight_group_availability: "pending"
+    ))
+  end
+end

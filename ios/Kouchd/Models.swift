@@ -56,6 +56,7 @@ enum Value: Codable, ConvexEncodable {
 extension Value {
   var id: String { self["_id"].text }
   var title: String { self["title"].text }
+  var guestPersonID: String { self["person"]["id"].text }
 }
 
 enum Display {
@@ -65,4 +66,14 @@ enum Display {
   static func date(_ date: Date = .now) -> String {
     date.formatted(.iso8601.year().month().day().dateSeparator(.dash))
   }
+}
+
+
+enum HouseDetail {
+  static let fields: [(key: String, label: String)] = [
+    ("wifiNetwork", "Wi-Fi network"), ("wifiPassword", "Wi-Fi password"),
+    ("streetAddress", "Street address"), ("unit", "Unit"), ("cityStateZip", "City and ZIP"),
+    ("doorCode", "Door code"), ("parkingNotes", "Parking"), ("trashDay", "Trash day"),
+    ("emergencyContact", "Emergency contact"), ("otherNotes", "Other notes")
+  ]
 }

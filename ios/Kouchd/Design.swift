@@ -52,6 +52,7 @@ struct Pill: View {
 }
 
 struct PrimaryButton: View {
+  @Environment(\.isEnabled) private var isEnabled
   let title: String
   let action: () -> Void
   var body: some View {
@@ -62,18 +63,29 @@ struct PrimaryButton: View {
     .buttonStyle(.plain)
     .foregroundStyle(.white)
     .background(Palette.forest, in: RoundedRectangle(cornerRadius: 16))
+    .opacity(isEnabled ? 1 : 0.5)
   }
 }
 
 struct DataRow: View {
+  @Environment(\.dynamicTypeSize) private var typeSize
   let title: String
   let detail: String
   var body: some View {
-    HStack(alignment: .firstTextBaseline) {
-      Text(title).foregroundStyle(Palette.muted)
-      Spacer(minLength: 12)
-      Text(detail).multilineTextAlignment(.trailing).foregroundStyle(Palette.ink)
-    }.font(.subheadline)
+    Group {
+      if typeSize.isAccessibilitySize {
+        VStack(alignment: .leading, spacing: 6) {
+          Text(title).foregroundStyle(Palette.muted)
+          Text(detail).foregroundStyle(Palette.ink)
+        }
+      } else {
+        HStack(alignment: .firstTextBaseline) {
+          Text(title).foregroundStyle(Palette.muted)
+          Spacer(minLength: 12)
+          Text(detail).multilineTextAlignment(.trailing).foregroundStyle(Palette.ink)
+        }
+      }
+    }.font(.subheadline).accessibilityElement(children: .combine)
   }
 }
 
@@ -86,5 +98,24 @@ struct EmptyCard: View {
       Text(title).font(.headline)
       Text(message).font(.subheadline).foregroundStyle(Palette.muted)
     }
+  }
+}
+
+struct VoidRecordButton: View {
+  let store: KouchdStore
+  let function: String
+  let recordKey: String
+  let recordID: String
+  @State private var confirming = false
+  var body: some View {
+    Button("Void record", role: .destructive) { confirming = true }
+      .disabled(store.isEnded)
+      .confirmationDialog("Void this record?", isPresented: $confirming) {
+        Button("Void record", role: .destructive) {
+          Task { _ = await store.mutate(function, [recordKey: recordID]) }
+        }
+      } message: {
+        Text("The record stays in the history but no longer counts toward the balance or current activity.")
+      }
   }
 }

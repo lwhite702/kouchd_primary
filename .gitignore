@@ -18,3 +18,8 @@ ios/**/DerivedData/
 # Agent MCP configs (contain tokens)
 .cursor/mcp.json
 .codex/config.toml
+
+ios/artifacts/
+ios/fastlane/report.xml
+ios/fastlane/README.md
+*.p8

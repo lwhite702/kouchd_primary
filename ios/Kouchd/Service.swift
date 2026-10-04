@@ -47,6 +47,7 @@ enum AppConfig {
   private var accountSubscriptions: [AnyCancellable] = []
   private var staySubscriptions: [AnyCancellable] = []
   private var financialSubscriptions: [AnyCancellable] = []
+  private var adminSubscriptions: [String: [AnyCancellable]] = [:]
 
   init() {
     client = ConvexClientWithAuth(
@@ -88,7 +89,16 @@ enum AppConfig {
     nights = []
     wallet = .null
     rules = []
+    clearAdmin()
     adminAccess = .null
+    selectedStayID = ""
+    selectedGuestID = ""
+    error = ""
+    isLoading = true
+  }
+
+  private func clearAdmin() {
+    adminSubscriptions.removeAll()
     adminStats = .null
     adminUsers = .null
     adminStays = .null
@@ -96,35 +106,36 @@ enum AppConfig {
     adminStayDetail = .null
     adminFinancials = .null
     adminSms = []
-    selectedStayID = ""
-    selectedGuestID = ""
-    error = ""
-    isLoading = true
   }
 
   func loadAdmin() {
     guard adminAccess.flag else { return }
-    watch("admin:getOverviewStats", into: \.adminStats)
-    watch("admin:listUsers", into: \.adminUsers)
-    watch("admin:listStays", into: \.adminStays)
-    watch("admin:listDisputesAndLedgers", into: \.adminFinancials)
-    watch("admin:listSmsComplianceEvents", into: \.adminSms)
+    adminSubscriptions["overview"] = []
+    watch("admin:getOverviewStats", into: \.adminStats, adminScope: "overview")
+    watch("admin:listUsers", into: \.adminUsers, adminScope: "overview")
+    watch("admin:listStays", into: \.adminStays, adminScope: "overview")
+    watch("admin:listDisputesAndLedgers", into: \.adminFinancials, adminScope: "overview")
+    watch("admin:listSmsComplianceEvents", into: \.adminSms, adminScope: "overview")
   }
 
   func loadAdminUser(_ id: String) {
     guard adminAccess.flag else { return }
-    watch("admin:getUserDetail", args: ["userId": id], into: \.adminUserDetail)
+    adminSubscriptions["user"] = []
+    adminUserDetail = .null
+    watch("admin:getUserDetail", args: ["userId": id], into: \.adminUserDetail, adminScope: "user")
   }
 
   func loadAdminStay(_ id: String) {
     guard adminAccess.flag else { return }
-    watch("admin:getStayDetail", args: ["stayId": id], into: \.adminStayDetail)
+    adminSubscriptions["stay"] = []
+    adminStayDetail = .null
+    watch("admin:getStayDetail", args: ["stayId": id], into: \.adminStayDetail, adminScope: "stay")
   }
 
   func syncUser(name: String?) async {
     do {
       var args: [String: ConvexEncodable?] = [:]
-      if let name, !name.isEmpty { args["name"] = name }
+      if let name, !name.isEmpty { args["clerkName"] = name }
       try await client.mutation("users:syncCurrent", with: args)
       loadAccount()
       isLoading = false
@@ -185,7 +196,8 @@ enum AppConfig {
     args: [String: ConvexEncodable?] = [:],
     into keyPath: ReferenceWritableKeyPath<KouchdStore, T>,
     account: Bool = false,
-    financial: Bool = false
+    financial: Bool = false,
+    adminScope: String = ""
   ) {
     let token = client.subscribe(to: name, with: args, yielding: T.self)
       .receive(on: DispatchQueue.main)
@@ -193,6 +205,7 @@ enum AppConfig {
         if case .failure(let failure) = result { self?.error = failure.localizedDescription }
       }, receiveValue: { [weak self] value in
         self?[keyPath: keyPath] = value
+        if name == "admin:canAccess", let self, !self.adminAccess.flag { self.clearAdmin() }
         if name == "stays:getBundle", let self, self.financialSubscriptions.isEmpty {
           if self.isHost {
             self.selectedGuestID = self.guests.first?["person"]["id"].text ?? ""
@@ -200,20 +213,33 @@ enum AppConfig {
           self.loadGuestData()
         }
       })
-    if account { accountSubscriptions.append(token) }
+    if !adminScope.isEmpty { adminSubscriptions[adminScope, default: []].append(token) }
+    else if account { accountSubscriptions.append(token) }
     else if financial { financialSubscriptions.append(token) }
     else { staySubscriptions.append(token) }
   }
 
-  func mutate(_ name: String, _ args: [String: ConvexEncodable?]) async -> Bool {
+  func mutateValue(_ name: String, _ args: [String: ConvexEncodable?]) async -> Value? {
     do {
-      try await client.mutation(name, with: args)
+      let result: Value = try await client.mutation(name, with: args)
       error = ""
-      return true
+      return result
     } catch {
       self.error = error.localizedDescription
-      return false
+      return nil
     }
+  }
+
+  func mutate(_ name: String, _ args: [String: ConvexEncodable?]) async -> Bool {
+    if let _ = await mutateValue(name, args) { return true }
+    return false
+  }
+
+  func joinOrCreateStay(_ name: String, _ args: [String: ConvexEncodable?]) async -> Bool {
+    guard let result = await mutateValue(name, args) else { return false }
+    let id = result.text.isEmpty ? result["stayId"].text : result.text
+    if !id.isEmpty { selectStay(id) }
+    return true
   }
 
   var isHost: Bool { bundle["membership"]["role"].text == "host" }

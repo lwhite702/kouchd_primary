@@ -20,6 +20,7 @@ jobs:
           xcode-version: latest-stable
       - run: npm ci
       - run: npm run release:check
+      - run: ruby -c ios/fastlane/Fastfile
       - run: brew install xcodegen
       - run: xcodegen generate --spec ios/project.yml
       - run: xcodebuild -project ios/Kouchd.xcodeproj -scheme Kouchd -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build

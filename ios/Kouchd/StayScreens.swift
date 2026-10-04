@@ -38,6 +38,16 @@ struct StayScreen: View {
              ? "No notes yet." : store.bundle["terms"]["houseNotes"].text)
       }
       Card {
+        Text("Around the home").font(.headline)
+        ForEach(HouseDetail.fields, id: \.key) { field in
+          let detail = store.bundle["stay"]["houseInfo"][field.key].text
+          if !detail.isEmpty { DataRow(title: field.label, detail: detail) }
+        }
+        if HouseDetail.fields.allSatisfy({ store.bundle["stay"]["houseInfo"][$0.key].text.isEmpty }) {
+          Text("Your host hasn't added house details yet.").foregroundStyle(Palette.muted)
+        }
+      }
+      Card {
         Text("Pay outside Kouchd").font(.headline)
         Text("Choose an option with your host, then record the contribution in the ledger.")
           .font(.subheadline).foregroundStyle(Palette.muted)
@@ -54,6 +64,8 @@ struct StayScreen: View {
         NavigationLink("Contribution rewards") { RewardsScreen(store: store) }
         NavigationLink("Household activity") { ActivityScreen(store: store) }
         NavigationLink("Settings and reminders") { SettingsScreen(store: store) }
+        NavigationLink("Create another stay") { CreateStayScreen(store: store) }
+        NavigationLink("Join another stay") { JoinCodeScreen(store: store) }
       }
       if store.isHost && !store.isEnded {
         NavigationLink("Host controls") { HostControlsScreen(store: store) }
@@ -137,7 +149,7 @@ struct InvitationScreen: View {
             Task {
               let hash = SHA256.hash(data: Data(token.utf8))
                 .map { String(format: "%02x", $0) }.joined()
-              if await store.mutate("invites:accept", ["tokenHash": hash]) { onFinished() }
+              if await store.joinOrCreateStay("invites:accept", ["tokenHash": hash]) { onFinished() }
             }
           }
         }
@@ -220,6 +232,7 @@ struct RenameStayForm: View {
 
 struct CreateStayScreen: View {
   let store: KouchdStore
+  @Environment(\.dismiss) private var dismiss
   @State private var name = ""
   @State private var start = Date.now
   @State private var end = Date.now.addingTimeInterval(30 * 86_400)
@@ -227,6 +240,9 @@ struct CreateStayScreen: View {
   @State private var cadence = "weekly"
   @State private var notes = ""
   @State private var busy = false
+  @State private var weekday = 1
+  @State private var checkInEnabled = false
+  @State private var checkIn = Date.now
   var body: some View {
     Form {
       Section("Household") { TextField("Stay name", text: $name) }
@@ -237,6 +253,13 @@ struct CreateStayScreen: View {
           Text("Weekly").tag("weekly")
           Text("Daily").tag("daily")
         }
+        if cadence == "weekly" {
+          Picker("Due weekday", selection: $weekday) {
+            ForEach(0..<7) { Text(Calendar.current.weekdaySymbols[$0]).tag($0) }
+          }
+        }
+        Toggle("Set a shared check-in", isOn: $checkInEnabled)
+        if checkInEnabled { DatePicker("Check-in", selection: $checkIn, displayedComponents: .date) }
         TextField("Amount in dollars", text: $rate).keyboardType(.decimalPad)
         TextField("House notes", text: $notes, axis: .vertical).lineLimit(3...7)
       }
@@ -252,10 +275,12 @@ struct CreateStayScreen: View {
               "earlyDiscountDays": 0, "lateFeeEnabled": false,
               "lateFeeCents": 0, "graceDays": 0, "houseNotes": notes
             ]
-            if cadence == "weekly" { terms["paymentDayOfWeek"] = 1 }
-            _ = await store.mutate("stays:create", [
+            if cadence == "weekly" { terms["paymentDayOfWeek"] = weekday }
+            var args: [String: ConvexEncodable?] = [
               "name": name, "timezone": TimeZone.current.identifier, "terms": terms
-            ])
+            ]
+            if checkInEnabled { args["nextCheckInDate"] = Display.date(checkIn) }
+            if await store.joinOrCreateStay("stays:create", args) { dismiss() }
             busy = false
           }
         }.disabled(busy || name.count < 2 || (Double(rate) ?? 0) <= 0)
@@ -267,6 +292,7 @@ struct CreateStayScreen: View {
 
 struct JoinCodeScreen: View {
   let store: KouchdStore
+  @Environment(\.dismiss) private var dismiss
   @State private var code = ""
   var body: some View {
     Form {
@@ -274,7 +300,9 @@ struct JoinCodeScreen: View {
         TextField("Referral code", text: $code)
           .textInputAutocapitalization(.characters)
         Button("Join stay") {
-          Task { _ = await store.mutate("referral:joinWithCode", ["referralCode": code]) }
+          Task {
+            if await store.joinOrCreateStay("referral:joinWithCode", ["referralCode": code]) { dismiss() }
+          }
         }.disabled(code.isEmpty)
       } footer: { Text("Ask your host for their household code.") }
     }

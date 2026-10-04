@@ -16,6 +16,11 @@ struct TermsEditScreen: View {
   @State private var earlyDiscount = false
   @State private var earlyPercent = ""
   @State private var earlyDays = ""
+  @State private var rewardEnabled = false
+  @State private var coinName = "Coins"
+  @State private var centsPerPoint = "100"
+  @State private var maxCredit = "0"
+  @State private var houseRules: [EditableHouseRule] = []
   private var terms: Value {
     if !store.selectedGuestID.isEmpty,
        let guest = store.guests.first(where: { $0["person"]["id"].text == store.selectedGuestID }) {
@@ -59,6 +64,28 @@ struct TermsEditScreen: View {
         }
       }
       Section("House notes") { TextField("Notes", text: $notes, axis: .vertical) }
+      Section("Shared expectations") {
+        ForEach($houseRules) { $rule in
+          VStack(alignment: .leading) {
+            TextField("Title", text: $rule.title)
+            TextField("Category", text: $rule.category)
+            TextField("Description", text: $rule.description, axis: .vertical)
+            Toggle("Required", isOn: $rule.required)
+            Button("Remove expectation", role: .destructive) {
+              houseRules.removeAll { $0.id == rule.id }
+            }
+          }
+        }
+        Button("Add expectation") { houseRules.append(EditableHouseRule()) }
+      }
+      Section("Contribution rewards") {
+        Toggle("Enable rewards", isOn: $rewardEnabled)
+        if rewardEnabled {
+          TextField("Point name", text: $coinName)
+          TextField("Cents per point", text: $centsPerPoint).keyboardType(.numberPad)
+          TextField("Maximum credit per period in dollars", text: $maxCredit).keyboardType(.decimalPad)
+        }
+      }
       Section {
         Button("Save new agreement version") { save() }
       } footer: {
@@ -85,6 +112,11 @@ struct TermsEditScreen: View {
     earlyDiscount = value["earlyDiscountEnabled"].flag
     earlyPercent = String(value["earlyDiscountPercentage"].int)
     earlyDays = String(value["earlyDiscountDays"].int)
+    rewardEnabled = value["rewards"]["enabled"].flag
+    coinName = value["rewards"]["coinName"].text.isEmpty ? "Coins" : value["rewards"]["coinName"].text
+    centsPerPoint = String(value["rewards"]["centsPerPoint"].int > 0 ? value["rewards"]["centsPerPoint"].int : 100)
+    maxCredit = String(Double(value["rewards"]["maxCreditPerPeriodCents"].int) / 100)
+    houseRules = value["houseRules"].items.map { EditableHouseRule(value: $0) }
   }
 
   private func save() {
@@ -99,9 +131,12 @@ struct TermsEditScreen: View {
       "graceDays": lateFee ? (Int(grace) ?? 0) : 0, "houseNotes": notes
     ]
     if cadence == "weekly" { fields["paymentDayOfWeek"] = weekday }
-    for key in ["houseRules", "rewards"] {
-      if case .null = terms[key] {} else { fields[key] = terms[key] }
-    }
+    fields["houseRules"] = Value.array(houseRules.map(\.value))
+    fields["rewards"] = Value.object([
+      "enabled": .bool(rewardEnabled), "coinName": .string(coinName),
+      "centsPerPoint": .number(Double(Int(centsPerPoint) ?? 0)),
+      "maxCreditPerPeriodCents": .number(Double(Int((Double(maxCredit) ?? 0) * 100)))
+    ])
     var args: [String: ConvexEncodable?] = ["stayId": store.selectedStayID, "terms": fields]
     let function = store.selectedGuestID.isEmpty ? "terms:updateCurrent" : "terms:updateGuest"
     if !store.selectedGuestID.isEmpty { args["guestUserId"] = store.selectedGuestID }
@@ -118,30 +153,33 @@ struct HouseInfoScreen: View {
   @State private var parking = ""
   @State private var trash = ""
   @State private var emergency = ""
+  @State private var unit = ""
+  @State private var city = ""
+  @State private var otherNotes = ""
   var body: some View {
     Form {
       Section("Access and Wi-Fi") {
         TextField("Network", text: $network)
         TextField("Password", text: $password)
         TextField("Street address", text: $address)
+        TextField("Unit", text: $unit)
+        TextField("City, state and ZIP", text: $city)
         TextField("Door code", text: $doorCode)
       }
       Section("Around the home") {
         TextField("Parking", text: $parking, axis: .vertical)
         TextField("Trash day", text: $trash)
         TextField("Emergency contact", text: $emergency)
+        TextField("Other notes", text: $otherNotes, axis: .vertical)
       }
       Button("Save house details") {
-        var info: [String: ConvexEncodable?] = [
+        let info: [String: ConvexEncodable?] = [
           "wifiNetwork": network, "wifiPassword": password,
           "streetAddress": address, "doorCode": doorCode,
           "parkingNotes": parking, "trashDay": trash,
-          "emergencyContact": emergency
+          "emergencyContact": emergency, "unit": unit,
+          "cityStateZip": city, "otherNotes": otherNotes
         ]
-        for key in ["unit", "cityStateZip", "otherNotes"] {
-          let value = store.bundle["stay"]["houseInfo"][key]
-          if case .null = value {} else { info[key] = value }
-        }
         Task { _ = await store.mutate("stays:updateHouseInfo", [
           "stayId": store.selectedStayID, "houseInfo": info
         ]) }
@@ -157,6 +195,9 @@ struct HouseInfoScreen: View {
       parking = info["parkingNotes"].text
       trash = info["trashDay"].text
       emergency = info["emergencyContact"].text
+      unit = info["unit"].text
+      city = info["cityStateZip"].text
+      otherNotes = info["otherNotes"].text
     }
   }
 }
@@ -260,5 +301,28 @@ struct RewardRulesScreen: View {
       }
     }
     .navigationTitle("Reward rules")
+  }
+}
+
+
+struct EditableHouseRule: Identifiable {
+  var id = UUID().uuidString
+  var category = "other"
+  var title = ""
+  var description = ""
+  var required = false
+
+  init() {}
+  init(value: Value) {
+    id = value["id"].text
+    category = value["category"].text
+    title = value["title"].text
+    description = value["description"].text
+    required = value["required"].flag
+  }
+  var value: Value {
+    .object(["id": .string(id), "category": .string(category),
+             "title": .string(title), "description": .string(description),
+             "required": .bool(required)])
   }
 }

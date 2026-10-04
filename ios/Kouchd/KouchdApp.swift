@@ -138,6 +138,9 @@ struct RootView: View {
           Text("Open their invite link or enter their referral code.")
           NavigationLink("Join with a code") { JoinCodeScreen(store: store) }
         }
+        NavigationLink("Profile and optional reminders") { SettingsScreen(store: store) }
+        Link("Terms & Conditions", destination: URL(string: "https://kouchd.com/terms")!)
+        Link("Privacy Policy", destination: URL(string: "https://kouchd.com/privacy")!)
         UserButton()
       }
     }

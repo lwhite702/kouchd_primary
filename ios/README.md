@@ -58,3 +58,27 @@ The root `VERSION` controls the app's marketing version. The separate
 `CURRENT_PROJECT_VERSION` is a local starting value only. Read App Store
 Connect for the next build number immediately before a release archive.
 See `docs/internal/IOS_RELEASE.md` for promotion and rollback evidence.
+
+
+## Build preparation
+
+The Convex binary supports Apple silicon simulators; the project excludes the
+Intel simulator architecture. Physical-device archives still target arm64.
+
+From `ios/`, run `fastlane ios next_build` to read the highest App Store Connect
+build across all versions, including processing or failed builds, and propose
+the next integer. Configure `ASC_KEY_ID`, `ASC_ISSUER_ID`, and `ASC_KEY_FILE`
+with the approved Wrelik App Store Connect key; never track the private key.
+`fastlane ios archive` builds a clean reviewed commit with production settings
+and records version, build, and commit in ignored `ios/artifacts/archive.json`.
+The archive lane does not upload. After action-time approval and recorded release
+gates, `KOUCHD_UPLOAD_APPROVED=yes fastlane ios upload` resolves a fresh number,
+archives, checks that no concurrent uploader reserved it, uploads, waits for
+processing, and records `upload.json`. Group distribution and real-device
+installation remain separate verification steps. These lanes have been syntax
+checked locally; Apple access and actual upload remain unverified.
+
+Release PRs classify their changes in `release/change.json` as major, minor,
+patch, or none with a factual reason. The gate validates the declared increment
+and rejects a version already tagged as released. Documentation changes alone
+retain the current version.

@@ -118,6 +118,7 @@ struct RewardsScreen: View {
   @State private var points = ""
   @State private var note = ""
   @State private var redeemPoints = ""
+  @State private var selectedRule = ""
   var body: some View {
     Page(title: "Contribution rewards") {
       if store.isHost && store.guests.count > 1 { GuestPicker(store: store) }
@@ -131,15 +132,31 @@ struct RewardsScreen: View {
       if !store.isHost && !store.isEnded && store.wallet["settings"]["enabled"].flag {
         Card {
           Text("Submit a contribution").font(.headline)
+          Picker("Suggested task", selection: $selectedRule) {
+            Text("Custom contribution").tag("")
+            ForEach(store.rules.filter { $0["isActive"].flag }, id: \.id) { rule in
+              Text(rule.title + " · \(rule["pointsAwarded"].int) pts").tag(rule.id)
+            }
+          }
+          .onChange(of: selectedRule) { _, id in
+            if let rule = store.rules.first(where: { $0.id == id }) {
+              title = rule.title
+              points = String(rule["pointsAwarded"].int)
+            }
+          }
           TextField("What did you do?", text: $title)
           TextField("Points", text: $points).keyboardType(.numberPad)
           TextField("Details", text: $note)
           PrimaryButton(title: "Submit for review") {
-            Task { _ = await store.mutate("rewards:submitClaim", [
-              "stayId": store.selectedStayID, "title": title, "points": Int(points) ?? 0,
-              "note": note, "date": Display.date()
-            ]) }
-          }
+            Task {
+              var args: [String: ConvexEncodable?] = [
+                "stayId": store.selectedStayID, "title": title, "points": Int(points) ?? 0,
+                "note": note, "date": Display.date()
+              ]
+              if !selectedRule.isEmpty { args["ruleId"] = selectedRule }
+              if await store.mutate("rewards:submitClaim", args) { title = ""; points = ""; note = ""; selectedRule = "" }
+            }
+          }.disabled(title.isEmpty || (Int(points) ?? 0) <= 0)
           TextField("Points to redeem", text: $redeemPoints).keyboardType(.numberPad)
           Button("Redeem toward balance") {
             Task { _ = await store.mutate("rewards:redeem", [
@@ -160,7 +177,12 @@ struct RewardsScreen: View {
             Spacer(); Pill(text: claim["status"].text)
           }
           DataRow(title: "Points", detail: "\(claim["points"].int)")
-          if store.isHost && claim["status"].text == "pending" {
+          if claim["status"].text != "voided" &&
+             (store.isHost || claim["guestUserId"].text == store.viewer["id"].text) {
+            VoidRecordButton(store: store, function: "rewards:voidClaim",
+                             recordKey: "claimId", recordID: claim.id)
+          }
+          if store.isHost && !store.isEnded && claim["status"].text == "pending" {
             HStack {
               Button("Confirm") {
                 Task { _ = await store.mutate("rewards:confirmClaim", ["claimId": claim.id]) }
@@ -210,13 +232,28 @@ struct SettingsScreen: View {
         Toggle("Email reminders", isOn: $email)
         Toggle("SMS reminders", isOn: $sms)
         if sms {
-          Text("By turning on SMS reminders, you agree to receive Kouchd stay messages. Message and data rates may apply. You can turn them off here.")
+          Text("By enabling SMS reminders, you agree to receive transactional text messages from Wrelik Brands LLC (operating Kouchd). Message and data rates may apply. Message frequency varies. Text STOP to cancel, HELP for help. Consent is not a condition of purchase or any stay agreement. We do not sell or share your SMS opt-in data or personal information with third parties for marketing purposes.")
             .font(.footnote).foregroundStyle(Palette.muted)
         }
+        Link("Terms & Conditions", destination: URL(string: "https://kouchd.com/terms")!)
+        Link("Privacy Policy", destination: URL(string: "https://kouchd.com/privacy")!)
+        Link("SMS Terms Details", destination: URL(string: "https://kouchd.com/sms-opt-in")!)
         PrimaryButton(title: "Save preferences") {
           Task {
+            let parts = name.split(whereSeparator: \.isWhitespace).map(String.init)
+            guard let first = parts.first, let user = clerk.user else {
+              store.error = "Enter your name before saving."
+              return
+            }
+            do {
+              _ = try await user.update(.init(firstName: first, lastName: parts.dropFirst().joined(separator: " ")))
+              guard await store.mutate("users:syncCurrent", ["clerkName": name]) else { return }
+            } catch {
+              store.error = error.localizedDescription
+              return
+            }
             _ = await store.mutate("users:updatePreferences", [
-              "name": name, "phone": phone,
+              "phone": phone,
               "notifyEmail": email, "notifySms": sms,
               "smsConsentSource": "settings", "smsConsentConfirmed": sms
             ])
@@ -231,6 +268,9 @@ struct SettingsScreen: View {
         Button("Sign out") {
           Task { try? await clerk.auth.signOut(sessionId: clerk.session?.id) }
         }
+      }
+      if !store.selectedStayID.isEmpty {
+        NavigationLink("Household guide") { HouseholdGuideScreen(store: store) }
       }
       if store.adminAccess.flag {
         NavigationLink("Platform administration") { AdminScreen(store: store) }
@@ -285,6 +325,8 @@ struct AdminScreen: View {
           }
         }.buttonStyle(.plain)
       }
+      NavigationLink("Contribution records and exceptions") { AdminFinancialScreen(store: store) }
+      NavigationLink("SMS consent history") { AdminSMSHistory(events: store.adminSms) }
       Card {
         Text("Financial exceptions").font(.headline)
         DataRow(title: "Recent contributions",
@@ -304,21 +346,44 @@ struct AdminScreen: View {
 struct AdminUserScreen: View {
   let store: KouchdStore
   let userID: String
+  @State private var confirmRoleChange = false
   var body: some View {
     Page(title: store.adminUserDetail["user"]["name"].text) {
       Card {
         DataRow(title: "Email", detail: store.adminUserDetail["user"]["email"].text)
         DataRow(title: "Stays", detail: "\(store.adminUserDetail["memberships"].items.count)")
         DataRow(title: "SMS events", detail: "\(store.adminUserDetail["smsEvents"].items.count)")
+        DataRow(title: "Phone", detail: store.adminUserDetail["user"]["phone"].text)
+        DataRow(title: "Email reminders", detail: store.adminUserDetail["user"]["notifyEmail"].flag ? "On" : "Off")
+        DataRow(title: "SMS reminders", detail: store.adminUserDetail["user"]["notifySms"].flag ? "On" : "Off")
+      }
+      Card {
+        Text("Platform access").font(.headline)
+        DataRow(title: "Administrator", detail: store.adminUserDetail["user"]["isAdmin"].flag ? "Yes" : "No")
+        Button(store.adminUserDetail["user"]["isAdmin"].flag ? "Remove administrator access" : "Grant administrator access") {
+          confirmRoleChange = true
+        }.disabled(!store.adminAccess.flag || store.adminUserDetail["user"].id.isEmpty)
       }
       ForEach(store.adminUserDetail["memberships"].items.indices, id: \.self) { index in
         let member = store.adminUserDetail["memberships"].items[index]
         Card {
           Text(member["role"].text.capitalized).font(.headline)
           Text(member["status"].text.capitalized).font(.subheadline)
+          DataRow(title: "Host", detail: member["hostName"].text)
+          DataRow(title: "Stay status", detail: member["stayStatus"].text)
+          NavigationLink("View stay") { AdminStayScreen(store: store, stayID: member["stayId"].text) }
         }
       }
-    }.task { store.loadAdminUser(userID) }
+      NavigationLink("SMS consent history") { AdminSMSHistory(events: store.adminUserDetail["smsEvents"].items) }
+    }
+    .task { store.loadAdminUser(userID) }
+    .confirmationDialog("Change this person's platform access?", isPresented: $confirmRoleChange) {
+      Button(store.adminUserDetail["user"]["isAdmin"].flag ? "Remove administrator access" : "Grant administrator access", role: .destructive) {
+        Task { _ = await store.mutate("admin:toggleAdmin", [
+          "userId": userID, "isAdmin": !store.adminUserDetail["user"]["isAdmin"].flag
+        ]) }
+      }
+    } message: { Text("Administrators can view platform user, household, financial, and SMS consent records.") }
   }
 }
 
@@ -333,6 +398,27 @@ struct AdminStayScreen: View {
         DataRow(title: "Members", detail: "\(store.adminStayDetail["members"].items.count)")
         DataRow(title: "Contributions", detail: "\(store.adminStayDetail["contributions"].items.count)")
         DataRow(title: "Chores", detail: "\(store.adminStayDetail["chores"].items.count)")
+      }
+      ForEach(store.adminStayDetail["members"].items.indices, id: \.self) { index in
+        let member = store.adminStayDetail["members"].items[index]
+        Card {
+          Text(member["user"]["name"].text).font(.headline)
+          DataRow(title: "Role", detail: member["role"].text)
+          DataRow(title: "Status", detail: member["status"].text)
+        }
+      }
+      AdminContributionList(records: store.adminStayDetail["contributions"].items)
+      AdminObligationList(records: store.adminStayDetail["obligations"].items)
+      ForEach(store.adminStayDetail["announcements"].items.indices, id: \.self) { index in
+        let notice = store.adminStayDetail["announcements"].items[index]
+        Card { Text(notice.title).font(.headline); Text(notice["body"].text) }
+      }
+      ForEach(store.adminStayDetail["chores"].items.indices, id: \.self) { index in
+        let chore = store.adminStayDetail["chores"].items[index]
+        Card { Text(chore.title).font(.headline); DataRow(title: "Completed", detail: chore["completed"].flag ? "Yes" : "No") }
+      }
+      ForEach(store.adminStayDetail["activity"].items.indices, id: \.self) { index in
+        Card { Text(store.adminStayDetail["activity"].items[index]["detail"].text) }
       }
     }.task { store.loadAdminStay(stayID) }
   }
@@ -385,6 +471,133 @@ struct HostControlsScreen: View {
       Button("End stay", role: .destructive) {
         Task { _ = await store.mutate("stays:end", ["stayId": store.selectedStayID]) }
       }
+    }
+  }
+}
+
+
+struct AdminFinancialScreen: View {
+  let store: KouchdStore
+  @State private var filter = "all"
+  var body: some View {
+    Page(title: "Financial records") {
+      Picker("Status", selection: $filter) {
+        Text("All").tag("all"); Text("Disputed").tag("disputed")
+        Text("Pending").tag("pending"); Text("Confirmed").tag("confirmed")
+      }
+      AdminContributionList(records: store.adminFinancials["contributions"].items.filter {
+        filter == "all" || $0["status"].text == filter
+      })
+      Text("Audited charges").font(.headline)
+      AdminObligationList(records: store.adminFinancials["auditedObligations"].items)
+    }
+  }
+}
+
+struct AdminContributionList: View {
+  let records: [Value]
+  var body: some View {
+    ForEach(records.indices, id: \.self) { index in
+      let record = records[index]
+      Card {
+        HStack { Text(record["type"].text.capitalized).font(.headline); Spacer(); Pill(text: record["status"].text) }
+        DataRow(title: "Amount", detail: Display.money(record["amountCents"].int))
+        DataRow(title: "Date", detail: record["date"].text)
+        if !record["guestName"].text.isEmpty { DataRow(title: "Guest", detail: record["guestName"].text) }
+        if !record["creatorName"].text.isEmpty { DataRow(title: "Recorded by", detail: record["creatorName"].text) }
+        Text(record["note"].text)
+      }
+    }
+  }
+}
+
+struct AdminObligationList: View {
+  let records: [Value]
+  var body: some View {
+    ForEach(records.indices, id: \.self) { index in
+      let record = records[index]
+      Card {
+        Text(record.title.isEmpty ? "Stay contribution" : record.title).font(.headline)
+        DataRow(title: "Amount", detail: Display.money(record["baseAmountCents"].int))
+        DataRow(title: "Due", detail: record["dueDate"].text)
+        if !record["voidedAt"].text.isEmpty { Pill(text: "Voided") }
+        if !record["lateFeeWaivedAt"].text.isEmpty { Pill(text: "Late fee waived") }
+      }
+    }
+  }
+}
+
+struct AdminSMSHistory: View {
+  let events: [Value]
+  var body: some View {
+    Page(title: "SMS consent history") {
+      if events.isEmpty { EmptyCard(title: "No events", message: "Consent events will appear here.") }
+      ForEach(events.indices, id: \.self) { index in
+        let event = events[index]
+        Card {
+          Text(event["userName"].text).font(.headline)
+          DataRow(title: "Action", detail: event["action"].text.replacingOccurrences(of: "_", with: " "))
+          DataRow(title: "Source", detail: event["source"].text)
+          DataRow(title: "Phone", detail: event["phone"].text)
+          DataRow(title: "Disclosure version", detail: event["consentVersion"].text)
+          if event["recordedAt"].int > 0 {
+            DataRow(title: "Recorded", detail: Date(timeIntervalSince1970: Double(event["recordedAt"].int) / 1000).formatted(date: .abbreviated, time: .shortened))
+          }
+        }
+      }
+    }
+  }
+}
+
+
+struct HouseholdGuideScreen: View {
+  let store: KouchdStore
+  @Environment(\.dismiss) private var dismiss
+  @State private var step = 0
+  private var role: String { store.isHost ? "host" : "guest" }
+  private var guidance: [(title: String, detail: String)] {
+    store.isHost ? [
+      ("Welcome your guests", "Give your stay a name, add house details and outside payment options, then share a one-use invitation."),
+      ("Agree on the stay", "Set dates, contribution rhythm and shared expectations. Guests review new agreement versions before continuing."),
+      ("Keep a shared record", "Add contributions after money or supplies have been provided outside Kouchd. The other person confirms each record. Discuss disputed records together."),
+      ("Share the little things", "Assign chores, review schedule requests and reward claims, and record occupied nights when the agreement uses them. Choose optional reminders in Settings.")
+    ] : [
+      ("Make yourself at home", "Review your host's invitation and current agreement. Choose your initial contribution rhythm and due weekday."),
+      ("Find your house details", "Stay contains the Wi-Fi, access details, house notes and outside payment choices shared by your host."),
+      ("Keep contributions clear", "Money moves outside Kouchd. Record what you provided in Ledger, then ask your host to confirm. Confirm or discuss records your host adds."),
+      ("Coordinate your stay", "Track chores, request schedule changes, submit reward claims and review occupied-night records. SMS and email reminders are optional in Settings.")
+    ]
+  }
+  var body: some View {
+    Page(title: "Your household guide") {
+      Card {
+        Pill(text: "Step \(step + 1) of 4")
+        Text(guidance[step].title).font(.title2.bold())
+        Text(guidance[step].detail)
+        HStack {
+          if step > 0 { Button("Back") { advance(to: step - 1) } }
+          Spacer()
+          Button(step == 3 ? "Finish" : "Next") {
+            if step == 3 { save(status: "completed", close: true) }
+            else { advance(to: step + 1) }
+          }.buttonStyle(.borderedProminent).tint(Palette.forest)
+        }
+        Button("Skip for now") { save(status: "skipped", close: true) }
+        NavigationLink("Open stay details") { StayScreen(store: store) }
+      }
+    }
+    .onAppear {
+      let progress = store.viewer["guideProgress"][role]
+      step = progress["status"].text == "in_progress" ? min(3, max(0, progress["step"].int)) : 0
+    }
+  }
+  private func advance(to next: Int) {
+    step = next
+    save(status: "in_progress", close: false)
+  }
+  private func save(status: String, close: Bool) {
+    Task {
+      if await store.mutate("users:updateGuideProgress", ["role": role, "step": step, "status": status]), close { dismiss() }
     }
   }
 }

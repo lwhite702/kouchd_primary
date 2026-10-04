@@ -8,7 +8,7 @@ const lockPath = join(root, "package-lock.json");
 const iosYamlPath = join(root, "ios/project.yml");
 const iosProjectPath = join(root, "ios/Kouchd.xcodeproj/project.pbxproj");
 const iosInfoPath = join(root, "ios/Kouchd/Info.plist");
-const semver = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-[0-9A-Za-z.-]+)?$/;
+const semver = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/;
 const mode = process.argv[2] ?? "check";
 const version = mode === "prepare" ? process.argv[3] : readFileSync(versionPath, "utf8").trim();
 
@@ -21,6 +21,12 @@ if (mode === "prepare") {
   packageJson.version = version;
   lockJson.version = version;
   lockJson.packages[""].version = version;
+  const changePath = join(root, "release/change.json");
+  if (existsSync(changePath)) {
+    const change = JSON.parse(readFileSync(changePath, "utf8"));
+    change.version = version;
+    writeFileSync(changePath, `${JSON.stringify(change, null, 2)}\n`);
+  }
   writeFileSync(versionPath, `${version}\n`);
   writeFileSync(packagePath, `${JSON.stringify(packageJson, null, 2)}\n`);
   writeFileSync(lockPath, `${JSON.stringify(lockJson, null, 2)}\n`);

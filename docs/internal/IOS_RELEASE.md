@@ -21,7 +21,7 @@ processing, real-device installation, and TestFlight availability are pending.
 
 - `VERSION` is the release SemVer source. `npm run version:prepare -- X.Y.Z` synchronizes the web package, lockfile, and iOS marketing version. `npm run version:check` verifies them.
 - Every product release PR changes the version, the leading `[Unreleased]` entry in `CHANGELOG.md`, and affected guides. `npm run release:check` is required before the release PR is merged.
-- Native build numbers increase independently. Check the highest processed App Store Connect build for the selected marketing version immediately before archiving; use the next integer. Never assume a local project number is free.
+- Native build numbers increase independently. The fastlane preparation lane queries every App Store Connect build across all versions, including processing and failed builds, and uses the next integer. The upload lane queries again immediately before upload and stops if another uploader reserved that number. Never assume a local project number is free.
 - Record the exact Git SHA, version, iOS build, deployment IDs, validation results, and App Store Connect processing state. A source commit, archive, upload, processed build, and tester availability are distinct facts.
 
 ## Promotion
@@ -38,3 +38,43 @@ processing, real-device installation, and TestFlight availability are pending.
 Retain the previous verified TestFlight build and release tag. For an iOS regression, stop distributing the affected build and upload a corrected build with a higher build number. For a web or backend regression, restore the previous verified deployment and document the data compatibility impact before applying a correction. Record incident cause and recovery evidence in the internal handoff.
 
 No account credentials, household records, invitation tokens, or guest financial data belong in release artifacts.
+
+
+## Local verification record
+
+- Full web release checks passed after rebasing on main `2b20aef`: lint,
+  TypeScript, all 57 backend/domain/release tests, and production web build.
+  The generic Apple silicon simulator build passed with the updated parity
+  screens; the fastlane lanes loaded and Ruby syntax validation passed.
+- Native iPhone 16 signed-out launch passed; accessibility-large text wrapped
+  and scrolled in the signed-out welcome. This does not verify VoiceOver or
+  authenticated screen behavior.
+- Subsequent parity review added household access details for guests, full
+  house-detail editing, shared expectation and reward-setting edits, audited
+  void actions, admin record details and role changes, resumable household
+  guides, additional-stay creation/joining, and complete SMS consent disclosures.
+- Release gate fixtures verify minor classification, released-version reuse
+  rejection, unchanged runtime-version rejection, incorrect-classification
+  rejection, and documentation-only changes retaining a released version.
+- No development or staging account credentials have been supplied. Real
+  invitation return, multiple-guest isolation, failed network requests, changed
+  agreements, contribution disputes, ended stays, and native administration
+  still need authenticated journey evidence. Native profile updates now use
+  Clerk and the current Convex `clerkName` contract. Mutations decode all result
+  shapes, including boolean and object responses; successful invitation and
+  referral joins select the returned stay.
+- Figma frame structure and typography informed implementation; visual
+  acceptance of each authenticated screen, small widths, larger text, and
+  VoiceOver remains an open gate.
+
+## Rollback record template
+
+| Field | Current record |
+| --- | --- |
+| Previous verified web/backend deployment | Pending provider verification |
+| Previous verified native build | None; first native release |
+| Candidate version | 0.4.0, minor, unreleased |
+| Candidate build | Resolve from App Store Connect at upload time |
+| Exact released commit/tag | None |
+| Deployment and TestFlight evidence | None |
+| Recovery owner and verification | Record with the approved release |

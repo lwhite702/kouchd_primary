@@ -82,7 +82,7 @@ struct HomeScreen: View {
           }
           .padding(24).frame(maxWidth: .infinity, alignment: .leading)
           .background(Palette.forest, in: RoundedRectangle(cornerRadius: 24))
-          if let next = store.chores.first(where: { !$0["completed"].flag }) {
+          if let next = store.chores.first(where: { !$0["completed"].flag && $0["voidedAt"].text.isEmpty && $0["assignee"].text != "host" && ($0["assigneeUserId"].text.isEmpty || $0["assigneeUserId"].text == store.viewer["id"].text) }) {
             Card {
               Text(next.title).font(.headline)
               Text("Your turn · \(next["dueDate"].text)")
@@ -127,7 +127,7 @@ struct HomeScreen: View {
       }
       HStack(spacing: 12) {
         NavigationLink { ChoresScreen(store: store) } label: {
-          StatCard(number: "\(store.chores.filter { !$0["completed"].flag }.count)", label: "Open chores")
+          StatCard(number: "\(store.chores.filter { !$0["completed"].flag && $0["voidedAt"].text.isEmpty }.count)", label: "Open chores")
         }
         NavigationLink { RewardsScreen(store: store) } label: {
           StatCard(number: "\(store.wallet["availablePoints"].int)", label: "Reward points")
@@ -227,7 +227,11 @@ struct LedgerScreen: View {
             DataRow(title: "Charge", detail: Display.money(item["effectiveChargeCents"].int))
             DataRow(title: "Confirmed credit", detail: Display.money(item["creditedCents"].int))
             DataRow(title: "Balance", detail: Display.money(item["balanceCents"].int))
-            if store.isHost && item["lateFeeCents"].int > 0 && !item["lateFeeWaived"].flag {
+            if store.isHost && item["type"].text == "adhoc" && item["status"].text != "voided" {
+              VoidRecordButton(store: store, function: "obligations:voidAdhocCharge",
+                               recordKey: "obligationId", recordID: item.id)
+            }
+            if store.isHost && !store.isEnded && item["lateFeeCents"].int > 0 && !item["lateFeeWaived"].flag {
               Button("Waive late fee") {
                 Task { _ = await store.mutate("obligations:waiveLateFee", ["obligationId": item.id]) }
               }
@@ -250,7 +254,7 @@ struct LedgerScreen: View {
           DataRow(title: "Amount", detail: Display.money(item["amountCents"].int))
           DataRow(title: "Date", detail: item["date"].text)
           if !item["note"].text.isEmpty { Text(item["note"].text).font(.subheadline) }
-          if item["status"].text == "pending" && item["createdBy"].text != store.viewer["id"].text {
+          if !store.isEnded && item["status"].text == "pending" && item["createdBy"].text != store.viewer["id"].text {
             HStack {
               Button("Confirm") {
                 Task { _ = await store.mutate("contributions:confirm", ["contributionId": item.id]) }
@@ -259,6 +263,11 @@ struct LedgerScreen: View {
                 Task { _ = await store.mutate("contributions:dispute", ["contributionId": item.id]) }
               }.tint(.red)
             }.buttonStyle(.bordered)
+          }
+          if item["status"].text != "voided" &&
+             (store.isHost || item["createdBy"].text == store.viewer["id"].text) {
+            VoidRecordButton(store: store, function: "contributions:voidContribution",
+                             recordKey: "contributionId", recordID: item.id)
           }
           if item["status"].text == "pending" && item["createdBy"].text == store.viewer["id"].text {
             Text("Waiting for the other person to confirm.")
@@ -337,7 +346,7 @@ struct ChoresScreen: View {
         Text("Little things, shared fairly.").font(.headline)
         Text("Keep track of what needs doing around the home.")
           .foregroundStyle(Palette.muted)
-        if store.isHost && !store.isEnded {
+        if !store.isEnded {
           PrimaryButton(title: "Add a chore") { showingCreate = true }
         }
       }
@@ -353,7 +362,8 @@ struct ChoresScreen: View {
             } label: {
               Image(systemName: chore["completed"].flag ? "checkmark.circle.fill" : "circle")
                 .font(.title2).foregroundStyle(Palette.forest)
-            }.accessibilityLabel(chore["completed"].flag ? "Mark incomplete" : "Mark complete")
+                .frame(minWidth: 44, minHeight: 44)
+            }.disabled(store.isEnded || !chore["voidedAt"].text.isEmpty).accessibilityLabel(chore["completed"].flag ? "Mark incomplete" : "Mark complete")
             VStack(alignment: .leading, spacing: 4) {
               Text(chore.title).font(.headline)
               Text(chore["assignee"].text.capitalized + " · " + chore["dueDate"].text)
@@ -362,6 +372,11 @@ struct ChoresScreen: View {
             Spacer()
           }
           if !chore["note"].text.isEmpty { Text(chore["note"].text).font(.subheadline) }
+          if !chore["voidedAt"].text.isEmpty { Pill(text: "Voided") }
+          if chore["voidedAt"].text.isEmpty && (store.isHost || chore["createdBy"].text == store.viewer["id"].text) {
+            VoidRecordButton(store: store, function: "chores:voidChore",
+                             recordKey: "choreId", recordID: chore.id)
+          }
         }
       }
       NavigationLink("Occupied nights") { OccupancyScreen(store: store) }
@@ -376,6 +391,7 @@ struct ChoreForm: View {
   @State private var title = ""
   @State private var note = ""
   @State private var assignee = "shared"
+  @State private var assigneeID = ""
   @State private var due = Date.now
   var body: some View {
     NavigationStack {
@@ -387,6 +403,14 @@ struct ChoreForm: View {
           Text("Host").tag("host")
           Text("Guest").tag("guest")
         }
+        if assignee == "guest" {
+          Picker("Guest", selection: $assigneeID) {
+            Text("Any guest").tag("")
+            ForEach(store.guests, id: \.guestPersonID) { guest in
+              Text(guest["person"]["name"].text).tag(guest["person"]["id"].text)
+            }
+          }
+        }
         DatePicker("Due", selection: $due, displayedComponents: .date)
       }
       .navigationTitle("New chore")
@@ -395,10 +419,12 @@ struct ChoreForm: View {
         ToolbarItem(placement: .confirmationAction) {
           Button("Add") {
             Task {
-              if await store.mutate("chores:create", [
+              var args: [String: ConvexEncodable?] = [
                 "stayId": store.selectedStayID, "title": title, "note": note,
                 "assignee": assignee, "dueDate": Display.date(due)
-              ]) { dismiss() }
+              ]
+              if assignee == "guest" && !assigneeID.isEmpty { args["assigneeUserId"] = assigneeID }
+              if await store.mutate("chores:create", args) { dismiss() }
             }
           }.disabled(title.trimmingCharacters(in: .whitespaces).isEmpty)
         }
