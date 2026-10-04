@@ -81,28 +81,28 @@ export function AuthenticatedHome() {
 
 function SyncedWorkspace() {
   const { isLoading: authLoading, isAuthenticated } = useConvexAuth();
-  const { user: clerkUser } = useUser();
+  const { isLoaded: clerkLoaded, user: clerkUser } = useUser();
   const syncCurrent = useMutation(api.users.syncCurrent);
-  const syncedNameRef = useRef<string | null>(null);
+  const syncedProfileRef = useRef<string | null>(null);
   const [synced, setSynced] = useState(false);
   const [syncError, setSyncError] = useState("");
   const [selectedStayId, setSelectedStayId] = useState<Id<"stays"> | null>(null);
 
   useEffect(() => {
-    if (!isAuthenticated) return;
+    if (!isAuthenticated || !clerkLoaded || !clerkUser) return;
     const resolvedName = clerkUser?.fullName
       || [clerkUser?.firstName, clerkUser?.lastName].filter(Boolean).join(" ").trim()
       || clerkUser?.username
       || undefined;
+    const email = clerkUser.primaryEmailAddress?.emailAddress;
+    const profileKey = JSON.stringify([clerkUser.id, resolvedName ?? "", email ?? "", clerkUser.imageUrl ?? ""]);
 
-    if (syncedNameRef.current !== null && (syncedNameRef.current === (resolvedName ?? "") || !resolvedName)) {
-      return;
-    }
-    syncedNameRef.current = resolvedName ?? "";
+    if (syncedProfileRef.current === profileKey) return;
+    syncedProfileRef.current = profileKey;
 
     void syncCurrent({
       clerkName: resolvedName,
-      email: clerkUser?.primaryEmailAddress?.emailAddress,
+      email,
       imageUrl: clerkUser?.imageUrl,
     })
       .then(() => setSynced(true))
@@ -110,7 +110,7 @@ function SyncedWorkspace() {
         console.error("Workspace sync error:", err);
         setSyncError("We could not prepare your private workspace.");
       });
-  }, [isAuthenticated, clerkUser, syncCurrent]);
+  }, [isAuthenticated, clerkLoaded, clerkUser, syncCurrent]);
 
   const stays = useQuery(api.stays.listMine, synced ? {} : "skip") as Array<{ stay: Doc<"stays">; membership: Doc<"memberships"> }> | undefined;
 
@@ -124,7 +124,7 @@ function SyncedWorkspace() {
           type="button"
           style={{ marginTop: "1rem" }}
           onClick={() => {
-            syncedNameRef.current = null;
+            syncedProfileRef.current = null;
             setSyncError("");
             const resolvedName = clerkUser?.fullName
               || [clerkUser?.firstName, clerkUser?.lastName].filter(Boolean).join(" ").trim()

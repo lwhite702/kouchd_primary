@@ -11,6 +11,11 @@ export function formatEmailAsName(email?: string): string | undefined {
   return localPart ? localPart.charAt(0).toUpperCase() + localPart.slice(1) : undefined;
 }
 
+function isUsableName(name?: string): name is string {
+  const normalized = name?.trim().replace(/\s+/g, " ").toLowerCase();
+  return Boolean(normalized && !["guest", "host", "kouchd member", "unknown guest", "unknown member"].includes(normalized));
+}
+
 export function resolveMemberName(candidate: {
   explicitName?: string;
   identityName?: string;
@@ -24,35 +29,35 @@ export function resolveMemberName(candidate: {
 }): string {
   // 1. Explicit name provided by client (e.g. from Clerk useUser() or settings input)
   const explicit = candidate.explicitName?.trim();
-  if (explicit && explicit !== "Kouchd member") {
+  if (isUsableName(explicit)) {
     return explicit;
   }
 
   // 2. Identity name claim from JWT (e.g. "Lee White")
   const idName = candidate.identityName?.trim();
-  if (idName && idName !== "Kouchd member") {
+  if (isUsableName(idName)) {
     return idName;
   }
 
   // 3. Combined given_name and family_name
   const combined = [candidate.givenName, candidate.familyName].filter(Boolean).join(" ").trim();
-  if (combined.length > 0 && combined !== "Kouchd member") {
+  if (isUsableName(combined)) {
     return combined;
   }
 
   // 4. Nickname or preferred username
   const nick = candidate.nickname?.trim();
-  if (nick && nick !== "Kouchd member") {
+  if (isUsableName(nick)) {
     return nick;
   }
   const preferred = candidate.preferredUsername?.trim();
-  if (preferred && preferred !== "Kouchd member") {
+  if (isUsableName(preferred)) {
     return preferred;
   }
 
-  // 5. Existing user record in database if already valid and not "Kouchd member"
+  // 5. Keep a saved profile name only when it is not a generic role fallback.
   const existing = candidate.existingName?.trim();
-  if (existing && existing !== "Kouchd member") {
+  if (isUsableName(existing)) {
     return existing;
   }
 
