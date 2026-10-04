@@ -677,7 +677,7 @@ export function HostOnboardingWizard({
           <p className="eyebrow onboarding-eyebrow">Step 5 of 5 · Final Agreement <HelpTip title="Review before creating" href="https://help.kouchd.com/hosts/getting-started">Check the dates, amount, house rules, and optional financial rules. You can then invite guests to review and accept the agreement.</HelpTip></p>
           <h1>Review the House Agreement.</h1>
           <p className="subhead">
-            Check your terms and boundaries. Once launched, Kouchd generates your household referral code to invite guests.
+            Creating the stay records your acceptance as host. Each guest reviews and accepts these terms when joining; they only need to accept again if the agreement changes.
           </p>
 
           <div
@@ -813,7 +813,7 @@ export function HostOnboardingWizard({
               <ArrowLeft size={18} /> Back
             </button>
             <button className="button primary" type="button" onClick={handleFinalSubmit} disabled={saving}>
-              <Sparkles size={18} /> {saving ? "Creating household..." : "Launch Shared Stay"}
+              <Sparkles size={18} /> {saving ? "Creating household..." : "Create stay"}
             </button>
           </div>
         </div>
