@@ -3,18 +3,19 @@
 Issue: WRE-162
 State: Implemented only after source and required checks pass; released only after distribution is verified.
 
-Current branch evidence: the native iOS simulator build and signed-out launch
-have been verified. The available local Clerk key and Convex deployment both
-point to production, so development and staging account journeys remain
-unverified pending separate environment settings and test accounts. App Store
-Connect app creation, distribution signing, build-number selection, upload,
-processing, real-device installation, and TestFlight availability are pending.
+Current branch evidence: the web release checks, native simulator build,
+signed-out launch, and production Clerk sign-in sheet have been verified.
+The owner authorized the existing production services and Apple team. A signed
+production archive was exported for version 0.4.0, build 1, from commit
+`321d791fbcad68e713248bf9828bc3cdd78f7d3d`. Backend deployment approval,
+authenticated account journeys, upload, processing, real-device installation,
+and TestFlight availability remain pending.
 
 | State | Evidence |
 | --- | --- |
 | Planned | Version 0.4.0 from current 0.3.0 baseline; Figma v2.1 is the visual revision; TestFlight handoff under the Wrelik team. |
 | Implemented in branch | SwiftUI sources, Clerk–Convex integration, stay screens, guarded admin access, universal-link route, version tooling, and CI checks. |
-| Verified | Web release checks and unsigned iPhone 16 simulator build; signed-out simulator launch. |
+| Verified | Web release checks, iPhone 16 simulator launch and production sign-in sheet; signed production archive/export for 0.4.0 (1), team L8R42BJ54K. |
 | Released | None. No production merge, release tag, backend deployment, App Store Connect build, or TestFlight distribution is claimed. |
 
 ## Version and evidence
@@ -56,7 +57,8 @@ No account credentials, household records, invitation tokens, or guest financial
 - Release gate fixtures verify minor classification, released-version reuse
   rejection, unchanged runtime-version rejection, incorrect-classification
   rejection, and documentation-only changes retaining a released version.
-- No development or staging account credentials have been supplied. Real
+- Development and staging environments remain unverified. Synthetic production
+  test identities were created with owner authorization on 2026-10-04. Real
   invitation return, multiple-guest isolation, failed network requests, changed
   agreements, contribution disputes, ended stays, and native administration
   still need authenticated journey evidence. Native profile updates now use
@@ -74,7 +76,7 @@ No account credentials, household records, invitation tokens, or guest financial
 | Previous verified web/backend deployment | Pending provider verification |
 | Previous verified native build | None; first native release |
 | Candidate version | 0.4.0, minor, unreleased |
-| Candidate build | Resolve from App Store Connect at upload time |
+| Candidate build | Archive 1; recheck App Store Connect immediately before upload |
 | Exact released commit/tag | None |
 | Deployment and TestFlight evidence | None |
 | Recovery owner and verification | Record with the approved release |
@@ -94,3 +96,40 @@ native environment responds successfully and exposes Google social sign-in.
 Production Convex and its Knock configuration were verified by read-only
 provider checks. The new native admin-access and stay-name functions are not
 currently deployed; action-time backend deployment approval is pending.
+
+## Signed archive evidence — 2026-10-04
+
+- Archive and IPA export succeeded from clean commit
+  `321d791fbcad68e713248bf9828bc3cdd78f7d3d`. IPA metadata confirms version
+  `0.4.0`, build `1`, minimum iOS `17.0`, and bundle
+  `com.wrelikbrands.kouchd`. Embedded distribution profile confirms team
+  `L8R42BJ54K` and development signing disabled.
+- The archive lane queried App Store Connect before choosing build 1. The
+  local `ios/artifacts/archive.json` records the exact candidate identity;
+  artifacts and signing material remain ignored. The build number must still
+  be rechecked immediately before upload.
+- The production-configured simulator rendered Clerk’s “Continue to Kouchd”
+  sheet with email and Google sign-in. No customer account was impersonated,
+  no sign-in code was sent, and native UI authentication success is not claimed.
+- Submission has not occurred. The compatible native backend additions and
+  authenticated role/isolation checks remain open gates. The owner subsequently
+  authorized creation of synthetic production test accounts, recorded below.
+
+## Synthetic account verification — 2026-10-04
+
+The owner authorized creation of test accounts. Four synthetic Clerk users were
+created for host, two guests, and admin testing. Server-only private metadata
+marks their test purpose and issue; this metadata does not grant app roles.
+Credentials and identifiers are kept in an ignored, permission-restricted local
+artifact and are not included in this handoff. No SMS subscription was enabled.
+
+Password sign-in returned `needs_client_trust` under production settings.
+Clerk’s documented single-use sign-in ticket flow then completed for all four
+identities, with a five-minute ticket expiration. Their Clerk Convex JWTs
+authenticated successfully to production Convex; profile synchronization and
+viewer queries passed, and each stay list was empty. These API checks do not
+prove sign-in completion in the native UI or guest isolation within a stay.
+Admin overview requests were rejected with production’s generic server error;
+no admin grant was added, so positive admin journeys remain unverified.
+Knock identification is scheduled by profile synchronization; notification
+delivery was not exercised or claimed.
