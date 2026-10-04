@@ -259,7 +259,7 @@
   .v21-cta-sparkle { top: 14px; right: 12px; width: 30px; height: 30px; }
   .v21-footer { width: calc(100% - 40px); padding: 20px 0; display: grid; grid-template-columns: 1fr auto; gap: 10px; }
   .v21-footer > p { grid-column: 1 / -1; grid-row: 2; }
-  .v21-footer > div { grid-column: 1 / -1; grid-row: 3; justify-content: flex-start; gap: 19px; }
+  .v21-footer > div { grid-column: 1 / -1; grid-row: 3; display: flex; flex-wrap: wrap; justify-content: flex-start; column-gap: 19px; row-gap: 10px; }
   .v21-footer > small { grid-column: 2; grid-row: 1; }
 }
 @media (prefers-reduced-motion: reduce) { .v21-button { transition: none; } }
