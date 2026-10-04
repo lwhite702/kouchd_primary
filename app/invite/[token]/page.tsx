@@ -15,7 +15,7 @@ export async function generateMetadata({ params }: { params: Promise<{ token: st
       const tokenHash = createHash("sha256").update(token).digest("hex");
       const client = new ConvexHttpClient(convexUrl);
       const preview = await client.query(api.invites.preview, { tokenHash });
-      if (preview.valid) hostName = preview.hostName;
+      if (preview.valid && "hostName" in preview) hostName = preview.hostName;
     } catch {
       // A preview crawler must still receive useful Kouchd metadata if Convex is unavailable.
     }

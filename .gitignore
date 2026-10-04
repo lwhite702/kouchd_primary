@@ -11,8 +11,10 @@ playwright-report/
 *.log
 *.tsbuildinfo
 .DS_Store
+ios/Config/Local.xcconfig
+ios/Config/Production.local.xcconfig
+ios/**/DerivedData/
 
 # Agent MCP configs (contain tokens)
 .cursor/mcp.json
 .codex/config.toml
-
