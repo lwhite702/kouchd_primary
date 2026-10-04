@@ -41,6 +41,7 @@ export default defineSchema({
 
   stays: defineTable({
     hostUserId: v.id("users"),
+    name: v.optional(v.string()),
     status: v.union(v.literal("pending"), v.literal("active"), v.literal("ended")),
     timezone: v.string(),
     referralCode: v.optional(v.string()),
