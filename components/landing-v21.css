@@ -163,6 +163,7 @@
   .v21-preview-row { padding-top: 8px; }
   .v21-privacy { gap: 38px; }
   .v21-faq { gap: 42px; }
+  .v21-people-art { position: relative; right: auto; bottom: auto; margin: 18px 0 0 auto; }
 }
 @media (max-width: 640px) {
   .landing-v21 { overflow: hidden; }
@@ -170,9 +171,11 @@
   .v21-brand span { gap: 6px !important; }
   .v21-brand svg { width: 23px; height: 23px; }
   .v21-brand span span { font-size: 1.25rem !important; }
-  .v21-nav, .v21-sign-in { display: none; }
+  .v21-nav { display: none; }
   .v21-header-actions { margin-left: auto; }
-  .v21-header-actions > .v21-button { min-height: 40px; padding: 0 15px; font-size: 12px; }
+  .v21-header-actions { gap: 10px; }
+  .v21-sign-in { display: inline-flex; align-items: center; padding: 8px 0; font-size: 12px; white-space: nowrap; }
+  .v21-header-actions > .v21-button { min-height: 40px; padding: 0 12px; font-size: 12px; white-space: nowrap; }
   .v21-hero { width: 100%; min-height: 0; padding: 38px 20px 28px; display: flex; flex-direction: column; align-items: stretch; gap: 0; }
   .v21-hero-copy { padding: 0; }
   .v21-eyebrow { margin-bottom: 14px; font-size: 9px; letter-spacing: .1em; }
@@ -236,7 +239,7 @@
   .v21-people-card .v21-eyebrow { margin: 15px 0 7px; }
   .v21-people-card h2 { max-width: 310px; font-size: 23px; }
   .v21-people-card div > p:last-child { max-width: 300px; font-size: 12px; }
-  .v21-people-art { right: 10px; bottom: 8px; width: 67px; height: 67px; }
+  .v21-people-art { width: 67px; height: 67px; }
   .v21-people-art svg { width: 48px; height: 48px; }
   .v21-privacy { grid-template-columns: 1fr; gap: 23px; padding: 52px 20px; }
   .v21-privacy-copy > p:not(.v21-eyebrow) { margin: 13px 0 18px; font-size: 13px; line-height: 1.65; }
@@ -256,7 +259,7 @@
   .v21-cta-sparkle { top: 14px; right: 12px; width: 30px; height: 30px; }
   .v21-footer { width: calc(100% - 40px); padding: 20px 0; display: grid; grid-template-columns: 1fr auto; gap: 10px; }
   .v21-footer > p { grid-column: 1 / -1; grid-row: 2; }
-  .v21-footer > div { grid-column: 1 / -1; grid-row: 3; justify-content: flex-start; gap: 19px; }
+  .v21-footer > div { grid-column: 1 / -1; grid-row: 3; display: flex; flex-wrap: wrap; justify-content: flex-start; column-gap: 19px; row-gap: 10px; }
   .v21-footer > small { grid-column: 2; grid-row: 1; }
 }
 @media (prefers-reduced-motion: reduce) { .v21-button { transition: none; } }
