@@ -44,7 +44,7 @@ def clean_release_source
 end
 
 def production_archive(build)
-  signing_args = "CURRENT_PROJECT_VERSION=#{build} CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY='Apple Distribution' PROVISIONING_PROFILE_SPECIFIER='Kouchd TestFlight'"
+  signing_args = "CURRENT_PROJECT_VERSION=#{build} DEVELOPMENT_TEAM=#{APPLE_TEAM} CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY='Apple Distribution'"
   if ENV["KOUCHD_SIGNING_KEYCHAIN"]
     flags = "--keychain #{ENV.fetch('KOUCHD_SIGNING_KEYCHAIN').shellescape}"
     signing_args += " OTHER_CODE_SIGN_FLAGS=#{flags.shellescape}"
