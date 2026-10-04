@@ -813,7 +813,7 @@ export function HostOnboardingWizard({
               <ArrowLeft size={18} /> Back
             </button>
             <button className="button primary" type="button" onClick={handleFinalSubmit} disabled={saving}>
-              <Sparkles size={18} /> {saving ? "Creating household..." : "Create stay & invite guests"}
+              <Sparkles size={18} /> {saving ? "Creating household..." : "Create stay"}
             </button>
           </div>
         </div>
