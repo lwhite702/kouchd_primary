@@ -3,7 +3,7 @@ export function GET() {
     applinks: {
       apps: [],
       details: [{
-        appIDs: ["LG7W94ZD3B.com.wrelikbrands.kouchd"],
+        appIDs: ["L8R42BJ54K.com.wrelikbrands.kouchd"],
         components: [{ "/": "/invite/*", comment: "Open a one-time Kouchd invitation" }],
       }],
     },

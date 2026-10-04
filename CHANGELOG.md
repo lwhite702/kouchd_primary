@@ -15,4 +15,5 @@
 
 ### Changed
 
+- Native signing and invitation association use the verified existing Kouchd Apple team.
 - iOS payment concepts use outside contribution records; Kouchd does not process payments.

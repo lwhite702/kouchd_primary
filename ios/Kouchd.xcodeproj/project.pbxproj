@@ -149,7 +149,7 @@
 				LastUpgradeCheck = 1600;
 				TargetAttributes = {
 					13421FB217D56F14767E3B45 = {
-						DevelopmentTeam = LG7W94ZD3B;
+						DevelopmentTeam = L8R42BJ54K;
 					};
 				};
 			};
@@ -357,7 +357,7 @@
 				CODE_SIGN_ENTITLEMENTS = Kouchd/Kouchd.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = LG7W94ZD3B;
+				DEVELOPMENT_TEAM = L8R42BJ54K;
 				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = x86_64;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Kouchd/Info.plist;
@@ -382,7 +382,7 @@
 				CODE_SIGN_ENTITLEMENTS = Kouchd/Kouchd.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = LG7W94ZD3B;
+				DEVELOPMENT_TEAM = L8R42BJ54K;
 				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = x86_64;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Kouchd/Info.plist;

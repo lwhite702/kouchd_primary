@@ -29,7 +29,7 @@ processing, real-device installation, and TestFlight availability are pending.
 1. Validate Clerk sign-in and Convex data against the development deployment with synthetic host, guest, and admin accounts.
 2. Repeat role-boundary, invite, contribution, and real-device smoke checks against staging. Confirm the staging deployment and secrets are separate from production.
 3. Review the release PR and its version diff. Merge only after required checks pass and release approval is given. Kouchd's main branch may trigger a production web deployment, so verify the deployed SHA and version before claiming release.
-4. Tag that exact SHA `vX.Y.Z` after merge. Confirm the tag and deployment match. Prepare the production iOS archive with bundle ID `com.wrelikbrands.kouchd` and team `LG7W94ZD3B`.
+4. Tag that exact SHA `vX.Y.Z` after merge. Confirm the tag and deployment match. Prepare the production iOS archive with bundle ID `com.wrelikbrands.kouchd` and team `L8R42BJ54K`.
 5. Upload to App Store Connect after approval. Confirm processing, install the build on a real device, and validate sign-in, invitation links, live data, and outside-payment wording. Add the verified build to the intended TestFlight group after approval.
 6. Move verified release notes into a dated changelog section. Update public help and roadmap only for behavior actually available to testers or customers; TestFlight access does not imply App Store availability.
 
@@ -78,3 +78,19 @@ No account credentials, household records, invitation tokens, or guest financial
 | Exact released commit/tag | None |
 | Deployment and TestFlight evidence | None |
 | Recovery owner and verification | Record with the approved release |
+
+
+## Production TestFlight direction — 2026-10-04
+
+The owner explicitly authorized use of the current production Clerk, Convex
+and Knock services and a TestFlight upload. The owner also confirmed team
+`L8R42BJ54K`, matching the existing Kouchd Apple bundle and App Store Connect
+record (Apple ID `6818980215`), replacing the original planned team. Native
+production settings are in ignored local xcconfig files. Apple’s TestFlight
+page and the authenticated API currently report no builds (next number 1).
+Distribution certificate `68TZFH3J25` and the Kouchd TestFlight provisioning
+profile were created and installed for the confirmed team. Production Clerk’s
+native environment responds successfully and exposes Google social sign-in.
+Production Convex and its Knock configuration were verified by read-only
+provider checks. The new native admin-access and stay-name functions are not
+currently deployed; action-time backend deployment approval is pending.

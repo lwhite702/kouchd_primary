@@ -24,14 +24,15 @@ is an app identifier, but these local files also prevent accidental environment
 mixups.
 
 In Clerk, enable the Native API and register
-`LG7W94ZD3B.com.wrelikbrands.kouchd` as a native application in each
+`L8R42BJ54K.com.wrelikbrands.kouchd` as a native application in each
 environment. Confirm the production Frontend API host is
 `clerk.kouchd.com`; the app entitlement also includes the existing
 development Clerk host. Configure the production and development Convex
 deployments to trust the matching Clerk issuer. Check Apple sign-in availability
 in each Clerk environment and configure its Apple credentials if it is enabled.
-The project declares associated domains and Sign in with Apple entitlements;
-these still require corresponding provider and signing setup.
+The project declares associated domains. Production Clerk currently exposes
+Google as its social provider; no unused Sign in with Apple entitlement is
+requested. Apple sign-in can be configured separately if that provider is added.
 
 The web app serves the invitation universal-link association at
 `/.well-known/apple-app-site-association`. Deploy and verify it on
