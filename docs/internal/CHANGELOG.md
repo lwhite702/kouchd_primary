@@ -2,6 +2,24 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-10-05 — Master Wrelik legal policies and sibling product parity
+
+- Established canonical legal definitions in `lib/legal.ts` (`legalMeta`, `privacyPolicy`, `termsOfUse`, `cookiePolicy`, `acceptableUsePolicy`, `legalLinks`) mirroring sibling Wrelik products (`sporkd`, `DRX_Primary`, and `Klutr`).
+- Refactored `app/privacy/page.tsx` and `app/terms/page.tsx` to render comprehensive master sections and dedicated Kouchd addenda while strictly preserving carrier 10DLC compliance statements (`tests/carrier-compliance.test.ts`).
+- Created dedicated web application legal pages:
+  - `app/cookies/page.tsx`: Cookie & Tracking Policy.
+  - `app/acceptable-use/page.tsx`: Acceptable Use Policy & Community Guidelines.
+  - Route aliases for standard Wrelik URL conventions: `app/legal/privacy/page.tsx`, `app/legal/terms/page.tsx`, `app/legal/cookies/page.tsx`, and `app/legal/acceptable-use/page.tsx`.
+- Updated `components/legal/legal-page-layout.tsx` navigation and footer to link Privacy, Terms, Cookies, Acceptable Use, and SMS Opt-In.
+- Refreshed Help Center documentation:
+  - `help/legal-trust/privacy-and-security.mdx`: Aligned with canonical Wrelik privacy and SMS commitments.
+  - `help/legal-trust/terms-of-service.mdx`: New documentation covering platform role, stay agreements, and SMS terms.
+  - `docs.json`: Registered `terms-of-service` under the "Trust & Legal" navigation group.
+- Validation:
+  - Passed `vitest run` (all 13 test files, 52 unit tests passed including carrier compliance).
+  - Passed `mintlify validate` and `mintlify broken-links`.
+  - Passed `git diff --check`.
+
 ## 2026-10-05 — Mintlify Help Center visual styling and color refresh
 
 - Added ambient `decoration: "gradient"` to `background` in `docs.json` to bring warm brand green gradient aura to all documentation pages.
