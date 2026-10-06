@@ -12,6 +12,8 @@ import {
   Users,
   X,
 } from "lucide-react";
+import { Tooltip } from "@/components/ui/tooltip";
+import { HELP_LINKS } from "@/lib/help-links";
 
 export interface MobileHeaderMenuProps {
   onTakeTour?: () => void;
@@ -26,7 +28,7 @@ export function MobileHeaderMenu({
   onStays,
   onJoinCode,
   onSettings,
-  docsHref = "https://help.kouchd.com",
+  docsHref = HELP_LINKS.home,
 }: MobileHeaderMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);

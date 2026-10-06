@@ -3,8 +3,10 @@
 import Image from "next/image";
 import Link from "next/link";
 import { SignInButton, SignUpButton } from "@clerk/nextjs";
-import { ArrowDown, ArrowRight, Check, CircleHelp, ClipboardList, HeartHandshake, House, LockKeyhole, MessageCircle, Sparkles, Users } from "lucide-react";
+import { ArrowDown, ArrowRight, ArrowUpRight, BookOpen, Check, CircleHelp, ClipboardList, HeartHandshake, House, LockKeyhole, MessageCircle, Sparkles, Users } from "lucide-react";
 import { KouchdWordmark } from "@/components/brand/kouchd-logo";
+import { Tooltip } from "@/components/ui/tooltip";
+import { HELP_LINKS } from "@/lib/help-links";
 import "./landing-v21.css";
 
 interface LandingPageProps { hasClerk?: boolean }
@@ -22,13 +24,42 @@ export function LandingPage({ hasClerk = true }: LandingPageProps) {
   return (
     <main className="landing-v21">
       <header className="v21-header">
-        <Link href="/" aria-label="Kouchd home" className="v21-brand"><KouchdWordmark size="md" /></Link>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <Link href="/" aria-label="Kouchd home" className="v21-brand">
+            <KouchdWordmark size="md" />
+          </Link>
+          <Tooltip content="Collaborative stay agreements & bilateral household ledger" position="bottom">
+            <span className="v21-header-badge">
+              <Sparkles size={13} />
+              <span>By Wrelik</span>
+            </span>
+          </Tooltip>
+        </div>
         <nav className="v21-nav" aria-label="Main navigation">
-          <a href="#how-it-works">How it works</a><a href="#privacy">Privacy</a><a href="#faq">FAQ</a>
+          <a href="#how-it-works">How it works</a>
+          <a href="#privacy">Privacy</a>
+          <a href="#faq">FAQ</a>
+          <Tooltip content="Explore stay guides, ledger setup & house rules" position="bottom">
+            <a href={HELP_LINKS.home} target="_blank" rel="noopener noreferrer" className="v21-nav-help">
+              <BookOpen size={15} />
+              <span>Guides</span>
+              <ArrowUpRight size={13} style={{ opacity: 0.7 }} />
+            </a>
+          </Tooltip>
         </nav>
         <div className="v21-header-actions">
-          {hasClerk && <SignInButton mode="modal"><button type="button" className="v21-sign-in">Sign in</button></SignInButton>}
-          <StartButton hasClerk={hasClerk} />
+          {hasClerk && (
+            <Tooltip content="Access your stays, ledger, or agreements" position="bottom">
+              <SignInButton mode="modal">
+                <button type="button" className="v21-sign-in">Sign in</button>
+              </SignInButton>
+            </Tooltip>
+          )}
+          <Tooltip content="Create a stay or join an existing household" position="bottom">
+            <div style={{ display: "inline-flex" }}>
+              <StartButton hasClerk={hasClerk} />
+            </div>
+          </Tooltip>
         </div>
       </header>
 

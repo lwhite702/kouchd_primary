@@ -222,3 +222,98 @@ export function InlineLoadingSpinner({
     </svg>
   );
 }
+
+export function CardSkeleton({
+  lines = 2,
+  hasHeader = true,
+  className = "",
+  style = {},
+}: {
+  lines?: number;
+  hasHeader?: boolean;
+  className?: string;
+  style?: React.CSSProperties;
+}) {
+  return (
+    <div
+      className={`card-skeleton-block ${className}`}
+      style={{
+        background: "var(--kouchd-surface, #fffdf8)",
+        border: "1px solid var(--kouchd-line, #ded8ce)",
+        borderRadius: 20,
+        padding: "20px 24px",
+        boxSizing: "border-box",
+        width: "100%",
+        display: "flex",
+        flexDirection: "column",
+        gap: 12,
+        ...style,
+      }}
+      role="status"
+      aria-label="Loading card content"
+    >
+      {hasHeader && (
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+          <SkeletonBox width={140} height={20} borderRadius={6} />
+          <SkeletonBox width={50} height={16} borderRadius={99} />
+        </div>
+      )}
+      {Array.from({ length: lines }).map((_, i) => (
+        <SkeletonBox
+          key={i}
+          width={i === lines - 1 && lines > 1 ? "65%" : "100%"}
+          height={14}
+          borderRadius={4}
+          style={{ opacity: 0.7 }}
+        />
+      ))}
+    </div>
+  );
+}
+
+export function LedgerSkeleton({ rows = 4 }: { rows?: number }) {
+  return (
+    <div
+      className="ledger-skeleton-block"
+      style={{
+        background: "var(--kouchd-surface, #fffdf8)",
+        border: "1px solid var(--kouchd-line, #ded8ce)",
+        borderRadius: 20,
+        padding: "20px 24px",
+        width: "100%",
+        boxSizing: "border-box",
+      }}
+      role="status"
+      aria-label="Loading ledger records"
+    >
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
+        <SkeletonBox width={160} height={22} borderRadius={6} />
+        <SkeletonBox width={80} height={28} borderRadius={12} />
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        {Array.from({ length: rows }).map((_, idx) => (
+          <div
+            key={idx}
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              padding: "10px 12px",
+              borderRadius: 12,
+              background: "rgba(222, 216, 206, 0.15)",
+            }}
+          >
+            <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+              <SkeletonBox width={32} height={32} borderRadius={8} />
+              <div>
+                <SkeletonBox width={110} height={14} borderRadius={4} style={{ marginBottom: 4 }} />
+                <SkeletonBox width={70} height={11} borderRadius={4} style={{ opacity: 0.6 }} />
+              </div>
+            </div>
+            <SkeletonBox width={60} height={18} borderRadius={6} />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
