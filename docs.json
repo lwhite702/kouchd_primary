@@ -13,6 +13,7 @@
     "dark": "#103627"
   },
   "background": {
+    "decoration": "gradient",
     "color": {
       "light": "#FFFDF8",
       "dark": "#FFFDF8"

@@ -2,6 +2,13 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-10-05 — Mintlify Help Center visual styling and color refresh
+
+- Added ambient `decoration: "gradient"` to `background` in `docs.json` to bring warm brand green gradient aura to all documentation pages.
+- Enriched help guides (`index.mdx`, `help/index.mdx`, `help/quickstart.mdx`, `help/hosts/getting-started.mdx`, `help/guests/joining-a-stay.mdx`, `help/guests/logging-contributions.mdx`, `help/product/roadmap.mdx`, `help/legal-trust/privacy-and-security.mdx`, `help/hosts/house-rules-and-chores.mdx`) with colorful callouts (`<Tip>`, `<Info>`, `<Note>`, `<Warning>`, `<Check>`), structured sequence `<Steps>`/`<Step>`, and complementary `<CardGroup>` links.
+- Corrected relative internal guide links to use the canonical `/help/...` pathing.
+- Passed `mintlify validate`, `mintlify broken-links`, `docs.json` JSON parsing, and `git diff --check`.
+
 ## 2026-09-28 — Guest payment schedule choice and approval
 
 - Added guest-selected daily or weekly billing at initial agreement acceptance, including an initial weekly payment weekday and clear rate/late-fee copy.
