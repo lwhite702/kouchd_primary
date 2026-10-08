@@ -4,6 +4,7 @@
 
 ### Added
 
+- Xcode Cloud post-clone configuration from production environment variables, with cloud automatic signing and retained local manual-signing defaults.
 - Native iOS app work for shared stays, guest invitations, agreements, chores, and outside contribution records.
 - Native schedule requests, occupied-night records, reward claims, reminders, and host and authorized admin views.
 - Invitation universal-link association for the Wrelik iOS bundle ID.

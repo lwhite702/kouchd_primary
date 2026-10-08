@@ -83,3 +83,31 @@ Release PRs classify their changes in `release/change.json` as major, minor,
 patch, or none with a factual reason. The gate validates the declared increment
 and rejects a version already tagged as released. Documentation changes alone
 retain the current version.
+
+## Xcode Cloud
+
+`ios/ci_scripts/ci_post_clone.sh` writes the ignored production override after
+clone. Set `PROD_CLERK_PUBLISHABLE_KEY` (`pk_live_…`) and `PROD_CONVEX_URL`
+(`https://your-deployment.convex.cloud`) in the workflow environment. The script
+validates both inputs, avoids printing their values, and writes the URL in
+xcconfig syntax that preserves its two slashes. Use matching production services.
+Do not provide Clerk secret keys, Convex deploy keys, or Knock backend keys.
+
+Select repository `lwhite702/kouchd_primary`, project `ios/Kouchd.xcodeproj`,
+scheme `Kouchd`, and the reviewed native branch `codex/wre-162-kouchd-ios`.
+The current main branch must contain the native project before it can be used.
+Choose an iOS Archive action with Release configuration and TestFlight internal
+deployment preparation. Configure the TestFlight post-action and internal group
+explicitly; preparation alone does not establish tester availability.
+
+Cloud builds use automatic signing under team `L8R42BJ54K`; local Release builds
+retain the `Kouchd TestFlight` manual profile. Xcode Cloud owns its increasing
+build counter. Immediately before starting, inspect App Store Connect builds
+across versions, including processing builds, and set Xcode Cloud > Settings >
+Build Number > Next Build Number above the highest reserved number. Avoid
+concurrent local uploads. Do not assume the next build is `1`.
+
+The marketing version remains the root `VERSION` value, currently `0.4.0` on
+this unreleased branch. Passing the script is configuration evidence only.
+Complete release checks, archive and processing checks, internal group access,
+and installation on a real device before recording TestFlight availability.

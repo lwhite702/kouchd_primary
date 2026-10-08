@@ -61,9 +61,9 @@ targets:
         CODE_SIGN_ENTITLEMENTS: Kouchd/Kouchd.entitlements
       configs:
         Release:
-          CODE_SIGN_STYLE: Manual
+          CODE_SIGN_STYLE: $(KOUCHD_CODE_SIGN_STYLE)
           CODE_SIGN_IDENTITY: Apple Distribution
-          PROVISIONING_PROFILE_SPECIFIER: Kouchd TestFlight
+          PROVISIONING_PROFILE_SPECIFIER: $(KOUCHD_PROVISIONING_PROFILE_SPECIFIER)
     dependencies:
       - package: Clerk
         product: ClerkKit
