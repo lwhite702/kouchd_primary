@@ -95,6 +95,8 @@ Do not provide Clerk secret keys, Convex deploy keys, or Knock backend keys.
 
 Select repository `lwhite702/kouchd_primary`, project `ios/Kouchd.xcodeproj`,
 scheme `Kouchd`, and the reviewed native branch `codex/wre-162-kouchd-ios`.
+Create the first workflow in Xcode (Product > Xcode Cloud > Create Workflow).
+After enrollment, App Store Connect can manage additional workflows.
 The current main branch must contain the native project before it can be used.
 Choose an iOS Archive action with Release configuration and TestFlight internal
 deployment preparation. Configure the TestFlight post-action and internal group
