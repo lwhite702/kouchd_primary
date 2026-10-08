@@ -772,8 +772,7 @@ function LiveStay({ stayId, onBackToHub }: { stayId: Id<"stays">; onBackToHub: (
       {/* Desktop Navigation Sidebar (Figma V2.1) */}
       <aside className="v21-sidebar" aria-label="Stay sidebar navigation">
         <Link className="v21-sidebar-brand" href="/" style={{ textDecoration: "none" }}>
-          <span className="v21-sidebar-mark" aria-hidden="true">K</span>
-          <span className="v21-sidebar-wordmark">kouchd</span>
+          <KouchdWordmark size="md" theme="cream" />
         </Link>
 
         {/* Stay Switcher Button */}
