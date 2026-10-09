@@ -9,15 +9,35 @@ Xcode matched `com.wrelikbrands.kouchd` to existing App Store Connect app
 tracked; per-user workspace state is ignored.
 
 The production Clerk publishable key and Convex URL are configured as redacted
-workflow variables. The initial action builds scheme Kouchd for an iOS device.
-Manual starts select the native branch. Archive scheme indexing, archive and
-TestFlight post-action configuration, cloud build success, processing, and
-real-device installation still require evidence. Enrollment is not a release.
+workflow variables. Starts are manual and restricted to `codex/wre-162-kouchd-ios`.
+Cloud build 1 succeeded at commit `44b8994390d09f0f66cd5c269499f4556576204d`;
+its Build action was compile verification, not a TestFlight upload. It reported
+orientation and always-run validation-script warnings.
+
+The workflow now archives scheme Kouchd (Release) with `INTERNAL_ONLY` distribution
+preparation. The supported workflow API saved the action because App Store
+Connect's new-action scheme selector returned no results. The saved UI confirms
+Kouchd and TestFlight (Internal Testing Only). No TestFlight group post-action is
+configured. App Store Connect reported no uploaded builds; the cloud counter
+reported next build 2 immediately before the manual archive start. Archive run 2
+(`8175129b-ff24-4b4b-b30e-de38a047018a`) compiled, signed, and exported its archive,
+but failed final preparation for App Store Connect. The UI exposes only the
+generic preparation failure; the detailed archive/export logs show successful
+export. No uploaded build is returned by the build API. No processing or tester
+availability is claimed.
 
 The former task worktree was removed outside this turn. Its committed native
-branch was restored; uncommitted introduction and motion edits are absent.
-Recover or reimplement that follow-up before distributing a build that claims
-those screens and transitions. The draft release PR is #22.
+branch was restored. The first-use introduction and shared motion behavior have
+now been reimplemented from the Figma v2.1 frames in source. A local generic
+Apple silicon simulator build succeeds, including the launch storyboard. No
+simulator runtime is currently installed, so first-use navigation, sign-in return,
+small-width/large-text rendering, VoiceOver, and motion still need runtime checks.
+The source release checks pass: version consistency, lint, typecheck, all 57 tests,
+web production build, and release classification/changelog checks. The managed
+environment-presence check also passes without printing values. These checks do
+not establish deployed backend parity or real-account isolation in the native UI.
+The draft release PR is #22. Prior signed-out runtime evidence below describes
+older source, not this restored introduction implementation.
 
 Issue: WRE-162
 State: Implemented only after source and required checks pass; released only after distribution is verified.

@@ -41,6 +41,11 @@ private enum Tab: String, CaseIterable {
 struct RootView: View {
   @Environment(Clerk.self) private var clerk
   @State private var store = KouchdStore()
+  @Environment(\.accessibilityReduceMotion) private var reduceMotion
+  @AppStorage("kouchd.introductionRevision") private var introductionRevision = 0
+  @State private var splashVisible = true
+  @State private var pendingRoute: EntryRoute?
+  @State private var destination: EntryRoute?
   @State private var authPresented = false
   @State private var inviteToken = ""
   @State private var invitePreview: Value = .null
@@ -48,8 +53,16 @@ struct RootView: View {
 
   var body: some View {
     Group {
-      if clerk.user == nil {
-        welcome
+      if splashVisible {
+        BrandSplash().transition(.opacity)
+      } else if introductionRevision < 1 && clerk.user == nil {
+        IntroductionScreen { route in
+          pendingRoute = route
+          introductionRevision = 1
+          authPresented = true
+        }
+      } else if clerk.user == nil {
+        NavigationStack { welcome }
       } else if store.isLoading {
         ProgressView("Loading your stays")
           .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -70,9 +83,27 @@ struct RootView: View {
         .tint(Palette.forest)
       }
     }
+    .animation(KouchdMotion.animation(reduceMotion), value: phase)
+    .task {
+      // Keep the brand entrance short; cancellation must not strand the splash.
+      try? await Task.sleep(for: .milliseconds(450))
+      splashVisible = false
+    }
+    .onChange(of: store.isLoading) { _, loading in
+      if !loading && clerk.user != nil && store.stays.isEmpty && !authPresented {
+        destination = pendingRoute
+        pendingRoute = nil
+      }
+    }
+    .onChange(of: authPresented) { _, presented in
+      if !presented && clerk.user != nil && !store.isLoading && store.stays.isEmpty {
+        destination = pendingRoute
+        pendingRoute = nil
+      }
+    }
     .sheet(isPresented: $authPresented) { AuthView().environment(clerk) }
     .sheet(isPresented: Binding(
-      get: { !inviteToken.isEmpty && clerk.user != nil && invitePreview["valid"].flag },
+      get: { !authPresented && !inviteToken.isEmpty && clerk.user != nil && invitePreview["valid"].flag },
       set: { if !$0 { inviteToken = "" } }
     )) {
       InvitationScreen(store: store, token: inviteToken, preview: invitePreview) {
@@ -87,15 +118,21 @@ struct RootView: View {
     } message: { Text(store.error) }
     .onOpenURL { url in
       if url.pathComponents.count >= 3 && url.pathComponents[1] == "invite" {
+        introductionRevision = 1
+        pendingRoute = nil
+        destination = nil
+        invitePreview = .null
         inviteToken = url.lastPathComponent
+        if clerk.user == nil { authPresented = true }
         Task { await loadInvitation() }
       } else {
         Task { try? await clerk.handle(url) }
       }
     }
     .onChange(of: clerk.user?.id, initial: true) { _, id in
-      if id == nil { store.reset() }
-      else if !inviteToken.isEmpty { Task { await loadInvitation() } }
+      if id == nil { store.reset(); destination = nil }
+      else { introductionRevision = 1 }
+      if id != nil && !inviteToken.isEmpty { Task { await loadInvitation() } }
     }
     .onChange(of: store.stays.count) { _, count in
       if store.selectedStayID.isEmpty, let first = store.stays.first, count > 0 {
@@ -116,6 +153,7 @@ struct RootView: View {
           PrimaryButton(title: "Sign in or create an account") { authPresented = true }
         })
       }
+      NavigationLink("About Kouchd") { AboutKouchdScreen() }
       if !inviteToken.isEmpty {
         Text("Your invitation will be ready after sign-in.")
           .font(.subheadline).foregroundStyle(Palette.forest)
@@ -141,17 +179,33 @@ struct RootView: View {
         NavigationLink("Profile and optional reminders") { SettingsScreen(store: store) }
         Link("Terms & Conditions", destination: URL(string: "https://kouchd.com/terms")!)
         Link("Privacy Policy", destination: URL(string: "https://kouchd.com/privacy")!)
+        NavigationLink("About Kouchd") { AboutKouchdScreen() }
         UserButton()
+      }
+      .navigationDestination(item: $destination) { route in
+        switch route {
+        case .host: CreateStayScreen(store: store)
+        case .guest: JoinCodeScreen(store: store)
+        }
       }
     }
   }
 
+  private var phase: String {
+    if splashVisible { return "splash" }
+    if clerk.user == nil { return introductionRevision < 1 ? "introduction" : "welcome" }
+    if store.isLoading { return "loading" }
+    return store.stays.isEmpty ? "setup" : "home"
+  }
+
   private func loadInvitation() async {
-    let hash = SHA256.hash(data: Data(inviteToken.utf8))
+    let token = inviteToken
+    let hash = SHA256.hash(data: Data(token.utf8))
       .map { String(format: "%02x", $0) }.joined()
     do {
       for try await preview in store.client
         .subscribe(to: "invites:preview", with: ["tokenHash": hash], yielding: Value.self).values {
+        guard token == inviteToken else { return }
         invitePreview = preview
         if !preview["valid"].flag { store.error = "This invitation has expired or was already used." }
         break

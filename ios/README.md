@@ -113,3 +113,22 @@ The marketing version remains the root `VERSION` value, currently `0.4.0` on
 this unreleased branch. Passing the script is configuration evidence only.
 Complete release checks, archive and processing checks, internal group access,
 and installation on a real device before recording TestFlight availability.
+
+
+## Introduction and motion
+
+First use shows the Figma v2.1 welcome and Stay, Ledger, and Chores previews,
+then offers host and guest entry paths. Sign-in and Skip finish the introduction;
+cancelling sign-in does not reopen it automatically. A pending role continues
+after authentication and account loading when the user has no stays. An incoming
+invitation takes priority over role selection. Returning users open their account.
+About Kouchd is available before sign-in and in Settings and can replay the
+feature previews without changing account state. Version text comes from native
+bundle metadata. All preview names, amounts, and tasks are synthetic.
+
+The launch storyboard and short in-app brand entrance lead into the current
+screen. Navigation remains native. Shared pages, cards, and primary buttons use
+short entrance/press animations; Reduce Motion uses fades without translation or
+scaling. Live document arrays use document IDs to retain row identity. The account
+query chooses the initial destination after its first response; responses from
+superseded accounts, stays, and guests are ignored.

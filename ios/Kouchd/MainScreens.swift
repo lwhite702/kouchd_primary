@@ -149,8 +149,8 @@ struct HomeScreen: View {
       if !store.activity.isEmpty {
         Card {
           Text("Recent activity").font(.headline)
-          ForEach(store.activity.prefix(3).indices, id: \.self) { index in
-            Text(store.activity[index]["detail"].text)
+          ForEach(Array(store.activity.prefix(3)), id: \.id) { item in
+            Text(item["detail"].text)
               .font(.subheadline).foregroundStyle(Palette.muted)
           }
         }
@@ -161,6 +161,7 @@ struct HomeScreen: View {
       .frame(maxWidth: .infinity)
     }
     .background(Palette.cream.ignoresSafeArea())
+    .kouchdEntrance()
     .toolbar(.hidden, for: .navigationBar)
   }
 }
@@ -214,8 +215,7 @@ struct LedgerScreen: View {
       if store.ledger.isEmpty {
         EmptyCard(title: "Nothing due yet", message: "Agreed charges will appear here.")
       } else {
-        ForEach(store.ledger.indices, id: \.self) { index in
-          let item = store.ledger[index]
+        ForEach(store.ledger, id: \.id) { item in
           Card {
             HStack {
               Text(item["title"].text.isEmpty ? "Stay contribution" : item["title"].text)
@@ -243,8 +243,7 @@ struct LedgerScreen: View {
       if store.contributions.isEmpty {
         EmptyCard(title: "No records yet", message: "Record a payment made outside Kouchd, groceries, supplies, or house work.")
       }
-      ForEach(store.contributions.indices, id: \.self) { index in
-        let item = store.contributions[index]
+      ForEach(store.contributions, id: \.id) { item in
         Card {
           HStack {
             Text(item["type"].text.replacingOccurrences(of: "_", with: " ").capitalized).font(.headline)
@@ -353,8 +352,7 @@ struct ChoresScreen: View {
       if store.chores.isEmpty {
         EmptyCard(title: "All clear", message: "Chores your household adds will show up here.")
       }
-      ForEach(store.chores.indices, id: \.self) { index in
-        let chore = store.chores[index]
+      ForEach(store.chores, id: \.id) { chore in
         Card {
           HStack {
             Button {

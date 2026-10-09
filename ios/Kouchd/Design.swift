@@ -26,6 +26,7 @@ struct Page<Content: View>: View {
       .frame(maxWidth: .infinity)
     }
     .background(Palette.cream.ignoresSafeArea())
+    .kouchdEntrance()
   }
 }
 
@@ -36,6 +37,7 @@ struct Card<Content: View>: View {
       .padding(20)
       .frame(maxWidth: .infinity, alignment: .leading)
       .background(.white, in: RoundedRectangle(cornerRadius: 24))
+      .kouchdEntrance(delay: 0.04)
   }
 }
 
@@ -60,9 +62,7 @@ struct PrimaryButton: View {
       Text(title).font(.headline).frame(maxWidth: .infinity)
         .padding(.vertical, 15)
     }
-    .buttonStyle(.plain)
-    .foregroundStyle(.white)
-    .background(Palette.forest, in: RoundedRectangle(cornerRadius: 16))
+    .buttonStyle(KouchdButtonStyle())
     .opacity(isEnabled ? 1 : 0.5)
   }
 }
@@ -117,5 +117,42 @@ struct VoidRecordButton: View {
       } message: {
         Text("The record stays in the history but no longer counts toward the balance or current activity.")
       }
+  }
+}
+
+// Animate navigation content and interactions, never financial values or live records.
+enum KouchdMotion {
+  static func animation(_ reduced: Bool) -> Animation {
+    reduced ? .easeOut(duration: 0.16) : .spring(duration: 0.38, bounce: 0.08)
+  }
+}
+
+private struct KouchdEntrance: ViewModifier {
+  @Environment(\.accessibilityReduceMotion) private var reduceMotion
+  @State private var visible = false
+  var delay: Double
+  func body(content: Content) -> some View {
+    content.opacity(visible ? 1 : 0)
+      .offset(y: visible || reduceMotion ? 0 : 10)
+      .onAppear {
+        withAnimation(KouchdMotion.animation(reduceMotion).delay(reduceMotion ? 0 : delay)) { visible = true }
+      }
+  }
+}
+
+extension View {
+  func kouchdEntrance(delay: Double = 0) -> some View {
+    modifier(KouchdEntrance(delay: delay))
+  }
+}
+
+private struct KouchdButtonStyle: ButtonStyle {
+  @Environment(\.accessibilityReduceMotion) private var reduceMotion
+  func makeBody(configuration: Configuration) -> some View {
+    configuration.label.foregroundStyle(.white)
+      .background(Palette.forest, in: RoundedRectangle(cornerRadius: 16))
+      .scaleEffect(configuration.isPressed && !reduceMotion ? 0.98 : 1)
+      .opacity(configuration.isPressed ? 0.85 : 1)
+      .animation(KouchdMotion.animation(reduceMotion), value: configuration.isPressed)
   }
 }

@@ -26,7 +26,16 @@ targets:
         CFBundleDisplayName: Kouchd
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
-        UILaunchScreen: {}
+        UILaunchStoryboardName: LaunchScreen
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
         UIAppFonts:
           - Manrope.ttf
         CLERK_PUBLISHABLE_KEY: $(CLERK_PUBLISHABLE_KEY)
@@ -36,6 +45,7 @@ targets:
       Release: Config/Production.xcconfig
     preBuildScripts:
       - name: Validate production release configuration
+        basedOnDependencyAnalysis: false
         script: |
           if [ "$CONFIGURATION" = "Release" ]; then
             case "$CLERK_PUBLISHABLE_KEY" in

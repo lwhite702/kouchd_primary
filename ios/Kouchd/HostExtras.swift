@@ -285,8 +285,7 @@ struct RewardRulesScreen: View {
         }.disabled(title.isEmpty || (Int(points) ?? 0) <= 0)
       }
       Section("Rules") {
-        ForEach(store.rules.indices, id: \.self) { index in
-          let rule = store.rules[index]
+        ForEach(store.rules, id: \.id) { rule in
           Button {
             Task { _ = await store.mutate("rewards:toggleRule", ["ruleId": rule.id]) }
           } label: {

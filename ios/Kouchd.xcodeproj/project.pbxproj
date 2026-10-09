@@ -13,7 +13,9 @@
 		74A2F0D8A622DB5FF5F0698E /* ConvexMobile in Frameworks */ = {isa = PBXBuildFile; productRef = BD61274E31847F6F50F197AB /* ConvexMobile */; };
 		934269B63B55A9B645F86F33 /* Service.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BFE92274E81D4153B7707BC /* Service.swift */; };
 		979ED40CCDDC40CC6B8E855B /* HostExtras.swift in Sources */ = {isa = PBXBuildFile; fileRef = 396286E31FFCC158CF46E208 /* HostExtras.swift */; };
+		99554FEEDC942FF5659E53D4 /* Introduction.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAF2858D8754E0517EEF1659 /* Introduction.swift */; };
 		A51DD4977F27F67ABF3C779D /* Design.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FAB50E0AF654FC7D39E3074 /* Design.swift */; };
+		A61314890E4CDEF5A7E04DD0 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 2BE8061F9EFC705EDAEAAD24 /* LaunchScreen.storyboard */; };
 		B397985E8E53AD6B31F35333 /* ClerkConvex in Frameworks */ = {isa = PBXBuildFile; productRef = A5A3BB6BCAD94B5A27F1D007 /* ClerkConvex */; };
 		B3A075991B02C83DCE934D12 /* KouchdApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D4E9A2F9C52E7B0F9D9EC5F /* KouchdApp.swift */; };
 		B8DBADA83280A246F6DF6617 /* MoreScreens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D6C4CC4E2D25C8E55E007C5 /* MoreScreens.swift */; };
@@ -29,6 +31,7 @@
 		1F456BBBC4E5A79C83B94DD4 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		28FB67FA8ACEEF88028EB12D /* MainScreens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainScreens.swift; sourceTree = "<group>"; };
 		29080916D19B8B8E9E38022A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		2BE8061F9EFC705EDAEAAD24 /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
 		2DC999A61B355E7B3842556B /* OFL.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = OFL.txt; sourceTree = "<group>"; };
 		30045E33092B71410923417C /* Development.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Development.xcconfig; sourceTree = "<group>"; };
 		396286E31FFCC158CF46E208 /* HostExtras.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostExtras.swift; sourceTree = "<group>"; };
@@ -36,6 +39,7 @@
 		4FAB50E0AF654FC7D39E3074 /* Design.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Design.swift; sourceTree = "<group>"; };
 		9D4E9A2F9C52E7B0F9D9EC5F /* KouchdApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KouchdApp.swift; sourceTree = "<group>"; };
 		AAB94C093B8F8FD00D92532A /* Production.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Production.xcconfig; sourceTree = "<group>"; };
+		AAF2858D8754E0517EEF1659 /* Introduction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Introduction.swift; sourceTree = "<group>"; };
 		BACC878623220A9635F675DE /* Kouchd.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Kouchd.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C4EB31DF8EAC4F2515510B22 /* Manrope.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Manrope.ttf; sourceTree = "<group>"; };
 		D2113646E0AF990592F43C78 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -65,8 +69,10 @@
 				4FAB50E0AF654FC7D39E3074 /* Design.swift */,
 				396286E31FFCC158CF46E208 /* HostExtras.swift */,
 				29080916D19B8B8E9E38022A /* Info.plist */,
+				AAF2858D8754E0517EEF1659 /* Introduction.swift */,
 				F616736201895BB76DA76381 /* Kouchd.entitlements */,
 				9D4E9A2F9C52E7B0F9D9EC5F /* KouchdApp.swift */,
+				2BE8061F9EFC705EDAEAAD24 /* LaunchScreen.storyboard */,
 				28FB67FA8ACEEF88028EB12D /* MainScreens.swift */,
 				1F456BBBC4E5A79C83B94DD4 /* Models.swift */,
 				3D6C4CC4E2D25C8E55E007C5 /* MoreScreens.swift */,
@@ -183,6 +189,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				69A55372E4F1B37912C6F675 /* Assets.xcassets in Resources */,
+				A61314890E4CDEF5A7E04DD0 /* LaunchScreen.storyboard in Resources */,
 				C75F49DD6AA1D187EE53C82E /* Manrope.ttf in Resources */,
 				E90C1942A7C41B9622F10D59 /* OFL.txt in Resources */,
 			);
@@ -193,6 +200,7 @@
 /* Begin PBXShellScriptBuildPhase section */
 		1F1D9652A0759603D827B778 /* Validate production release configuration */ = {
 			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
@@ -218,6 +226,7 @@
 			files = (
 				A51DD4977F27F67ABF3C779D /* Design.swift in Sources */,
 				979ED40CCDDC40CC6B8E855B /* HostExtras.swift in Sources */,
+				99554FEEDC942FF5659E53D4 /* Introduction.swift in Sources */,
 				B3A075991B02C83DCE934D12 /* KouchdApp.swift in Sources */,
 				50DD2C11C824695D4C0B9F3F /* MainScreens.swift in Sources */,
 				2FF47254E3CA13D7C4C05DC0 /* Models.swift in Sources */,

@@ -40,8 +40,7 @@ struct ScheduleScreen: View {
       if store.schedule.isEmpty {
         EmptyCard(title: "No requests", message: "Schedule requests will appear here.")
       }
-      ForEach(store.schedule.indices, id: \.self) { index in
-        let request = store.schedule[index]
+      ForEach(store.schedule, id: \.id) { request in
         Card {
           HStack {
             Text(request["guestName"].text).font(.headline)
@@ -95,8 +94,7 @@ struct OccupancyScreen: View {
       if store.nights.isEmpty {
         EmptyCard(title: "No nights recorded", message: "Recorded nights appear here with their agreed amount.")
       }
-      ForEach(store.nights.indices, id: \.self) { index in
-        let night = store.nights[index]
+      ForEach(store.nights, id: \.id) { night in
         Card {
           DataRow(title: night["nightDate"].text, detail: Display.money(night["amountCents"].int))
           if store.isHost && !store.isEnded && night["voidedAt"].text.isEmpty {
@@ -169,8 +167,7 @@ struct RewardsScreen: View {
       if store.wallet["claims"].items.isEmpty {
         EmptyCard(title: "No reward claims", message: "Household contributions can earn points after review.")
       }
-      ForEach(store.wallet["claims"].items.indices, id: \.self) { index in
-        let claim = store.wallet["claims"].items[index]
+      ForEach(store.wallet["claims"].items, id: \.id) { claim in
         Card {
           HStack {
             Text(claim.title).font(.headline)
@@ -205,8 +202,7 @@ struct ActivityScreen: View {
       if store.activity.isEmpty {
         EmptyCard(title: "Quiet for now", message: "Stay updates will appear here.")
       }
-      ForEach(store.activity.indices, id: \.self) { index in
-        let event = store.activity[index]
+      ForEach(store.activity, id: \.id) { event in
         Card {
           Text(event["detail"].text).font(.headline)
           Text(event["kind"].text.capitalized).font(.caption).foregroundStyle(Palette.muted)
@@ -262,6 +258,7 @@ struct SettingsScreen: View {
       }
       Card {
         Text("Account").font(.headline)
+        NavigationLink("About Kouchd") { AboutKouchdScreen() }
         UserButton()
         DataRow(title: "Kouchd version",
                 detail: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "—")

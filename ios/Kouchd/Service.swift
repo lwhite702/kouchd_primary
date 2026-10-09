@@ -43,6 +43,7 @@ enum AppConfig {
   var selectedGuestID = ""
   var error = ""
   var isLoading = true
+  private var accountGeneration = 0
   private var authSubscription: AnyCancellable?
   private var accountSubscriptions: [AnyCancellable] = []
   private var staySubscriptions: [AnyCancellable] = []
@@ -74,6 +75,7 @@ enum AppConfig {
   }
 
   func reset() {
+    accountGeneration += 1
     accountSubscriptions.removeAll()
     staySubscriptions.removeAll()
     financialSubscriptions.removeAll()
@@ -133,13 +135,15 @@ enum AppConfig {
   }
 
   func syncUser(name: String?) async {
+    let generation = accountGeneration
     do {
       var args: [String: ConvexEncodable?] = [:]
       if let name, !name.isEmpty { args["clerkName"] = name }
       try await client.mutation("users:syncCurrent", with: args)
+      guard generation == accountGeneration else { return }
       loadAccount()
-      isLoading = false
     } catch {
+      guard generation == accountGeneration else { return }
       self.error = error.localizedDescription
       isLoading = false
     }
@@ -199,14 +203,27 @@ enum AppConfig {
     financial: Bool = false,
     adminScope: String = ""
   ) {
+    let generation = accountGeneration
+    let stayID = selectedStayID
+    let guestID = selectedGuestID
     let token = client.subscribe(to: name, with: args, yielding: T.self)
       .receive(on: DispatchQueue.main)
       .sink(receiveCompletion: { [weak self] result in
-        if case .failure(let failure) = result { self?.error = failure.localizedDescription }
+        guard let self, generation == self.accountGeneration else { return }
+        if !account && adminScope.isEmpty && stayID != self.selectedStayID { return }
+        if financial && guestID != self.selectedGuestID { return }
+        if case .failure(let failure) = result {
+          self.error = failure.localizedDescription
+          if name == "stays:listMine" { self.isLoading = false }
+        }
       }, receiveValue: { [weak self] value in
-        self?[keyPath: keyPath] = value
-        if name == "admin:canAccess", let self, !self.adminAccess.flag { self.clearAdmin() }
-        if name == "stays:getBundle", let self, self.financialSubscriptions.isEmpty {
+        guard let self, generation == self.accountGeneration else { return }
+        if !account && adminScope.isEmpty && stayID != self.selectedStayID { return }
+        if financial && guestID != self.selectedGuestID { return }
+        self[keyPath: keyPath] = value
+        if name == "stays:listMine" { self.isLoading = false }
+        if name == "admin:canAccess", !self.adminAccess.flag { self.clearAdmin() }
+        if name == "stays:getBundle", self.financialSubscriptions.isEmpty {
           if self.isHost {
             self.selectedGuestID = self.guests.first?["person"]["id"].text ?? ""
           }
