@@ -20,6 +20,11 @@ jobs:
           xcode-version: latest-stable
       - run: npm ci
       - run: npm run release:check
+        env:
+          NEXT_PUBLIC_CONVEX_URL: https://dummy-test.convex.cloud
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_dummy
+          CLERK_SECRET_KEY: sk_test_dummy
+          CLERK_JWT_ISSUER_DOMAIN: https://dummy.clerk.accounts.dev
       - run: ruby -c ios/fastlane/Fastfile
       - run: brew install xcodegen
       - run: xcodegen generate --spec ios/project.yml
