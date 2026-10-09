@@ -1,5 +1,24 @@
 # Native iOS release handoff
 
+## Xcode Cloud enrollment — 2026-10-08
+
+Xcode matched `com.wrelikbrands.kouchd` to existing App Store Connect app
+`6818980215` and completed enrollment. Cloud product:
+`4d7b3d02-d6e8-4500-b598-bc0832fd2f09`; workflow:
+`31301092-07E3-4F1F-9896-51F4003AAB13`. The shared Xcode Cloud manifest is
+tracked; per-user workspace state is ignored.
+
+The production Clerk publishable key and Convex URL are configured as redacted
+workflow variables. The initial action builds scheme Kouchd for an iOS device.
+Manual starts select the native branch. Archive scheme indexing, archive and
+TestFlight post-action configuration, cloud build success, processing, and
+real-device installation still require evidence. Enrollment is not a release.
+
+The former task worktree was removed outside this turn. Its committed native
+branch was restored; uncommitted introduction and motion edits are absent.
+Recover or reimplement that follow-up before distributing a build that claims
+those screens and transitions. The draft release PR is #22.
+
 Issue: WRE-162
 State: Implemented only after source and required checks pass; released only after distribution is verified.
 

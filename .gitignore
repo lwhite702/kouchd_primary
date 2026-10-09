@@ -14,6 +14,7 @@ playwright-report/
 ios/Config/Local.xcconfig
 ios/Config/Production.local.xcconfig
 ios/**/DerivedData/
+ios/**/xcuserdata/
 
 # Agent MCP configs (contain tokens)
 .cursor/mcp.json
