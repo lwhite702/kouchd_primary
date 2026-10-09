@@ -26,8 +26,21 @@ generic preparation failure; the detailed archive/export logs show successful
 export. Direct validation of the exported IPA identifies error 90717 (icon alpha)
 and 90474 (missing orientation declarations). Source now uses an opaque square
 export of the existing brand SVG and declares all iPad orientations; the original
-rounded icon is retained in ios/Artwork. No uploaded build is returned by the build API. No processing or tester
-availability is claimed.
+rounded icon is retained in ios/Artwork. Cloud archive 3 then succeeded with zero errors and warnings at commit
+`736b4a19f1f2cf03c074a9742c451232f771bf1d`. App Store Connect processed
+version 0.4.0 (3) with state VALID. It has not been assigned to a tester group or
+installed on a real device. Its App Store archive export and checksum metadata
+are retained locally in ignored `ios/artifacts/cloud-build-3/` for comparison and
+recovery; it is a processed candidate, not a verified release.
+
+App Store Connect currently flags build 3 as Missing Compliance. The bundled
+ConvexMobileCoreRS library contains Rustls TLS symbols, and the upstream mobile
+SDK declares Rustls dependencies. The export-compliance form is therefore being
+reviewed as standard encryption, not as Apple-OS-only encryption. The owner must
+confirm whether distribution includes France before the form is submitted. The
+existing `INFOPLIST_KEY_ITSAppUsesNonExemptEncryption` build setting does not
+appear in the generated Info.plist (`GENERATE_INFOPLIST_FILE=NO`); it does not
+establish compliance. No compliance answer has been saved.
 
 The former task worktree was removed outside this turn. Its committed native
 branch was restored. The first-use introduction and shared motion behavior have
@@ -45,20 +58,22 @@ older source, not this restored introduction implementation.
 Issue: WRE-162
 State: Implemented only after source and required checks pass; released only after distribution is verified.
 
-Current branch evidence: the web release checks, native simulator build,
-signed-out launch, and production Clerk sign-in sheet have been verified.
+Historical branch evidence: the web release checks, native simulator build,
+signed-out launch, and production Clerk sign-in sheet were verified against the
+earlier source recorded below. Current source has compile and source-check
+evidence, but no new runtime journey verification.
 The owner authorized the existing production services and Apple team. A signed
 production archive was exported for version 0.4.0, build 1, from commit
 `321d791fbcad68e713248bf9828bc3cdd78f7d3d`. Backend deployment approval,
-authenticated account journeys, upload, processing, real-device installation,
-and TestFlight availability remain pending.
+authenticated account journeys, real-device installation, and tester group
+availability remain pending. Cloud upload and processing are recorded above.
 
 | State | Evidence |
 | --- | --- |
 | Planned | Version 0.4.0 from current 0.3.0 baseline; Figma v2.1 is the visual revision; TestFlight handoff under the Wrelik team. |
 | Implemented in branch | SwiftUI sources, Clerk–Convex integration, stay screens, guarded admin access, universal-link route, version tooling, and CI checks. |
-| Verified | Web release checks, iPhone 16 simulator launch and production sign-in sheet; signed production archive/export for 0.4.0 (1), team L8R42BJ54K. |
-| Released | None. No production merge, release tag, backend deployment, App Store Connect build, or TestFlight distribution is claimed. |
+| Verified source/build | Current source release checks (57 tests), generic simulator compile, cloud archive/export and App Store processing for 0.4.0 (3), team L8R42BJ54K. Runtime evidence below is historical. |
+| Released | None. App Store Connect has a processed candidate. No production merge, release tag, backend deployment, tester-group distribution, or real-device installation is claimed. |
 
 ## Version and evidence
 
