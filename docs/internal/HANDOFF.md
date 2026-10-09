@@ -80,3 +80,9 @@
 - Configuration: Added `background.decoration: "gradient"` to `docs.json` for warm brand green ambient gradient styling.
 - Content styling: Upgraded guides across `index.mdx` and `help/` with `<Tip>`, `<Info>`, `<Note>`, `<Warning>`, `<Check>`, `<Steps>`/`<Step>`, and cross-linking `<CardGroup>` components.
 - Verification: `mintlify validate` passed, `mintlify broken-links` passed (zero broken links), `docs.json` parsed successfully, and `git diff --check` passed cleanly.
+### Landing-page review fixes (2026-10-09)
+
+- Branch: `codex/WRE-177-landing-claims`; source PR: [#26](https://github.com/lwhite702/kouchd_primary/pull/26). The earlier PR #25 was based on a pre-merge snapshot and conflicted with current `main`; it should be closed after this replacement PR is verified and merged.
+- Changes: corrected unsupported Ledger creator attribution and guest arrival-window claims; added an expandable tablet navigation menu; prepared version `0.4.1` patch metadata and internal release notes to satisfy the repository release gate.
+- Evidence: local typecheck, targeted ESLint, and 60 tests passed. GitHub CI passed lint, typecheck, tests, and build but failed only at release classification because the first PR commit had no new patch version. Current `0.4.1` changes require CI rerun.
+- Release state: no production deployment, tag, public changelog entry, or customer availability is verified. Public Mintlify content was not changed.
