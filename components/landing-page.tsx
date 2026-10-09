@@ -36,6 +36,7 @@ export function LandingPage({ hasClerk = true }: LandingPageProps) {
           </Tooltip>
         </div>
         <nav className="v21-nav" aria-label="Main navigation">
+          <a href="#features">Features</a>
           <a href="#how-it-works">How it works</a>
           <a href="#privacy">Privacy</a>
           <a href="#faq">FAQ</a>
@@ -66,7 +67,7 @@ export function LandingPage({ hasClerk = true }: LandingPageProps) {
           <p className="v21-eyebrow"><span /> A calmer way to share a home</p>
           <h1 id="v21-hero-title">Make room for<br className="v21-desktop-break" /> a better stay.</h1>
           <p className="v21-lede">Kouchd brings house details and updates, a contribution ledger, shared chores, and check-ins into one private space for hosts and guests.</p>
-          <div className="v21-hero-actions"><StartButton hasClerk={hasClerk} /><a className="v21-text-link" href="#how-it-works">See how it works <ArrowDown size={16} /></a></div>
+          <div className="v21-hero-actions"><StartButton hasClerk={hasClerk} /><a className="v21-text-link" href="#features">Explore the tools <ArrowDown size={16} /></a></div>
           <p className="v21-invite-note">Already invited? Open the link your host shared with you.</p>
         </div>
         <div className="v21-hero-art" aria-label="Illustration of a welcoming shared living room">
@@ -100,7 +101,70 @@ export function LandingPage({ hasClerk = true }: LandingPageProps) {
           </div>
           <span className="v21-preview-orbit orbit-one" /><span className="v21-preview-orbit orbit-two" />
         </div>
-        <div className="v21-product-copy"><p className="v21-eyebrow">A look inside Kouchd</p><h2 id="v21-product-title">Your shared stay,<br /> clearly organized.</h2><p>House details and updates, contribution records, chores, and check-ins—all in one view.</p><a className="v21-text-link" href="#how-it-works">See how it works <ArrowRight size={16} /></a></div>
+        <div className="v21-product-copy"><p className="v21-eyebrow">A look inside Kouchd</p><h2 id="v21-product-title">Your shared stay,<br /> clearly organized.</h2><p>House details and updates, contribution records, chores, and check-ins—all in one view.</p><a className="v21-text-link" href="#features">Explore the tools <ArrowRight size={16} /></a></div>
+      </section>
+
+      <section className="v21-feature-tour" id="features" aria-labelledby="v21-feature-title">
+        <div className="v21-feature-intro">
+          <p className="v21-eyebrow">A shared place to come back to</p>
+          <h2 id="v21-feature-title">The details, the ledger, and the to-dos.</h2>
+          <p className="v21-feature-description">Kouchd brings the practical parts of sharing a stay together—so everyone can find the right information and know what is next.</p>
+          <p className="v21-feature-disclaimer">The screens below use illustrative example content.</p>
+        </div>
+
+        <article className="v21-feature-row" aria-labelledby="v21-feature-guide-title">
+          <div className="v21-feature-copy">
+            <span className="v21-feature-index">01 <span>Stay information</span></span>
+            <h3 id="v21-feature-guide-title">Keep the house guide and updates close at hand.</h3>
+            <p>Share the details people need before and during a stay, then post updates in the same place guests already use to check their plans.</p>
+            <ul><li><Check size={16} /> House details guests can look up again</li><li><Check size={16} /> Stay updates alongside the shared context</li><li><Check size={16} /> Guest list and arrival check-ins in view</li></ul>
+          </div>
+          <div className="v21-feature-scene scene-guide" aria-hidden="true">
+            <div className="v21-scene-window">
+              <div className="v21-scene-top"><span><i className="scene-dot" /> JUNIPER HOUSE</span><span className="scene-date">OCT 10—13</span></div>
+              <div className="scene-tabs"><span className="selected">Overview</span><span>House guide</span><span>Updates</span></div>
+              <div className="scene-welcome"><span className="scene-house-icon"><House size={17} /></span><div><strong>Welcome to the house</strong><small>The useful details, all together</small></div></div>
+              <div className="scene-info-grid"><div><span>WI-FI</span><strong>JuniperGuest</strong><small>Ask Maya for the password</small></div><div><span>QUIET HOURS</span><strong>10 pm – 8 am</strong><small>Thanks for keeping it cozy</small></div></div>
+              <div className="scene-update"><span className="scene-avatar">M</span><div><strong>Update from Maya <small>Today</small></strong><p>Use the side entrance after 8. The porch light is on.</p></div></div>
+            </div>
+          </div>
+        </article>
+
+        <article className="v21-feature-row v21-feature-row-reverse" aria-labelledby="v21-feature-ledger-title">
+          <div className="v21-feature-copy">
+            <span className="v21-feature-index">02 <span>Contribution ledger</span></span>
+            <h3 id="v21-feature-ledger-title">Keep a clear record of shared costs.</h3>
+            <p>Give each contribution a place in the stay record, with who added it, what it was for, and its current status easy to review.</p>
+            <ul><li><Check size={16} /> Entries stay connected to the household</li><li><Check size={16} /> Notes give each record useful context</li><li><Check size={16} /> A shared record helps everyone stay oriented</li></ul>
+            <p className="v21-feature-note">Kouchd records contributions; payment is arranged separately between people.</p>
+          </div>
+          <div className="v21-feature-scene scene-ledger" aria-hidden="true">
+            <div className="v21-scene-window">
+              <div className="scene-ledger-head"><div><span className="scene-section-label">JUNIPER HOUSE · LEDGER</span><strong>Contribution records</strong></div><span className="scene-filter">This stay <ArrowDown size={12} /></span></div>
+              <div className="scene-ledger-summary"><span>RECENT ACTIVITY</span><strong>Shared costs, clearly noted</strong><small>Illustrative entries · recorded only</small></div>
+              <div className="scene-ledger-row"><span className="scene-ledger-icon"><House size={16} /></span><div><strong>Utilities</strong><small>Added by Maya · Oct 8</small></div><div className="scene-amount"><strong>$84.00</strong><small>Recorded</small></div></div>
+              <div className="scene-ledger-row"><span className="scene-ledger-icon grocery-icon"><Check size={16} /></span><div><strong>Shared groceries</strong><small>Added by Jordan · Oct 7</small></div><div className="scene-amount"><strong>$36.50</strong><small>Recorded</small></div></div>
+              <div className="scene-ledger-foot"><ClipboardList size={15} /><span>Entries are a shared record—not a payment transfer.</span></div>
+            </div>
+          </div>
+        </article>
+
+        <article className="v21-feature-row" aria-labelledby="v21-feature-tasks-title">
+          <div className="v21-feature-copy">
+            <span className="v21-feature-index">03 <span>Chores and check-ins</span></span>
+            <h3 id="v21-feature-tasks-title">Make shared responsibilities easier to follow.</h3>
+            <p>Put a name and a due date beside a task, then keep simple stay check-ins where the group can find them.</p>
+            <ul><li><Check size={16} /> See what needs doing and who owns it</li><li><Check size={16} /> Keep due dates from getting buried in a chat</li><li><Check size={16} /> Share arrival and stay check-ins in context</li></ul>
+          </div>
+          <div className="v21-feature-scene scene-tasks" aria-hidden="true">
+            <div className="v21-scene-window">
+              <div className="scene-tasks-heading"><div><span className="scene-section-label">JUNIPER HOUSE · TOGETHER</span><strong>Things to take care of</strong></div><span className="scene-task-count">2 open</span></div>
+              <div className="scene-task-row"><span className="scene-check"></span><div><strong>Take the bins to the curb</strong><small>Alex · Due Thursday</small></div><span className="scene-due">Tomorrow</span></div>
+              <div className="scene-task-row"><span className="scene-check done"><Check size={12} /></span><div><strong>Restock the coffee shelf</strong><small>Jordan · Done today</small></div><span className="scene-done">Done</span></div>
+              <div className="scene-checkin"><span className="scene-checkin-icon"><Users size={16} /></span><div><span className="scene-section-label">NEXT CHECK-IN</span><strong>Arrival plans</strong><small>Friday · Add your arrival window</small></div><ArrowRight size={16} /></div>
+            </div>
+          </div>
+        </article>
       </section>
 
       <section className="v21-how" id="how-it-works" aria-labelledby="v21-how-title">
