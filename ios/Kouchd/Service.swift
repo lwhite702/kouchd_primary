@@ -43,6 +43,11 @@ enum AppConfig {
   var selectedGuestID = ""
   var error = ""
   var isLoading = true
+  var isStayLoading = false
+  var isFinancialLoading = false
+  private var stayGeneration = 0
+  private var financialGeneration = 0
+  private var pendingFinancialQueries: Set<String> = []
   private var accountGeneration = 0
   private var authSubscription: AnyCancellable?
   private var accountSubscriptions: [AnyCancellable] = []
@@ -76,6 +81,11 @@ enum AppConfig {
 
   func reset() {
     accountGeneration += 1
+    stayGeneration += 1
+    financialGeneration += 1
+    pendingFinancialQueries = []
+    isStayLoading = false
+    isFinancialLoading = false
     accountSubscriptions.removeAll()
     staySubscriptions.removeAll()
     financialSubscriptions.removeAll()
@@ -151,6 +161,11 @@ enum AppConfig {
 
   func selectStay(_ id: String) {
     guard !id.isEmpty else { return }
+    stayGeneration += 1
+    financialGeneration += 1
+    isStayLoading = true
+    isFinancialLoading = false
+    pendingFinancialQueries = []
     selectedStayID = id
     selectedGuestID = ""
     staySubscriptions.removeAll()
@@ -181,6 +196,9 @@ enum AppConfig {
 
   private func loadGuestData() {
     guard !selectedStayID.isEmpty else { return }
+    financialGeneration += 1
+    pendingFinancialQueries = ["contributions:list", "occupancy:list", "rewards:getWallet", "obligations:list"]
+    isFinancialLoading = true
     financialSubscriptions.removeAll()
     contributions = []
     ledger = []
@@ -204,24 +222,30 @@ enum AppConfig {
     adminScope: String = ""
   ) {
     let generation = accountGeneration
+    let stayEpoch = stayGeneration
+    let financialEpoch = financialGeneration
     let stayID = selectedStayID
     let guestID = selectedGuestID
     let token = client.subscribe(to: name, with: args, yielding: T.self)
       .receive(on: DispatchQueue.main)
       .sink(receiveCompletion: { [weak self] result in
         guard let self, generation == self.accountGeneration else { return }
-        if !account && adminScope.isEmpty && stayID != self.selectedStayID { return }
-        if financial && guestID != self.selectedGuestID { return }
+        if !account && adminScope.isEmpty && (stayID != self.selectedStayID || stayEpoch != self.stayGeneration) { return }
+        if financial && (guestID != self.selectedGuestID || financialEpoch != self.financialGeneration) { return }
         if case .failure(let failure) = result {
           self.error = failure.localizedDescription
           if name == "stays:listMine" { self.isLoading = false }
+          if name == "stays:getBundle" { self.isStayLoading = false }
+          if financial { self.finishFinancialQuery(name) }
         }
       }, receiveValue: { [weak self] value in
         guard let self, generation == self.accountGeneration else { return }
-        if !account && adminScope.isEmpty && stayID != self.selectedStayID { return }
-        if financial && guestID != self.selectedGuestID { return }
+        if !account && adminScope.isEmpty && (stayID != self.selectedStayID || stayEpoch != self.stayGeneration) { return }
+        if financial && (guestID != self.selectedGuestID || financialEpoch != self.financialGeneration) { return }
         self[keyPath: keyPath] = value
         if name == "stays:listMine" { self.isLoading = false }
+        if name == "stays:getBundle" { self.isStayLoading = false }
+        if financial { self.finishFinancialQuery(name) }
         if name == "admin:canAccess", !self.adminAccess.flag { self.clearAdmin() }
         if name == "stays:getBundle", self.financialSubscriptions.isEmpty {
           if self.isHost {
@@ -234,6 +258,11 @@ enum AppConfig {
     else if account { accountSubscriptions.append(token) }
     else if financial { financialSubscriptions.append(token) }
     else { staySubscriptions.append(token) }
+  }
+
+  private func finishFinancialQuery(_ name: String) {
+    pendingFinancialQueries.remove(name)
+    isFinancialLoading = !pendingFinancialQueries.isEmpty
   }
 
   func mutateValue(_ name: String, _ args: [String: ConvexEncodable?]) async -> Value? {

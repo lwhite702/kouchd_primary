@@ -131,7 +131,9 @@ screen. Navigation remains native. Shared pages, cards, and primary buttons use
 short entrance/press animations; Reduce Motion uses fades without translation or
 scaling. Live document arrays use document IDs to retain row identity. The account
 query chooses the initial destination after its first response; responses from
-superseded accounts, stays, and guests are ignored.
+superseded accounts, stays, and guests are ignored. Selected-stay and guest
+financial loading keep navigation stacks mounted and show a loading state
+instead of transient zero balances.
 
 The App Store icon is an opaque RGB export of `Artwork/AppIcon.svg`, derived
 from the existing brand vector. iOS applies its own outer mask. The original

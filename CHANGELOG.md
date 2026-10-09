@@ -19,7 +19,7 @@
 ### Changed
 
 - Native screen entrances and primary-button feedback use restrained springs and respect Reduce Motion; live document lists retain stable IDs and stale account/stay responses are ignored.
-- Initial stay loading waits for the account query before choosing the empty-state setup screen.
+- Initial stay loading waits for the account query before choosing the empty-state setup screen; selected-stay and guest-financial loading preserve navigation stacks and hide transient zero balances.
 
 - Native signing and invitation association use the verified existing Kouchd Apple team.
 - App Store icon export is opaque and square; native orientation declarations support iPad multitasking.

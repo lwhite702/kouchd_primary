@@ -156,3 +156,22 @@ private struct KouchdButtonStyle: ButtonStyle {
       .animation(KouchdMotion.animation(reduceMotion), value: configuration.isPressed)
   }
 }
+
+
+// Keep each navigation stack mounted while a selected stay or guest loads.
+struct LoadedStayContent<Content: View>: View {
+  let loading: Bool
+  @ViewBuilder let content: Content
+  @Environment(\.accessibilityReduceMotion) private var reduceMotion
+  var body: some View {
+    content.opacity(loading ? 0 : 1).disabled(loading).accessibilityHidden(loading)
+      .overlay {
+        if loading {
+          ProgressView("Opening your stay")
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Palette.cream.ignoresSafeArea()).transition(.opacity)
+        }
+      }
+      .animation(KouchdMotion.animation(reduceMotion), value: loading)
+  }
+}

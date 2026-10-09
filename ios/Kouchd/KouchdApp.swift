@@ -71,13 +71,29 @@ struct RootView: View {
         onboarding
       } else {
         TabView(selection: $tab) {
-          NavigationStack { HomeScreen(store: store) }
+          NavigationStack {
+            LoadedStayContent(loading: store.isStayLoading || store.isFinancialLoading) {
+              HomeScreen(store: store)
+            }
+          }
             .tabItem { Label(Tab.home.rawValue, systemImage: Tab.home.symbol) }.tag(Tab.home)
-          NavigationStack { LedgerScreen(store: store) }
+          NavigationStack {
+            LoadedStayContent(loading: store.isStayLoading || store.isFinancialLoading) {
+              LedgerScreen(store: store)
+            }
+          }
             .tabItem { Label(Tab.ledger.rawValue, systemImage: Tab.ledger.symbol) }.tag(Tab.ledger)
-          NavigationStack { ChoresScreen(store: store) }
+          NavigationStack {
+            LoadedStayContent(loading: store.isStayLoading) {
+              ChoresScreen(store: store)
+            }
+          }
             .tabItem { Label(Tab.chores.rawValue, systemImage: Tab.chores.symbol) }.tag(Tab.chores)
-          NavigationStack { StayScreen(store: store) }
+          NavigationStack {
+            LoadedStayContent(loading: store.isStayLoading) {
+              StayScreen(store: store)
+            }
+          }
             .tabItem { Label(Tab.stay.rawValue, systemImage: Tab.stay.symbol) }.tag(Tab.stay)
         }
         .tint(Palette.forest)
