@@ -51,6 +51,7 @@ export const triggerWorkflow = internalAction({
     stayId: v.optional(v.id("stays")),
     workflow: v.string(),
     entityId: v.optional(v.string()),
+    cancellationKey: v.optional(v.string()),
     data: v.any(),
   },
   returns: deliveryResult,
@@ -87,6 +88,7 @@ export const triggerWorkflow = internalAction({
     const response = await knock.workflows.trigger(args.workflow, {
       recipients: [recipient.id],
       data: args.data,
+      cancellation_key: args.cancellationKey,
     });
     await ctx.runMutation(internal.notifications.recordSent, {
       userId: args.userId,
@@ -97,6 +99,64 @@ export const triggerWorkflow = internalAction({
       action: typeof args.data?.action === "string" ? args.data.action : undefined,
     });
     return { status: "sent" as const, workflowRunId: response.workflow_run_id };
+  },
+});
+
+export const cancelWorkflow = internalAction({
+  args: {
+    workflow: v.string(),
+    cancellationKey: v.string(),
+    recipients: v.optional(v.array(v.string())),
+  },
+  returns: v.union(v.literal("cancelled"), v.literal("skipped")),
+  handler: async (_ctx, args) => {
+    const knock = client();
+    if (!knock) return "skipped";
+    try {
+      await knock.workflows.cancel(args.workflow, {
+        cancellation_key: args.cancellationKey,
+        recipients: args.recipients ? args.recipients.map((id) => ({ id })) : undefined,
+      });
+      return "cancelled";
+    } catch (error) {
+      console.warn(`Knock cancel failed for workflow ${args.workflow}:`, error);
+      return "skipped";
+    }
+  },
+});
+
+export const cancelAgreementPending = internalAction({
+  args: {
+    stayId: v.id("stays"),
+    userId: v.id("users"),
+    role: v.union(v.literal("host"), v.literal("guest")),
+  },
+  returns: v.null(),
+  handler: async (ctx, { stayId, userId, role }) => {
+    const knock = client();
+    if (!knock) return null;
+    const stay = await ctx.runQuery(internal.notifications.getStayById, { stayId });
+
+    // Cancel self reminder
+    try {
+      await knock.workflows.cancel("agreement-pending", {
+        cancellation_key: `agreement-pending:${stayId}:${userId}`,
+      });
+    } catch (e) {
+      console.warn("Knock cancel (self) failed:", e);
+    }
+
+    // If guest accepted, also cancel host's reminder for this guest
+    if (role === "guest" && stay?.hostUserId) {
+      try {
+        await knock.workflows.cancel("agreement-pending", {
+          cancellation_key: `agreement-pending:${stayId}:${stay.hostUserId}:${userId}`,
+        });
+      } catch (e) {
+        console.warn("Knock cancel (host-for-guest) failed:", e);
+      }
+    }
+    return null;
   },
 });
 

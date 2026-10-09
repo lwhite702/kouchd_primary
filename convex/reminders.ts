@@ -24,3 +24,16 @@ export const queueDailyReminders = internalAction({
     return candidates.length;
   },
 });
+
+export const queueAgreementPendingReminders = internalAction({
+  args: { slot: v.optional(v.union(v.literal("am"), v.literal("pm"))) },
+  returns: v.number(),
+  handler: async (ctx, { slot }): Promise<number> => {
+    const now = Date.now();
+    const candidates = await ctx.runQuery(internal.notifications.agreementPendingCandidates, { now, slot });
+    for (const [index, candidate] of candidates.entries()) {
+      await ctx.scheduler.runAfter(index * 25, internal.knock.triggerWorkflow, candidate);
+    }
+    return candidates.length;
+  },
+});

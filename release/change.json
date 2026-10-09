@@ -1,5 +1,5 @@
 {
-  "version": "0.4.4",
+  "version": "0.4.1",
   "type": "patch",
-  "reason": "Declares the Face ID purpose string required for optional biometric sign-in; preserves the resolved tour-to-authentication render loop fix."
+  "reason": "Wire Knock agreement-pending triggers with twice-daily host and guest reminders and cancellation on acceptance."
 }
