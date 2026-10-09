@@ -53,8 +53,9 @@ This file governs agent activity in the Kouchd repository. Read it before planni
 
 ## Versioning and release integrity
 
-- The checked-in `package.json` version is the current package version source. Do not add a second version file or synchronize other surfaces unless a real release workflow requires it.
-- Do not copy DRX-specific automation claims into Kouchd. Kouchd currently has no checked-in automated version bump/tag/release workflow; verify repository automation before describing one.
+- The root `VERSION` file is the canonical SemVer source for the Wrelik release workflow. Synchronize `package.json`, its lockfile, and every iOS marketing version with it. Keep the iOS build number independent and strictly increasing.
+- Every product-behavior release PR needs a unique version, a substantive `[Unreleased]` technical changelog entry, and affected documentation updates. Run `npm run release:check` before promotion; documentation-only changes do not need a version bump.
+- Do not copy DRX-specific automation claims into Kouchd. Kouchd's release-integrity workflow checks source and version consistency; it does not automatically bump, tag, deploy, or distribute a release.
 - Documentation-only changes do not bump the product version. Version changes, tags, release notes, deployment, and public availability are distinct steps and require evidence appropriate to each.
 - Before a product release, verify the exact commit, required checks, version consistency, and release pipeline. Never infer deployment or customer availability from a local build, branch, tag, or dashboard setting.
 

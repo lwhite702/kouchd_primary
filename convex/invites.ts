@@ -14,7 +14,16 @@ export const preview = query({
     status: v.optional(v.union(v.literal("invalid"), v.literal("used"))),
     hostName: v.optional(v.string()),
     referralCode: v.optional(v.string()),
+    stayName: v.optional(v.string()),
     expiresAt: v.optional(v.number()),
+    terms: v.optional(v.object({
+      version: v.number(),
+      startDate: v.string(),
+      endDate: v.string(),
+      cadence: v.union(v.literal("daily"), v.literal("weekly")),
+      rateCents: v.number(),
+      houseNotes: v.string(),
+    })),
   }),
   handler: async (ctx, { tokenHash }) => {
     try {
@@ -29,11 +38,21 @@ export const preview = query({
     const stay = await ctx.db.get(invite.stayId);
     if (!stay || stay.status === "ended") return { valid: false, status: "invalid" as const };
     const host = await ctx.db.get(stay.hostUserId);
+    const terms = stay.currentTermsId ? await ctx.db.get(stay.currentTermsId) : null;
     return {
       valid: true,
       hostName: host?.name ?? "A Kouchd host",
       referralCode: stay.referralCode,
+      stayName: stay.name ?? "Shared stay",
       expiresAt: invite.expiresAt,
+      ...(terms ? { terms: {
+        version: terms.version,
+        startDate: terms.startDate,
+        endDate: terms.endDate,
+        cadence: terms.cadence,
+        rateCents: terms.rateCents,
+        houseNotes: terms.houseNotes,
+      } } : {}),
     };
   },
 });

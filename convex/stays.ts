@@ -65,6 +65,7 @@ const termsInput = {
 
 export const create = mutation({
   args: {
+    name: v.optional(v.string()),
     timezone: v.string(),
     nextCheckInDate: v.optional(v.string()),
     houseInfo: v.optional(v.object(houseInfoInput)),
@@ -74,6 +75,8 @@ export const create = mutation({
   returns: v.id("stays"),
   handler: async (ctx, args) => {
     const user = await requireCurrentUser(ctx);
+    const name = args.name?.trim();
+    if (name !== undefined && (name.length < 2 || name.length > 80)) throw new Error("Stay name must be 2–80 characters");
     assertTimezone(args.timezone);
     assertStayTerms(args.terms);
     if (args.nextCheckInDate) assertCalendarDate(args.nextCheckInDate, "Next check-in date");
@@ -84,6 +87,7 @@ export const create = mutation({
     const referralCode = generateReferralCode();
     const stayId = await ctx.db.insert("stays", {
       hostUserId: user._id,
+      name,
       status: "pending",
       timezone: args.timezone,
       referralCode,
@@ -117,6 +121,21 @@ export const create = mutation({
 
     await recordActivity(ctx, { stayId, actorUserId: user._id, kind: "stay", action: "created", detail: "Stay and first terms version created", entityId: stayId });
     return stayId;
+  },
+});
+
+export const updateName = mutation({
+  args: { stayId: v.id("stays"), name: v.string() },
+  returns: v.null(),
+  handler: async (ctx, { stayId, name }) => {
+    const { user } = await requireHost(ctx, stayId);
+    const stay = await ctx.db.get(stayId);
+    if (!stay || stay.status === "ended") throw new Error("Ended stays cannot be edited");
+    const trimmed = name.trim();
+    if (trimmed.length < 2 || trimmed.length > 80) throw new Error("Stay name must be 2–80 characters");
+    await ctx.db.patch(stayId, { name: trimmed, updatedAt: Date.now() });
+    await recordActivity(ctx, { stayId, actorUserId: user._id, kind: "stay", action: "renamed", detail: "Stay name updated", entityId: stayId });
+    return null;
   },
 });
 

@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowDown, ArrowRight, ArrowUpRight, BookOpen, Check, CircleHelp, ClipboardList, HeartHandshake, House, LockKeyhole, MessageCircle, Sparkles, Users } from "lucide-react";
 import { KouchdWordmark } from "@/components/brand/kouchd-logo";
+import { appVersion } from "@/lib/version";
 import { Tooltip } from "@/components/ui/tooltip";
 import { HELP_LINKS } from "@/lib/help-links";
 import { APP_ORIGIN } from "@/lib/app-domain";
@@ -183,7 +184,7 @@ export function LandingPage({ hasClerk = true }: LandingPageProps) {
 
       <section className="v21-privacy" id="privacy" aria-labelledby="v21-privacy-title">
         <div className="v21-privacy-copy"><p className="v21-eyebrow">Private by design</p><h2 id="v21-privacy-title">A shared space for the people in the stay.</h2><p>Kouchd is built around private households. Hosts and guests see the information relevant to their stay, with contributions recorded clearly for everyone involved.</p><div className="v21-privacy-points"><span><LockKeyhole size={17} /> Private household access</span><span><MessageCircle size={17} /> Updates and house details</span></div></div>
-        <div className="v21-coming-card"><span className="v21-coming-icon"><Sparkles size={18} /></span><p className="v21-eyebrow">On the horizon</p><h3>More ways to make shared living easier.</h3><ul><li>More household tools <span>Coming soon</span></li><li>In-app payments <span>Coming soon</span></li><li>Native iOS &amp; Android apps <span>Coming soon</span></li></ul><small>Contributions are currently recorded in Kouchd; payment happens separately between people.</small></div>
+        <div className="v21-coming-card"><span className="v21-coming-icon"><Sparkles size={18} /></span><p className="v21-eyebrow">On the horizon</p><h3>More ways to make shared living easier.</h3><ul><li>More household tools <span>Coming soon</span></li><li>Native iOS &amp; Android apps <span>Coming soon</span></li></ul><small>Contributions are currently recorded in Kouchd; payment happens separately between people.</small></div>
       </section>
 
       <section className="v21-faq" id="faq" aria-labelledby="v21-faq-title">
@@ -198,7 +199,7 @@ export function LandingPage({ hasClerk = true }: LandingPageProps) {
 
       <section className="v21-cta"><KouchdWordmark size="md" theme="cream" /><h2>Make the next stay feel easier.</h2><p>Bring the people, details, and shared responsibilities together.</p><StartButton hasClerk={hasClerk} /><span className="v21-cta-sparkle"><Sparkles size={50} strokeWidth={1} /></span></section>
 
-      <footer className="v21-footer"><Link href="/" className="v21-footer-brand"><KouchdWordmark size="sm" /></Link><p>Shared living, with a little more clarity.</p><div><a href="https://help.kouchd.com" target="_blank" rel="noreferrer">Help center</a><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link><Link href="/sms-opt-in">SMS opt-in</Link><a href="#faq">FAQ</a></div><small>© {new Date().getFullYear()} Wrelik Brands LLC · Kouchd records shared expectations; it does not replace applicable housing rights.</small></footer>
+      <footer className="v21-footer"><Link href="/" className="v21-footer-brand"><KouchdWordmark size="sm" /></Link><p>Shared living, with a little more clarity.</p><div><a href="https://help.kouchd.com" target="_blank" rel="noreferrer">Help center</a><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link><Link href="/sms-opt-in">SMS opt-in</Link><a href="#faq">FAQ</a></div><small>© {new Date().getFullYear()} Wrelik Brands LLC. Kouchd records shared expectations; it does not replace applicable housing rights. · v{appVersion}</small></footer>
     </main>
   );
 }

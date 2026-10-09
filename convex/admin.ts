@@ -3,6 +3,19 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { requirePlatformAdmin } from "./lib/auth";
 
+export const canAccess = query({
+  args: {},
+  returns: v.boolean(),
+  handler: async (ctx) => {
+    try {
+      await requirePlatformAdmin(ctx);
+      return true;
+    } catch {
+      return false;
+    }
+  },
+});
+
 export const getOverviewStats = query({
   args: {},
   handler: async (ctx) => {

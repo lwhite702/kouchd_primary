@@ -30,6 +30,7 @@ export function HostOnboardingWizard({
   const today = calendarDateInTimezone(new Date(), timezone);
 
   const [step, setStep] = useState<1 | 2 | 3 | 4 | 5>(1);
+  const [stayName, setStayName] = useState("");
   const [phone, setPhone] = useState("");
   const [optInSms, setOptInSms] = useState(false);
   const [startDate, setStartDate] = useState(today);
@@ -138,6 +139,7 @@ export function HostOnboardingWizard({
         .join("\n\n");
 
       const stayId = await createStay({
+        name: stayName.trim() || undefined,
         timezone,
         nextCheckInDate: nextCheckInDate || undefined,
         paymentOptions: (Object.entries(paymentDetails) as Array<[keyof typeof paymentDetails, string]>)
@@ -207,6 +209,16 @@ export function HostOnboardingWizard({
           </p>
 
           <div className="form-grid" style={{ marginTop: "1.5rem" }}>
+            <label className="full">
+              <span>Stay name</span>
+              <input
+                name="stayName"
+                value={stayName}
+                onChange={(event) => setStayName(event.target.value)}
+                placeholder="Maple House"
+                maxLength={80}
+              />
+            </label>
             <label>
               <span>Start date</span>
               <input

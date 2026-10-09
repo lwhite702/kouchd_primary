@@ -6,6 +6,7 @@ import { Activity, ArrowLeft, CheckCircle2, FileText, Home, Shield, Users } from
 import type { ReactNode } from "react";
 import { KouchdWordmark } from "@/components/brand/kouchd-logo";
 import type { PlatformAdminUser } from "@/lib/platform/platform-admin";
+import { appVersion } from "@/lib/version";
 
 interface ConsoleShellProps {
   consoleKey: string;
@@ -34,7 +35,7 @@ export function ConsoleShell({ consoleKey, admin, children }: ConsoleShellProps)
           </Link>
           <span className="console-badge">
             <Shield size={12} />
-            Console
+            Console v{appVersion}
           </span>
         </div>
 
