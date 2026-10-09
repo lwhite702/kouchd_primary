@@ -2,11 +2,11 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { SignInButton, SignUpButton } from "@clerk/nextjs";
 import { ArrowDown, ArrowRight, ArrowUpRight, BookOpen, Check, CircleHelp, ClipboardList, HeartHandshake, House, LockKeyhole, MessageCircle, Sparkles, Users } from "lucide-react";
 import { KouchdWordmark } from "@/components/brand/kouchd-logo";
 import { Tooltip } from "@/components/ui/tooltip";
 import { HELP_LINKS } from "@/lib/help-links";
+import { APP_ORIGIN } from "@/lib/app-domain";
 import "./landing-v21.css";
 
 interface LandingPageProps { hasClerk?: boolean }
@@ -14,7 +14,7 @@ interface LandingPageProps { hasClerk?: boolean }
 function StartButton({ hasClerk, secondary = false }: { hasClerk: boolean; secondary?: boolean }) {
   const className = secondary ? "v21-button v21-button-outline" : "v21-button v21-button-lime";
   return hasClerk ? (
-    <SignUpButton mode="modal"><button className={className} type="button">Start a stay <ArrowRight size={17} /></button></SignUpButton>
+    <Link className={className} href={`${APP_ORIGIN}/sign-up`}>Start a stay <ArrowRight size={17} /></Link>
   ) : (
     <Link className={className} href="/?preview=true">Start a stay <ArrowRight size={17} /></Link>
   );
@@ -50,9 +50,7 @@ export function LandingPage({ hasClerk = true }: LandingPageProps) {
         <div className="v21-header-actions">
           {hasClerk && (
             <Tooltip content="Access your stays, ledger, or agreements" position="bottom">
-              <SignInButton mode="modal">
-                <button type="button" className="v21-sign-in">Sign in</button>
-              </SignInButton>
+              <Link href={`${APP_ORIGIN}/sign-in`} className="v21-sign-in">Sign in</Link>
             </Tooltip>
           )}
           <Tooltip content="Create a stay or join an existing household" position="bottom">
