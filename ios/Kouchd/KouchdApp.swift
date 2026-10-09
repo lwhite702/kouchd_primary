@@ -42,7 +42,11 @@ struct RootView: View {
   @Environment(Clerk.self) private var clerk
   @State private var store = KouchdStore()
   @Environment(\.accessibilityReduceMotion) private var reduceMotion
-  @AppStorage("kouchd.introductionRevision") private var introductionRevision = 0
+  // Clerk's AuthView initializer persists its identifier preferences. AppStorage
+  // here would observe those unrelated writes and rebuild the sheet content,
+  // whose initializer writes again. Keep the revision in local state and persist
+  // only when the introduction is completed.
+  @State private var introductionRevision = UserDefaults.standard.integer(forKey: "kouchd.introductionRevision")
   @State private var splashVisible = true
   @State private var pendingRoute: EntryRoute?
   @State private var destination: EntryRoute?
@@ -52,15 +56,11 @@ struct RootView: View {
   @State private var tab: Tab = .home
 
   var body: some View {
-    Group {
+    ZStack {
       if splashVisible {
         BrandSplash().transition(.opacity)
       } else if introductionRevision < 1 && clerk.user == nil {
-        IntroductionScreen { route in
-          pendingRoute = route
-          introductionRevision = 1
-          authPresented = true
-        }
+        IntroductionScreen(finish: finishIntroduction)
       } else if clerk.user == nil {
         NavigationStack { welcome }
       } else if store.isLoading {
@@ -134,7 +134,7 @@ struct RootView: View {
     } message: { Text(store.error) }
     .onOpenURL { url in
       if url.pathComponents.count >= 3 && url.pathComponents[1] == "invite" {
-        introductionRevision = 1
+        markIntroductionCompleted()
         pendingRoute = nil
         destination = nil
         invitePreview = .null
@@ -147,7 +147,7 @@ struct RootView: View {
     }
     .onChange(of: clerk.user?.id, initial: true) { _, id in
       if id == nil { store.reset(); destination = nil }
-      else { introductionRevision = 1 }
+      else { markIntroductionCompleted() }
       if id != nil && !inviteToken.isEmpty { Task { await loadInvitation() } }
     }
     .onChange(of: store.stays.count) { _, count in
@@ -212,6 +212,18 @@ struct RootView: View {
     if clerk.user == nil { return introductionRevision < 1 ? "introduction" : "welcome" }
     if store.isLoading { return "loading" }
     return store.stays.isEmpty ? "setup" : "home"
+  }
+
+  private func markIntroductionCompleted() {
+    guard introductionRevision < 1 else { return }
+    introductionRevision = 1
+    UserDefaults.standard.set(1, forKey: "kouchd.introductionRevision")
+  }
+
+  private func finishIntroduction(_ route: EntryRoute?) {
+    pendingRoute = route
+    markIntroductionCompleted()
+    authPresented = true
   }
 
   private func loadInvitation() async {
