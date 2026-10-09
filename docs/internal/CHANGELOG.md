@@ -2,6 +2,53 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-10-05 — Landing header refresh, accessible tooltips, skeleton loaders, and canonical help links
+
+- Refreshed Landing Page Header (`components/landing-page.tsx`, `components/landing-v21.css`):
+  - Added brand badge ("By Wrelik") with informative tooltip explaining the brand ecosystem.
+  - Added a direct "Guides" link with book icon to canonical Mintlify documentation (`https://help.kouchd.com`).
+  - Added accessible tooltips to "Sign in" and "Start a stay" CTAs.
+  - Preserved carrier compliance footer elements verbatim (`tests/carrier-compliance.test.ts`).
+- Introduced Accessible Tooltip Component (`components/ui/tooltip.tsx`, `app/production.css`):
+  - Accessible wrapper supporting mouse hover and keyboard focus/blur with ARIA `role="tooltip"` and dynamic IDs.
+  - Configurable positions (`top`, `bottom`, `left`, `right`) with arrow indicator and subtle fade animation.
+  - Deployed tooltips across authenticated dashboard utilities (`Tour`, `All stays`, `Docs`, `Join with code`, `Settings`), action triggers (`Add contribution`, `Add charge`, chore toggles), external payment copy actions, and referral code copy buttons.
+- Expanded Skeleton Loading States (`components/skeleton-loader.tsx`):
+  - Added modular `CardSkeleton` (for overview cards, house info, and onboarding summaries) and `LedgerSkeleton` (for transaction rows and obligation tables).
+  - Replaced plain text loading states in `components/onboarding/guest-onboarding-flow.tsx` with smooth shimmer `CardSkeleton`.
+- Canonical Help Articles Integration (`lib/help-links.ts`):
+  - Created centralized `HELP_LINKS` dictionary mapping canonical Mintlify paths (`hostsGettingStarted`, `joiningAStay`, `pricingAndTerms`, `houseRulesAndChores`, `ledgerManagement`, `stayAgreements`, `quickstart`, etc.).
+  - Replaced hardcoded help URLs across onboarding wizards (`host-onboarding-wizard.tsx`, `guest-onboarding-flow.tsx`, `guided-tour.tsx`, `join-household.tsx`, `header-menu.tsx`, and `authenticated-home.tsx`).
+- Validation:
+  - Passed `vitest run` (13 test files, 52/52 tests passing).
+  - Passed `npx tsc --noEmit` with zero errors.
+  - Passed `git diff --check`.
+
+## 2026-10-05 — Master Wrelik legal policies and sibling product parity
+
+- Established canonical legal definitions in `lib/legal.ts` (`legalMeta`, `privacyPolicy`, `termsOfUse`, `cookiePolicy`, `acceptableUsePolicy`, `legalLinks`) mirroring sibling Wrelik products (`sporkd`, `DRX_Primary`, and `Klutr`).
+- Refactored `app/privacy/page.tsx` and `app/terms/page.tsx` to render comprehensive master sections and dedicated Kouchd addenda while strictly preserving carrier 10DLC compliance statements (`tests/carrier-compliance.test.ts`).
+- Created dedicated web application legal pages:
+  - `app/cookies/page.tsx`: Cookie & Tracking Policy.
+  - `app/acceptable-use/page.tsx`: Acceptable Use Policy & Community Guidelines.
+  - Route aliases for standard Wrelik URL conventions: `app/legal/privacy/page.tsx`, `app/legal/terms/page.tsx`, `app/legal/cookies/page.tsx`, and `app/legal/acceptable-use/page.tsx`.
+- Updated `components/legal/legal-page-layout.tsx` navigation and footer to link Privacy, Terms, Cookies, Acceptable Use, and SMS Opt-In.
+- Refreshed Help Center documentation:
+  - `help/legal-trust/privacy-and-security.mdx`: Aligned with canonical Wrelik privacy and SMS commitments.
+  - `help/legal-trust/terms-of-service.mdx`: New documentation covering platform role, stay agreements, and SMS terms.
+  - `docs.json`: Registered `terms-of-service` under the "Trust & Legal" navigation group.
+- Validation:
+  - Passed `vitest run` (all 13 test files, 52 unit tests passed including carrier compliance).
+  - Passed `mintlify validate` and `mintlify broken-links`.
+  - Passed `git diff --check`.
+
+## 2026-10-05 — Mintlify Help Center visual styling and color refresh
+
+- Added ambient `decoration: "gradient"` to `background` in `docs.json` to bring warm brand green gradient aura to all documentation pages.
+- Enriched help guides (`index.mdx`, `help/index.mdx`, `help/quickstart.mdx`, `help/hosts/getting-started.mdx`, `help/guests/joining-a-stay.mdx`, `help/guests/logging-contributions.mdx`, `help/product/roadmap.mdx`, `help/legal-trust/privacy-and-security.mdx`, `help/hosts/house-rules-and-chores.mdx`) with colorful callouts (`<Tip>`, `<Info>`, `<Note>`, `<Warning>`, `<Check>`), structured sequence `<Steps>`/`<Step>`, and complementary `<CardGroup>` links.
+- Corrected relative internal guide links to use the canonical `/help/...` pathing.
+- Passed `mintlify validate`, `mintlify broken-links`, `docs.json` JSON parsing, and `git diff --check`.
+
 ## 2026-09-28 — Guest payment schedule choice and approval
 
 - Added guest-selected daily or weekly billing at initial agreement acceptance, including an initial weekly payment weekday and clear rate/late-fee copy.

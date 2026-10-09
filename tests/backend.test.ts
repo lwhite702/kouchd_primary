@@ -48,6 +48,26 @@ describe("shared stay authorization and audit rules", () => {
     expect(await member.query(api.admin.canAccess, {})).toBe(true);
   });
 
+  it("accepts existing stays with an optional name field", async () => {
+    const t = convexTest(schema, modules);
+    await createUser(t, "named-stay-host", "Lee");
+    const stayId = await t.run(async ({ db }) => {
+      const host = await db.query("users").first();
+      if (!host) throw new Error("Expected test host to exist");
+      return db.insert("stays", {
+        hostUserId: host._id,
+        name: "WRE-162 Native Verification",
+        status: "active",
+        timezone: "America/New_York",
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      });
+    });
+
+    const stay = await t.run(({ db }) => db.get(stayId));
+    expect(stay?.name).toBe("WRE-162 Native Verification");
+  });
+
   it("keeps invite previews read-only and carries the guest name into membership", async () => {
     const t = convexTest(schema, modules);
     const host = await createUser(t, "invite-preview-host", "Lee");

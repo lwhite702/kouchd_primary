@@ -4,6 +4,7 @@ import { Check, Copy, Edit3, ExternalLink, Landmark } from "lucide-react";
 import { FormEvent, useState } from "react";
 
 import type { Doc } from "@/convex/_generated/dataModel";
+import { Tooltip } from "@/components/ui/tooltip";
 
 type PaymentOption = NonNullable<Doc<"stays">["paymentOptions"]>[number];
 const providers = [
@@ -67,9 +68,11 @@ export function PaymentOptionsCard({
                   {isWebUrl(option.detail)
                     ? <a href={option.detail} target="_blank" rel="noopener noreferrer">Open {label} <ExternalLink size={14} /></a>
                     : <strong>{option.detail}</strong>}
-                  <button className="button soft compact copy-btn" type="button" onClick={() => void copy(option.detail, label)} aria-label={`Copy ${label} details`}>
-                    {copied === label ? <Check size={14} /> : <Copy size={14} />}<span>{copied === label ? "Copied" : "Copy"}</span>
-                  </button>
+                  <Tooltip content={`Copy ${label} handle to clipboard`}>
+                    <button className="button soft compact copy-btn" type="button" onClick={() => void copy(option.detail, label)} aria-label={`Copy ${label} details`}>
+                      {copied === label ? <Check size={14} /> : <Copy size={14} />}<span>{copied === label ? "Copied" : "Copy"}</span>
+                    </button>
+                  </Tooltip>
                 </div>
               </article>
             );

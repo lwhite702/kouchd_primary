@@ -6,7 +6,7 @@ import { KouchdWordmark } from "@/components/brand/kouchd-logo";
 
 interface LegalPageLayoutProps {
   children: React.ReactNode;
-  activeRoute?: "privacy" | "terms" | "sms-opt-in";
+  activeRoute?: "privacy" | "terms" | "sms-opt-in" | "cookies" | "acceptable-use";
 }
 
 export function LegalPageLayout({ children, activeRoute }: LegalPageLayoutProps) {
@@ -77,6 +77,28 @@ export function LegalPageLayout({ children, activeRoute }: LegalPageLayoutProps)
             Terms &amp; Conditions
           </Link>
           <Link
+            href="/cookies"
+            style={{
+              fontSize: "0.88rem",
+              fontWeight: activeRoute === "cookies" ? 800 : 600,
+              color: activeRoute === "cookies" ? "var(--kouchd-forest, #184f3a)" : "var(--kouchd-muted, #59675f)",
+              textDecoration: "none",
+            }}
+          >
+            Cookies
+          </Link>
+          <Link
+            href="/acceptable-use"
+            style={{
+              fontSize: "0.88rem",
+              fontWeight: activeRoute === "acceptable-use" ? 800 : 600,
+              color: activeRoute === "acceptable-use" ? "var(--kouchd-forest, #184f3a)" : "var(--kouchd-muted, #59675f)",
+              textDecoration: "none",
+            }}
+          >
+            Acceptable Use
+          </Link>
+          <Link
             href="/sms-opt-in"
             style={{
               fontSize: "0.88rem",
@@ -128,12 +150,18 @@ export function LegalPageLayout({ children, activeRoute }: LegalPageLayoutProps)
         <p style={{ margin: "0 0 0.5rem" }}>
           <strong>Kouchd</strong> is operated by <strong>Wrelik Brands LLC</strong>.
         </p>
-        <p style={{ margin: "0 0 0.75rem" }}>
-          <Link href="/privacy" style={{ color: "var(--kouchd-forest, #184f3a)", textDecoration: "none", marginRight: "1rem" }}>
+        <p style={{ margin: "0 0 0.75rem", display: "flex", justifyContent: "center", gap: "1rem", flexWrap: "wrap" }}>
+          <Link href="/privacy" style={{ color: "var(--kouchd-forest, #184f3a)", textDecoration: "none" }}>
             Privacy Policy
           </Link>
-          <Link href="/terms" style={{ color: "var(--kouchd-forest, #184f3a)", textDecoration: "none", marginRight: "1rem" }}>
+          <Link href="/terms" style={{ color: "var(--kouchd-forest, #184f3a)", textDecoration: "none" }}>
             Terms &amp; Conditions
+          </Link>
+          <Link href="/cookies" style={{ color: "var(--kouchd-forest, #184f3a)", textDecoration: "none" }}>
+            Cookie Policy
+          </Link>
+          <Link href="/acceptable-use" style={{ color: "var(--kouchd-forest, #184f3a)", textDecoration: "none" }}>
+            Acceptable Use
           </Link>
           <Link href="/sms-opt-in" style={{ color: "var(--kouchd-forest, #184f3a)", textDecoration: "none" }}>
             SMS Opt-In

@@ -1,0 +1,17 @@
+export const HELP_LINKS = {
+  home: "https://help.kouchd.com",
+  quickstart: "https://help.kouchd.com/help/quickstart",
+  hostsGettingStarted: "https://help.kouchd.com/help/hosts/getting-started",
+  pricingAndTerms: "https://help.kouchd.com/help/hosts/pricing-and-terms",
+  houseRulesAndChores: "https://help.kouchd.com/help/hosts/house-rules-and-chores",
+  ledgerManagement: "https://help.kouchd.com/help/hosts/ledger-management",
+  joiningAStay: "https://help.kouchd.com/help/guests/joining-a-stay",
+  loggingContributions: "https://help.kouchd.com/help/guests/logging-contributions",
+  kouchdCoins: "https://help.kouchd.com/help/guests/kouchd-coins",
+  notificationPreferences: "https://help.kouchd.com/help/notifications/notification-preferences",
+  stayAgreements: "https://help.kouchd.com/help/legal-trust/stay-agreements",
+  privacyAndSecurity: "https://help.kouchd.com/help/legal-trust/privacy-and-security",
+  termsOfService: "https://help.kouchd.com/help/legal-trust/terms-of-service",
+  roadmap: "https://help.kouchd.com/help/product/roadmap",
+  changelog: "https://help.kouchd.com/help/product/changelog",
+} as const;

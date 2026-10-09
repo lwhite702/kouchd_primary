@@ -72,3 +72,11 @@
 - Updated the product roadmap to identify the schedule and occupancy workflows as in progress. The work is not merged, deployed, or published; public guides and changelog do not claim availability.
 - `tsc --noEmit`, targeted ESLint, and `git diff --check` passed after final edits. No tests were added or run.
 - Linear issue association remains unresolved because only the Wrelik team is available in the connected workspace; do not create a Kouchd issue under Wrelik.
+
+### Mintlify Help Center color and visual refresh (2026-10-05)
+
+- Task branch: `codex/mintlify-color-refresh`.
+- User request: "Add more color to the kouchd mintlify app" followed by explicit approval to "merge".
+- Configuration: Added `background.decoration: "gradient"` to `docs.json` for warm brand green ambient gradient styling.
+- Content styling: Upgraded guides across `index.mdx` and `help/` with `<Tip>`, `<Info>`, `<Note>`, `<Warning>`, `<Check>`, `<Steps>`/`<Step>`, and cross-linking `<CardGroup>` components.
+- Verification: `mintlify validate` passed, `mintlify broken-links` passed (zero broken links), `docs.json` parsed successfully, and `git diff --check` passed cleanly.
