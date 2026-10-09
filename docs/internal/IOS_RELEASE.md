@@ -23,7 +23,10 @@ reported next build 2 immediately before the manual archive start. Archive run 2
 (`8175129b-ff24-4b4b-b30e-de38a047018a`) compiled, signed, and exported its archive,
 but failed final preparation for App Store Connect. The UI exposes only the
 generic preparation failure; the detailed archive/export logs show successful
-export. No uploaded build is returned by the build API. No processing or tester
+export. Direct validation of the exported IPA identifies error 90717 (icon alpha)
+and 90474 (missing orientation declarations). Source now uses an opaque square
+export of the existing brand SVG and declares all iPad orientations; the original
+rounded icon is retained in ios/Artwork. No uploaded build is returned by the build API. No processing or tester
 availability is claimed.
 
 The former task worktree was removed outside this turn. Its committed native

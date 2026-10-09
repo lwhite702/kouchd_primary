@@ -22,4 +22,5 @@
 - Initial stay loading waits for the account query before choosing the empty-state setup screen.
 
 - Native signing and invitation association use the verified existing Kouchd Apple team.
+- App Store icon export is opaque and square; native orientation declarations support iPad multitasking.
 - iOS payment concepts use outside contribution records; Kouchd does not process payments.

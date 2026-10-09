@@ -132,3 +132,15 @@ short entrance/press animations; Reduce Motion uses fades without translation or
 scaling. Live document arrays use document IDs to retain row identity. The account
 query chooses the initial destination after its first response; responses from
 superseded accounts, stays, and guests are ignored.
+
+The App Store icon is an opaque RGB export of `Artwork/AppIcon.svg`, derived
+from the existing brand vector. iOS applies its own outer mask. The original
+rounded export is retained in Artwork for reference.
+
+Regenerate the native export on macOS with:
+
+```sh
+qlmanage -t -s 1024 -o /tmp ios/Artwork/AppIcon.svg
+swift ios/scripts/export-app-icon.swift /tmp/AppIcon.svg.png \
+  ios/Kouchd/Assets.xcassets/AppIcon.appiconset/AppIconOpaque.png
+```
