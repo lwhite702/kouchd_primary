@@ -29,6 +29,7 @@
 }
 .v21-brand, .v21-footer-brand { display: inline-flex; text-decoration: none; flex: 0 0 auto; }
 .v21-nav { display: flex; align-items: center; gap: 28px; margin-left: auto; margin-right: auto; }
+.v21-nav-compact { display: none; }
 .v21-nav a, .v21-sign-in, .v21-footer a { color: #3e4e45; text-decoration: none; font-size: 14px; font-weight: 650; transition: color .18s ease; }
 .v21-nav a:hover, .v21-sign-in:hover, .v21-footer a:hover { color: var(--v21-forest); }
 .v21-nav a.v21-nav-help { display: inline-flex; align-items: center; gap: 6px; }
@@ -265,6 +266,13 @@
 
 @media (max-width: 900px) {
   .v21-header { width: calc(100% - 44px); }
+  .v21-nav { display: none; }
+  .v21-nav-compact { position: relative; display: block; flex: 0 0 auto; margin-left: auto; }
+  .v21-nav-compact > summary { padding: 9px 13px; border: 1px solid #cfd8cc; border-radius: 999px; color: #30483a; background: #fffefa; cursor: pointer; list-style: none; font-size: 12px; font-weight: 700; }
+  .v21-nav-compact > summary::-webkit-details-marker { display: none; }
+  .v21-nav-compact-panel { position: absolute; z-index: 10; top: calc(100% + 9px); right: 0; display: grid; min-width: 205px; gap: 2px; padding: 7px; border: 1px solid #e1e4dc; border-radius: 13px; background: #fffefa; box-shadow: 0 12px 32px #243b2c1c; }
+  .v21-nav-compact-panel a { padding: 10px 11px; border-radius: 8px; color: #35483b; text-decoration: none; font-size: 13px; font-weight: 650; }
+  .v21-nav-compact-panel a:hover, .v21-nav-compact-panel a:focus-visible { color: #174b37; background: #edf3e9; }
   .v21-hero { width: calc(100% - 44px); min-height: 540px; grid-template-columns: .98fr 1.02fr; gap: 10px; }
   .v21-hero h1 { font-size: clamp(49px, 7vw, 65px); }
   .v21-lede { font-size: 15px; }
@@ -291,6 +299,7 @@
   .v21-brand svg { width: 23px; height: 23px; }
   .v21-brand span span { font-size: 1.25rem !important; }
   .v21-nav { display: none; }
+  .v21-nav-compact { display: none; }
   .v21-header-actions { margin-left: auto; }
   .v21-header-actions { gap: 10px; }
   .v21-sign-in { display: inline-flex; align-items: center; padding: 8px 0; font-size: 12px; white-space: nowrap; }
