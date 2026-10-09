@@ -49,6 +49,16 @@ export function LandingPage({ hasClerk = true }: LandingPageProps) {
             </a>
           </Tooltip>
         </nav>
+        <details className="v21-nav-compact">
+          <summary>Menu</summary>
+          <nav className="v21-nav-compact-panel" aria-label="Main navigation">
+            <a href="#features">Features</a>
+            <a href="#how-it-works">How it works</a>
+            <a href="#privacy">Privacy</a>
+            <a href="#faq">FAQ</a>
+            <a href={HELP_LINKS.home} target="_blank" rel="noopener noreferrer">Guides</a>
+          </nav>
+        </details>
         <div className="v21-header-actions">
           {hasClerk && (
             <Tooltip content="Access your stays, ledger, or agreements" position="bottom">
@@ -84,7 +94,7 @@ export function LandingPage({ hasClerk = true }: LandingPageProps) {
           <article className="v21-proof-card"><span className="v21-proof-icon"><Users size={19} /></span><span className="v21-proof-label">Guests</span><strong>5</strong><small>3 confirmed · 2 pending</small></article>
           <article className="v21-proof-card"><span className="v21-proof-icon"><ClipboardList size={19} /></span><span className="v21-proof-label">Contributions</span><strong className="v21-proof-word">Recorded</strong><small>Recorded outside Kouchd</small></article>
           <article className="v21-proof-card"><span className="v21-proof-icon"><Check size={19} /></span><span className="v21-proof-label">Chores</span><strong>3</strong><small>1 needs an owner</small></article>
-          <article className="v21-proof-card"><span className="v21-proof-icon"><Sparkles size={19} /></span><span className="v21-proof-label">Check-ins</span><strong className="v21-proof-word">Friday</strong><small>Arrival window confirmed</small></article>
+          <article className="v21-proof-card"><span className="v21-proof-icon"><Sparkles size={19} /></span><span className="v21-proof-label">Next check-in</span><strong className="v21-proof-word">Friday</strong><small>Scheduled by the host</small></article>
         </div>
         <p className="v21-preview-disclaimer">Illustrative preview · Example details, not live household data</p>
       </section>
@@ -118,7 +128,7 @@ export function LandingPage({ hasClerk = true }: LandingPageProps) {
             <span className="v21-feature-index">01 <span>Stay information</span></span>
             <h3 id="v21-feature-guide-title">Keep the house guide and updates close at hand.</h3>
             <p>Share the details people need before and during a stay, then post updates in the same place guests already use to check their plans.</p>
-            <ul><li><Check size={16} /> House details guests can look up again</li><li><Check size={16} /> Stay updates alongside the shared context</li><li><Check size={16} /> Guest list and arrival check-ins in view</li></ul>
+            <ul><li><Check size={16} /> House details guests can look up again</li><li><Check size={16} /> Stay updates alongside the shared context</li><li><Check size={16} /> Guest list and scheduled check-in date in view</li></ul>
           </div>
           <div className="v21-feature-scene scene-guide" aria-hidden="true">
             <div className="v21-scene-window">
@@ -135,7 +145,7 @@ export function LandingPage({ hasClerk = true }: LandingPageProps) {
           <div className="v21-feature-copy">
             <span className="v21-feature-index">02 <span>Contribution ledger</span></span>
             <h3 id="v21-feature-ledger-title">Keep a clear record of shared costs.</h3>
-            <p>Give each contribution a place in the stay record, with who added it, what it was for, and its current status easy to review.</p>
+            <p>Give each contribution a place in the stay record, with its note, status, and date easy to review.</p>
             <ul><li><Check size={16} /> Entries stay connected to the household</li><li><Check size={16} /> Notes give each record useful context</li><li><Check size={16} /> A shared record helps everyone stay oriented</li></ul>
             <p className="v21-feature-note">Kouchd records contributions; payment is arranged separately between people.</p>
           </div>
@@ -143,8 +153,8 @@ export function LandingPage({ hasClerk = true }: LandingPageProps) {
             <div className="v21-scene-window">
               <div className="scene-ledger-head"><div><span className="scene-section-label">JUNIPER HOUSE · LEDGER</span><strong>Contribution records</strong></div><span className="scene-filter">This stay <ArrowDown size={12} /></span></div>
               <div className="scene-ledger-summary"><span>RECENT ACTIVITY</span><strong>Shared costs, clearly noted</strong><small>Illustrative entries · recorded only</small></div>
-              <div className="scene-ledger-row"><span className="scene-ledger-icon"><House size={16} /></span><div><strong>Utilities</strong><small>Added by Maya · Oct 8</small></div><div className="scene-amount"><strong>$84.00</strong><small>Recorded</small></div></div>
-              <div className="scene-ledger-row"><span className="scene-ledger-icon grocery-icon"><Check size={16} /></span><div><strong>Shared groceries</strong><small>Added by Jordan · Oct 7</small></div><div className="scene-amount"><strong>$36.50</strong><small>Recorded</small></div></div>
+              <div className="scene-ledger-row"><span className="scene-ledger-icon"><House size={16} /></span><div><strong>Utilities</strong><small>Oct 8 · Shared expense</small></div><div className="scene-amount"><strong>$84.00</strong><small>Recorded</small></div></div>
+              <div className="scene-ledger-row"><span className="scene-ledger-icon grocery-icon"><Check size={16} /></span><div><strong>Shared groceries</strong><small>Oct 7 · Shared expense</small></div><div className="scene-amount"><strong>$36.50</strong><small>Recorded</small></div></div>
               <div className="scene-ledger-foot"><ClipboardList size={15} /><span>Entries are a shared record—not a payment transfer.</span></div>
             </div>
           </div>
@@ -154,15 +164,15 @@ export function LandingPage({ hasClerk = true }: LandingPageProps) {
           <div className="v21-feature-copy">
             <span className="v21-feature-index">03 <span>Chores and check-ins</span></span>
             <h3 id="v21-feature-tasks-title">Make shared responsibilities easier to follow.</h3>
-            <p>Put a name and a due date beside a task, then keep simple stay check-ins where the group can find them.</p>
-            <ul><li><Check size={16} /> See what needs doing and who owns it</li><li><Check size={16} /> Keep due dates from getting buried in a chat</li><li><Check size={16} /> Share arrival and stay check-ins in context</li></ul>
+            <p>Put a name and a due date beside a task, and keep the host-scheduled check-in date in view.</p>
+            <ul><li><Check size={16} /> See what needs doing and who owns it</li><li><Check size={16} /> Keep due dates from getting buried in a chat</li><li><Check size={16} /> Keep the scheduled check-in date easy to find</li></ul>
           </div>
           <div className="v21-feature-scene scene-tasks" aria-hidden="true">
             <div className="v21-scene-window">
               <div className="scene-tasks-heading"><div><span className="scene-section-label">JUNIPER HOUSE · TOGETHER</span><strong>Things to take care of</strong></div><span className="scene-task-count">2 open</span></div>
               <div className="scene-task-row"><span className="scene-check"></span><div><strong>Take the bins to the curb</strong><small>Alex · Due Thursday</small></div><span className="scene-due">Tomorrow</span></div>
               <div className="scene-task-row"><span className="scene-check done"><Check size={12} /></span><div><strong>Restock the coffee shelf</strong><small>Jordan · Done today</small></div><span className="scene-done">Done</span></div>
-              <div className="scene-checkin"><span className="scene-checkin-icon"><Users size={16} /></span><div><span className="scene-section-label">NEXT CHECK-IN</span><strong>Arrival plans</strong><small>Friday · Add your arrival window</small></div><ArrowRight size={16} /></div>
+              <div className="scene-checkin"><span className="scene-checkin-icon"><Users size={16} /></span><div><span className="scene-section-label">NEXT CHECK-IN</span><strong>Scheduled check-in</strong><small>Friday · Set by the host</small></div></div>
             </div>
           </div>
         </article>
