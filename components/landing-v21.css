@@ -127,7 +127,8 @@
 .v21-feature-intro { max-width: 710px; margin: 0 auto 32px; text-align: center; }
 .v21-feature-intro .v21-eyebrow { justify-content: center; }
 .v21-feature-intro h2 { margin: 0; font-size: clamp(37px, 4.2vw, 50px); line-height: 1.08; letter-spacing: -.055em; font-weight: 720; }
-.v21-feature-intro > p:last-child { max-width: 600px; margin: 17px auto 0; color: #59665d; font-size: 15px; line-height: 1.75; }
+.v21-feature-description { max-width: 600px; margin: 17px auto 0; color: #59665d; font-size: 15px; line-height: 1.75; }
+.v21-feature-intro > .v21-feature-disclaimer { margin-top: 10px; color: #778177; font-size: 10px; line-height: 1.5; }
 .v21-feature-row { display: grid; grid-template-columns: minmax(0, .88fr) minmax(0, 1.12fr); align-items: center; column-gap: clamp(52px, 7.5vw, 96px); padding: 52px 0; border-top: 1px solid #e7e9e0; }
 .v21-feature-row-reverse .v21-feature-copy { grid-column: 2; grid-row: 1; }
 .v21-feature-row-reverse .v21-feature-scene { grid-column: 1; grid-row: 1; }
@@ -171,7 +172,6 @@
 .scene-update strong { display: block; color: #33453a; font-size: 9px; }
 .scene-update strong small { margin-left: 6px; color: #859086; font-size: 8px; font-weight: 600; }
 .scene-update p { margin: 5px 0 0; color: #657167; font-size: 9px; line-height: 1.5; }
-.scene-caption { display: block; position: relative; z-index: 1; margin-top: 12px; color: #66786a; font-size: 9px; font-weight: 650; }
 .scene-ledger-head { margin-bottom: 17px; }
 .scene-ledger-head > div > strong, .scene-tasks-heading > div > strong { display: block; margin-top: 6px; color: #293a30; font-size: 15px; letter-spacing: -.02em; }
 .scene-filter { display: inline-flex; align-items: center; gap: 9px; padding: 8px 10px; border: 1px solid #e4e7dd; border-radius: 8px; color: #526256; background: #fffefa; font-size: 9px; font-weight: 700; white-space: nowrap; }
@@ -332,7 +332,7 @@
   .v21-feature-intro { margin-bottom: 24px; text-align: left; }
   .v21-feature-intro .v21-eyebrow { justify-content: flex-start; }
   .v21-feature-intro h2 { font-size: 35px; }
-  .v21-feature-intro > p:last-child { margin-top: 13px; font-size: 13px; line-height: 1.65; }
+  .v21-feature-description { margin-top: 13px; font-size: 13px; line-height: 1.65; }
   .v21-feature-row { grid-template-columns: 1fr; gap: 22px; padding: 32px 0; }
   .v21-feature-row-reverse .v21-feature-copy, .v21-feature-row-reverse .v21-feature-scene { grid-column: auto; grid-row: auto; }
   .v21-feature-copy { max-width: none; }

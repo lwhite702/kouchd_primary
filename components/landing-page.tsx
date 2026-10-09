@@ -110,7 +110,8 @@ export function LandingPage({ hasClerk = true }: LandingPageProps) {
         <div className="v21-feature-intro">
           <p className="v21-eyebrow">A shared place to come back to</p>
           <h2 id="v21-feature-title">The details, the ledger, and the to-dos.</h2>
-          <p>Kouchd brings the practical parts of sharing a stay together—so everyone can find the right information and know what is next.</p>
+          <p className="v21-feature-description">Kouchd brings the practical parts of sharing a stay together—so everyone can find the right information and know what is next.</p>
+          <p className="v21-feature-disclaimer">The screens below use illustrative example content.</p>
         </div>
 
         <article className="v21-feature-row" aria-labelledby="v21-feature-guide-title">
@@ -128,7 +129,6 @@ export function LandingPage({ hasClerk = true }: LandingPageProps) {
               <div className="scene-info-grid"><div><span>WI-FI</span><strong>JuniperGuest</strong><small>Ask Maya for the password</small></div><div><span>QUIET HOURS</span><strong>10 pm – 8 am</strong><small>Thanks for keeping it cozy</small></div></div>
               <div className="scene-update"><span className="scene-avatar">M</span><div><strong>Update from Maya <small>Today</small></strong><p>Use the side entrance after 8. The porch light is on.</p></div></div>
             </div>
-            <span className="scene-caption">Example stay · illustrative content</span>
           </div>
         </article>
 
@@ -148,7 +148,6 @@ export function LandingPage({ hasClerk = true }: LandingPageProps) {
               <div className="scene-ledger-row"><span className="scene-ledger-icon grocery-icon"><Check size={16} /></span><div><strong>Shared groceries</strong><small>Added by Jordan · Oct 7</small></div><div className="scene-amount"><strong>$36.50</strong><small>Recorded</small></div></div>
               <div className="scene-ledger-foot"><ClipboardList size={15} /><span>Entries are a shared record—not a payment transfer.</span></div>
             </div>
-            <span className="scene-caption">Example stay · illustrative content</span>
           </div>
         </article>
 
@@ -166,7 +165,6 @@ export function LandingPage({ hasClerk = true }: LandingPageProps) {
               <div className="scene-task-row"><span className="scene-check done"><Check size={12} /></span><div><strong>Restock the coffee shelf</strong><small>Jordan · Done today</small></div><span className="scene-done">Done</span></div>
               <div className="scene-checkin"><span className="scene-checkin-icon"><Users size={16} /></span><div><span className="scene-section-label">NEXT CHECK-IN</span><strong>Arrival plans</strong><small>Friday · Add your arrival window</small></div><ArrowRight size={16} /></div>
             </div>
-            <span className="scene-caption">Example stay · illustrative content</span>
           </div>
         </article>
       </section>
