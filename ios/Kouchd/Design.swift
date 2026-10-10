@@ -171,6 +171,10 @@ extension View {
       case .admin: AdminScreen(store: store)
       case .adminFinancial: AdminFinancialScreen(store: store)
       case .adminSmsHistory: AdminSMSHistory(events: store.adminSms)
+      case .adminUserSmsHistory(let userID):
+        AdminSMSHistory(events: store.adminUserDetail["user"].id == userID
+          ? store.adminUserDetail["smsEvents"].items
+          : [])
       case .adminUser(let id): AdminUserScreen(store: store, userID: id)
       case .adminStay(let id): AdminStayScreen(store: store, stayID: id)
       }

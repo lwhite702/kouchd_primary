@@ -367,7 +367,7 @@ struct AdminUserScreen: View {
           NavigationLink("View stay", value: KouchdRoute.adminStay(id: member["stayId"].text))
         }
       }
-      NavigationLink("SMS consent history", value: KouchdRoute.adminSmsHistory)
+      NavigationLink("SMS consent history", value: KouchdRoute.adminUserSmsHistory(userID: userID))
     }
     .task { store.loadAdminUser(userID) }
     .confirmationDialog("Change this person's platform access?", isPresented: $confirmRoleChange) {

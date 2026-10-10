@@ -102,6 +102,7 @@ enum KouchdRoute: Hashable {
   case admin
   case adminFinancial
   case adminSmsHistory
+  case adminUserSmsHistory(userID: String)
   case adminUser(id: String)
   case adminStay(id: String)
 }
