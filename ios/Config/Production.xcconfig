@@ -1,5 +1,0 @@
-CLERK_PUBLISHABLE_KEY = missing_production_key
-CONVEX_URL = https:/$()/missing-production.example
-KOUCHD_CODE_SIGN_STYLE = Manual
-KOUCHD_PROVISIONING_PROFILE_SPECIFIER = Kouchd TestFlight
-#include? "Production.local.xcconfig"
