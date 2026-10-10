@@ -8,7 +8,8 @@ Internal engineering record. This file is excluded from Mintlify navigation and 
 - Replaced the guest-editable arrival-window example with the host-scheduled next check-in date already supported by the app.
 - Added an expandable tablet navigation menu so all header links remain available at widths where the desktop row does not fit.
 - Prepared package/iOS version `0.4.1` as a patch for the landing-page release gate. This is branch-only work; no release, deployment, or public changelog update is verified.
-- Validation: `npm run typecheck`, `npx eslint components/landing-page.tsx`, and all 60 tests passed locally. The first GitHub `verify` run completed lint, typecheck, tests, and build but failed the release gate because the branch lacked the required patch classification and version artifacts; updated them here for rerun.
+- Made the release gate find the nearest versioned first-parent ancestor when the base snapshot has no version file, and added a regression test for that recovery case.
+- Validation: `npm run release:check` passed against the last complete baseline; 61 tests passed, the production build and version sync passed, and the release gate passed. Lint reports 15 existing warnings and no errors. The public Mintlify changelog remains unchanged.
 
 ## 2026-10-05 — Landing header refresh, accessible tooltips, skeleton loaders, and canonical help links
 

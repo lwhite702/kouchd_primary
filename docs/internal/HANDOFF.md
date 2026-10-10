@@ -84,5 +84,5 @@
 
 - Branch: `codex/WRE-177-landing-claims`; source PR: [#26](https://github.com/lwhite702/kouchd_primary/pull/26). The earlier PR #25 was based on a pre-merge snapshot and conflicted with current `main`; it should be closed after this replacement PR is verified and merged.
 - Changes: corrected unsupported Ledger creator attribution and guest arrival-window claims; added an expandable tablet navigation menu; prepared version `0.4.1` patch metadata and internal release notes to satisfy the repository release gate.
-- Evidence: local typecheck, targeted ESLint, and 60 tests passed. GitHub CI passed lint, typecheck, tests, and build but failed only at release classification because the first PR commit had no new patch version. Current `0.4.1` changes require CI rerun.
+- Evidence: `npm run release:check` passed against the last complete baseline `3a0c559`; version sync, typecheck, all 61 tests, Next.js production build, and release gate passed. Lint reports 15 existing warnings and no errors. Release-gate fallback now finds the nearest versioned first-parent ancestor when the base snapshot has no version file, with a regression test.
 - Release state: no production deployment, tag, public changelog entry, or customer availability is verified. Public Mintlify content was not changed.
