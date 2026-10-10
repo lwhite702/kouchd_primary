@@ -35,22 +35,9 @@ export function LegalPageLayout({ children, activeRoute }: LegalPageLayoutProps)
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
-          <Link href="/" style={{ display: "inline-flex", textDecoration: "none" }}>
+          <Link href="/" style={{ display: "inline-flex", textDecoration: "none" }} aria-label="Kouchd home">
             <KouchdWordmark size="sm" />
           </Link>
-          <span
-            style={{
-              fontSize: "0.75rem",
-              fontWeight: 700,
-              color: "var(--kouchd-forest, #184f3a)",
-              background: "var(--kouchd-sage, #e5edde)",
-              padding: "4px 10px",
-              borderRadius: "99px",
-              border: "1px solid rgba(24, 79, 58, 0.12)",
-            }}
-          >
-            By Wrelik Brands LLC
-          </span>
         </div>
 
         <nav style={{ display: "flex", alignItems: "center", gap: "1.25rem", flexWrap: "wrap" }}>

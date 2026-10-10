@@ -2,6 +2,15 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-10-09 — Landing-page claim corrections and tablet navigation
+
+- Removed contributor-attribution language from the public Ledger tour because the current Ledger UI does not identify the entry creator.
+- Replaced the guest-editable arrival-window example with the host-scheduled next check-in date already supported by the app.
+- Added an expandable tablet navigation menu so all header links remain available at widths where the desktop row does not fit.
+- Prepared package/iOS version `0.4.1` as a patch for the landing-page release gate. This is branch-only work; no release, deployment, or public changelog update is verified.
+- Made the release gate find the nearest versioned first-parent ancestor when the base snapshot has no version file, and added a regression test for that recovery case.
+- Validation: `npm run release:check` passed against the last complete baseline; 61 tests passed, the production build and version sync passed, and the release gate passed. Lint reports 15 existing warnings and no errors. The public Mintlify changelog remains unchanged.
+
 ## 2026-10-05 — Landing header refresh, accessible tooltips, skeleton loaders, and canonical help links
 
 - Refreshed Landing Page Header (`components/landing-page.tsx`, `components/landing-v21.css`):

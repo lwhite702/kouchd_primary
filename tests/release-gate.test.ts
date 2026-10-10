@@ -41,6 +41,13 @@ describe("Wrelik release gate", () => {
     const f = fixture(); f.runtime();
     expect(f.run()).toContain("runtime changes: true");
   });
+  it("uses the nearest versioned ancestor when the base snapshot has no version file", () => {
+    const f = fixture();
+    f.git("rm", "VERSION");
+    f.git("commit", "-m", "snapshot without release metadata");
+    f.runtime();
+    expect(f.run()).toContain("runtime changes: true");
+  });
   it("rejects reuse of a released version", () => {
     const f = fixture(); f.runtime(); f.git("tag", "v0.4.0");
     expect(f.run).toThrow(/already been released/);
