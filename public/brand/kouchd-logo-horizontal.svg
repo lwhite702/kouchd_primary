@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 80" fill="none">
+  <!-- Couch Icon Symbol -->
+  <g transform="translate(10, 8)">
+    <rect width="64" height="64" rx="16" fill="#184F3A"/>
+    <path d="M14.4 33.6V23.2C14.4 16 19.2 12.8 25.6 12.8H38.4C44.8 12.8 49.6 16 49.6 23.2V33.6" stroke="#FFFFFF" stroke-width="4.5" stroke-linecap="round"/>
+    <path d="M9.6 29.6C12.8 29.6 15.2 32 15.2 35.2V39.2H48.8V35.2C48.8 32 51.2 29.6 54.4 29.6C57.6 29.6 60 32 60 35.2V44.8C60 48.8 56.8 52 52.8 52H11.2C7.2 52 4 48.8 4 44.8V35.2C4 32 6.4 29.6 9.6 29.6Z" fill="#DFF25E"/>
+    <path d="M13.6 51.2V56M50.4 51.2V56" stroke="#DFF25E" stroke-width="4" stroke-linecap="round"/>
+  </g>
+  <!-- Text Wordmark -->
+  <text x="88" y="52" fill="#184F3A" font-family="-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif" font-size="40" font-weight="800" letter-spacing="-1.5">kouchd</text>
+</svg>

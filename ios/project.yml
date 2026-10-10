@@ -1,0 +1,94 @@
+name: Kouchd
+options:
+  bundleIdPrefix: com.wrelikbrands
+  deploymentTarget:
+    iOS: '17.0'
+  xcodeVersion: '16.0'
+packages:
+  Clerk:
+    url: https://github.com/clerk/clerk-ios.git
+    from: 1.5.8
+  ClerkConvex:
+    url: https://github.com/clerk/clerk-convex-swift.git
+    from: 0.1.0
+  Convex:
+    url: https://github.com/get-convex/convex-swift.git
+    from: 0.8.1
+targets:
+  Kouchd:
+    type: application
+    platform: iOS
+    sources:
+      - path: Kouchd
+    info:
+      path: Kouchd/Info.plist
+      properties:
+        CFBundleDisplayName: Kouchd
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        UILaunchStoryboardName: LaunchScreen
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        UIAppFonts:
+          - Manrope.ttf
+        CLERK_PUBLISHABLE_KEY: $(CLERK_PUBLISHABLE_KEY)
+        CONVEX_URL: $(CONVEX_URL)
+    configFiles:
+      Debug: Config/Development.xcconfig
+      Release: Config/Production.xcconfig
+    preBuildScripts:
+      - name: Validate production release configuration
+        basedOnDependencyAnalysis: false
+        script: |
+          if [ "$CONFIGURATION" = "Release" ]; then
+            case "$CLERK_PUBLISHABLE_KEY" in
+              pk_live_*) ;;
+              *) echo "Release requires a production Clerk publishable key." >&2; exit 1 ;;
+            esac
+            case "$CONVEX_URL" in
+              https://*convex.cloud) ;;
+              *) echo "Release requires a production Convex URL." >&2; exit 1 ;;
+            esac
+          fi
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.wrelikbrands.kouchd
+        DEVELOPMENT_TEAM: L8R42BJ54K
+        MARKETING_VERSION: 0.4.0
+        CURRENT_PROJECT_VERSION: 1
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        SWIFT_VERSION: 5.0
+        EXCLUDED_ARCHS[sdk=iphonesimulator*]: x86_64
+        GENERATE_INFOPLIST_FILE: NO
+        INFOPLIST_KEY_ITSAppUsesNonExemptEncryption: NO
+        CODE_SIGN_ENTITLEMENTS: Kouchd/Kouchd.entitlements
+      configs:
+        Release:
+          CODE_SIGN_STYLE: $(KOUCHD_CODE_SIGN_STYLE)
+          CODE_SIGN_IDENTITY: Apple Distribution
+          PROVISIONING_PROFILE_SPECIFIER: $(KOUCHD_PROVISIONING_PROFILE_SPECIFIER)
+    dependencies:
+      - package: Clerk
+        product: ClerkKit
+      - package: Clerk
+        product: ClerkKitUI
+      - package: ClerkConvex
+        product: ClerkConvex
+      - package: Convex
+        product: ConvexMobile
+schemes:
+  Kouchd:
+    build:
+      targets:
+        Kouchd: all
+    run:
+      config: Debug
+    archive:
+      config: Release

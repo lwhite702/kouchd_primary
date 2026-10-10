@@ -1,0 +1,117 @@
+import { convexTest } from "convex-test";
+import { describe, expect, it } from "vitest";
+
+import { api } from "../convex/_generated/api";
+import schema from "../convex/schema";
+
+const modules = import.meta.glob([
+  "../convex/**/*.ts",
+  "!../convex/lib/**",
+  "!../convex/schema.ts",
+  "!../convex/auth.config.ts",
+]);
+
+const sampleTerms = {
+  startDate: "2026-09-01",
+  endDate: "2026-09-21",
+  cadence: "weekly" as const,
+  rateCents: 20_000,
+  earlyDiscountEnabled: false,
+  earlyDiscountPercentage: 0,
+  earlyDiscountDays: 0,
+  lateFeeEnabled: false,
+  lateFeeCents: 0,
+  graceDays: 0,
+  houseNotes: "Quiet after 10 PM.",
+  houseRules: [
+    {
+      id: "quiet_1",
+      category: "quiet_hours",
+      title: "Quiet hours 10 PM - 8 AM",
+      description: "Keep common spaces quiet during nighttime.",
+      required: true,
+    },
+  ],
+  rewards: {
+    enabled: true,
+    coinName: "KouchdCoins",
+    centsPerPoint: 100,
+    maxCreditPerPeriodCents: 10_000,
+  },
+};
+
+async function createUser(t: ReturnType<typeof convexTest>, subject: string, name: string) {
+  const actor = t.withIdentity({ subject, name, email: `${subject}@example.com` });
+  await actor.mutation(api.users.syncCurrent, {});
+  return actor;
+}
+
+describe("Household Referral Codes", () => {
+  it("generates a referral code on stay creation and allows guests to preview and join", async () => {
+    const t = convexTest(schema, modules);
+    const host = await createUser(t, "host-ref-1", "Jordan Host");
+    const guest = await createUser(t, "guest-ref-1", "Taylor Guest");
+
+    const stayId = await host.mutation(api.stays.create, {
+      timezone: "America/New_York",
+      terms: sampleTerms,
+    });
+
+    const bundle = await host.query(api.stays.getBundle, { stayId });
+    expect(bundle.stay.referralCode).toBeDefined();
+    expect(bundle.stay.referralCode).toMatch(/^KCH-[A-Z0-9]{4,10}$/);
+
+    const referralCode = bundle.stay.referralCode!;
+
+    // Guest previews the referral code without joining
+    const preview = await guest.query(api.referral.preview, { referralCode });
+    expect(preview.valid).toBe(true);
+    if (preview.valid) {
+      expect(preview.stayId).toBe(stayId);
+      expect(preview.hostName).toBe("Jordan Host");
+      expect(preview.houseRules?.length).toBe(1);
+      expect(preview.rewards?.enabled).toBe(true);
+      expect(preview.rewards?.coinName).toBe("KouchdCoins");
+    }
+
+    // Guest joins using the referral code
+    const joinResult = await guest.mutation(api.referral.joinWithCode, { referralCode });
+    expect(joinResult.stayId).toBe(stayId);
+    expect(joinResult.alreadyMember).toBe(false);
+
+    // Re-joining returns alreadyMember: true
+    const rejoinResult = await guest.mutation(api.referral.joinWithCode, { referralCode });
+    expect(rejoinResult.alreadyMember).toBe(true);
+
+    // Verify guest has membership
+    const guestStays = await guest.query(api.stays.listMine, {});
+    expect(guestStays.length).toBe(1);
+    expect(guestStays[0].membership.role).toBe("guest");
+    expect(guestStays[0].stay._id).toBe(stayId);
+  });
+
+  it("allows host to regenerate referral code and invalidates the old one", async () => {
+    const t = convexTest(schema, modules);
+    const host = await createUser(t, "host-ref-2", "Alex Host");
+    const outsider = await createUser(t, "outsider-ref", "Morgan");
+
+    const stayId = await host.mutation(api.stays.create, {
+      timezone: "America/New_York",
+      terms: sampleTerms,
+    });
+
+    const initialBundle = await host.query(api.stays.getBundle, { stayId });
+    const oldCode = initialBundle.stay.referralCode!;
+
+    const newCode = await host.mutation(api.referral.regenerateCode, { stayId });
+    expect(newCode).not.toBe(oldCode);
+
+    // Old code preview fails
+    const oldPreview = await outsider.query(api.referral.preview, { referralCode: oldCode });
+    expect(oldPreview.valid).toBe(false);
+
+    // New code preview succeeds
+    const newPreview = await outsider.query(api.referral.preview, { referralCode: newCode });
+    expect(newPreview.valid).toBe(true);
+  });
+});
