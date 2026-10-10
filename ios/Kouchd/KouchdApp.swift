@@ -75,24 +75,28 @@ struct RootView: View {
             LoadedStayContent(loading: store.isStayLoading || store.isFinancialLoading) {
               HomeScreen(store: store)
             }
+            .kouchdDestinations(store: store)
           }
             .tabItem { Label(Tab.home.rawValue, systemImage: Tab.home.symbol) }.tag(Tab.home)
           NavigationStack {
             LoadedStayContent(loading: store.isStayLoading || store.isFinancialLoading) {
               LedgerScreen(store: store)
             }
+            .kouchdDestinations(store: store)
           }
             .tabItem { Label(Tab.ledger.rawValue, systemImage: Tab.ledger.symbol) }.tag(Tab.ledger)
           NavigationStack {
             LoadedStayContent(loading: store.isStayLoading) {
               ChoresScreen(store: store)
             }
+            .kouchdDestinations(store: store)
           }
             .tabItem { Label(Tab.chores.rawValue, systemImage: Tab.chores.symbol) }.tag(Tab.chores)
           NavigationStack {
             LoadedStayContent(loading: store.isStayLoading) {
               StayScreen(store: store)
             }
+            .kouchdDestinations(store: store)
           }
             .tabItem { Label(Tab.stay.rawValue, systemImage: Tab.stay.symbol) }.tag(Tab.stay)
         }
@@ -169,12 +173,13 @@ struct RootView: View {
           PrimaryButton(title: "Sign in or create an account") { authPresented = true }
         })
       }
-      NavigationLink("About Kouchd") { AboutKouchdScreen() }
+      NavigationLink("About Kouchd", value: KouchdRoute.about)
       if !inviteToken.isEmpty {
         Text("Your invitation will be ready after sign-in.")
           .font(.subheadline).foregroundStyle(Palette.forest)
       }
     }
+    .kouchdDestinations(store: store)
   }
 
   private var onboarding: some View {
@@ -184,20 +189,21 @@ struct RootView: View {
           Text("Start a shared stay").font(.title3.bold())
           Text("Set the dates, contribution rhythm, and house notes for your guests.")
             .foregroundStyle(Palette.muted)
-          NavigationLink("Create a stay") { CreateStayScreen(store: store) }
+          NavigationLink("Create a stay", value: KouchdRoute.createStay)
             .buttonStyle(.borderedProminent).tint(Palette.forest)
         }
         Card {
           Text("Joining someone?").font(.title3.bold())
           Text("Open their invite link or enter their referral code.")
-          NavigationLink("Join with a code") { JoinCodeScreen(store: store) }
+          NavigationLink("Join with a code", value: KouchdRoute.joinCode)
         }
-        NavigationLink("Profile and optional reminders") { SettingsScreen(store: store) }
+        NavigationLink("Profile and optional reminders", value: KouchdRoute.settings)
         Link("Terms & Conditions", destination: URL(string: "https://kouchd.com/terms")!)
         Link("Privacy Policy", destination: URL(string: "https://kouchd.com/privacy")!)
-        NavigationLink("About Kouchd") { AboutKouchdScreen() }
+        NavigationLink("About Kouchd", value: KouchdRoute.about)
         UserButton()
       }
+      .kouchdDestinations(store: store)
       .navigationDestination(item: $destination) { route in
         switch route {
         case .host: CreateStayScreen(store: store)
