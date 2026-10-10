@@ -75,7 +75,7 @@ struct HomeScreen: View {
               .font(.largeTitle.bold()).foregroundStyle(.white)
             Text("Due \(store.ledger.first?["dueDate"].text ?? "later")")
               .font(.subheadline).foregroundStyle(.white.opacity(0.85))
-            NavigationLink("View contributions") { LedgerScreen(store: store) }
+            NavigationLink("View contributions", value: KouchdRoute.ledger)
               .font(.headline).foregroundStyle(Palette.ink)
               .frame(maxWidth: .infinity).padding(14)
               .background(.white, in: RoundedRectangle(cornerRadius: 14))
@@ -115,7 +115,7 @@ struct HomeScreen: View {
         Card {
           Text("Your agreement needs review").font(.headline)
           Text("Read the current terms before recording new activity.")
-          NavigationLink("Review agreement") { AgreementScreen(store: store) }
+          NavigationLink("Review agreement", value: KouchdRoute.agreement)
         }
       }
       Card {
@@ -123,13 +123,13 @@ struct HomeScreen: View {
         Text(Display.money(store.ledger.reduce(0) { $0 + $1["balanceCents"].int }))
           .font(.system(size: 38, weight: .bold, design: .rounded))
           .foregroundStyle(Palette.forest)
-        NavigationLink("Open ledger") { LedgerScreen(store: store) }
+        NavigationLink("Open ledger", value: KouchdRoute.ledger)
       }
       HStack(spacing: 12) {
-        NavigationLink { ChoresScreen(store: store) } label: {
+        NavigationLink(value: KouchdRoute.chores) {
           StatCard(number: "\(store.chores.filter { !$0["completed"].flag && $0["voidedAt"].text.isEmpty }.count)", label: "Open chores")
         }
-        NavigationLink { RewardsScreen(store: store) } label: {
+        NavigationLink(value: KouchdRoute.rewards) {
           StatCard(number: "\(store.wallet["availablePoints"].int)", label: "Reward points")
         }
       }
@@ -142,9 +142,9 @@ struct HomeScreen: View {
       }
       Card {
         Text("Your next steps").font(.headline)
-        NavigationLink("Stay details and agreement") { StayScreen(store: store) }
-        NavigationLink("Occupied nights") { OccupancyScreen(store: store) }
-        NavigationLink("Schedule requests") { ScheduleScreen(store: store) }
+        NavigationLink("Stay details and agreement", value: KouchdRoute.stay)
+        NavigationLink("Occupied nights", value: KouchdRoute.occupancy)
+        NavigationLink("Schedule requests", value: KouchdRoute.schedule)
       }
       if !store.activity.isEmpty {
         Card {
@@ -274,8 +274,8 @@ struct LedgerScreen: View {
           }
         }
       }
-      NavigationLink("Contribution rewards") { RewardsScreen(store: store) }
-      NavigationLink("Schedule changes") { ScheduleScreen(store: store) }
+      NavigationLink("Contribution rewards", value: KouchdRoute.rewards)
+      NavigationLink("Schedule changes", value: KouchdRoute.schedule)
     }
     .sheet(isPresented: $showingContribution) { ContributionForm(store: store) }
   }
@@ -377,7 +377,7 @@ struct ChoresScreen: View {
           }
         }
       }
-      NavigationLink("Occupied nights") { OccupancyScreen(store: store) }
+      NavigationLink("Occupied nights", value: KouchdRoute.occupancy)
     }
     .sheet(isPresented: $showingCreate) { ChoreForm(store: store) }
   }

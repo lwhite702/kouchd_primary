@@ -1,5 +1,5 @@
 {
-  "version": "0.4.1",
+  "version": "0.4.2",
   "type": "patch",
-  "reason": "Corrects landing-page feature claims and adds compact tablet navigation."
+  "reason": "Modernizes native iOS SwiftUI navigation with typed routes and destination mapping."
 }
