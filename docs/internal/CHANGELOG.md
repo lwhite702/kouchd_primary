@@ -2,6 +2,14 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-10-10 — SwiftUI Navigation modernization and route typing
+
+- Modernized native SwiftUI navigation in Kouchd iOS to use data-driven, strongly-typed routing instead of eager closure-based destinations.
+- Introduced `KouchdRoute: Hashable` representing all in-app navigation targets across tabs, onboarding, host controls, and administrative records.
+- Created `View.kouchdDestinations(store:)` registering `.navigationDestination(for: KouchdRoute.self)` across all top-level `NavigationStack` instances.
+- Preserved individual user scope in administrative SMS consent views via dedicated `.adminUserSmsHistory(userID:)` route.
+- Synchronized package and iOS marketing versions to `0.4.2` with patch release classification.
+
 ## 2026-10-09 — Landing-page claim corrections and tablet navigation
 
 - Removed contributor-attribution language from the public Ledger tour because the current Ledger UI does not identify the entry creator.
