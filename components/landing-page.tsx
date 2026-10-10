@@ -25,17 +25,9 @@ export function LandingPage({ hasClerk = true }: LandingPageProps) {
   return (
     <main className="landing-v21">
       <header className="v21-header">
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <Link href="/" aria-label="Kouchd home" className="v21-brand">
-            <KouchdWordmark size="md" />
-          </Link>
-          <Tooltip content="Collaborative stay agreements & bilateral household ledger" position="bottom">
-            <span className="v21-header-badge">
-              <Sparkles size={13} />
-              <span>By Wrelik</span>
-            </span>
-          </Tooltip>
-        </div>
+        <Link href="/" aria-label="Kouchd home" className="v21-brand">
+          <KouchdWordmark size="md" />
+        </Link>
         <nav className="v21-nav" aria-label="Main navigation">
           <a href="#features">Features</a>
           <a href="#how-it-works">How it works</a>
