@@ -6,6 +6,7 @@ import { requireCurrentUser, requireHost } from "./lib/auth";
 import { recordActivity } from "./lib/activity";
 import { assertInvite, assertInviteHash } from "./lib/validation";
 import { ensureGuestTerms } from "./lib/stayTerms";
+import { scheduleSubscriptionLimitShadow } from "./subscriptionShadow";
 
 export const preview = query({
   args: { tokenHash: v.string() },
@@ -105,6 +106,9 @@ export const accept = mutation({
     if (!stay) throw new Error("Stay not found");
     await ensureGuestTerms(ctx, invite.stayId, user._id, stay.hostUserId);
     await ctx.db.patch(invite._id, { usedAt: now, usedBy: user._id });
+    if (stay.status === "active") {
+      await scheduleSubscriptionLimitShadow(ctx, stay._id, "guest_joined", "active_guest_memberships");
+    }
     await recordActivity(ctx, { stayId: invite.stayId, actorUserId: user._id, kind: "invite", action: "accepted", detail: "Guest joined the stay", entityId: invite._id });
     return invite.stayId;
   },
