@@ -2,8 +2,106 @@ import { v } from "convex/values";
 
 import type { Id } from "./_generated/dataModel";
 import type { MutationCtx } from "./_generated/server";
-import { internalMutation } from "./_generated/server";
+import { internalMutation, query } from "./_generated/server";
 import { getOrCreateHouseholdAccount } from "./householdOwnership";
+import { getEffectiveSubscriptionForAccount } from "./lib/subscriptionAccess";
+import { requireCurrentUser } from "./lib/auth";
+import { getPlanCapabilities, type SubscriptionPlan } from "../lib/domain/subscriptionPlans";
+
+const planValidator = v.union(v.literal("starter"), v.literal("hostPlus"), v.literal("householdPro"));
+const summaryStatusValidator = v.union(
+  v.literal("starter"),
+  v.literal("active"),
+  v.literal("grace_period"),
+  v.literal("billing_retry"),
+  v.literal("canceled"),
+  v.literal("expired"),
+  v.literal("refunded"),
+  v.literal("unknown"),
+);
+const capabilitiesValidator = v.object({
+  agreementsAndHistory: v.boolean(),
+  individualRecords: v.boolean(),
+  coreLedger: v.boolean(),
+  basicChores: v.boolean(),
+  guestFunctions: v.boolean(),
+  flexibleTerms: v.boolean(),
+  recurringChores: v.boolean(),
+  expandedKoins: v.boolean(),
+  hostReporting: v.boolean(),
+  welcomeKit: v.boolean(),
+  multiStayManagement: v.boolean(),
+  cohostAdministration: v.boolean(),
+  consolidatedReporting: v.boolean(),
+});
+
+/**
+ * Client-safe view of the signed-in user's own host subscription. A guest
+ * cannot query another household's billing state because this query accepts
+ * no account or user identifier and returns Starter for guest-only accounts.
+ */
+export const currentAccountSummary = query({
+  args: {},
+  returns: v.object({
+    canManageSubscription: v.boolean(),
+    plan: planValidator,
+    status: summaryStatusValidator,
+    currentPeriodEndsAt: v.optional(v.number()),
+    willRenew: v.optional(v.boolean()),
+    capabilities: capabilitiesValidator,
+  }),
+  handler: async (ctx) => {
+    const user = await requireCurrentUser(ctx);
+    const hostStay = await ctx.db
+      .query("stays")
+      .withIndex("by_host_user_id", (q) => q.eq("hostUserId", user._id))
+      .first();
+    const account = await ctx.db
+      .query("householdAccounts")
+      .withIndex("by_owner_user_id", (q) => q.eq("ownerUserId", user._id))
+      .unique();
+    const canManageSubscription = Boolean(hostStay || account);
+
+    // Guests receive only the public Starter baseline, never a billing
+    // account lookup or provider state for the household they joined.
+    if (!canManageSubscription) {
+      const plan: SubscriptionPlan = "starter";
+      return {
+        canManageSubscription: false,
+        plan,
+        status: "starter" as const,
+        capabilities: getPlanCapabilities(plan),
+      };
+    }
+
+    const configuredEnvironment = process.env.SUBSCRIPTION_EXPECTED_ENVIRONMENT;
+    const expectedEnvironment = configuredEnvironment === "production" || configuredEnvironment === "sandbox"
+      ? configuredEnvironment
+      : undefined;
+    const subscription = account && expectedEnvironment
+      ? await getEffectiveSubscriptionForAccount(ctx, account._id, expectedEnvironment)
+      : null;
+    const plan = subscription?.plan ?? "starter";
+    const snapshot = subscription?.snapshot;
+    const nowMs = Date.now();
+    const isPeriodEnded = snapshot?.currentPeriodEndsAt !== undefined
+      && nowMs >= snapshot.currentPeriodEndsAt;
+    const status: SnapshotStatus | "starter" = !snapshot
+      ? "starter"
+      : isPeriodEnded && (snapshot.status === "active" || snapshot.status === "grace_period" || snapshot.status === "canceled")
+        ? "expired"
+        : snapshot.status;
+
+    return {
+      canManageSubscription: true,
+      plan,
+      status,
+      currentPeriodEndsAt: snapshot?.currentPeriodEndsAt,
+      willRenew: snapshot?.willRenew,
+      capabilities: getPlanCapabilities(plan),
+    };
+  },
+});
 
 const statusValidator = v.union(
   v.literal("active"),
