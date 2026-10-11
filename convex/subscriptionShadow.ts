@@ -90,8 +90,8 @@ export const recordLimitShadow = internalMutation({
               .take(51);
             observedCount += memberships.length;
             scanTruncated ||= memberships.length > 50;
-            // These tiers cap at five guests; beyond that, the exact count is
-            // unnecessary to determine whether the commercial limit is hit.
+            // Current proposals cap at three guests; beyond that, the exact
+            // count is unnecessary to determine whether the commercial limit is hit.
             if (observedCount > limit) break;
           }
         }
