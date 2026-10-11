@@ -9,6 +9,7 @@ import { generateReferralCode } from "../lib/referral";
 import { SUGGESTED_CONTRIBUTION_TASKS } from "../lib/domain/rewards";
 import { getCurrentGuestTerms } from "./lib/stayTerms";
 import { resolveMemberName } from "./lib/names";
+import { getOrCreateHouseholdAccount } from "./householdOwnership";
 
 const houseInfoInput = {
   wifiNetwork: v.optional(v.string()),
@@ -85,9 +86,11 @@ export const create = mutation({
     assertPaymentOptionsInput(paymentOptions);
     const now = Date.now();
     const referralCode = generateReferralCode();
+    const householdAccountId = await getOrCreateHouseholdAccount(ctx, user._id);
     const stayId = await ctx.db.insert("stays", {
       hostUserId: user._id,
       name,
+      householdAccountId,
       status: "pending",
       timezone: args.timezone,
       referralCode,

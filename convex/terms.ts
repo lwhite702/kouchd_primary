@@ -8,6 +8,7 @@ import { recordActivity } from "./lib/activity";
 import { ensureObligationsForTerms } from "./lib/obligations";
 import { assertStayTerms } from "./lib/validation";
 import { ensureGuestTerms, getCurrentGuestTerms } from "./lib/stayTerms";
+import { scheduleSubscriptionLimitShadow } from "./subscriptionShadow";
 import { addCalendarDays, calendarDateInTimezone, stayDays } from "../lib/domain/dates";
 import { buildObligationPeriods } from "../lib/domain/obligations";
 
@@ -159,7 +160,11 @@ export const acceptCurrent = mutation({
       if (!memberTerms || member.acceptedTermsId !== memberTerms._id) allAccepted = false;
     }
     if (allAccepted) {
-      if (stay.status !== "active") await ctx.db.patch(stayId, { status: "active", updatedAt: Date.now() });
+      if (stay.status !== "active") {
+        await ctx.db.patch(stayId, { status: "active", updatedAt: Date.now() });
+        await scheduleSubscriptionLimitShadow(ctx, stayId, "stay_activated", "active_stays");
+        await scheduleSubscriptionLimitShadow(ctx, stayId, "stay_activated", "active_guest_memberships");
+      }
     }
     await recordActivity(ctx, { stayId, actorUserId: user._id, kind: "terms", action: "accepted", detail: "Current stay terms accepted", entityId: termsId });
     await ctx.scheduler.runAfter(0, internal.knock.cancelAgreementPending, {
