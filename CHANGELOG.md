@@ -4,6 +4,9 @@
 
 ### Added
 
+- Multi-tier feature flag system with client dev overrides, platform database kill-switches, PostHog Cloud synchronization, and typed code defaults.
+- RevenueCat Web billing integration, dynamic paywall gating, customer center self-service, and host entitlement checks.
+- Shared and personal shopping items, host/guest check-in records with response and follow-up status, and recurring daily or weekly chores with deduplicated due reminders.
 - Figma v2.1 first-use introduction, feature previews, host/guest entry paths, a branded launch screen, and replayable About Kouchd information.
 
 - Xcode Cloud post-clone configuration from production environment variables, with cloud automatic signing and retained local manual-signing defaults.

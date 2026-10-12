@@ -95,3 +95,17 @@ Internal engineering record. This file is excluded from Mintlify navigation and 
 
 - Merged [PR #7](https://github.com/lwhite702/kouchd_primary/pull/7) to `main` (`d2f74f33bef7729398ea14bbf960326849bf05e2`) and verified the live Help Center route returns HTTP 200 with updated Mintlify page metadata.
 - Vercel preview and CodeRabbit passed; Mintlify PR check was skipped, so publication was confirmed by reading the live page after merge.
+### 2026-10-09 — WRE-179, WRE-180, WRE-181
+
+- Implemented stay-scoped shared/personal shopping items, private host/guest check-ins with response and follow-up status, and daily/weekly recurring chores with deduplicated due reminders.
+- Added daily advancement for overdue recurring chores and activity history for shopping and check-in actions.
+- Work is on `codex/wre-179-181-household-coordination`; not merged, deployed, or released. Public roadmap marks household coordination as in development.
+- `npm run typecheck` passed. ESLint on changed TypeScript files passed with 10 pre-existing `<img>` optimization warnings in `components/authenticated-home.tsx`. Tests were not run.
+
+### 2026-10-12 — PostHog Feature Flags & RevenueCat Monetization
+
+- Integrated PostHog analytics and multi-tier Feature Flag evaluation engine (local developer URL/storage override → Convex platform emergency kill switch → PostHog Cloud percentage rollouts → typesafe code defaults).
+- Created Platform Admin Flags Explorer at `/console/[consoleKey]/flags` with real-time override management and reset capabilities.
+- Defined 14 canonical flags in `lib/flags/config.ts` covering household coordination, core roadmap features, onboarding, messaging, and RevenueCat monetization. Provisioned all 14 flags in PostHog project `Kouchd` (`595950`).
+- Integrated RevenueCat Web SDK and created responsive `PaywallModal` and `useKouchdPlus` gated behind `feature_revenuecat_paywall`, `feature_billing_portal`, `feature_kouchd_plus_entitlement`, and `feature_customer_center`.
+- Added automated unit and integration tests in `tests/feature-flags.test.ts`. Verified `npx convex codegen`, `npm run typecheck` (0 errors), `npm run test` (all 17 test suites, 77 tests pass), and `npm run lint`.

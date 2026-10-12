@@ -5,9 +5,19 @@ import "server-only";
  * If bypass is enabled, platform console discovery and access must strictly fail closed.
  */
 export function isAuthBypassEnabled(): boolean {
-  return (
-    process.env.AUTH_BYPASS_ENABLED === "true" ||
-    process.env.NEXT_PUBLIC_DISABLE_AUTH === "true" ||
-    process.env.BYPASS_AUTH === "true"
-  );
+  if (
+    process.env.NODE_ENV === "production" ||
+    process.env.VERCEL_ENV === "production"
+  ) {
+    return false;
+  }
+
+  const enabled = process.env.AUTH_BYPASS_ENABLED === "true";
+  if (enabled) {
+    console.warn(
+      "[AUTH] Authentication bypass is ENABLED. Do not use this configuration in production."
+    );
+  }
+  return enabled;
 }
+

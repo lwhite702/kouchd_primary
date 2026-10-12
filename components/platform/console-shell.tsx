@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Activity, ArrowLeft, CheckCircle2, FileText, Home, Shield, Users } from "lucide-react";
+import { Activity, ArrowLeft, CheckCircle2, FileText, Flag, Home, Shield, Users } from "lucide-react";
 import type { ReactNode } from "react";
 import { KouchdWordmark } from "@/components/brand/kouchd-logo";
 import type { PlatformAdminUser } from "@/lib/platform/platform-admin";
@@ -24,6 +24,7 @@ export function ConsoleShell({ consoleKey, admin, children }: ConsoleShellProps)
     { label: "Households & Stays", href: `${basePath}/stays`, icon: Home },
     { label: "Financials & Disputes", href: `${basePath}/financials`, icon: FileText },
     { label: "10DLC Compliance", href: `${basePath}/compliance`, icon: CheckCircle2 },
+    { label: "Feature Flags", href: `${basePath}/flags`, icon: Flag },
   ];
 
   return (

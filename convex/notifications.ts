@@ -451,13 +451,18 @@ export const reminderCandidates = internalQuery({
       const members = await ctx.db.query("memberships").withIndex("by_stay", (query) => query.eq("stayId", chore.stayId)).take(20);
       const recipients = chore.assigneeUserId
         ? members.filter((member) => member.userId === chore.assigneeUserId && member.status === "active")
-        : members.filter((member) => member.status === "active");
+        : members.filter((member) => member.status === "active" && (chore.assignee === "shared" || member.role === chore.assignee));
       for (const member of recipients) {
+        const entityId = `chore:${chore._id}:${localToday}`;
+        const alreadySent = await ctx.db.query("notifications")
+          .withIndex("by_user_workflow_and_entity", (query) => query.eq("userId", member.userId).eq("workflow", "chore-reminder").eq("entityId", entityId))
+          .first();
+        if (alreadySent) continue;
         candidates.push({
           userId: member.userId,
           stayId: chore.stayId,
           workflow: "chore-reminder",
-        entityId: `chore:${chore._id}:${localToday}`,
+          entityId,
           data: { choreTitle: chore.title, dueDate: chore.dueDate },
         });
       }

@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { withSentryConfig } from "@sentry/nextjs/config";
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
@@ -30,4 +31,13 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withSentryConfig(nextConfig, {
+  org: "wrelik-0y",
+  project: "kouchd",
+  silent: !process.env.CI,
+  reactComponentAnnotation: {
+    enabled: true,
+  },
+  tunnelRoute: "/monitoring-tunnel",
+});
+

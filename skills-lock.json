@@ -1,6 +1,20 @@
 {
   "version": 1,
   "skills": {
+    "brand-review": {
+      "source": "anthropics/knowledge-work-plugins",
+      "ref": "02ffa99ff00ce4d3046ccebabb8357cb39f3ab06",
+      "sourceType": "github",
+      "skillPath": "marketing/skills/brand-review/SKILL.md",
+      "computedHash": "266e6795caefed694696f2b71d201295d6f0d2cce1e6ed5ee24195b09e34148d"
+    },
+    "campaign-plan": {
+      "source": "anthropics/knowledge-work-plugins",
+      "ref": "02ffa99ff00ce4d3046ccebabb8357cb39f3ab06",
+      "sourceType": "github",
+      "skillPath": "marketing/skills/campaign-plan/SKILL.md",
+      "computedHash": "2335b5e87cc366b7cd6113dac41387a56e0fbf2102e3fe67fe4a2bdead60fd7d"
+    },
     "clerk": {
       "source": "clerk/skills",
       "sourceType": "github",
@@ -120,6 +134,68 @@
       "sourceType": "github",
       "skillPath": "skills/features/clerk-webhooks/SKILL.md",
       "computedHash": "e3c348bdc6dee1f28bc56577cd4aac605d3dfc3c63fcb10fc51e6c04c1fe3fb0"
+    },
+    "competitive-brief": {
+      "source": "anthropics/knowledge-work-plugins",
+      "ref": "02ffa99ff00ce4d3046ccebabb8357cb39f3ab06",
+      "sourceType": "github",
+      "skillPath": "marketing/skills/competitive-brief/SKILL.md",
+      "computedHash": "5cbd5b8ad2d9234fba1a149ad90e2889539e3f74d2cc66710f0bf92c23c9de3f"
+    },
+    "content-creation": {
+      "source": "anthropics/knowledge-work-plugins",
+      "ref": "02ffa99ff00ce4d3046ccebabb8357cb39f3ab06",
+      "sourceType": "github",
+      "skillPath": "marketing/skills/content-creation/SKILL.md",
+      "computedHash": "012ed09d491de22ef3d2697e7f268597353711b8c17d72ce013c4a6e396df970"
+    },
+    "docs-architect": {
+      "source": "smithery.ai",
+      "sourceUrl": "https://smithery.ai/skills/sickn33/docs-architect",
+      "sourceType": "well-known",
+      "computedHash": "b41fb317cd174cc1dd8af2180ab9a947cf7f947f7ee9cb5dbba38b1574484a1c",
+      "wellKnownDigest": "sha256:7fe062c2213aaef83d9f9d5eb44c402a572ee77e0b6bdafd251fc00030e688bc"
+    },
+    "draft-content": {
+      "source": "anthropics/knowledge-work-plugins",
+      "ref": "02ffa99ff00ce4d3046ccebabb8357cb39f3ab06",
+      "sourceType": "github",
+      "skillPath": "marketing/skills/draft-content/SKILL.md",
+      "computedHash": "0387c1d6dece22365c092d0c695611af0e2241b60f3e1d635a80145e4b4fc5a7"
+    },
+    "email-sequence": {
+      "source": "anthropics/knowledge-work-plugins",
+      "ref": "02ffa99ff00ce4d3046ccebabb8357cb39f3ab06",
+      "sourceType": "github",
+      "skillPath": "marketing/skills/email-sequence/SKILL.md",
+      "computedHash": "7a89a7aeaf0ba16756cd0150b99e72efcaf22c8fbdb53c7ae484527874a4b258"
+    },
+    "performance-report": {
+      "source": "anthropics/knowledge-work-plugins",
+      "ref": "02ffa99ff00ce4d3046ccebabb8357cb39f3ab06",
+      "sourceType": "github",
+      "skillPath": "marketing/skills/performance-report/SKILL.md",
+      "computedHash": "10cabcb049c9305306a1cfce1960ad20fc5d44557779214f7d1bd726b57c4d9e"
+    },
+    "revenuecat": {
+      "source": "smithery.ai",
+      "sourceUrl": "https://smithery.ai/skills/rawveg/revenuecat",
+      "sourceType": "well-known",
+      "computedHash": "4fff1c5c8a14a85b0994ea171d9a89490b80097e0b0bebdbdbed56cd22ebec12",
+      "wellKnownDigest": "sha256:a9e0b0286338009121fe21cf707b31d2d907772d44b581b2bd914e23e685dc9b"
+    },
+    "seo-audit": {
+      "source": "anthropics/knowledge-work-plugins",
+      "ref": "02ffa99ff00ce4d3046ccebabb8357cb39f3ab06",
+      "sourceType": "github",
+      "skillPath": "marketing/skills/seo-audit/SKILL.md",
+      "computedHash": "8e2ca1e7267fab10969f83a4ae6dbc15ce4082f35d8bc7fcd004b7af41ee9e4d"
+    },
+    "stripe-best-practices": {
+      "source": "stripe/ai",
+      "sourceType": "github",
+      "skillPath": "skills/stripe-best-practices/SKILL.md",
+      "computedHash": "517e425060fe9cbed9f7d17cc900cbfc812c5248c2d09ec89818937eb3c5cb0f"
     }
   }
 }
