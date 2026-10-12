@@ -43,8 +43,6 @@ describe("Platform Console Discovery & Access Gate", () => {
   it("succeeds when consoleKey matches and bypass is false", () => {
     process.env.PLATFORM_CONSOLE_SLUG = validSlug;
     delete process.env.AUTH_BYPASS_ENABLED;
-    delete process.env.NEXT_PUBLIC_DISABLE_AUTH;
-    delete process.env.BYPASS_AUTH;
     expect(() => requirePlatformEntryKey(validSlug)).not.toThrow();
   });
 });
