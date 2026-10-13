@@ -144,6 +144,42 @@ extension View {
   func kouchdEntrance(delay: Double = 0) -> some View {
     modifier(KouchdEntrance(delay: delay))
   }
+
+  @ViewBuilder
+  func kouchdDestinations(store: KouchdStore) -> some View {
+    self.navigationDestination(for: KouchdRoute.self) { route in
+      switch route {
+      case .agreement: AgreementScreen(store: store)
+      case .ledger: LedgerScreen(store: store)
+      case .chores: ChoresScreen(store: store)
+      case .rewards: RewardsScreen(store: store)
+      case .stay: StayScreen(store: store)
+      case .occupancy: OccupancyScreen(store: store)
+      case .schedule: ScheduleScreen(store: store)
+      case .settings: SettingsScreen(store: store)
+      case .activity: ActivityScreen(store: store)
+      case .householdGuide: HouseholdGuideScreen(store: store)
+      case .createStay: CreateStayScreen(store: store)
+      case .joinCode: JoinCodeScreen(store: store)
+      case .hostControls: HostControlsScreen(store: store)
+      case .termsEdit: TermsEditScreen(store: store)
+      case .houseInfo: HouseInfoScreen(store: store)
+      case .paymentOptions: PaymentOptionsScreen(store: store)
+      case .adhocCharge: AdhocChargeScreen(store: store)
+      case .rewardRules: RewardRulesScreen(store: store)
+      case .about: AboutKouchdScreen()
+      case .admin: AdminScreen(store: store)
+      case .adminFinancial: AdminFinancialScreen(store: store)
+      case .adminSmsHistory: AdminSMSHistory(events: store.adminSms)
+      case .adminUserSmsHistory(let userID):
+        AdminSMSHistory(events: store.adminUserDetail["user"].id == userID
+          ? store.adminUserDetail["smsEvents"].items
+          : [])
+      case .adminUser(let id): AdminUserScreen(store: store, userID: id)
+      case .adminStay(let id): AdminStayScreen(store: store, stayID: id)
+      }
+    }
+  }
 }
 
 private struct KouchdButtonStyle: ButtonStyle {

@@ -27,8 +27,20 @@ const base = process.env.RELEASE_BASE_REF || (process.env.GITHUB_BASE_REF
 let baseVersion;
 let changed = [];
 try {
-  try { baseVersion = execFileSync("git", ["show", `${base}:VERSION`], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim(); }
-  catch { baseVersion = JSON.parse(execFileSync("git", ["show", `${base}:package.json`], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] })).version; }
+  const baselineHistory = execFileSync("git", ["rev-list", "--first-parent", base], { encoding: "utf8" }).trim().split("\n").filter(Boolean);
+  for (const revision of baselineHistory) {
+    try {
+      baseVersion = execFileSync("git", ["show", `${revision}:VERSION`], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
+    } catch {
+      try {
+        baseVersion = JSON.parse(execFileSync("git", ["show", `${revision}:package.json`], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] })).version;
+      } catch {
+        continue;
+      }
+    }
+    if (baseVersion) break;
+  }
+  if (!baseVersion) throw new Error(`No release version exists in ${base} or its first-parent history`);
   changed = execFileSync("git", ["diff", "--name-only", base], { encoding: "utf8" }).trim().split("\n").filter(Boolean);
   changed.push(...execFileSync("git", ["ls-files", "--others", "--exclude-standard"], { encoding: "utf8" }).trim().split("\n").filter(Boolean));
 } catch (error) {

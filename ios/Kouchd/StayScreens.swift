@@ -58,17 +58,17 @@ struct StayScreen: View {
       }
       Card {
         Text("More for your stay").font(.headline)
-        NavigationLink("Guest agreement") { AgreementScreen(store: store) }
-        NavigationLink("Schedule changes") { ScheduleScreen(store: store) }
-        NavigationLink("Occupied nights") { OccupancyScreen(store: store) }
-        NavigationLink("Contribution rewards") { RewardsScreen(store: store) }
-        NavigationLink("Household activity") { ActivityScreen(store: store) }
-        NavigationLink("Settings and reminders") { SettingsScreen(store: store) }
-        NavigationLink("Create another stay") { CreateStayScreen(store: store) }
-        NavigationLink("Join another stay") { JoinCodeScreen(store: store) }
+        NavigationLink("Guest agreement", value: KouchdRoute.agreement)
+        NavigationLink("Schedule changes", value: KouchdRoute.schedule)
+        NavigationLink("Occupied nights", value: KouchdRoute.occupancy)
+        NavigationLink("Contribution rewards", value: KouchdRoute.rewards)
+        NavigationLink("Household activity", value: KouchdRoute.activity)
+        NavigationLink("Settings and reminders", value: KouchdRoute.settings)
+        NavigationLink("Create another stay", value: KouchdRoute.createStay)
+        NavigationLink("Join another stay", value: KouchdRoute.joinCode)
       }
       if store.isHost && !store.isEnded {
-        NavigationLink("Host controls") { HostControlsScreen(store: store) }
+        NavigationLink("Host controls", value: KouchdRoute.hostControls)
       }
     }
     .sheet(isPresented: $showingInvite) { InviteForm(store: store) }
