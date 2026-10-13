@@ -2,6 +2,13 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-10-12 — iOS navigation bar modernization and auth sheet loop resolution
+
+- Standardized navigation bars and toolbars across Kouchd iOS using `.kouchdNavigationBar(title:)`, toolbar placements (`.topBarLeading`, `.topBarTrailing`, `.primaryAction`, `.confirmationAction`, `.cancellationAction`), and sticky navigation bar styling.
+- Resolved app freeze / watchdog termination on launch caused by `@AppStorage` observation looping when Clerk SDK writes to `UserDefaults` during auth sheet presentation.
+- Updated `AboutKouchdScreen` inline navigation title and fixed welcome screen navigation link hit-testing.
+- Synchronized package and iOS marketing versions to `0.4.3` with patch release classification.
+
 ## 2026-10-10 — SwiftUI Navigation modernization and route typing
 
 - Modernized native SwiftUI navigation in Kouchd iOS to use data-driven, strongly-typed routing instead of eager closure-based destinations.

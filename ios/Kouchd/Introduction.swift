@@ -146,7 +146,7 @@ struct IntroductionScreen: View {
 struct AboutKouchdScreen: View {
   @State private var previewPresented = false
   var body: some View {
-    Page(title: "Make room\nfor clarity.") {
+    Page(title: "Make room\nfor clarity.", navigationTitle: "About Kouchd") {
       Image("CouchMark").resizable().scaledToFit().frame(width: 64, height: 64).accessibilityHidden(true)
       Text("Kouchd helps hosts and guests manage a shared stay with clearer expectations and fewer scattered conversations.")
         .foregroundStyle(Palette.muted)
@@ -163,7 +163,6 @@ struct AboutKouchdScreen: View {
       Text("Version \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "—") · A Wrelik Brands app")
         .font(.caption).foregroundStyle(Palette.muted)
     }
-    .navigationTitle("About Kouchd").navigationBarTitleDisplayMode(.inline)
     .sheet(isPresented: $previewPresented) {
       IntroductionScreen(replay: true) { _ in previewPresented = false }
     }

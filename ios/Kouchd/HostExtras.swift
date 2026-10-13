@@ -92,7 +92,12 @@ struct TermsEditScreen: View {
         Text("Guests must review a changed agreement before continuing.")
       }
     }
-    .navigationTitle("Agreement")
+    .kouchdNavigationBar(title: "Agreement")
+    .toolbar {
+      ToolbarItem(placement: .confirmationAction) {
+        Button("Save") { save() }
+      }
+    }
     .onAppear(perform: fill)
     .onChange(of: store.selectedGuestID) { _, _ in fill() }
   }
@@ -173,19 +178,15 @@ struct HouseInfoScreen: View {
         TextField("Other notes", text: $otherNotes, axis: .vertical)
       }
       Button("Save house details") {
-        let info: [String: ConvexEncodable?] = [
-          "wifiNetwork": network, "wifiPassword": password,
-          "streetAddress": address, "doorCode": doorCode,
-          "parkingNotes": parking, "trashDay": trash,
-          "emergencyContact": emergency, "unit": unit,
-          "cityStateZip": city, "otherNotes": otherNotes
-        ]
-        Task { _ = await store.mutate("stays:updateHouseInfo", [
-          "stayId": store.selectedStayID, "houseInfo": info
-        ]) }
+        save()
       }
     }
-    .navigationTitle("House details")
+    .kouchdNavigationBar(title: "House details")
+    .toolbar {
+      ToolbarItem(placement: .confirmationAction) {
+        Button("Save") { save() }
+      }
+    }
     .onAppear {
       let info = store.bundle["stay"]["houseInfo"]
       network = info["wifiNetwork"].text
@@ -199,6 +200,19 @@ struct HouseInfoScreen: View {
       city = info["cityStateZip"].text
       otherNotes = info["otherNotes"].text
     }
+  }
+
+  private func save() {
+    let info: [String: ConvexEncodable?] = [
+      "wifiNetwork": network, "wifiPassword": password,
+      "streetAddress": address, "doorCode": doorCode,
+      "parkingNotes": parking, "trashDay": trash,
+      "emergencyContact": emergency, "unit": unit,
+      "cityStateZip": city, "otherNotes": otherNotes
+    ]
+    Task { _ = await store.mutate("stays:updateHouseInfo", [
+      "stayId": store.selectedStayID, "houseInfo": info
+    ]) }
   }
 }
 
@@ -229,14 +243,23 @@ struct PaymentOptionsScreen: View {
       }
       Section {
         Button("Save outside payment options") {
-          Task { _ = await store.mutate("stays:updatePaymentOptions", [
-            "stayId": store.selectedStayID, "paymentOptions": Value.array(options)
-          ]) }
+          save()
         }
       } footer: { Text("Kouchd displays these options but does not move money.") }
     }
-    .navigationTitle("Outside payment")
+    .kouchdNavigationBar(title: "Outside payment")
+    .toolbar {
+      ToolbarItem(placement: .confirmationAction) {
+        Button("Save") { save() }
+      }
+    }
     .onAppear { options = store.bundle["stay"]["paymentOptions"].items }
+  }
+
+  private func save() {
+    Task { _ = await store.mutate("stays:updatePaymentOptions", [
+      "stayId": store.selectedStayID, "paymentOptions": Value.array(options)
+    ]) }
   }
 }
 
@@ -253,15 +276,29 @@ struct AdhocChargeScreen: View {
         TextField("Amount in dollars", text: $amount).keyboardType(.decimalPad)
         DatePicker("Due date", selection: $due, displayedComponents: .date)
         Button("Add charge") {
-          Task { _ = await store.mutate("obligations:createAdhocCharge", [
-            "stayId": store.selectedStayID, "guestUserId": store.selectedGuestID,
-            "title": title, "amountCents": Int((Double(amount) ?? 0) * 100),
-            "effectiveDate": Display.date(), "dueDate": Display.date(due)
-          ]) }
-        }.disabled(store.selectedGuestID.isEmpty || title.isEmpty || (Double(amount) ?? 0) <= 0)
+          addCharge()
+        }.disabled(isInvalid)
       }
     }
-    .navigationTitle("One-time charge")
+    .kouchdNavigationBar(title: "One-time charge")
+    .toolbar {
+      ToolbarItem(placement: .confirmationAction) {
+        Button("Add") { addCharge() }
+          .disabled(isInvalid)
+      }
+    }
+  }
+
+  private var isInvalid: Bool {
+    store.selectedGuestID.isEmpty || title.trimmingCharacters(in: .whitespaces).isEmpty || (Double(amount) ?? 0) <= 0
+  }
+
+  private func addCharge() {
+    Task { _ = await store.mutate("obligations:createAdhocCharge", [
+      "stayId": store.selectedStayID, "guestUserId": store.selectedGuestID,
+      "title": title, "amountCents": Int((Double(amount) ?? 0) * 100),
+      "effectiveDate": Display.date(), "dueDate": Display.date(due)
+    ]) }
   }
 }
 
@@ -277,12 +314,8 @@ struct RewardRulesScreen: View {
         TextField("Points", text: $points).keyboardType(.numberPad)
         TextField("Description", text: $description)
         Button("Add rule") {
-          Task { _ = await store.mutate("rewards:createRule", [
-            "stayId": store.selectedStayID, "title": title,
-            "category": "other", "pointsAwarded": Int(points) ?? 0,
-            "description": description
-          ]) }
-        }.disabled(title.isEmpty || (Int(points) ?? 0) <= 0)
+          addRule()
+        }.disabled(isRuleInvalid)
       }
       Section("Rules") {
         ForEach(store.rules, id: \.id) { rule in
@@ -299,7 +332,25 @@ struct RewardRulesScreen: View {
         }
       }
     }
-    .navigationTitle("Reward rules")
+    .kouchdNavigationBar(title: "Reward rules")
+    .toolbar {
+      ToolbarItem(placement: .confirmationAction) {
+        Button("Add") { addRule() }
+          .disabled(isRuleInvalid)
+      }
+    }
+  }
+
+  private var isRuleInvalid: Bool {
+    title.trimmingCharacters(in: .whitespaces).isEmpty || (Int(points) ?? 0) <= 0
+  }
+
+  private func addRule() {
+    Task { _ = await store.mutate("rewards:createRule", [
+      "stayId": store.selectedStayID, "title": title,
+      "category": "other", "pointsAwarded": Int(points) ?? 0,
+      "description": description
+    ]) }
   }
 }
 
