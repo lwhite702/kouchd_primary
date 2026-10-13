@@ -1,5 +1,6 @@
 import ClerkKit
 import ClerkKitUI
+import ConvexMobile
 import CryptoKit
 import SwiftUI
 
@@ -7,6 +8,7 @@ import SwiftUI
   init() {
     #if DEBUG
     if IntroductionTestHost.isEnabled { return }
+    initConvexLogging()
     #endif
     if AppConfig.isConfigured {
       Clerk.configure(publishableKey: AppConfig.clerkKey)
@@ -98,6 +100,8 @@ struct RootView: View {
         }
       } else if clerk.user == nil {
         NavigationStack { welcome }
+      } else if !store.connectionError.isEmpty {
+        connectionIssue
       } else if store.isLoading {
         ProgressView("Loading your stays")
           .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -188,13 +192,14 @@ struct RootView: View {
     }
     .onChange(of: clerk.user?.id, initial: true) { _, id in
       if id == nil {
-        store.reset()
         destination = nil
+        Task { await store.disconnectAuthenticatedSession() }
       } else {
         markIntroductionComplete()
         if activeSheet?.id == "auth" {
           activeSheet = nil
         }
+        Task { await store.connectAuthenticatedSession() }
         if !inviteToken.isEmpty {
           if invitePreview["valid"].flag {
             activeSheet = .invitation(token: inviteToken, preview: invitePreview)
@@ -276,9 +281,26 @@ struct RootView: View {
     }
   }
 
+  private var connectionIssue: some View {
+    Page(title: "We couldn't load your stays") {
+      Card {
+        Image(systemName: "wifi.exclamationmark")
+          .font(.title2)
+          .foregroundStyle(Palette.forest)
+        Text(store.connectionError)
+          .foregroundStyle(Palette.muted)
+        PrimaryButton(title: "Try again") {
+          Task { await store.connectAuthenticatedSession() }
+        }
+        UserButton()
+      }
+    }
+  }
+
   private var phase: String {
     if splashVisible { return "splash" }
     if clerk.user == nil { return introductionRevision < 1 ? "introduction" : "welcome" }
+    if !store.connectionError.isEmpty { return "connection-error" }
     if store.isLoading { return "loading" }
     return store.stays.isEmpty ? "setup" : "home"
   }
