@@ -82,6 +82,22 @@ final class IntroductionFlowTests: XCTestCase {
     XCTAssertTrue(app.staticTexts["Introduction completed: none"].waitForExistence(timeout: 5))
   }
 
+  func testConfiguredSignInPresentsAuthentication() throws {
+    app.launchArguments = ["-kouchd.introductionRevision", "0"]
+    app.launch()
+
+    let signIn = app.buttons["Already have an account? Sign in"].firstMatch
+    guard signIn.waitForExistence(timeout: 10) else {
+      throw XCTSkip("Requires local Clerk and Convex configuration")
+    }
+
+    signIn.tap()
+    XCTAssertTrue(
+      app.staticTexts["Welcome! Sign in to continue"].waitForExistence(timeout: 10),
+      "Authentication screen did not appear"
+    )
+  }
+
   func testReplayCompletesWithoutRoleSelection() {
     launch(replay: true)
     XCTAssertFalse(app.buttons["Already have an account? Sign in"].exists)
