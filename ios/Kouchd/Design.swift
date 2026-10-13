@@ -13,7 +13,15 @@ enum Palette {
 
 struct Page<Content: View>: View {
   let title: String
+  var navigationTitle: String? = nil
   @ViewBuilder let content: Content
+
+  init(title: String, navigationTitle: String? = nil, @ViewBuilder content: () -> Content) {
+    self.title = title
+    self.navigationTitle = navigationTitle
+    self.content = content()
+  }
+
   var body: some View {
     ScrollView {
       VStack(alignment: .leading, spacing: 20) {
@@ -27,7 +35,7 @@ struct Page<Content: View>: View {
     }
     .background(Palette.cream.ignoresSafeArea())
     .kouchdEntrance()
-    .kouchdNavigationBar(title: title)
+    .kouchdNavigationBar(title: navigationTitle ?? title)
   }
 }
 
@@ -62,6 +70,7 @@ struct PrimaryButton: View {
     Button(action: action) {
       Text(title).font(.headline).frame(maxWidth: .infinity)
         .padding(.vertical, 15)
+        .contentShape(Rectangle())
     }
     .buttonStyle(KouchdButtonStyle())
     .opacity(isEnabled ? 1 : 0.5)
@@ -145,7 +154,7 @@ private struct KouchdNavigationBarModifier: ViewModifier {
   var title: String? = nil
 
   func body(content: Content) -> some View {
-    if let title {
+    if let title, !title.isEmpty {
       content
         .navigationTitle(title.replacingOccurrences(of: "\n", with: " "))
         .navigationBarTitleDisplayMode(.inline)
@@ -211,6 +220,7 @@ private struct KouchdButtonStyle: ButtonStyle {
   func makeBody(configuration: Configuration) -> some View {
     configuration.label.foregroundStyle(.white)
       .background(Palette.forest, in: RoundedRectangle(cornerRadius: 16))
+      .contentShape(RoundedRectangle(cornerRadius: 16))
       .scaleEffect(configuration.isPressed && !reduceMotion ? 0.98 : 1)
       .opacity(configuration.isPressed ? 0.85 : 1)
       .animation(KouchdMotion.animation(reduceMotion), value: configuration.isPressed)
