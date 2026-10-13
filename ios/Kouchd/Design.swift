@@ -27,6 +27,7 @@ struct Page<Content: View>: View {
     }
     .background(Palette.cream.ignoresSafeArea())
     .kouchdEntrance()
+    .kouchdNavigationBar(title: title)
   }
 }
 
@@ -140,7 +141,30 @@ private struct KouchdEntrance: ViewModifier {
   }
 }
 
+private struct KouchdNavigationBarModifier: ViewModifier {
+  var title: String? = nil
+
+  func body(content: Content) -> some View {
+    if let title {
+      content
+        .navigationTitle(title.replacingOccurrences(of: "\n", with: " "))
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbarBackground(Palette.cream, for: .navigationBar)
+        .toolbarBackground(.visible, for: .navigationBar)
+    } else {
+      content
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbarBackground(Palette.cream, for: .navigationBar)
+        .toolbarBackground(.visible, for: .navigationBar)
+    }
+  }
+}
+
 extension View {
+  func kouchdNavigationBar(title: String? = nil) -> some View {
+    modifier(KouchdNavigationBarModifier(title: title))
+  }
+
   func kouchdEntrance(delay: Double = 0) -> some View {
     modifier(KouchdEntrance(delay: delay))
   }

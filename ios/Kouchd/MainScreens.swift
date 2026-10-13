@@ -8,27 +8,6 @@ struct HomeScreen: View {
   var body: some View {
     ScrollView {
       VStack(alignment: .leading, spacing: 24) {
-        HStack {
-          Menu {
-            ForEach(store.stays.indices, id: \.self) { index in
-              let stay = store.stays[index]["stay"]
-              Button(stay["name"].text.isEmpty ? "Shared stay" : stay["name"].text) {
-                store.selectStay(stay["_id"].text)
-              }
-            }
-          } label: {
-            HStack(spacing: 5) {
-              Text(store.stayName).font(.headline)
-              Image(systemName: "chevron.down").font(.caption2)
-            }.foregroundStyle(Palette.forest)
-          }
-          Spacer()
-          Text(String(store.viewer["name"].text.prefix(2)).uppercased())
-            .font(.caption.bold()).foregroundStyle(Palette.forest)
-            .frame(width: 40, height: 40)
-            .background(Palette.lime, in: Circle())
-            .accessibilityLabel("Account initials")
-        }
         VStack(alignment: .leading, spacing: 8) {
           Text(store.isHost ? "A little room, well shared." : "Make yourself at home.")
             .font(Palette.heading).foregroundStyle(Palette.forest)
@@ -162,7 +141,36 @@ struct HomeScreen: View {
     }
     .background(Palette.cream.ignoresSafeArea())
     .kouchdEntrance()
-    .toolbar(.hidden, for: .navigationBar)
+    .kouchdNavigationBar()
+    .toolbar {
+      ToolbarItem(placement: .topBarLeading) {
+        Menu {
+          ForEach(store.stays.indices, id: \.self) { index in
+            let stay = store.stays[index]["stay"]
+            Button(stay["name"].text.isEmpty ? "Shared stay" : stay["name"].text) {
+              store.selectStay(stay["_id"].text)
+            }
+          }
+        } label: {
+          HStack(spacing: 5) {
+            Text(store.stayName).font(.headline)
+            Image(systemName: "chevron.down").font(.caption2.bold())
+          }
+          .foregroundStyle(Palette.forest)
+        }
+        .accessibilityLabel("Switch stay, current stay: \(store.stayName)")
+      }
+      ToolbarItem(placement: .topBarTrailing) {
+        NavigationLink(value: KouchdRoute.settings) {
+          Text(String(store.viewer["name"].text.prefix(2)).uppercased())
+            .font(.caption2.bold())
+            .foregroundStyle(Palette.forest)
+            .frame(width: 32, height: 32)
+            .background(Palette.lime, in: Circle())
+        }
+        .accessibilityLabel("Settings, account: \(store.viewer["name"].text)")
+      }
+    }
   }
 }
 
@@ -277,6 +285,17 @@ struct LedgerScreen: View {
       NavigationLink("Contribution rewards", value: KouchdRoute.rewards)
       NavigationLink("Schedule changes", value: KouchdRoute.schedule)
     }
+    .toolbar {
+      if !store.isEnded {
+        ToolbarItem(placement: .primaryAction) {
+          Button {
+            showingContribution = true
+          } label: {
+            Label("Record contribution", systemImage: "plus")
+          }
+        }
+      }
+    }
     .sheet(isPresented: $showingContribution) { ContributionForm(store: store) }
   }
 }
@@ -310,6 +329,7 @@ struct ContributionForm: View {
         }
       }
       .navigationTitle("Contribution")
+      .kouchdNavigationBar()
       .toolbar {
         ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
         ToolbarItem(placement: .confirmationAction) {
@@ -379,6 +399,17 @@ struct ChoresScreen: View {
       }
       NavigationLink("Occupied nights", value: KouchdRoute.occupancy)
     }
+    .toolbar {
+      if !store.isEnded {
+        ToolbarItem(placement: .primaryAction) {
+          Button {
+            showingCreate = true
+          } label: {
+            Label("Add chore", systemImage: "plus")
+          }
+        }
+      }
+    }
     .sheet(isPresented: $showingCreate) { ChoreForm(store: store) }
   }
 }
@@ -412,6 +443,7 @@ struct ChoreForm: View {
         DatePicker("Due", selection: $due, displayedComponents: .date)
       }
       .navigationTitle("New chore")
+      .kouchdNavigationBar()
       .toolbar {
         ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
         ToolbarItem(placement: .confirmationAction) {
