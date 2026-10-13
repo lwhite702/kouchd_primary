@@ -5,23 +5,38 @@ import SwiftUI
 
 @main struct KouchdApp: App {
   init() {
+    #if DEBUG
+    if IntroductionTestHost.isEnabled { return }
+    #endif
     if AppConfig.isConfigured {
       Clerk.configure(publishableKey: AppConfig.clerkKey)
     }
   }
   var body: some Scene {
     WindowGroup {
-      if AppConfig.isConfigured {
-        RootView()
-          .prefetchClerkImages()
-          .environment(Clerk.shared)
+      #if DEBUG
+      if IntroductionTestHost.isEnabled {
+        IntroductionTestHost()
       } else {
-        ContentUnavailableView(
-          "Setup needed",
-          systemImage: "gearshape",
-          description: Text("Add the Clerk and Convex development settings to Local.xcconfig.")
-        )
+        configuredContent
       }
+      #else
+      configuredContent
+      #endif
+    }
+  }
+
+  @ViewBuilder private var configuredContent: some View {
+    if AppConfig.isConfigured {
+      RootView()
+        .prefetchClerkImages()
+        .environment(Clerk.shared)
+    } else {
+      ContentUnavailableView(
+        "Setup needed",
+        systemImage: "gearshape",
+        description: Text("Add the Clerk and Convex development settings to Local.xcconfig.")
+      )
     }
   }
 }

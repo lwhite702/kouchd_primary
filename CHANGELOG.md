@@ -9,6 +9,7 @@
 ### Added
 
 - Twice-daily Knock reminders for unsigned stay agreements, role-aware host and guest payloads with direct terms deep links, and automated reminder cancellation on terms acceptance.
+- Native introduction UI regression tests with a Debug-only offline test host; Release entry behavior is unchanged.
 - Multi-tier feature flag system with client dev overrides, platform database kill-switches, PostHog Cloud synchronization, and typed code defaults.
 - RevenueCat Web billing integration, dynamic paywall gating, customer center self-service, and host entitlement checks.
 - Shared and personal shopping items, host/guest check-in records with response and follow-up status, and recurring daily or weekly chores with deduplicated due reminders.
@@ -27,6 +28,7 @@
 ### Changed
 
 - Corrected public landing-page examples to match the current Ledger and host-scheduled check-in behavior; added compact tablet navigation while retaining access to all header links.
+- Native cream backgrounds, cards, text, separators, and controls now adapt to dark appearance while retaining Kouchd's forest-and-lime identity; taller introduction pages stay within the safe area and scroll behind an opaque footer.
 - Native screen entrances and primary-button feedback use restrained springs and respect Reduce Motion; live document lists retain stable IDs and stale account/stay responses are ignored.
 - Native navigation transitions to typed, value-driven routing with a centralized destination registry, preserving individual user scope in administrative views.
 - Native navigation bars and toolbar controls modernized across all screens with inline styling, sticky scrolling backgrounds, stay selector menus, and standard confirmation/cancellation actions.

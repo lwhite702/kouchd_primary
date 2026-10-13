@@ -146,3 +146,21 @@ qlmanage -t -s 1024 -o /tmp ios/Artwork/AppIcon.svg
 swift ios/scripts/export-app-icon.swift /tmp/AppIcon.svg.png \
   ios/Kouchd/Assets.xcassets/AppIcon.appiconset/AppIconOpaque.png
 ```
+
+## Introduction UI regression tests
+
+The Kouchd scheme includes KouchdUITests. Run with a specific simulator UDID:
+
+```sh
+xcodebuild test -project ios/Kouchd.xcodeproj -scheme Kouchd \
+  -destination 'platform=iOS Simulator,id=<UDID>' \
+  -parallel-testing-enabled NO CODE_SIGNING_ALLOWED=NO
+```
+
+The Debug-only `--ui-test-introduction` launch flag renders the existing
+IntroductionScreen without configuring Clerk or creating a network-backed store.
+`--ui-test-dark` selects dark appearance and `--ui-test-replay` selects replay.
+These flags and the test host are excluded from Release. Tests cover preview
+navigation, both role callbacks, skip, sign-in callback, and replay, with light
+and dark screenshots. They do not verify authentication, persisted first-launch
+routing, household workflows, purchase/restore, or service failure handling.

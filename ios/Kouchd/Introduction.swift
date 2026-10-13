@@ -18,7 +18,7 @@ struct BrandSplash: View {
         .foregroundStyle(Palette.lime)
     }
     .foregroundStyle(.white).padding(24).frame(maxWidth: .infinity)
-    .background(Palette.forest.ignoresSafeArea())
+    .background(Palette.brandForest.ignoresSafeArea())
   }
 }
 
@@ -78,7 +78,15 @@ struct IntroductionScreen: View {
         .transition(reduceMotion ? .opacity : .opacity.combined(with: .offset(y: 12)))
         .padding(24).frame(maxWidth: 600, alignment: .leading).frame(maxWidth: .infinity)
       }
-      VStack(spacing: 12) {
+    }
+    .safeAreaInset(edge: .bottom, spacing: 0) {
+      footer
+    }
+    .foregroundStyle(Palette.forest)
+    .background(Palette.cream.ignoresSafeArea())
+  }
+  private var footer: some View {
+    VStack(spacing: 12) {
         if step < 4 {
           HStack(spacing: 12) {
             ForEach(0..<4) { index in
@@ -90,9 +98,9 @@ struct IntroductionScreen: View {
           }
         }
         if !replay { Button("Already have an account? Sign in") { finish(nil) }.frame(minHeight: 44) }
-      }.padding(.horizontal, 24).padding(.bottom, 16)
-    }
-    .foregroundStyle(Palette.forest).background(Palette.cream.ignoresSafeArea())
+      }
+      .padding(.horizontal, 24).padding(.bottom, 16)
+      .background(Palette.cream)
   }
   @ViewBuilder private var preview: some View {
     switch step {
@@ -102,7 +110,7 @@ struct IntroductionScreen: View {
         Text("Agree on the stay.\nKeep a clear record.\nShare the everyday.").font(Palette.section)
         Text("For hosts and guests, together.").font(.subheadline)
       }.foregroundStyle(.white).padding(20).frame(maxWidth: .infinity, alignment: .leading)
-        .background(Palette.forest, in: RoundedRectangle(cornerRadius: 24))
+        .background(Palette.brandForest, in: RoundedRectangle(cornerRadius: 24))
     case 1:
       Card {
         Text("Alex’s stay").font(Palette.section)

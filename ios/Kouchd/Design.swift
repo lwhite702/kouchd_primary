@@ -1,14 +1,28 @@
 import SwiftUI
 
 enum Palette {
-  static let cream = Color(red: 0.966, green: 0.949, blue: 0.917)
-  static let forest = Color(red: 0.090, green: 0.306, blue: 0.224)
-  static let ink = Color(red: 0.086, green: 0.141, blue: 0.118)
-  static let muted = Color(red: 0.412, green: 0.443, blue: 0.412)
+  static let cream = adaptive(light: 0xF6F2EA, dark: 0x101713)
+  static let surface = adaptive(light: 0xFFFFFF, dark: 0x1B2721)
+  static let forest = adaptive(light: 0x174E39, dark: 0xD5F59A)
+  static let brandForest = Color(red: 0.090, green: 0.306, blue: 0.224)
+  static let ink = adaptive(light: 0x16241E, dark: 0xF1F5F0)
+  static let muted = adaptive(light: 0x697169, dark: 0xAEB8B0)
   static let lime = Color(red: 0.870, green: 0.950, blue: 0.370)
-  static let line = Color(red: 0.875, green: 0.870, blue: 0.829)
+  static let line = adaptive(light: 0xDFDED3, dark: 0x34443B)
   static let heading = Font.custom("Manrope", size: 33, relativeTo: .largeTitle).weight(.bold)
   static let section = Font.custom("Manrope", size: 23, relativeTo: .title2).weight(.bold)
+
+  private static func adaptive(light: UInt32, dark: UInt32) -> Color {
+    Color(uiColor: UIColor { traits in
+      let value = traits.userInterfaceStyle == .dark ? dark : light
+      return UIColor(
+        red: CGFloat((value >> 16) & 0xFF) / 255,
+        green: CGFloat((value >> 8) & 0xFF) / 255,
+        blue: CGFloat(value & 0xFF) / 255,
+        alpha: 1
+      )
+    })
+  }
 }
 
 struct Page<Content: View>: View {
@@ -45,7 +59,7 @@ struct Card<Content: View>: View {
     VStack(alignment: .leading, spacing: 14) { content }
       .padding(20)
       .frame(maxWidth: .infinity, alignment: .leading)
-      .background(.white, in: RoundedRectangle(cornerRadius: 24))
+      .background(Palette.surface, in: RoundedRectangle(cornerRadius: 24))
       .kouchdEntrance(delay: 0.04)
   }
 }
@@ -56,7 +70,7 @@ struct Pill: View {
     Text(text.uppercased())
       .font(.caption2.weight(.bold))
       .tracking(1)
-      .foregroundStyle(Palette.forest)
+      .foregroundStyle(Palette.brandForest)
       .padding(.horizontal, 12).padding(.vertical, 7)
       .background(Palette.lime, in: Capsule())
   }
@@ -73,6 +87,7 @@ struct PrimaryButton: View {
         .contentShape(Rectangle())
     }
     .buttonStyle(KouchdButtonStyle())
+    .fixedSize(horizontal: false, vertical: true)
     .opacity(isEnabled ? 1 : 0.5)
   }
 }
@@ -219,7 +234,7 @@ private struct KouchdButtonStyle: ButtonStyle {
   @Environment(\.accessibilityReduceMotion) private var reduceMotion
   func makeBody(configuration: Configuration) -> some View {
     configuration.label.foregroundStyle(.white)
-      .background(Palette.forest, in: RoundedRectangle(cornerRadius: 16))
+      .background(Palette.brandForest, in: RoundedRectangle(cornerRadius: 16))
       .contentShape(RoundedRectangle(cornerRadius: 16))
       .scaleEffect(configuration.isPressed && !reduceMotion ? 0.98 : 1)
       .opacity(configuration.isPressed ? 0.85 : 1)

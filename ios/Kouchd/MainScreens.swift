@@ -27,7 +27,7 @@ struct HomeScreen: View {
               .font(.subheadline).foregroundStyle(.white.opacity(0.8))
           }
           .padding(24).frame(maxWidth: .infinity, alignment: .leading)
-          .background(Palette.forest, in: RoundedRectangle(cornerRadius: 24))
+          .background(Palette.brandForest, in: RoundedRectangle(cornerRadius: 24))
           Text("Your stays").font(Palette.section)
           ForEach(store.stays.indices, id: \.self) { index in
             let stay = store.stays[index]["stay"]
@@ -43,7 +43,7 @@ struct HomeScreen: View {
                 Text("Open household details").font(.subheadline).foregroundStyle(Palette.forest)
               }
               .padding(22).frame(maxWidth: .infinity, alignment: .leading)
-              .background(.white, in: RoundedRectangle(cornerRadius: 24))
+              .background(Palette.surface, in: RoundedRectangle(cornerRadius: 24))
               .overlay(RoundedRectangle(cornerRadius: 24).stroke(Palette.line))
             }.buttonStyle(.plain)
           }
@@ -57,10 +57,10 @@ struct HomeScreen: View {
             NavigationLink("View contributions", value: KouchdRoute.ledger)
               .font(.headline).foregroundStyle(Palette.ink)
               .frame(maxWidth: .infinity).padding(14)
-              .background(.white, in: RoundedRectangle(cornerRadius: 14))
+              .background(Palette.surface, in: RoundedRectangle(cornerRadius: 14))
           }
           .padding(24).frame(maxWidth: .infinity, alignment: .leading)
-          .background(Palette.forest, in: RoundedRectangle(cornerRadius: 24))
+          .background(Palette.brandForest, in: RoundedRectangle(cornerRadius: 24))
           if let next = store.chores.first(where: { !$0["completed"].flag && $0["voidedAt"].text.isEmpty && $0["assignee"].text != "host" && ($0["assigneeUserId"].text.isEmpty || $0["assigneeUserId"].text == store.viewer["id"].text) }) {
             Card {
               Text(next.title).font(.headline)

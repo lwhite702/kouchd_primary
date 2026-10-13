@@ -20,13 +20,26 @@
 		B3A075991B02C83DCE934D12 /* KouchdApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D4E9A2F9C52E7B0F9D9EC5F /* KouchdApp.swift */; };
 		B8DBADA83280A246F6DF6617 /* MoreScreens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D6C4CC4E2D25C8E55E007C5 /* MoreScreens.swift */; };
 		C75F49DD6AA1D187EE53C82E /* Manrope.ttf in Resources */ = {isa = PBXBuildFile; fileRef = C4EB31DF8EAC4F2515510B22 /* Manrope.ttf */; };
+		CB51A112F0C5EF73EEDBB3FB /* IntroductionFlowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94F34D6A302D22BE5484C401 /* IntroductionFlowTests.swift */; };
 		CDC623139610A1D52C5C6746 /* ClerkKit in Frameworks */ = {isa = PBXBuildFile; productRef = D5431C4ED24F969226376AC0 /* ClerkKit */; };
 		CDD1F2D952A10F4765EA55F4 /* ClerkKitUI in Frameworks */ = {isa = PBXBuildFile; productRef = 9FC00433A0A25EA43930C998 /* ClerkKitUI */; };
 		DA298C1816D701574257B0E6 /* StayScreens.swift in Sources */ = {isa = PBXBuildFile; fileRef = F05360FF67DCBF3824A3A69F /* StayScreens.swift */; };
 		E90C1942A7C41B9622F10D59 /* OFL.txt in Resources */ = {isa = PBXBuildFile; fileRef = 2DC999A61B355E7B3842556B /* OFL.txt */; };
+		FAA0BC50A18183029D42D5B7 /* IntroductionTestHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A354F47AE7460DA68D2213C /* IntroductionTestHost.swift */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		94F89821B922B0C6912E7266 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A5A09F22BC138A585E244FF8 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 13421FB217D56F14767E3B45;
+			remoteInfo = Kouchd;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
+		0A354F47AE7460DA68D2213C /* IntroductionTestHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntroductionTestHost.swift; sourceTree = "<group>"; };
 		1BFE92274E81D4153B7707BC /* Service.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Service.swift; sourceTree = "<group>"; };
 		1F456BBBC4E5A79C83B94DD4 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		28FB67FA8ACEEF88028EB12D /* MainScreens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainScreens.swift; sourceTree = "<group>"; };
@@ -36,7 +49,9 @@
 		30045E33092B71410923417C /* Development.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Development.xcconfig; sourceTree = "<group>"; };
 		396286E31FFCC158CF46E208 /* HostExtras.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HostExtras.swift; sourceTree = "<group>"; };
 		3D6C4CC4E2D25C8E55E007C5 /* MoreScreens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoreScreens.swift; sourceTree = "<group>"; };
+		49A1CA7350D893AD72B73968 /* KouchdUITests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = KouchdUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		4FAB50E0AF654FC7D39E3074 /* Design.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Design.swift; sourceTree = "<group>"; };
+		94F34D6A302D22BE5484C401 /* IntroductionFlowTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntroductionFlowTests.swift; sourceTree = "<group>"; };
 		9D4E9A2F9C52E7B0F9D9EC5F /* KouchdApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KouchdApp.swift; sourceTree = "<group>"; };
 		AAB94C093B8F8FD00D92532A /* Production.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Production.xcconfig; sourceTree = "<group>"; };
 		AAF2858D8754E0517EEF1659 /* Introduction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Introduction.swift; sourceTree = "<group>"; };
@@ -70,6 +85,7 @@
 				396286E31FFCC158CF46E208 /* HostExtras.swift */,
 				29080916D19B8B8E9E38022A /* Info.plist */,
 				AAF2858D8754E0517EEF1659 /* Introduction.swift */,
+				0A354F47AE7460DA68D2213C /* IntroductionTestHost.swift */,
 				F616736201895BB76DA76381 /* Kouchd.entitlements */,
 				9D4E9A2F9C52E7B0F9D9EC5F /* KouchdApp.swift */,
 				2BE8061F9EFC705EDAEAAD24 /* LaunchScreen.storyboard */,
@@ -88,14 +104,24 @@
 			children = (
 				B70BE05A5CD96B6107AADBFC /* Config */,
 				5296377909989FCAD4E8CB49 /* Kouchd */,
+				8A78E0450AD0954546FC3DA8 /* KouchdUITests */,
 				A14398F8EA07739BB42CBFE5 /* Products */,
 			);
+			sourceTree = "<group>";
+		};
+		8A78E0450AD0954546FC3DA8 /* KouchdUITests */ = {
+			isa = PBXGroup;
+			children = (
+				94F34D6A302D22BE5484C401 /* IntroductionFlowTests.swift */,
+			);
+			path = KouchdUITests;
 			sourceTree = "<group>";
 		};
 		A14398F8EA07739BB42CBFE5 /* Products */ = {
 			isa = PBXGroup;
 			children = (
 				BACC878623220A9635F675DE /* Kouchd.app */,
+				49A1CA7350D893AD72B73968 /* KouchdUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -145,6 +171,24 @@
 			productReference = BACC878623220A9635F675DE /* Kouchd.app */;
 			productType = "com.apple.product-type.application";
 		};
+		FCFE5E2182ED2BF5643EC386 /* KouchdUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 5140B84A1D95CB6E661472C2 /* Build configuration list for PBXNativeTarget "KouchdUITests" */;
+			buildPhases = (
+				F4B76C3D076C3F1F40FA4D12 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				E7C770897ED018ACD04FAB81 /* PBXTargetDependency */,
+			);
+			name = KouchdUITests;
+			packageProductDependencies = (
+			);
+			productName = KouchdUITests;
+			productReference = 49A1CA7350D893AD72B73968 /* KouchdUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -156,6 +200,9 @@
 				TargetAttributes = {
 					13421FB217D56F14767E3B45 = {
 						DevelopmentTeam = L8R42BJ54K;
+					};
+					FCFE5E2182ED2BF5643EC386 = {
+						TestTargetID = 13421FB217D56F14767E3B45;
 					};
 				};
 			};
@@ -179,6 +226,7 @@
 			projectRoot = "";
 			targets = (
 				13421FB217D56F14767E3B45 /* Kouchd */,
+				FCFE5E2182ED2BF5643EC386 /* KouchdUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -227,6 +275,7 @@
 				A51DD4977F27F67ABF3C779D /* Design.swift in Sources */,
 				979ED40CCDDC40CC6B8E855B /* HostExtras.swift in Sources */,
 				99554FEEDC942FF5659E53D4 /* Introduction.swift in Sources */,
+				FAA0BC50A18183029D42D5B7 /* IntroductionTestHost.swift in Sources */,
 				B3A075991B02C83DCE934D12 /* KouchdApp.swift in Sources */,
 				50DD2C11C824695D4C0B9F3F /* MainScreens.swift in Sources */,
 				2FF47254E3CA13D7C4C05DC0 /* Models.swift in Sources */,
@@ -236,9 +285,43 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		F4B76C3D076C3F1F40FA4D12 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				CB51A112F0C5EF73EEDBB3FB /* IntroductionFlowTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		E7C770897ED018ACD04FAB81 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 13421FB217D56F14767E3B45 /* Kouchd */;
+			targetProxy = 94F89821B922B0C6912E7266 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		33AB8E1EDD5FC682FACC8C44 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.wrelikbrands.kouchd.uitests;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = Kouchd;
+			};
+			name = Debug;
+		};
 		CC2C607661DF83B71CF82D87 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -376,12 +459,30 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.5.0;
+				MARKETING_VERSION = 0.4.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.wrelikbrands.kouchd;
 				PROVISIONING_PROFILE_SPECIFIER = "$(KOUCHD_PROVISIONING_PROFILE_SPECIFIER)";
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		E02BB31ADA0C8DD3C9678E0E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.wrelikbrands.kouchd.uitests;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = Kouchd;
 			};
 			name = Release;
 		};
@@ -402,7 +503,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.5.0;
+				MARKETING_VERSION = 0.4.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.wrelikbrands.kouchd;
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 5.0;
@@ -418,6 +519,15 @@
 			buildConfigurations = (
 				F02740196CF5369FBCE8F87E /* Debug */,
 				D6C11B9A44C31D60D07B97FE /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		5140B84A1D95CB6E661472C2 /* Build configuration list for PBXNativeTarget "KouchdUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				33AB8E1EDD5FC682FACC8C44 /* Debug */,
+				E02BB31ADA0C8DD3C9678E0E /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
