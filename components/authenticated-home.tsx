@@ -117,6 +117,19 @@ function SyncedWorkspace() {
 
   const stays = useQuery(api.stays.listMine, synced ? {} : "skip") as Array<{ stay: Doc<"stays">; membership: Doc<"memberships"> }> | undefined;
 
+  useEffect(() => {
+    if (!stays || stays.length === 0 || selectedStayId) return;
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const stayIdParam = params.get("stayId");
+    if (stayIdParam) {
+      const matchingStay = stays.find((item) => item.stay._id === stayIdParam);
+      if (matchingStay) {
+        setSelectedStayId(matchingStay.stay._id);
+      }
+    }
+  }, [stays, selectedStayId]);
+
   if (syncError) {
     return (
       <main className="route-state">

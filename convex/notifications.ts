@@ -3,7 +3,7 @@ import { v } from "convex/values";
 import { calculateObligationLedger } from "../lib/domain/obligations";
 import { addCalendarDays, calendarDateInTimezone, stayDays } from "../lib/domain/dates";
 import type { Doc, Id } from "./_generated/dataModel";
-import { internalMutation, internalQuery } from "./_generated/server";
+import { internalMutation, internalQuery, type QueryCtx } from "./_generated/server";
 import { getCurrentGuestTerms } from "./lib/stayTerms";
 import { listActiveGuestObligations } from "./lib/obligations";
 
@@ -535,6 +535,153 @@ export function buildAgreementPendingPayload({
   };
 }
 
+async function collectAgreementPendingCandidatesForStays(
+  ctx: QueryCtx,
+  stays: Doc<"stays">[],
+  now: number,
+  determinedSlot: "am" | "pm",
+) {
+  const candidates: Array<{
+    userId: Id<"users">;
+    stayId: Id<"stays">;
+    workflow: string;
+    entityId: string;
+    cancellationKey: string;
+    expectedTermsId?: Id<"terms">;
+    recipientRole?: "host" | "guest";
+    guestUserId?: Id<"users">;
+    data: Record<string, unknown>;
+  }> = [];
+
+  for (const stay of stays) {
+    if (stay.status === "ended" || !stay.currentTermsId) continue;
+    const localDate = calendarDateInTimezone(new Date(now), stay.timezone);
+    const members = await ctx.db
+      .query("memberships")
+      .withIndex("by_stay", (query) => query.eq("stayId", stay._id))
+      .take(50);
+    const activeMembers = members.filter((m) => m.status === "active");
+    const hostMembership = activeMembers.find((m) => m.role === "host");
+    const guestMemberships = activeMembers.filter((m) => m.role === "guest");
+    const hostUser = stay.hostUserId ? await ctx.db.get(stay.hostUserId) : null;
+    const defaultTerms = await ctx.db.get(stay.currentTermsId);
+    if (!defaultTerms) continue;
+
+    const termsUrl = buildTermsUrl(stay._id);
+
+    // Check each guest
+    for (const guestMembership of guestMemberships) {
+      const guestUser = await ctx.db.get(guestMembership.userId);
+      const guestTerms = await getCurrentGuestTerms(ctx, stay._id, guestMembership.userId);
+      const termsToUse = guestTerms ?? defaultTerms;
+
+      const isGuestUnsigned = !guestMembership.acceptedTermsId || guestMembership.acceptedTermsId !== termsToUse._id;
+      if (isGuestUnsigned) {
+        // Candidate for guest
+        const guestEntityId = `agreement-pending:${stay._id}:${guestMembership.userId}:${localDate}:${determinedSlot}`;
+        const guestCancellationKey = `agreement-pending:${stay._id}:${guestMembership.userId}`;
+
+        const guestAlreadySent = await ctx.db
+          .query("notifications")
+          .withIndex("by_user_workflow_and_entity", (query) =>
+            query.eq("userId", guestMembership.userId).eq("workflow", "agreement-pending").eq("entityId", guestEntityId),
+          )
+          .first();
+
+        if (!guestAlreadySent) {
+          candidates.push({
+            userId: guestMembership.userId,
+            stayId: stay._id,
+            workflow: "agreement-pending",
+            entityId: guestEntityId,
+            cancellationKey: guestCancellationKey,
+            expectedTermsId: termsToUse._id,
+            recipientRole: "guest",
+            guestUserId: guestMembership.userId,
+            data: buildAgreementPendingPayload({
+              recipientRole: "guest",
+              stay,
+              hostUser,
+              guestUser,
+              terms: termsToUse,
+              termsUrl,
+            }),
+          });
+        }
+
+        // Candidate for host (alerting host about this unsigned guest)
+        if (hostMembership && stay.hostUserId) {
+          const hostEntityId = `agreement-pending:${stay._id}:${stay.hostUserId}:${guestMembership.userId}:${localDate}:${determinedSlot}`;
+          const hostCancellationKey = `agreement-pending:${stay._id}:${stay.hostUserId}:${guestMembership.userId}`;
+
+          const hostAlreadySent = await ctx.db
+            .query("notifications")
+            .withIndex("by_user_workflow_and_entity", (query) =>
+              query.eq("userId", stay.hostUserId).eq("workflow", "agreement-pending").eq("entityId", hostEntityId),
+            )
+            .first();
+
+          if (!hostAlreadySent) {
+            candidates.push({
+              userId: stay.hostUserId,
+              stayId: stay._id,
+              workflow: "agreement-pending",
+              entityId: hostEntityId,
+              cancellationKey: hostCancellationKey,
+              expectedTermsId: termsToUse._id,
+              recipientRole: "host",
+              guestUserId: guestMembership.userId,
+              data: buildAgreementPendingPayload({
+                recipientRole: "host",
+                stay,
+                hostUser,
+                guestUser,
+                terms: termsToUse,
+                termsUrl,
+              }),
+            });
+          }
+        }
+      }
+    }
+
+    // If host themself has not accepted currentTermsId
+    if (hostMembership && stay.hostUserId && (!hostMembership.acceptedTermsId || hostMembership.acceptedTermsId !== stay.currentTermsId)) {
+      const hostSelfEntityId = `agreement-pending:${stay._id}:${stay.hostUserId}:${localDate}:${determinedSlot}`;
+      const hostSelfCancellationKey = `agreement-pending:${stay._id}:${stay.hostUserId}`;
+
+      const hostSelfAlreadySent = await ctx.db
+        .query("notifications")
+        .withIndex("by_user_workflow_and_entity", (query) =>
+          query.eq("userId", stay.hostUserId).eq("workflow", "agreement-pending").eq("entityId", hostSelfEntityId),
+        )
+        .first();
+
+      if (!hostSelfAlreadySent) {
+        candidates.push({
+          userId: stay.hostUserId,
+          stayId: stay._id,
+          workflow: "agreement-pending",
+          entityId: hostSelfEntityId,
+          cancellationKey: hostSelfCancellationKey,
+          expectedTermsId: defaultTerms._id,
+          recipientRole: "host",
+          data: buildAgreementPendingPayload({
+            recipientRole: "host",
+            stay,
+            hostUser,
+            guestUser: null,
+            terms: defaultTerms,
+            termsUrl,
+          }),
+        });
+      }
+    }
+  }
+
+  return candidates;
+}
+
 export const agreementPendingCandidates = internalQuery({
   args: { now: v.number(), slot: v.optional(v.union(v.literal("am"), v.literal("pm"))) },
   returns: v.array(v.object({
@@ -544,142 +691,163 @@ export const agreementPendingCandidates = internalQuery({
     entityId: v.string(),
     cancellationKey: v.string(),
     data: v.any(),
+    expectedTermsId: v.optional(v.id("terms")),
+    recipientRole: v.optional(v.union(v.literal("host"), v.literal("guest"))),
+    guestUserId: v.optional(v.id("users")),
   })),
   handler: async (ctx, { now, slot }) => {
     const determinedSlot = slot ?? (new Date(now).getUTCHours() < 16 ? "am" : "pm");
-    const candidates: Array<{
-      userId: Id<"users">;
-      stayId: Id<"stays">;
-      workflow: string;
-      entityId: string;
-      cancellationKey: string;
-      data: Record<string, unknown>;
-    }> = [];
+    const [pendingStays, activeStays] = await Promise.all([
+      ctx.db.query("stays").withIndex("by_status", (query) => query.eq("status", "pending")).collect(),
+      ctx.db.query("stays").withIndex("by_status", (query) => query.eq("status", "active")).collect(),
+    ]);
+    const stays = [...pendingStays, ...activeStays];
+    return collectAgreementPendingCandidatesForStays(ctx, stays, now, determinedSlot);
+  },
+});
 
-    // Query pending stays
-    const stays = await ctx.db
-      .query("stays")
-      .withIndex("by_status", (query) => query.eq("status", "pending"))
-      .take(200);
-
-    for (const stay of stays) {
-      if (!stay.currentTermsId) continue;
-      const localDate = calendarDateInTimezone(new Date(now), stay.timezone);
-      const members = await ctx.db
-        .query("memberships")
-        .withIndex("by_stay", (query) => query.eq("stayId", stay._id))
-        .take(50);
-      const activeMembers = members.filter((m) => m.status === "active");
-      const hostMembership = activeMembers.find((m) => m.role === "host");
-      const guestMemberships = activeMembers.filter((m) => m.role === "guest");
-      const hostUser = stay.hostUserId ? await ctx.db.get(stay.hostUserId) : null;
-      const defaultTerms = await ctx.db.get(stay.currentTermsId);
-      if (!defaultTerms) continue;
-
-      const termsUrl = buildTermsUrl(stay._id);
-
-      // Check each guest
-      for (const guestMembership of guestMemberships) {
-        const guestUser = await ctx.db.get(guestMembership.userId);
-        const guestTerms = await getCurrentGuestTerms(ctx, stay._id, guestMembership.userId);
-        const termsToUse = guestTerms ?? defaultTerms;
-
-        const isGuestUnsigned = !guestMembership.acceptedTermsId || guestMembership.acceptedTermsId !== termsToUse._id;
-        if (isGuestUnsigned) {
-          // Candidate for guest
-          const guestEntityId = `agreement-pending:${stay._id}:${guestMembership.userId}:${localDate}:${determinedSlot}`;
-          const guestCancellationKey = `agreement-pending:${stay._id}:${guestMembership.userId}`;
-
-          const guestAlreadySent = await ctx.db
-            .query("notifications")
-            .withIndex("by_user_workflow_and_entity", (query) =>
-              query.eq("userId", guestMembership.userId).eq("workflow", "agreement-pending").eq("entityId", guestEntityId),
-            )
-            .first();
-
-          if (!guestAlreadySent) {
-            candidates.push({
-              userId: guestMembership.userId,
-              stayId: stay._id,
-              workflow: "agreement-pending",
-              entityId: guestEntityId,
-              cancellationKey: guestCancellationKey,
-              data: buildAgreementPendingPayload({
-                recipientRole: "guest",
-                stay,
-                hostUser,
-                guestUser,
-                terms: termsToUse,
-                termsUrl,
-              }),
-            });
-          }
-
-          // Candidate for host (alerting host about this unsigned guest)
-          if (hostMembership && stay.hostUserId) {
-            const hostEntityId = `agreement-pending:${stay._id}:${stay.hostUserId}:${guestMembership.userId}:${localDate}:${determinedSlot}`;
-            const hostCancellationKey = `agreement-pending:${stay._id}:${stay.hostUserId}:${guestMembership.userId}`;
-
-            const hostAlreadySent = await ctx.db
-              .query("notifications")
-              .withIndex("by_user_workflow_and_entity", (query) =>
-                query.eq("userId", stay.hostUserId).eq("workflow", "agreement-pending").eq("entityId", hostEntityId),
-              )
-              .first();
-
-            if (!hostAlreadySent) {
-              candidates.push({
-                userId: stay.hostUserId,
-                stayId: stay._id,
-                workflow: "agreement-pending",
-                entityId: hostEntityId,
-                cancellationKey: hostCancellationKey,
-                data: buildAgreementPendingPayload({
-                  recipientRole: "host",
-                  stay,
-                  hostUser,
-                  guestUser,
-                  terms: termsToUse,
-                  termsUrl,
-                }),
-              });
-            }
-          }
+export const agreementPendingCandidatesPage = internalQuery({
+  args: {
+    now: v.number(),
+    slot: v.optional(v.union(v.literal("am"), v.literal("pm"))),
+    cursor: v.optional(v.union(v.string(), v.null())),
+    pageSize: v.optional(v.number()),
+  },
+  returns: v.object({
+    candidates: v.array(v.object({
+      userId: v.id("users"),
+      stayId: v.id("stays"),
+      workflow: v.string(),
+      entityId: v.string(),
+      cancellationKey: v.string(),
+      data: v.any(),
+      expectedTermsId: v.optional(v.id("terms")),
+      recipientRole: v.optional(v.union(v.literal("host"), v.literal("guest"))),
+      guestUserId: v.optional(v.id("users")),
+    })),
+    continueCursor: v.union(v.string(), v.null()),
+    isDone: v.boolean(),
+  }),
+  handler: async (ctx, { now, slot, cursor, pageSize = 100 }) => {
+    const determinedSlot = slot ?? (new Date(now).getUTCHours() < 16 ? "am" : "pm");
+    let stage: "pending" | "active" = "pending";
+    let innerCursor: string | null = null;
+    if (cursor) {
+      try {
+        const parsed = JSON.parse(cursor);
+        if (parsed.stage === "pending" || parsed.stage === "active") {
+          stage = parsed.stage;
+          innerCursor = parsed.innerCursor ?? null;
         }
-      }
-
-      // If host themself has not accepted currentTermsId
-      if (hostMembership && stay.hostUserId && (!hostMembership.acceptedTermsId || hostMembership.acceptedTermsId !== stay.currentTermsId)) {
-        const hostSelfEntityId = `agreement-pending:${stay._id}:${stay.hostUserId}:${localDate}:${determinedSlot}`;
-        const hostSelfCancellationKey = `agreement-pending:${stay._id}:${stay.hostUserId}`;
-
-        const hostSelfAlreadySent = await ctx.db
-          .query("notifications")
-          .withIndex("by_user_workflow_and_entity", (query) =>
-            query.eq("userId", stay.hostUserId).eq("workflow", "agreement-pending").eq("entityId", hostSelfEntityId),
-          )
-          .first();
-
-        if (!hostSelfAlreadySent) {
-          candidates.push({
-            userId: stay.hostUserId,
-            stayId: stay._id,
-            workflow: "agreement-pending",
-            entityId: hostSelfEntityId,
-            cancellationKey: hostSelfCancellationKey,
-            data: buildAgreementPendingPayload({
-              recipientRole: "host",
-              stay,
-              hostUser,
-              guestUser: null,
-              terms: defaultTerms,
-              termsUrl,
-            }),
-          });
-        }
+      } catch {
+        // Fallback if cursor format is unrecognized
       }
     }
 
-    return candidates.slice(0, 500);
+    if (stage === "pending") {
+      const paginated = await ctx.db
+        .query("stays")
+        .withIndex("by_status", (query) => query.eq("status", "pending"))
+        .paginate({ numItems: pageSize, cursor: innerCursor });
+
+      const candidates = await collectAgreementPendingCandidatesForStays(ctx, paginated.page, now, determinedSlot);
+
+      if (paginated.isDone) {
+        return {
+          candidates,
+          continueCursor: JSON.stringify({ stage: "active", innerCursor: null }),
+          isDone: false,
+        };
+      }
+
+      return {
+        candidates,
+        continueCursor: JSON.stringify({ stage: "pending", innerCursor: paginated.continueCursor }),
+        isDone: false,
+      };
+    } else {
+      const paginated = await ctx.db
+        .query("stays")
+        .withIndex("by_status", (query) => query.eq("status", "active"))
+        .paginate({ numItems: pageSize, cursor: innerCursor });
+
+      const candidates = await collectAgreementPendingCandidatesForStays(ctx, paginated.page, now, determinedSlot);
+
+      return {
+        candidates,
+        continueCursor: paginated.isDone ? null : JSON.stringify({ stage: "active", innerCursor: paginated.continueCursor }),
+        isDone: paginated.isDone,
+      };
+    }
+  },
+});
+
+export const checkAgreementPendingEligibility = internalQuery({
+  args: {
+    stayId: v.id("stays"),
+    userId: v.id("users"),
+    expectedTermsId: v.id("terms"),
+    recipientRole: v.union(v.literal("host"), v.literal("guest")),
+    guestUserId: v.optional(v.id("users")),
+    workflow: v.string(),
+    entityId: v.string(),
+  },
+  returns: v.boolean(),
+  handler: async (ctx, args) => {
+    const duplicate = await ctx.db
+      .query("notifications")
+      .withIndex("by_user_workflow_and_entity", (query) =>
+        query.eq("userId", args.userId).eq("workflow", args.workflow).eq("entityId", args.entityId),
+      )
+      .first();
+    if (duplicate) return false;
+
+    const stay = await ctx.db.get(args.stayId);
+    if (!stay || stay.status === "ended") return false;
+
+    if (args.recipientRole === "guest") {
+      const guestMembership = await ctx.db
+        .query("memberships")
+        .withIndex("by_stay_user", (query) => query.eq("stayId", args.stayId).eq("userId", args.userId))
+        .first();
+      if (!guestMembership || guestMembership.status !== "active") return false;
+
+      const currentTerms = await getCurrentGuestTerms(ctx, args.stayId, args.userId);
+      const termsToUse = currentTerms ?? (stay.currentTermsId ? await ctx.db.get(stay.currentTermsId) : null);
+      if (!termsToUse) return false;
+
+      if (guestMembership.acceptedTermsId && (guestMembership.acceptedTermsId === termsToUse._id || guestMembership.acceptedTermsId === args.expectedTermsId)) {
+        return false;
+      }
+      return true;
+    } else {
+      const hostMembership = await ctx.db
+        .query("memberships")
+        .withIndex("by_stay_user", (query) => query.eq("stayId", args.stayId).eq("userId", args.userId))
+        .first();
+      if (!hostMembership || hostMembership.status !== "active") return false;
+
+      if (args.guestUserId) {
+        const guestMembership = await ctx.db
+          .query("memberships")
+          .withIndex("by_stay_user", (query) => query.eq("stayId", args.stayId).eq("userId", args.guestUserId!))
+          .first();
+        if (!guestMembership || guestMembership.status !== "active") return false;
+
+        const currentTerms = await getCurrentGuestTerms(ctx, args.stayId, args.guestUserId);
+        const termsToUse = currentTerms ?? (stay.currentTermsId ? await ctx.db.get(stay.currentTermsId) : null);
+        if (!termsToUse) return false;
+
+        if (guestMembership.acceptedTermsId && (guestMembership.acceptedTermsId === termsToUse._id || guestMembership.acceptedTermsId === args.expectedTermsId)) {
+          return false;
+        }
+        return true;
+      } else {
+        if (hostMembership.acceptedTermsId && (hostMembership.acceptedTermsId === stay.currentTermsId || hostMembership.acceptedTermsId === args.expectedTermsId)) {
+          return false;
+        }
+        return true;
+      }
+    }
   },
 });

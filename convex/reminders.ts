@@ -30,10 +30,23 @@ export const queueAgreementPendingReminders = internalAction({
   returns: v.number(),
   handler: async (ctx, { slot }): Promise<number> => {
     const now = Date.now();
-    const candidates = await ctx.runQuery(internal.notifications.agreementPendingCandidates, { now, slot });
-    for (const [index, candidate] of candidates.entries()) {
-      await ctx.scheduler.runAfter(index * 25, internal.knock.triggerWorkflow, candidate);
+    let cursor: string | null = null;
+    let isDone = false;
+    let totalScheduled = 0;
+    while (!isDone) {
+      const page = await ctx.runQuery(internal.notifications.agreementPendingCandidatesPage, {
+        now,
+        slot,
+        cursor,
+        pageSize: 100,
+      });
+      for (const candidate of page.candidates) {
+        await ctx.scheduler.runAfter(totalScheduled * 25, internal.knock.deliverAgreementPending, candidate);
+        totalScheduled++;
+      }
+      cursor = page.continueCursor;
+      isDone = page.isDone;
     }
-    return candidates.length;
+    return totalScheduled;
   },
 });

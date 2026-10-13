@@ -102,6 +102,81 @@ export const triggerWorkflow = internalAction({
   },
 });
 
+export const deliverAgreementPending = internalAction({
+  args: {
+    userId: v.id("users"),
+    stayId: v.id("stays"),
+    workflow: v.string(),
+    entityId: v.string(),
+    cancellationKey: v.string(),
+    data: v.any(),
+    expectedTermsId: v.optional(v.id("terms")),
+    recipientRole: v.optional(v.union(v.literal("host"), v.literal("guest"))),
+    guestUserId: v.optional(v.id("users")),
+  },
+  returns: deliveryResult,
+  handler: async (ctx, args) => {
+    if (args.expectedTermsId && args.recipientRole) {
+      const isEligible = await ctx.runQuery(internal.notifications.checkAgreementPendingEligibility, {
+        stayId: args.stayId,
+        userId: args.userId,
+        expectedTermsId: args.expectedTermsId,
+        recipientRole: args.recipientRole,
+        guestUserId: args.guestUserId,
+        workflow: args.workflow,
+        entityId: args.entityId,
+      });
+      if (!isEligible) {
+        return { status: "skipped" as const };
+      }
+    } else {
+      const duplicate = await ctx.runQuery(internal.notifications.wasSent, {
+        userId: args.userId,
+        workflow: args.workflow,
+        entityId: args.entityId,
+      });
+      if (duplicate) return { status: "duplicate" as const };
+    }
+
+    const recipient = await ctx.runQuery(internal.notifications.getRecipient, { userId: args.userId });
+    if (!recipient) return { status: "disabled" as const };
+    const knock = client();
+    if (!knock) return { status: "skipped" as const };
+
+    await knock.users.update(recipient.id, {
+      name: recipient.name,
+      email: recipient.email ?? null,
+      phone_number: recipient.phone ?? null,
+      role: recipient.role ?? null,
+      stayStatus: recipient.stayStatus ?? null,
+      stayId: recipient.stayId ?? null,
+      preferences: {
+        default: {
+          channel_types: {
+            email: recipient.notifyEmail,
+            sms: recipient.notifySms && Boolean(recipient.phone),
+            in_app_feed: true,
+          },
+        },
+      },
+    });
+    const response = await knock.workflows.trigger(args.workflow, {
+      recipients: [recipient.id],
+      data: args.data,
+      cancellation_key: args.cancellationKey,
+    });
+    await ctx.runMutation(internal.notifications.recordSent, {
+      userId: args.userId,
+      stayId: args.stayId,
+      workflow: args.workflow,
+      entityId: args.entityId,
+      detail: typeof args.data?.detail === "string" ? args.data.detail : undefined,
+      action: typeof args.data?.action === "string" ? args.data.action : undefined,
+    });
+    return { status: "sent" as const, workflowRunId: response.workflow_run_id };
+  },
+});
+
 export const cancelWorkflow = internalAction({
   args: {
     workflow: v.string(),

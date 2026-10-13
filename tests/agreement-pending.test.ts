@@ -123,6 +123,118 @@ describe("agreement-pending reminders and cancellation contract (WRE-176)", () =
     expect(candidates).toHaveLength(0);
   });
 
+  it("identifies unsigned agreements on active stays when guest-specific terms are updated", async () => {
+    const t = convexTest(schema, modules);
+    const host = await createUser(t, "host-dana", "Dana Host");
+    const guest = await createUser(t, "guest-evan", "Evan Guest");
+
+    const stayId = await host.mutation(api.stays.create, {
+      timezone: "America/New_York",
+      terms: testTerms,
+    });
+
+    const token = "4".repeat(64);
+    await host.mutation(api.invites.create, { stayId, tokenHash: token, expiresAt: Date.now() + 86_400_000 });
+    await guest.mutation(api.invites.accept, { tokenHash: token });
+
+    // Initial acceptance activates stay
+    await guest.mutation(api.terms.acceptCurrent, { stayId });
+    const now = new Date("2026-10-09T10:00:00Z").getTime();
+    let candidates = await t.query(internal.notifications.agreementPendingCandidates, { now });
+    expect(candidates).toHaveLength(0);
+
+    // Host updates guest-specific terms on the ACTIVE stay
+    const guestUserId = (await guest.query(api.users.viewer, {}))!.id;
+    await host.mutation(api.terms.updateGuest, {
+      stayId,
+      guestUserId,
+      terms: {
+        ...testTerms,
+        paymentDayOfWeek: 1,
+        rateCents: 30_000,
+      },
+    });
+
+    // Stay remains active, but Evan has not signed the new terms version!
+    const activeStay = await guest.query(api.stays.getBundle, { stayId });
+    expect(activeStay?.stay.status).toBe("active");
+
+    // Reminders must still be triggered for unsigned agreement on active stay
+    candidates = await t.query(internal.notifications.agreementPendingCandidates, { now });
+    expect(candidates).toHaveLength(2); // Evan + Dana for Evan
+    expect(candidates.find((c) => c.data.recipientRole === "guest" && c.data.rate === "$300")).toBeDefined();
+  });
+
+  it("paginates agreement pending candidates with continuation cursors across stay statuses", async () => {
+    const t = convexTest(schema, modules);
+    const host = await createUser(t, "host-frank", "Frank Host");
+    const guest = await createUser(t, "guest-grace", "Grace Guest");
+
+    const stay1 = await host.mutation(api.stays.create, {
+      timezone: "America/New_York",
+      terms: testTerms,
+    });
+    const token1 = "5".repeat(64);
+    await host.mutation(api.invites.create, { stayId: stay1, tokenHash: token1, expiresAt: Date.now() + 86_400_000 });
+    await guest.mutation(api.invites.accept, { tokenHash: token1 });
+
+    const now = new Date("2026-10-09T10:00:00Z").getTime();
+
+    // Query with page size 1
+    const page1 = await t.query(internal.notifications.agreementPendingCandidatesPage, { now, pageSize: 1 });
+    expect(page1.candidates).toHaveLength(2); // candidates for stay1
+    expect(page1.continueCursor).toBeDefined();
+
+    // Query next page with cursor
+    const page2 = await t.query(internal.notifications.agreementPendingCandidatesPage, { now, cursor: page1.continueCursor, pageSize: 1 });
+    expect(page2.isDone).toBe(true);
+  });
+
+  it("skips delayed delivery if agreement is accepted before action runs", async () => {
+    const t = convexTest(schema, modules);
+    const host = await createUser(t, "host-hank", "Hank Host");
+    const guest = await createUser(t, "guest-ivy", "Ivy Guest");
+
+    const stayId = await host.mutation(api.stays.create, {
+      timezone: "America/New_York",
+      terms: testTerms,
+    });
+    const token = "6".repeat(64);
+    await host.mutation(api.invites.create, { stayId, tokenHash: token, expiresAt: Date.now() + 86_400_000 });
+    await guest.mutation(api.invites.accept, { tokenHash: token });
+
+    const now = new Date("2026-10-09T10:00:00Z").getTime();
+    const candidates = await t.query(internal.notifications.agreementPendingCandidates, { now });
+    const guestCandidate = candidates.find((c) => c.data.recipientRole === "guest")!;
+
+    // Recheck eligibility before acceptance: should be eligible
+    const eligibleBefore = await t.query(internal.notifications.checkAgreementPendingEligibility, {
+      stayId,
+      userId: guestCandidate.userId,
+      expectedTermsId: guestCandidate.expectedTermsId!,
+      recipientRole: "guest",
+      guestUserId: guestCandidate.guestUserId,
+      workflow: guestCandidate.workflow,
+      entityId: guestCandidate.entityId,
+    });
+    expect(eligibleBefore).toBe(true);
+
+    // Guest accepts agreement
+    await guest.mutation(api.terms.acceptCurrent, { stayId });
+
+    // Recheck eligibility after acceptance: MUST be ineligible (skips Knock workflow creation)
+    const eligibleAfter = await t.query(internal.notifications.checkAgreementPendingEligibility, {
+      stayId,
+      userId: guestCandidate.userId,
+      expectedTermsId: guestCandidate.expectedTermsId!,
+      recipientRole: "guest",
+      guestUserId: guestCandidate.guestUserId,
+      workflow: guestCandidate.workflow,
+      entityId: guestCandidate.entityId,
+    });
+    expect(eligibleAfter).toBe(false);
+  });
+
   it("builds consistent termsUrl using production and custom origins", () => {
     const stayId = "stay123";
     const defaultUrl = `https://app.kouchd.com/?stayId=${encodeURIComponent(stayId)}#stay`;
