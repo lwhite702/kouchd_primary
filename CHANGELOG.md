@@ -22,7 +22,11 @@
 
 ### Changed
 
+- Corrected public landing-page examples to match the current Ledger and host-scheduled check-in behavior; added compact tablet navigation while retaining access to all header links.
 - Native screen entrances and primary-button feedback use restrained springs and respect Reduce Motion; live document lists retain stable IDs and stale account/stay responses are ignored.
+- Native navigation transitions to typed, value-driven routing with a centralized destination registry, preserving individual user scope in administrative views.
+- Native navigation bars and toolbar controls modernized across all screens with inline styling, sticky scrolling backgrounds, stay selector menus, and standard confirmation/cancellation actions.
+- Prevented native auth sheet re-render loop on launch by eliminating root-level reactive UserDefaults storage churn, and ensured smooth About Kouchd sheet navigation.
 - Initial stay loading waits for the account query before choosing the empty-state setup screen; selected-stay and guest-financial loading preserve navigation stacks and hide transient zero balances.
 
 - Native signing and invitation association use the verified existing Kouchd Apple team.

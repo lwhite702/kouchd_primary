@@ -8,27 +8,6 @@ struct HomeScreen: View {
   var body: some View {
     ScrollView {
       VStack(alignment: .leading, spacing: 24) {
-        HStack {
-          Menu {
-            ForEach(store.stays.indices, id: \.self) { index in
-              let stay = store.stays[index]["stay"]
-              Button(stay["name"].text.isEmpty ? "Shared stay" : stay["name"].text) {
-                store.selectStay(stay["_id"].text)
-              }
-            }
-          } label: {
-            HStack(spacing: 5) {
-              Text(store.stayName).font(.headline)
-              Image(systemName: "chevron.down").font(.caption2)
-            }.foregroundStyle(Palette.forest)
-          }
-          Spacer()
-          Text(String(store.viewer["name"].text.prefix(2)).uppercased())
-            .font(.caption.bold()).foregroundStyle(Palette.forest)
-            .frame(width: 40, height: 40)
-            .background(Palette.lime, in: Circle())
-            .accessibilityLabel("Account initials")
-        }
         VStack(alignment: .leading, spacing: 8) {
           Text(store.isHost ? "A little room, well shared." : "Make yourself at home.")
             .font(Palette.heading).foregroundStyle(Palette.forest)
@@ -75,7 +54,7 @@ struct HomeScreen: View {
               .font(.largeTitle.bold()).foregroundStyle(.white)
             Text("Due \(store.ledger.first?["dueDate"].text ?? "later")")
               .font(.subheadline).foregroundStyle(.white.opacity(0.85))
-            NavigationLink("View contributions") { LedgerScreen(store: store) }
+            NavigationLink("View contributions", value: KouchdRoute.ledger)
               .font(.headline).foregroundStyle(Palette.ink)
               .frame(maxWidth: .infinity).padding(14)
               .background(.white, in: RoundedRectangle(cornerRadius: 14))
@@ -115,7 +94,7 @@ struct HomeScreen: View {
         Card {
           Text("Your agreement needs review").font(.headline)
           Text("Read the current terms before recording new activity.")
-          NavigationLink("Review agreement") { AgreementScreen(store: store) }
+          NavigationLink("Review agreement", value: KouchdRoute.agreement)
         }
       }
       Card {
@@ -123,13 +102,13 @@ struct HomeScreen: View {
         Text(Display.money(store.ledger.reduce(0) { $0 + $1["balanceCents"].int }))
           .font(.system(size: 38, weight: .bold, design: .rounded))
           .foregroundStyle(Palette.forest)
-        NavigationLink("Open ledger") { LedgerScreen(store: store) }
+        NavigationLink("Open ledger", value: KouchdRoute.ledger)
       }
       HStack(spacing: 12) {
-        NavigationLink { ChoresScreen(store: store) } label: {
+        NavigationLink(value: KouchdRoute.chores) {
           StatCard(number: "\(store.chores.filter { !$0["completed"].flag && $0["voidedAt"].text.isEmpty }.count)", label: "Open chores")
         }
-        NavigationLink { RewardsScreen(store: store) } label: {
+        NavigationLink(value: KouchdRoute.rewards) {
           StatCard(number: "\(store.wallet["availablePoints"].int)", label: "Reward points")
         }
       }
@@ -142,9 +121,9 @@ struct HomeScreen: View {
       }
       Card {
         Text("Your next steps").font(.headline)
-        NavigationLink("Stay details and agreement") { StayScreen(store: store) }
-        NavigationLink("Occupied nights") { OccupancyScreen(store: store) }
-        NavigationLink("Schedule requests") { ScheduleScreen(store: store) }
+        NavigationLink("Stay details and agreement", value: KouchdRoute.stay)
+        NavigationLink("Occupied nights", value: KouchdRoute.occupancy)
+        NavigationLink("Schedule requests", value: KouchdRoute.schedule)
       }
       if !store.activity.isEmpty {
         Card {
@@ -162,7 +141,36 @@ struct HomeScreen: View {
     }
     .background(Palette.cream.ignoresSafeArea())
     .kouchdEntrance()
-    .toolbar(.hidden, for: .navigationBar)
+    .kouchdNavigationBar()
+    .toolbar {
+      ToolbarItem(placement: .topBarLeading) {
+        Menu {
+          ForEach(store.stays.indices, id: \.self) { index in
+            let stay = store.stays[index]["stay"]
+            Button(stay["name"].text.isEmpty ? "Shared stay" : stay["name"].text) {
+              store.selectStay(stay["_id"].text)
+            }
+          }
+        } label: {
+          HStack(spacing: 5) {
+            Text(store.stayName).font(.headline)
+            Image(systemName: "chevron.down").font(.caption2.bold())
+          }
+          .foregroundStyle(Palette.forest)
+        }
+        .accessibilityLabel("Switch stay, current stay: \(store.stayName)")
+      }
+      ToolbarItem(placement: .topBarTrailing) {
+        NavigationLink(value: KouchdRoute.settings) {
+          Text(String(store.viewer["name"].text.prefix(2)).uppercased())
+            .font(.caption2.bold())
+            .foregroundStyle(Palette.forest)
+            .frame(width: 32, height: 32)
+            .background(Palette.lime, in: Circle())
+        }
+        .accessibilityLabel("Settings, account: \(store.viewer["name"].text)")
+      }
+    }
   }
 }
 
@@ -274,8 +282,19 @@ struct LedgerScreen: View {
           }
         }
       }
-      NavigationLink("Contribution rewards") { RewardsScreen(store: store) }
-      NavigationLink("Schedule changes") { ScheduleScreen(store: store) }
+      NavigationLink("Contribution rewards", value: KouchdRoute.rewards)
+      NavigationLink("Schedule changes", value: KouchdRoute.schedule)
+    }
+    .toolbar {
+      if !store.isEnded {
+        ToolbarItem(placement: .primaryAction) {
+          Button {
+            showingContribution = true
+          } label: {
+            Label("Record contribution", systemImage: "plus")
+          }
+        }
+      }
     }
     .sheet(isPresented: $showingContribution) { ContributionForm(store: store) }
   }
@@ -310,6 +329,7 @@ struct ContributionForm: View {
         }
       }
       .navigationTitle("Contribution")
+      .kouchdNavigationBar()
       .toolbar {
         ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
         ToolbarItem(placement: .confirmationAction) {
@@ -377,7 +397,18 @@ struct ChoresScreen: View {
           }
         }
       }
-      NavigationLink("Occupied nights") { OccupancyScreen(store: store) }
+      NavigationLink("Occupied nights", value: KouchdRoute.occupancy)
+    }
+    .toolbar {
+      if !store.isEnded {
+        ToolbarItem(placement: .primaryAction) {
+          Button {
+            showingCreate = true
+          } label: {
+            Label("Add chore", systemImage: "plus")
+          }
+        }
+      }
     }
     .sheet(isPresented: $showingCreate) { ChoreForm(store: store) }
   }
@@ -412,6 +443,7 @@ struct ChoreForm: View {
         DatePicker("Due", selection: $due, displayedComponents: .date)
       }
       .navigationTitle("New chore")
+      .kouchdNavigationBar()
       .toolbar {
         ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
         ToolbarItem(placement: .confirmationAction) {

@@ -58,17 +58,38 @@ struct StayScreen: View {
       }
       Card {
         Text("More for your stay").font(.headline)
-        NavigationLink("Guest agreement") { AgreementScreen(store: store) }
-        NavigationLink("Schedule changes") { ScheduleScreen(store: store) }
-        NavigationLink("Occupied nights") { OccupancyScreen(store: store) }
-        NavigationLink("Contribution rewards") { RewardsScreen(store: store) }
-        NavigationLink("Household activity") { ActivityScreen(store: store) }
-        NavigationLink("Settings and reminders") { SettingsScreen(store: store) }
-        NavigationLink("Create another stay") { CreateStayScreen(store: store) }
-        NavigationLink("Join another stay") { JoinCodeScreen(store: store) }
+        NavigationLink("Guest agreement", value: KouchdRoute.agreement)
+        NavigationLink("Schedule changes", value: KouchdRoute.schedule)
+        NavigationLink("Occupied nights", value: KouchdRoute.occupancy)
+        NavigationLink("Contribution rewards", value: KouchdRoute.rewards)
+        NavigationLink("Household activity", value: KouchdRoute.activity)
+        NavigationLink("Settings and reminders", value: KouchdRoute.settings)
+        NavigationLink("Create another stay", value: KouchdRoute.createStay)
+        NavigationLink("Join another stay", value: KouchdRoute.joinCode)
       }
       if store.isHost && !store.isEnded {
-        NavigationLink("Host controls") { HostControlsScreen(store: store) }
+        NavigationLink("Host controls", value: KouchdRoute.hostControls)
+      }
+    }
+    .toolbar {
+      if store.isHost && !store.isEnded {
+        ToolbarItem(placement: .primaryAction) {
+          Menu {
+            Button {
+              showingInvite = true
+            } label: {
+              Label("Invite guest", systemImage: "person.badge.plus")
+            }
+            Button {
+              showingEdit = true
+            } label: {
+              Label("Edit stay name", systemImage: "pencil")
+            }
+          } label: {
+            Image(systemName: "ellipsis.circle")
+          }
+          .accessibilityLabel("Stay options")
+        }
       }
     }
     .sheet(isPresented: $showingInvite) { InviteForm(store: store) }
@@ -154,7 +175,11 @@ struct InvitationScreen: View {
           }
         }
       }
-      .toolbar { Button("Close") { onFinished() } }
+      .toolbar {
+        ToolbarItem(placement: .cancellationAction) {
+          Button("Close") { onFinished() }
+        }
+      }
     }
   }
 }
@@ -180,6 +205,7 @@ struct InviteForm: View {
         }
       }
       .navigationTitle("Invite a guest")
+      .kouchdNavigationBar()
       .toolbar {
         ToolbarItem(placement: .cancellationAction) { Button("Done") { dismiss() } }
         ToolbarItem(placement: .confirmationAction) {
@@ -213,6 +239,7 @@ struct RenameStayForm: View {
     NavigationStack {
       Form { TextField("Stay name", text: $name) }
         .navigationTitle("Stay name")
+        .kouchdNavigationBar()
         .toolbar {
           ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
           ToolbarItem(placement: .confirmationAction) {
@@ -265,28 +292,43 @@ struct CreateStayScreen: View {
       }
       Section {
         Button("Create stay") {
-          busy = true
-          Task {
-            var terms: [String: ConvexEncodable?] = [
-              "startDate": Display.date(start), "endDate": Display.date(end),
-              "cadence": cadence,
-              "rateCents": Int((Double(rate) ?? 0) * 100),
-              "earlyDiscountEnabled": false, "earlyDiscountPercentage": 0,
-              "earlyDiscountDays": 0, "lateFeeEnabled": false,
-              "lateFeeCents": 0, "graceDays": 0, "houseNotes": notes
-            ]
-            if cadence == "weekly" { terms["paymentDayOfWeek"] = weekday }
-            var args: [String: ConvexEncodable?] = [
-              "name": name, "timezone": TimeZone.current.identifier, "terms": terms
-            ]
-            if checkInEnabled { args["nextCheckInDate"] = Display.date(checkIn) }
-            if await store.joinOrCreateStay("stays:create", args) { dismiss() }
-            busy = false
-          }
-        }.disabled(busy || name.count < 2 || (Double(rate) ?? 0) <= 0)
+          createStay()
+        }.disabled(isInvalid)
       }
     }
-    .navigationTitle("Create stay")
+    .kouchdNavigationBar(title: "Create stay")
+    .toolbar {
+      ToolbarItem(placement: .confirmationAction) {
+        Button("Create") {
+          createStay()
+        }.disabled(isInvalid)
+      }
+    }
+  }
+
+  private var isInvalid: Bool {
+    busy || name.trimmingCharacters(in: .whitespaces).count < 2 || (Double(rate) ?? 0) <= 0
+  }
+
+  private func createStay() {
+    busy = true
+    Task {
+      var terms: [String: ConvexEncodable?] = [
+        "startDate": Display.date(start), "endDate": Display.date(end),
+        "cadence": cadence,
+        "rateCents": Int((Double(rate) ?? 0) * 100),
+        "earlyDiscountEnabled": false, "earlyDiscountPercentage": 0,
+        "earlyDiscountDays": 0, "lateFeeEnabled": false,
+        "lateFeeCents": 0, "graceDays": 0, "houseNotes": notes
+      ]
+      if cadence == "weekly" { terms["paymentDayOfWeek"] = weekday }
+      var args: [String: ConvexEncodable?] = [
+        "name": name, "timezone": TimeZone.current.identifier, "terms": terms
+      ]
+      if checkInEnabled { args["nextCheckInDate"] = Display.date(checkIn) }
+      if await store.joinOrCreateStay("stays:create", args) { dismiss() }
+      busy = false
+    }
   }
 }
 
@@ -294,18 +336,34 @@ struct JoinCodeScreen: View {
   let store: KouchdStore
   @Environment(\.dismiss) private var dismiss
   @State private var code = ""
+  @State private var busy = false
   var body: some View {
     Form {
       Section {
         TextField("Referral code", text: $code)
           .textInputAutocapitalization(.characters)
         Button("Join stay") {
-          Task {
-            if await store.joinOrCreateStay("referral:joinWithCode", ["referralCode": code]) { dismiss() }
-          }
-        }.disabled(code.isEmpty)
+          joinStay()
+        }.disabled(busy || code.trimmingCharacters(in: .whitespaces).isEmpty)
       } footer: { Text("Ask your host for their household code.") }
     }
-    .navigationTitle("Join a stay")
+    .kouchdNavigationBar(title: "Join a stay")
+    .toolbar {
+      ToolbarItem(placement: .confirmationAction) {
+        Button("Join") {
+          joinStay()
+        }.disabled(busy || code.trimmingCharacters(in: .whitespaces).isEmpty)
+      }
+    }
+  }
+
+  private func joinStay() {
+    busy = true
+    Task {
+      if await store.joinOrCreateStay("referral:joinWithCode", ["referralCode": code.trimmingCharacters(in: .whitespaces)]) {
+        dismiss()
+      }
+      busy = false
+    }
   }
 }

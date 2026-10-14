@@ -77,3 +77,32 @@ enum HouseDetail {
     ("emergencyContact", "Emergency contact"), ("otherNotes", "Other notes")
   ]
 }
+
+/// Strongly-typed navigation destinations supported across Kouchd navigation stacks.
+enum KouchdRoute: Hashable {
+  case agreement
+  case ledger
+  case chores
+  case rewards
+  case stay
+  case occupancy
+  case schedule
+  case settings
+  case activity
+  case householdGuide
+  case createStay
+  case joinCode
+  case hostControls
+  case termsEdit
+  case houseInfo
+  case paymentOptions
+  case adhocCharge
+  case rewardRules
+  case about
+  case admin
+  case adminFinancial
+  case adminSmsHistory
+  case adminUserSmsHistory(userID: String)
+  case adminUser(id: String)
+  case adminStay(id: String)
+}

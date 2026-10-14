@@ -28,8 +28,10 @@ Face ID as the cause of the reported crash.
 
 ## Acceptance and release
 
-Planned: patch candidate 0.4.1. Implemented source is separate from uploaded
-TestFlight build 0.4.0 (4). No fixed build has been uploaded yet.
+The tour-to-authentication render-loop correction is already present on the
+current main branch. This PR preserves that correction while adding the Face ID
+purpose string. Planned source version: 0.4.4. The implemented source is separate
+from uploaded TestFlight build 0.4.0 (4); no 0.4.4 build has been uploaded.
 Verify on a real device: complete all tour steps and choose host/guest; skip
 to sign-in; dismiss/reopen authentication; restart after completion; open an
 invitation while signed out; replay the tour from About; check Reduce Motion.

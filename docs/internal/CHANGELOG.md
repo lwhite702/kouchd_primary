@@ -2,6 +2,30 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-10-12 — iOS navigation bar modernization and auth sheet loop resolution
+
+- Standardized navigation bars and toolbars across Kouchd iOS using `.kouchdNavigationBar(title:)`, toolbar placements (`.topBarLeading`, `.topBarTrailing`, `.primaryAction`, `.confirmationAction`, `.cancellationAction`), and sticky navigation bar styling.
+- Resolved app freeze / watchdog termination on launch caused by `@AppStorage` observation looping when Clerk SDK writes to `UserDefaults` during auth sheet presentation.
+- Updated `AboutKouchdScreen` inline navigation title and fixed welcome screen navigation link hit-testing.
+- Synchronized package and iOS marketing versions to `0.4.3` with patch release classification.
+
+## 2026-10-10 — SwiftUI Navigation modernization and route typing
+
+- Modernized native SwiftUI navigation in Kouchd iOS to use data-driven, strongly-typed routing instead of eager closure-based destinations.
+- Introduced `KouchdRoute: Hashable` representing all in-app navigation targets across tabs, onboarding, host controls, and administrative records.
+- Created `View.kouchdDestinations(store:)` registering `.navigationDestination(for: KouchdRoute.self)` across all top-level `NavigationStack` instances.
+- Preserved individual user scope in administrative SMS consent views via dedicated `.adminUserSmsHistory(userID:)` route.
+- Synchronized package and iOS marketing versions to `0.4.2` with patch release classification.
+
+## 2026-10-09 — Landing-page claim corrections and tablet navigation
+
+- Removed contributor-attribution language from the public Ledger tour because the current Ledger UI does not identify the entry creator.
+- Replaced the guest-editable arrival-window example with the host-scheduled next check-in date already supported by the app.
+- Added an expandable tablet navigation menu so all header links remain available at widths where the desktop row does not fit.
+- Prepared package/iOS version `0.4.1` as a patch for the landing-page release gate. This is branch-only work; no release, deployment, or public changelog update is verified.
+- Made the release gate find the nearest versioned first-parent ancestor when the base snapshot has no version file, and added a regression test for that recovery case.
+- Validation: `npm run release:check` passed against the last complete baseline; 61 tests passed, the production build and version sync passed, and the release gate passed. Lint reports 15 existing warnings and no errors. The public Mintlify changelog remains unchanged.
+
 ## 2026-10-05 — Landing header refresh, accessible tooltips, skeleton loaders, and canonical help links
 
 - Refreshed Landing Page Header (`components/landing-page.tsx`, `components/landing-v21.css`):

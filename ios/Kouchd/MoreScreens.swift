@@ -235,30 +235,12 @@ struct SettingsScreen: View {
         Link("Privacy Policy", destination: URL(string: "https://kouchd.com/privacy")!)
         Link("SMS Terms Details", destination: URL(string: "https://kouchd.com/sms-opt-in")!)
         PrimaryButton(title: "Save preferences") {
-          Task {
-            let parts = name.split(whereSeparator: \.isWhitespace).map(String.init)
-            guard let first = parts.first, let user = clerk.user else {
-              store.error = "Enter your name before saving."
-              return
-            }
-            do {
-              _ = try await user.update(.init(firstName: first, lastName: parts.dropFirst().joined(separator: " ")))
-              guard await store.mutate("users:syncCurrent", ["clerkName": name]) else { return }
-            } catch {
-              store.error = error.localizedDescription
-              return
-            }
-            _ = await store.mutate("users:updatePreferences", [
-              "phone": phone,
-              "notifyEmail": email, "notifySms": sms,
-              "smsConsentSource": "settings", "smsConsentConfirmed": sms
-            ])
-          }
+          savePreferences()
         }
       }
       Card {
         Text("Account").font(.headline)
-        NavigationLink("About Kouchd") { AboutKouchdScreen() }
+        NavigationLink("About Kouchd", value: KouchdRoute.about)
         UserButton()
         DataRow(title: "Kouchd version",
                 detail: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "—")
@@ -267,10 +249,15 @@ struct SettingsScreen: View {
         }
       }
       if !store.selectedStayID.isEmpty {
-        NavigationLink("Household guide") { HouseholdGuideScreen(store: store) }
+        NavigationLink("Household guide", value: KouchdRoute.householdGuide)
       }
       if store.adminAccess.flag {
-        NavigationLink("Platform administration") { AdminScreen(store: store) }
+        NavigationLink("Platform administration", value: KouchdRoute.admin)
+      }
+    }
+    .toolbar {
+      ToolbarItem(placement: .confirmationAction) {
+        Button("Save") { savePreferences() }
       }
     }
     .onAppear {
@@ -278,6 +265,28 @@ struct SettingsScreen: View {
       phone = store.viewer["phone"].text
       email = store.viewer["notifyEmail"].flag
       sms = store.viewer["notifySms"].flag
+    }
+  }
+
+  private func savePreferences() {
+    Task {
+      let parts = name.split(whereSeparator: \.isWhitespace).map(String.init)
+      guard let first = parts.first, let user = clerk.user else {
+        store.error = "Enter your name before saving."
+        return
+      }
+      do {
+        _ = try await user.update(.init(firstName: first, lastName: parts.dropFirst().joined(separator: " ")))
+        guard await store.mutate("users:syncCurrent", ["clerkName": name]) else { return }
+      } catch {
+        store.error = error.localizedDescription
+        return
+      }
+      _ = await store.mutate("users:updatePreferences", [
+        "phone": phone,
+        "notifyEmail": email, "notifySms": sms,
+        "smsConsentSource": "settings", "smsConsentConfirmed": sms
+      ])
     }
   }
 }
@@ -301,9 +310,7 @@ struct AdminScreen: View {
       }
       ForEach(store.adminUsers.items.indices, id: \.self) { index in
         let user = store.adminUsers.items[index]
-        NavigationLink {
-          AdminUserScreen(store: store, userID: user.id)
-        } label: {
+        NavigationLink(value: KouchdRoute.adminUser(id: user.id)) {
           Card {
             Text(user["name"].text).font(.headline)
             Text(user["email"].text).font(.subheadline).foregroundStyle(Palette.muted)
@@ -312,9 +319,7 @@ struct AdminScreen: View {
       }
       ForEach(store.adminStays.items.indices, id: \.self) { index in
         let stay = store.adminStays.items[index]
-        NavigationLink {
-          AdminStayScreen(store: store, stayID: stay.id)
-        } label: {
+        NavigationLink(value: KouchdRoute.adminStay(id: stay.id)) {
           Card {
             Text(stay["hostName"].text + "'s stay").font(.headline)
             DataRow(title: "Status", detail: stay["status"].text)
@@ -322,8 +327,8 @@ struct AdminScreen: View {
           }
         }.buttonStyle(.plain)
       }
-      NavigationLink("Contribution records and exceptions") { AdminFinancialScreen(store: store) }
-      NavigationLink("SMS consent history") { AdminSMSHistory(events: store.adminSms) }
+      NavigationLink("Contribution records and exceptions", value: KouchdRoute.adminFinancial)
+      NavigationLink("SMS consent history", value: KouchdRoute.adminSmsHistory)
       Card {
         Text("Financial exceptions").font(.headline)
         DataRow(title: "Recent contributions",
@@ -368,10 +373,10 @@ struct AdminUserScreen: View {
           Text(member["status"].text.capitalized).font(.subheadline)
           DataRow(title: "Host", detail: member["hostName"].text)
           DataRow(title: "Stay status", detail: member["stayStatus"].text)
-          NavigationLink("View stay") { AdminStayScreen(store: store, stayID: member["stayId"].text) }
+          NavigationLink("View stay", value: KouchdRoute.adminStay(id: member["stayId"].text))
         }
       }
-      NavigationLink("SMS consent history") { AdminSMSHistory(events: store.adminUserDetail["smsEvents"].items) }
+      NavigationLink("SMS consent history", value: KouchdRoute.adminUserSmsHistory(userID: userID))
     }
     .task { store.loadAdminUser(userID) }
     .confirmationDialog("Change this person's platform access?", isPresented: $confirmRoleChange) {
@@ -451,11 +456,11 @@ struct HostControlsScreen: View {
       }
       Card {
         Text("Stay management").font(.headline)
-        NavigationLink("Edit agreement") { TermsEditScreen(store: store) }
-        NavigationLink("House details") { HouseInfoScreen(store: store) }
-        NavigationLink("Outside payment options") { PaymentOptionsScreen(store: store) }
-        NavigationLink("Add a one-time charge") { AdhocChargeScreen(store: store) }
-        NavigationLink("Reward rules") { RewardRulesScreen(store: store) }
+        NavigationLink("Edit agreement", value: KouchdRoute.termsEdit)
+        NavigationLink("House details", value: KouchdRoute.houseInfo)
+        NavigationLink("Outside payment options", value: KouchdRoute.paymentOptions)
+        NavigationLink("Add a one-time charge", value: KouchdRoute.adhocCharge)
+        NavigationLink("Reward rules", value: KouchdRoute.rewardRules)
       }
       Card {
         Text("End this stay").font(.headline)
@@ -580,7 +585,7 @@ struct HouseholdGuideScreen: View {
           }.buttonStyle(.borderedProminent).tint(Palette.forest)
         }
         Button("Skip for now") { save(status: "skipped", close: true) }
-        NavigationLink("Open stay details") { StayScreen(store: store) }
+        NavigationLink("Open stay details", value: KouchdRoute.stay)
       }
     }
     .onAppear {

@@ -1,5 +1,5 @@
 {
-  "version": "0.4.1",
+  "version": "0.4.4",
   "type": "patch",
-  "reason": "Breaks the native tour-to-authentication preferences update loop, keeps the sheet host stable, and supplies the Face ID usage declaration."
+  "reason": "Declares the Face ID purpose string required for optional biometric sign-in; preserves the resolved tour-to-authentication render loop fix."
 }

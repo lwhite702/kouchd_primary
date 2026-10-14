@@ -38,29 +38,49 @@ private enum Tab: String, CaseIterable {
   }
 }
 
+private enum ActiveSheet: Identifiable {
+  case auth
+  case invitation(token: String, preview: Value)
+
+  var id: String {
+    switch self {
+    case .auth: return "auth"
+    case .invitation(let token, _): return "invite-\(token)"
+    }
+  }
+}
+
 struct RootView: View {
   @Environment(Clerk.self) private var clerk
   @State private var store = KouchdStore()
   @Environment(\.accessibilityReduceMotion) private var reduceMotion
-  // Clerk's AuthView initializer persists its identifier preferences. AppStorage
-  // here would observe those unrelated writes and rebuild the sheet content,
-  // whose initializer writes again. Keep the revision in local state and persist
-  // only when the introduction is completed.
   @State private var introductionRevision = UserDefaults.standard.integer(forKey: "kouchd.introductionRevision")
   @State private var splashVisible = true
   @State private var pendingRoute: EntryRoute?
   @State private var destination: EntryRoute?
-  @State private var authPresented = false
+  @State private var activeSheet: ActiveSheet?
   @State private var inviteToken = ""
   @State private var invitePreview: Value = .null
   @State private var tab: Tab = .home
 
+  private func markIntroductionComplete() {
+    introductionRevision = 1
+    UserDefaults.standard.set(1, forKey: "kouchd.introductionRevision")
+  }
+
   var body: some View {
-    ZStack {
+    Group {
       if splashVisible {
         BrandSplash().transition(.opacity)
       } else if introductionRevision < 1 && clerk.user == nil {
-        IntroductionScreen(finish: finishIntroduction)
+        IntroductionScreen { route in
+          pendingRoute = route
+          markIntroductionComplete()
+          Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(250))
+            activeSheet = .auth
+          }
+        }
       } else if clerk.user == nil {
         NavigationStack { welcome }
       } else if store.isLoading {
@@ -75,24 +95,28 @@ struct RootView: View {
             LoadedStayContent(loading: store.isStayLoading || store.isFinancialLoading) {
               HomeScreen(store: store)
             }
+            .kouchdDestinations(store: store)
           }
             .tabItem { Label(Tab.home.rawValue, systemImage: Tab.home.symbol) }.tag(Tab.home)
           NavigationStack {
             LoadedStayContent(loading: store.isStayLoading || store.isFinancialLoading) {
               LedgerScreen(store: store)
             }
+            .kouchdDestinations(store: store)
           }
             .tabItem { Label(Tab.ledger.rawValue, systemImage: Tab.ledger.symbol) }.tag(Tab.ledger)
           NavigationStack {
             LoadedStayContent(loading: store.isStayLoading) {
               ChoresScreen(store: store)
             }
+            .kouchdDestinations(store: store)
           }
             .tabItem { Label(Tab.chores.rawValue, systemImage: Tab.chores.symbol) }.tag(Tab.chores)
           NavigationStack {
             LoadedStayContent(loading: store.isStayLoading) {
               StayScreen(store: store)
             }
+            .kouchdDestinations(store: store)
           }
             .tabItem { Label(Tab.stay.rawValue, systemImage: Tab.stay.symbol) }.tag(Tab.stay)
         }
@@ -106,24 +130,26 @@ struct RootView: View {
       splashVisible = false
     }
     .onChange(of: store.isLoading) { _, loading in
-      if !loading && clerk.user != nil && store.stays.isEmpty && !authPresented {
+      if !loading && clerk.user != nil && store.stays.isEmpty && activeSheet == nil {
         destination = pendingRoute
         pendingRoute = nil
       }
     }
-    .onChange(of: authPresented) { _, presented in
-      if !presented && clerk.user != nil && !store.isLoading && store.stays.isEmpty {
+    .onChange(of: activeSheet?.id) { _, sheetId in
+      if sheetId == nil && clerk.user != nil && !store.isLoading && store.stays.isEmpty {
         destination = pendingRoute
         pendingRoute = nil
       }
     }
-    .sheet(isPresented: $authPresented) { AuthView().environment(clerk) }
-    .sheet(isPresented: Binding(
-      get: { !authPresented && !inviteToken.isEmpty && clerk.user != nil && invitePreview["valid"].flag },
-      set: { if !$0 { inviteToken = "" } }
-    )) {
-      InvitationScreen(store: store, token: inviteToken, preview: invitePreview) {
-        inviteToken = ""
+    .sheet(item: $activeSheet) { sheet in
+      switch sheet {
+      case .auth:
+        AuthView()
+      case .invitation(let token, let preview):
+        InvitationScreen(store: store, token: token, preview: preview) {
+          inviteToken = ""
+          activeSheet = nil
+        }
       }
     }
     .alert("Kouchd couldn't complete that", isPresented: Binding(
@@ -134,21 +160,34 @@ struct RootView: View {
     } message: { Text(store.error) }
     .onOpenURL { url in
       if url.pathComponents.count >= 3 && url.pathComponents[1] == "invite" {
-        markIntroductionCompleted()
+        markIntroductionComplete()
         pendingRoute = nil
         destination = nil
         invitePreview = .null
         inviteToken = url.lastPathComponent
-        if clerk.user == nil { authPresented = true }
+        if clerk.user == nil { activeSheet = .auth }
         Task { await loadInvitation() }
       } else {
         Task { try? await clerk.handle(url) }
       }
     }
     .onChange(of: clerk.user?.id, initial: true) { _, id in
-      if id == nil { store.reset(); destination = nil }
-      else { markIntroductionCompleted() }
-      if id != nil && !inviteToken.isEmpty { Task { await loadInvitation() } }
+      if id == nil {
+        store.reset()
+        destination = nil
+      } else {
+        markIntroductionComplete()
+        if activeSheet?.id == "auth" {
+          activeSheet = nil
+        }
+        if !inviteToken.isEmpty {
+          if invitePreview["valid"].flag {
+            activeSheet = .invitation(token: inviteToken, preview: invitePreview)
+          } else {
+            Task { await loadInvitation() }
+          }
+        }
+      }
     }
     .onChange(of: store.stays.count) { _, count in
       if store.selectedStayID.isEmpty, let first = store.stays.first, count > 0 {
@@ -157,24 +196,38 @@ struct RootView: View {
     }
   }
 
+  @ViewBuilder
   private var welcome: some View {
-    Page(title: "Make room for what matters.") {
+    Page(title: "Make room for what matters.", navigationTitle: "") {
       Card {
         Pill(text: "Kouchd")
         Text("A calmer way to share a stay.")
           .font(.system(size: 28, weight: .semibold, design: .rounded))
         Text("Keep agreements, contributions, chores, and check-ins together.")
           .foregroundStyle(Palette.muted)
-        UserButton(signedOutContent: {
-          PrimaryButton(title: "Sign in or create an account") { authPresented = true }
-        })
+        PrimaryButton(title: "Sign in or create an account") {
+          activeSheet = .auth
+        }
       }
-      NavigationLink("About Kouchd") { AboutKouchdScreen() }
+      NavigationLink(value: KouchdRoute.about) {
+        HStack {
+          Text("About Kouchd")
+            .font(.body.weight(.medium))
+            .foregroundStyle(Palette.forest)
+          Spacer()
+          Image(systemName: "chevron.right")
+            .font(.footnote.weight(.semibold))
+            .foregroundStyle(Palette.muted)
+        }
+        .padding(.vertical, 8)
+        .contentShape(Rectangle())
+      }
       if !inviteToken.isEmpty {
         Text("Your invitation will be ready after sign-in.")
           .font(.subheadline).foregroundStyle(Palette.forest)
       }
     }
+    .kouchdDestinations(store: store)
   }
 
   private var onboarding: some View {
@@ -184,20 +237,21 @@ struct RootView: View {
           Text("Start a shared stay").font(.title3.bold())
           Text("Set the dates, contribution rhythm, and house notes for your guests.")
             .foregroundStyle(Palette.muted)
-          NavigationLink("Create a stay") { CreateStayScreen(store: store) }
+          NavigationLink("Create a stay", value: KouchdRoute.createStay)
             .buttonStyle(.borderedProminent).tint(Palette.forest)
         }
         Card {
           Text("Joining someone?").font(.title3.bold())
           Text("Open their invite link or enter their referral code.")
-          NavigationLink("Join with a code") { JoinCodeScreen(store: store) }
+          NavigationLink("Join with a code", value: KouchdRoute.joinCode)
         }
-        NavigationLink("Profile and optional reminders") { SettingsScreen(store: store) }
+        NavigationLink("Profile and optional reminders", value: KouchdRoute.settings)
         Link("Terms & Conditions", destination: URL(string: "https://kouchd.com/terms")!)
         Link("Privacy Policy", destination: URL(string: "https://kouchd.com/privacy")!)
-        NavigationLink("About Kouchd") { AboutKouchdScreen() }
+        NavigationLink("About Kouchd", value: KouchdRoute.about)
         UserButton()
       }
+      .kouchdDestinations(store: store)
       .navigationDestination(item: $destination) { route in
         switch route {
         case .host: CreateStayScreen(store: store)
@@ -214,18 +268,6 @@ struct RootView: View {
     return store.stays.isEmpty ? "setup" : "home"
   }
 
-  private func markIntroductionCompleted() {
-    guard introductionRevision < 1 else { return }
-    introductionRevision = 1
-    UserDefaults.standard.set(1, forKey: "kouchd.introductionRevision")
-  }
-
-  private func finishIntroduction(_ route: EntryRoute?) {
-    pendingRoute = route
-    markIntroductionCompleted()
-    authPresented = true
-  }
-
   private func loadInvitation() async {
     let token = inviteToken
     let hash = SHA256.hash(data: Data(token.utf8))
@@ -235,7 +277,11 @@ struct RootView: View {
         .subscribe(to: "invites:preview", with: ["tokenHash": hash], yielding: Value.self).values {
         guard token == inviteToken else { return }
         invitePreview = preview
-        if !preview["valid"].flag { store.error = "This invitation has expired or was already used." }
+        if !preview["valid"].flag {
+          store.error = "This invitation has expired or was already used."
+        } else if clerk.user != nil && activeSheet == nil {
+          activeSheet = .invitation(token: token, preview: preview)
+        }
         break
       }
     } catch {

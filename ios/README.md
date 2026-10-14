@@ -109,7 +109,7 @@ across versions, including processing builds, and set Xcode Cloud > Settings >
 Build Number > Next Build Number above the highest reserved number. Avoid
 concurrent local uploads. Do not assume the next build is `1`.
 
-The marketing version remains the root `VERSION` value, currently `0.4.0` on
+The marketing version remains the root `VERSION` value, currently `0.4.4` on
 this unreleased branch. Passing the script is configuration evidence only.
 Complete release checks, archive and processing checks, internal group access,
 and installation on a real device before recording TestFlight availability.

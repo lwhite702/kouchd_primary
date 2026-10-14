@@ -13,7 +13,15 @@ enum Palette {
 
 struct Page<Content: View>: View {
   let title: String
+  var navigationTitle: String? = nil
   @ViewBuilder let content: Content
+
+  init(title: String, navigationTitle: String? = nil, @ViewBuilder content: () -> Content) {
+    self.title = title
+    self.navigationTitle = navigationTitle
+    self.content = content()
+  }
+
   var body: some View {
     ScrollView {
       VStack(alignment: .leading, spacing: 20) {
@@ -27,6 +35,7 @@ struct Page<Content: View>: View {
     }
     .background(Palette.cream.ignoresSafeArea())
     .kouchdEntrance()
+    .kouchdNavigationBar(title: navigationTitle ?? title)
   }
 }
 
@@ -61,6 +70,7 @@ struct PrimaryButton: View {
     Button(action: action) {
       Text(title).font(.headline).frame(maxWidth: .infinity)
         .padding(.vertical, 15)
+        .contentShape(Rectangle())
     }
     .buttonStyle(KouchdButtonStyle())
     .opacity(isEnabled ? 1 : 0.5)
@@ -140,9 +150,68 @@ private struct KouchdEntrance: ViewModifier {
   }
 }
 
+private struct KouchdNavigationBarModifier: ViewModifier {
+  var title: String? = nil
+
+  func body(content: Content) -> some View {
+    if let title, !title.isEmpty {
+      content
+        .navigationTitle(title.replacingOccurrences(of: "\n", with: " "))
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbarBackground(Palette.cream, for: .navigationBar)
+        .toolbarBackground(.visible, for: .navigationBar)
+    } else {
+      content
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbarBackground(Palette.cream, for: .navigationBar)
+        .toolbarBackground(.visible, for: .navigationBar)
+    }
+  }
+}
+
 extension View {
+  func kouchdNavigationBar(title: String? = nil) -> some View {
+    modifier(KouchdNavigationBarModifier(title: title))
+  }
+
   func kouchdEntrance(delay: Double = 0) -> some View {
     modifier(KouchdEntrance(delay: delay))
+  }
+
+  @ViewBuilder
+  func kouchdDestinations(store: KouchdStore) -> some View {
+    self.navigationDestination(for: KouchdRoute.self) { route in
+      switch route {
+      case .agreement: AgreementScreen(store: store)
+      case .ledger: LedgerScreen(store: store)
+      case .chores: ChoresScreen(store: store)
+      case .rewards: RewardsScreen(store: store)
+      case .stay: StayScreen(store: store)
+      case .occupancy: OccupancyScreen(store: store)
+      case .schedule: ScheduleScreen(store: store)
+      case .settings: SettingsScreen(store: store)
+      case .activity: ActivityScreen(store: store)
+      case .householdGuide: HouseholdGuideScreen(store: store)
+      case .createStay: CreateStayScreen(store: store)
+      case .joinCode: JoinCodeScreen(store: store)
+      case .hostControls: HostControlsScreen(store: store)
+      case .termsEdit: TermsEditScreen(store: store)
+      case .houseInfo: HouseInfoScreen(store: store)
+      case .paymentOptions: PaymentOptionsScreen(store: store)
+      case .adhocCharge: AdhocChargeScreen(store: store)
+      case .rewardRules: RewardRulesScreen(store: store)
+      case .about: AboutKouchdScreen()
+      case .admin: AdminScreen(store: store)
+      case .adminFinancial: AdminFinancialScreen(store: store)
+      case .adminSmsHistory: AdminSMSHistory(events: store.adminSms)
+      case .adminUserSmsHistory(let userID):
+        AdminSMSHistory(events: store.adminUserDetail["user"].id == userID
+          ? store.adminUserDetail["smsEvents"].items
+          : [])
+      case .adminUser(let id): AdminUserScreen(store: store, userID: id)
+      case .adminStay(let id): AdminStayScreen(store: store, stayID: id)
+      }
+    }
   }
 }
 
@@ -151,6 +220,7 @@ private struct KouchdButtonStyle: ButtonStyle {
   func makeBody(configuration: Configuration) -> some View {
     configuration.label.foregroundStyle(.white)
       .background(Palette.forest, in: RoundedRectangle(cornerRadius: 16))
+      .contentShape(RoundedRectangle(cornerRadius: 16))
       .scaleEffect(configuration.isPressed && !reduceMotion ? 0.98 : 1)
       .opacity(configuration.isPressed ? 0.85 : 1)
       .animation(KouchdMotion.animation(reduceMotion), value: configuration.isPressed)
