@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 
 import type { Doc } from "./_generated/dataModel";
+import { internal } from "./_generated/api";
 import { mutation } from "./_generated/server";
 import { requireHost, requireMembership } from "./lib/auth";
 import { recordActivity } from "./lib/activity";
@@ -161,6 +162,11 @@ export const acceptCurrent = mutation({
       if (stay.status !== "active") await ctx.db.patch(stayId, { status: "active", updatedAt: Date.now() });
     }
     await recordActivity(ctx, { stayId, actorUserId: user._id, kind: "terms", action: "accepted", detail: "Current stay terms accepted", entityId: termsId });
+    await ctx.scheduler.runAfter(0, internal.knock.cancelAgreementPending, {
+      stayId,
+      userId: user._id,
+      role: membership.role,
+    });
     return stay.status === "active" || allAccepted ? "active" : "pending";
   },
 });
