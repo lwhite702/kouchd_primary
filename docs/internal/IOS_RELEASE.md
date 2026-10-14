@@ -70,7 +70,7 @@ availability remain pending. Cloud upload and processing are recorded above.
 
 | State | Evidence |
 | --- | --- |
-| Planned | Version 0.4.0 from current 0.3.0 baseline; Figma v2.1 is the visual revision; TestFlight handoff under the Wrelik team. |
+| Planned | Version 0.4.4 from current 0.4.3 baseline; Figma v2.1 is the visual revision; TestFlight handoff under the Wrelik team. No 0.4.4 archive or distribution is evidenced. |
 | Implemented in branch | SwiftUI sources, Clerk–Convex integration, stay screens, guarded admin access, universal-link route, version tooling, and CI checks. |
 | Verified source/build | Current source release checks (57 tests), generic simulator compile, cloud archive/export and App Store processing for 0.4.0 (3), team L8R42BJ54K. Runtime evidence below is historical. |
 | Released | None. App Store Connect has a processed candidate. No production merge, release tag, backend deployment, tester-group distribution, or real-device installation is claimed. |
