@@ -125,7 +125,9 @@ function SyncedWorkspace() {
     if (stayIdParam) {
       const matchingStay = stays.find((item) => item.stay._id === stayIdParam);
       if (matchingStay) {
-        setSelectedStayId(matchingStay.stay._id);
+        queueMicrotask(() => {
+          setSelectedStayId(matchingStay.stay._id);
+        });
       }
     }
   }, [stays, selectedStayId]);

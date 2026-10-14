@@ -34,7 +34,21 @@ export const queueAgreementPendingReminders = internalAction({
     let isDone = false;
     let totalScheduled = 0;
     while (!isDone) {
-      const page = await ctx.runQuery(internal.notifications.agreementPendingCandidatesPage, {
+      const page: {
+        candidates: Array<{
+          userId: Id<"users">;
+          stayId: Id<"stays">;
+          workflow: string;
+          entityId: string;
+          cancellationKey: string;
+          data: Record<string, unknown>;
+          expectedTermsId?: Id<"terms">;
+          recipientRole?: "host" | "guest";
+          guestUserId?: Id<"users">;
+        }>;
+        continueCursor: string | null;
+        isDone: boolean;
+      } = await ctx.runQuery(internal.notifications.agreementPendingCandidatesPage, {
         now,
         slot,
         cursor,
