@@ -1,6 +1,7 @@
 import { ClerkProvider } from "@clerk/nextjs";
 import type { Metadata, Viewport } from "next";
 import { Manrope } from "next/font/google";
+import { VercelAnalytics } from "../components/vercel-analytics";
 
 import { AppProviders } from "./providers";
 import "../styles.css";
@@ -56,6 +57,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <ClerkProvider>
           <AppProviders>{children}</AppProviders>
         </ClerkProvider>
+        <VercelAnalytics />
       </body>
     </html>
   );
