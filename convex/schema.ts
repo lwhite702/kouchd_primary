@@ -39,8 +39,56 @@ export default defineSchema({
     recordedAt: v.number(),
   }).index("by_user_recorded_at", ["userId", "recordedAt"]),
 
+  householdAccounts: defineTable({
+    ownerUserId: v.id("users"),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_owner_user_id", ["ownerUserId"]),
+
+  subscriptionSnapshots: defineTable({
+    householdAccountId: v.id("householdAccounts"),
+    provider: v.string(),
+    providerAppUserId: v.optional(v.string()),
+    productId: v.optional(v.string()),
+    entitlement: v.optional(v.string()),
+    status: v.union(
+      v.literal("active"),
+      v.literal("grace_period"),
+      v.literal("billing_retry"),
+      v.literal("canceled"),
+      v.literal("expired"),
+      v.literal("refunded"),
+      v.literal("unknown"),
+    ),
+    environment: v.string(),
+    startedAt: v.optional(v.number()),
+    currentPeriodEndsAt: v.optional(v.number()),
+    willRenew: v.optional(v.boolean()),
+    latestProviderEventAt: v.optional(v.number()),
+    updatedAt: v.number(),
+  })
+    .index("by_household_account", ["householdAccountId"])
+    .index("by_household_account_provider_environment", ["householdAccountId", "provider", "environment"]),
+
+  providerEvents: defineTable({
+    provider: v.string(),
+    providerEventId: v.string(),
+    householdAccountId: v.optional(v.id("householdAccounts")),
+    eventType: v.string(),
+    productId: v.optional(v.string()),
+    environment: v.string(),
+    occurredAt: v.optional(v.number()),
+    receivedAt: v.number(),
+    processedAt: v.optional(v.number()),
+    processingError: v.optional(v.string()),
+  })
+    .index("by_provider_event_id", ["provider", "environment", "providerEventId"])
+    .index("by_household_account_received_at", ["householdAccountId", "receivedAt"]),
+
   stays: defineTable({
     hostUserId: v.id("users"),
+    householdAccountId: v.optional(v.id("householdAccounts")),
     name: v.optional(v.string()),
     status: v.union(v.literal("pending"), v.literal("active"), v.literal("ended")),
     timezone: v.string(),
@@ -70,6 +118,9 @@ export default defineSchema({
     updatedAt: v.number(),
   })
     .index("by_host_user_id", ["hostUserId"])
+    .index("by_household_account", ["householdAccountId"])
+    .index("by_host_user_status", ["hostUserId", "status"])
+    .index("by_household_account_status", ["householdAccountId", "status"])
     .index("by_status", ["status"])
     .index("by_referral_code", ["referralCode"])
     .index("by_next_check_in_date", ["nextCheckInDate"]),
@@ -84,7 +135,8 @@ export default defineSchema({
   })
     .index("by_stay", ["stayId"])
     .index("by_user", ["userId"])
-    .index("by_stay_user", ["stayId", "userId"]),
+    .index("by_stay_user", ["stayId", "userId"])
+    .index("by_stay_role_status", ["stayId", "role", "status"]),
 
   invites: defineTable({
     stayId: v.id("stays"),
