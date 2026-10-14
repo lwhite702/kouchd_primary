@@ -1,7 +1,7 @@
 import { ClerkProvider } from "@clerk/nextjs";
 import type { Metadata, Viewport } from "next";
 import { Manrope } from "next/font/google";
-import { Analytics } from "@vercel/analytics/next";
+import { Analytics, type BeforeSendEvent } from "@vercel/analytics/next";
 
 import { AppProviders } from "./providers";
 import "../styles.css";
@@ -57,7 +57,14 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <ClerkProvider>
           <AppProviders>{children}</AppProviders>
         </ClerkProvider>
-        <Analytics />
+        <Analytics
+          beforeSend={(event: BeforeSendEvent) => {
+            // Invitation URLs contain bearer tokens. Do not send these paths
+            // to analytics, even after the invitation has been accepted.
+            const pathname = new URL(event.url).pathname;
+            return pathname.startsWith("/invite/") ? null : event;
+          }}
+        />
       </body>
     </html>
   );
