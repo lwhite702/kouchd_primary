@@ -1,5 +1,5 @@
 {
-  "version": "0.5.0",
-  "type": "minor",
-  "reason": "Wire Knock agreement-pending triggers with twice-daily host and guest reminders and cancellation on acceptance."
+  "version": "0.5.1",
+  "type": "patch",
+  "reason": "Implement multi-tier feature flags, PostHog/Sentry integration, RevenueCat web paywall, and native introduction self-check."
 }

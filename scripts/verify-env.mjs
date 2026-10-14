@@ -5,6 +5,32 @@ if (!isManagedBuild) {
   process.exit(0);
 }
 
+// Security: Auth bypass flags must never be exposed to the client
+if (process.env.NEXT_PUBLIC_DISABLE_AUTH) {
+  console.error(
+    "Security violation: NEXT_PUBLIC_DISABLE_AUTH is present. Client-exposed auth bypasses are strictly forbidden."
+  );
+  process.exit(1);
+}
+
+// Security: Auth bypass flags must never be active in production
+const isProduction =
+  process.env.NODE_ENV === "production" ||
+  process.env.VERCEL_ENV === "production";
+
+const forbiddenBypassVars = ["AUTH_BYPASS_ENABLED", "BYPASS_AUTH"];
+if (isProduction) {
+  const activeBypass = forbiddenBypassVars.filter(
+    (name) => process.env[name] === "true" || process.env[name] === "1"
+  );
+  if (activeBypass.length > 0) {
+    console.error(
+      `Security violation: Auth bypass flags (${activeBypass.join(", ")}) must never be enabled in production.`
+    );
+    process.exit(1);
+  }
+}
+
 const required = [
   "NEXT_PUBLIC_CONVEX_URL",
   "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY",
@@ -19,4 +45,5 @@ if (missing.length > 0) {
   process.exit(1);
 }
 
-console.log("Required deployment environment variables are present.");
+console.log("Required deployment environment variables are present and security guards passed.");
+

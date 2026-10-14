@@ -35,6 +35,8 @@ describe("Platform Console Discovery & Access Gate", () => {
   });
 
   it("fails closed when auth bypass is enabled", () => {
+    (process.env as Record<string, string | undefined>).NODE_ENV = "development";
+    delete process.env.VERCEL_ENV;
     process.env.PLATFORM_CONSOLE_SLUG = validSlug;
     process.env.AUTH_BYPASS_ENABLED = "true";
     expect(() => requirePlatformEntryKey(validSlug)).toThrow();
@@ -43,8 +45,6 @@ describe("Platform Console Discovery & Access Gate", () => {
   it("succeeds when consoleKey matches and bypass is false", () => {
     process.env.PLATFORM_CONSOLE_SLUG = validSlug;
     delete process.env.AUTH_BYPASS_ENABLED;
-    delete process.env.NEXT_PUBLIC_DISABLE_AUTH;
-    delete process.env.BYPASS_AUTH;
     expect(() => requirePlatformEntryKey(validSlug)).not.toThrow();
   });
 });

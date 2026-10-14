@@ -287,6 +287,9 @@ export default defineSchema({
     assignee: v.union(v.literal("host"), v.literal("guest"), v.literal("shared")),
     assigneeUserId: v.optional(v.id("users")),
     dueDate: v.string(),
+    repeatCadence: v.optional(v.union(v.literal("daily"), v.literal("weekly"))),
+    recurrenceRootId: v.optional(v.id("chores")),
+    nextOccurrenceId: v.optional(v.id("chores")),
     completedAt: v.optional(v.number()),
     completedBy: v.optional(v.id("users")),
     voidedAt: v.optional(v.number()),
@@ -296,6 +299,41 @@ export default defineSchema({
     .index("by_stay", ["stayId"])
     .index("by_stay_due_date", ["stayId", "dueDate"])
     .index("by_due_date", ["dueDate"]),
+
+  shoppingItems: defineTable({
+    stayId: v.id("stays"),
+    createdBy: v.id("users"),
+    title: v.string(),
+    quantity: v.string(),
+    note: v.string(),
+    visibility: v.union(v.literal("shared"), v.literal("personal")),
+    checkedAt: v.optional(v.number()),
+    checkedBy: v.optional(v.id("users")),
+    deletedAt: v.optional(v.number()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_stay_created_at", ["stayId", "createdAt"])
+    .index("by_stay_visibility_and_created_at", ["stayId", "visibility", "createdAt"]),
+
+  checkIns: defineTable({
+    stayId: v.id("stays"),
+    guestUserId: v.id("users"),
+    createdBy: v.id("users"),
+    checkInDate: v.string(),
+    topic: v.string(),
+    note: v.string(),
+    status: v.union(v.literal("open"), v.literal("follow_up"), v.literal("resolved")),
+    responses: v.array(v.object({
+      userId: v.id("users"),
+      body: v.string(),
+      createdAt: v.number(),
+    })),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_stay_and_date", ["stayId", "checkInDate"])
+    .index("by_stay_guest_and_date", ["stayId", "guestUserId", "checkInDate"]),
 
   announcements: defineTable({
     stayId: v.id("stays"),
@@ -356,7 +394,7 @@ export default defineSchema({
     stayId: v.id("stays"),
     actorUserId: v.id("users"),
     guestUserId: v.optional(v.id("users")),
-    kind: v.union(v.literal("stay"), v.literal("terms"), v.literal("invite"), v.literal("contribution"), v.literal("chore"), v.literal("check_in"), v.literal("obligation"), v.literal("announcement"), v.literal("notification"), v.literal("reward")),
+    kind: v.union(v.literal("stay"), v.literal("terms"), v.literal("invite"), v.literal("contribution"), v.literal("chore"), v.literal("check_in"), v.literal("shopping"), v.literal("obligation"), v.literal("announcement"), v.literal("notification"), v.literal("reward")),
     action: v.string(),
     detail: v.string(),
     entityId: v.optional(v.string()),
@@ -374,4 +412,12 @@ export default defineSchema({
   })
     .index("by_user", ["userId"])
     .index("by_user_workflow_and_entity", ["userId", "workflow", "entityId"]),
+
+  featureFlags: defineTable({
+    key: v.string(),
+    override: v.union(v.literal("enabled"), v.literal("disabled"), v.literal("default")),
+    note: v.optional(v.string()),
+    updatedByUserId: v.optional(v.id("users")),
+    updatedAt: v.number(),
+  }).index("by_key", ["key"]),
 });

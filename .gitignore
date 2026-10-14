@@ -24,3 +24,8 @@ ios/artifacts/
 ios/fastlane/report.xml
 ios/fastlane/README.md
 *.p8
+
+# Local Agent Workspace and Reports
+.agents/
+.claude/
+posthog-warehouse-report.md

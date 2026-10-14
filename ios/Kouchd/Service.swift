@@ -1,4 +1,4 @@
-import ClerkConvex
+import ClerkKit
 import Combine
 import ConvexMobile
 import Foundation
@@ -14,6 +14,80 @@ enum AppConfig {
   static var isConfigured: Bool {
     clerkKey.hasPrefix("pk_") && convexURL.hasPrefix("https://")
       && !convexURL.contains("missing")
+  }
+}
+
+private enum KouchdAuthError: LocalizedError {
+  case clerkNotReady
+  case noActiveSession
+  case missingConvexToken
+
+  var errorDescription: String? {
+    switch self {
+    case .clerkNotReady: "Clerk is still loading. Please try again."
+    case .noActiveSession: "Your Clerk session is no longer active."
+    case .missingConvexToken: "Clerk did not return the Convex access token."
+    }
+  }
+}
+
+/// Requests Clerk's Convex JWT template. The generic Clerk session token does
+/// not carry the `aud = convex` claim required by Convex's auth configuration.
+@MainActor private final class KouchdAuthProvider: AuthProvider {
+  typealias T = String
+
+  private var onIdToken: (@Sendable (String?) -> Void)?
+  private var tokenRefreshTask: Task<Void, Never>?
+
+  func login(onIdToken: @Sendable @escaping (String?) -> Void) async throws -> String {
+    try await authenticate(onIdToken: onIdToken)
+  }
+
+  func loginFromCache(onIdToken: @Sendable @escaping (String?) -> Void) async throws -> String {
+    try await authenticate(onIdToken: onIdToken)
+  }
+
+  func logout() async throws {
+    tokenRefreshTask?.cancel()
+    tokenRefreshTask = nil
+    onIdToken?(nil)
+    onIdToken = nil
+    if Clerk.shared.user != nil { try await Clerk.shared.auth.signOut() }
+  }
+
+  nonisolated func extractIdToken(from authResult: String) -> String { authResult }
+
+  private func authenticate(onIdToken: @Sendable @escaping (String?) -> Void) async throws -> String {
+    guard Clerk.shared.isLoaded else { throw KouchdAuthError.clerkNotReady }
+    guard let session = Clerk.shared.session, session.status == .active else {
+      throw KouchdAuthError.noActiveSession
+    }
+    guard let token = try await convexToken(for: session) else {
+      throw KouchdAuthError.missingConvexToken
+    }
+    self.onIdToken = onIdToken
+    startTokenRefreshListener()
+    return token
+  }
+
+  private func convexToken(for session: Session) async throws -> String? {
+    try await session.getToken(.init(template: "convex"))
+  }
+
+  private func startTokenRefreshListener() {
+    tokenRefreshTask?.cancel()
+    tokenRefreshTask = Task { [weak self] in
+      guard let self else { return }
+      for await event in Clerk.shared.auth.events {
+        guard !Task.isCancelled else { return }
+        guard case .tokenRefreshed = event else { continue }
+        guard let session = Clerk.shared.session, session.status == .active else {
+          onIdToken?(nil)
+          continue
+        }
+        onIdToken?(try? await convexToken(for: session))
+      }
+    }
   }
 }
 
@@ -42,6 +116,7 @@ enum AppConfig {
   var selectedStayID = ""
   var selectedGuestID = ""
   var error = ""
+  var connectionError = ""
   var isLoading = true
   var isStayLoading = false
   var isFinancialLoading = false
@@ -50,6 +125,10 @@ enum AppConfig {
   private var pendingFinancialQueries: Set<String> = []
   private var accountGeneration = 0
   private var authSubscription: AnyCancellable?
+  private var connectionTimeoutTask: Task<Void, Never>?
+  private var hasAttemptedConnection = false
+  private var convexAuthLoading = false
+  private var isSyncingUser = false
   private var accountSubscriptions: [AnyCancellable] = []
   private var staySubscriptions: [AnyCancellable] = []
   private var financialSubscriptions: [AnyCancellable] = []
@@ -58,18 +137,73 @@ enum AppConfig {
   init() {
     client = ConvexClientWithAuth(
       deploymentUrl: AppConfig.convexURL,
-      authProvider: ClerkConvexAuthProvider()
+      authProvider: KouchdAuthProvider()
     )
     authSubscription = client.authState
       .receive(on: DispatchQueue.main)
       .sink { [weak self] state in
         guard let self else { return }
-        if case .authenticated = state {
+        switch state {
+        case .authenticated:
+          self.convexAuthLoading = false
+          self.connectionError = ""
+          guard !self.isSyncingUser, self.accountSubscriptions.isEmpty else { return }
           Task { await self.syncUser(name: nil) }
-        } else if case .unauthenticated = state {
-          self.reset()
+        case .loading:
+          self.hasAttemptedConnection = true
+          self.convexAuthLoading = true
+          self.isLoading = true
+          self.connectionError = ""
+          self.startConnectionTimeout()
+        case .unauthenticated:
+          self.convexAuthLoading = false
+          self.connectionTimeoutTask?.cancel()
+          if Clerk.shared.user == nil {
+            self.reset()
+          } else if self.hasAttemptedConnection {
+            self.failConnection()
+          }
         }
       }
+  }
+
+  /// Reconciles an already active Clerk session with Convex. This is also called
+  /// explicitly when SwiftUI observes a signed-in user so startup does not depend
+  /// on catching Clerk's session-change event at exactly the right moment.
+  func connectAuthenticatedSession() async {
+    guard Clerk.shared.user != nil, !convexAuthLoading else { return }
+    hasAttemptedConnection = true
+    isLoading = true
+    connectionError = ""
+    startConnectionTimeout()
+
+    let result = await client.loginFromCache()
+    if case .failure(let failure) = result, Clerk.shared.user != nil {
+      connectionTimeoutTask?.cancel()
+      convexAuthLoading = false
+      failConnection(detail: failure.localizedDescription)
+    }
+  }
+
+  func disconnectAuthenticatedSession() async {
+    await client.logout()
+    reset()
+  }
+
+  private func startConnectionTimeout() {
+    connectionTimeoutTask?.cancel()
+    connectionTimeoutTask = Task { [weak self] in
+      try? await Task.sleep(for: .seconds(15))
+      guard !Task.isCancelled, let self, Clerk.shared.user != nil else { return }
+      self.convexAuthLoading = false
+      self.failConnection()
+    }
+  }
+
+  private func failConnection(detail: String = "") {
+    isLoading = false
+    connectionError = "Your account is signed in, but Kouchd couldn't load your stays. Check your connection and try again."
+    if !detail.isEmpty { connectionError += "\n\n\(detail)" }
   }
 
   func loadAccount() {
@@ -80,6 +214,10 @@ enum AppConfig {
   }
 
   func reset() {
+    connectionTimeoutTask?.cancel()
+    hasAttemptedConnection = false
+    convexAuthLoading = false
+    isSyncingUser = false
     accountGeneration += 1
     stayGeneration += 1
     financialGeneration += 1
@@ -106,6 +244,7 @@ enum AppConfig {
     selectedStayID = ""
     selectedGuestID = ""
     error = ""
+    connectionError = ""
     isLoading = true
   }
 
@@ -145,17 +284,21 @@ enum AppConfig {
   }
 
   func syncUser(name: String?) async {
+    guard !isSyncingUser else { return }
+    isSyncingUser = true
+    defer { isSyncingUser = false }
     let generation = accountGeneration
     do {
       var args: [String: ConvexEncodable?] = [:]
       if let name, !name.isEmpty { args["clerkName"] = name }
       try await client.mutation("users:syncCurrent", with: args)
       guard generation == accountGeneration else { return }
+      connectionError = ""
       loadAccount()
     } catch {
       guard generation == accountGeneration else { return }
-      self.error = error.localizedDescription
-      isLoading = false
+      connectionTimeoutTask?.cancel()
+      failConnection(detail: error.localizedDescription)
     }
   }
 
@@ -233,8 +376,12 @@ enum AppConfig {
         if !account && adminScope.isEmpty && (stayID != self.selectedStayID || stayEpoch != self.stayGeneration) { return }
         if financial && (guestID != self.selectedGuestID || financialEpoch != self.financialGeneration) { return }
         if case .failure(let failure) = result {
-          self.error = failure.localizedDescription
-          if name == "stays:listMine" { self.isLoading = false }
+          if name == "stays:listMine" {
+            self.connectionTimeoutTask?.cancel()
+            self.failConnection(detail: failure.localizedDescription)
+          } else {
+            self.error = failure.localizedDescription
+          }
           if name == "stays:getBundle" { self.isStayLoading = false }
           if financial { self.finishFinancialQuery(name) }
         }
@@ -243,7 +390,10 @@ enum AppConfig {
         if !account && adminScope.isEmpty && (stayID != self.selectedStayID || stayEpoch != self.stayGeneration) { return }
         if financial && (guestID != self.selectedGuestID || financialEpoch != self.financialGeneration) { return }
         self[keyPath: keyPath] = value
-        if name == "stays:listMine" { self.isLoading = false }
+        if name == "stays:listMine" {
+          self.connectionTimeoutTask?.cancel()
+          self.isLoading = false
+        }
         if name == "stays:getBundle" { self.isStayLoading = false }
         if financial { self.finishFinancialQuery(name) }
         if name == "admin:canAccess", !self.adminAccess.flag { self.clearAdmin() }
