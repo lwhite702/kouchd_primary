@@ -24,6 +24,8 @@
 	<string>$(CLERK_PUBLISHABLE_KEY)</string>
 	<key>CONVEX_URL</key>
 	<string>$(CONVEX_URL)</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Use Face ID to sign in to your Kouchd account when you enable biometric sign-in.</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>Manrope.ttf</string>
