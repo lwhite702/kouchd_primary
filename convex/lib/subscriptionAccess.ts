@@ -77,6 +77,44 @@ function toSubscriptionState(snapshot: Doc<"subscriptionSnapshots"> | undefined)
   }
 }
 
+/** Select verified account state for trusted server-side callers. */
+export async function getEffectiveSubscriptionForAccount(
+  ctx: AppCtx,
+  householdAccountId: Id<"householdAccounts">,
+  expectedEnvironment: string,
+  nowMs = Date.now(),
+): Promise<{
+  plan: SubscriptionPlan;
+  snapshot: Doc<"subscriptionSnapshots"> | null;
+}> {
+  const snapshots = await ctx.db
+    .query("subscriptionSnapshots")
+    .withIndex("by_household_account", (query) =>
+      query.eq("householdAccountId", householdAccountId),
+    )
+    .collect();
+  const matchingSnapshots = snapshots.filter(
+    (snapshot) => snapshot.environment === expectedEnvironment,
+  );
+  const statusRank: Record<Doc<"subscriptionSnapshots">["status"], number> = {
+    active: 6,
+    grace_period: 5,
+    canceled: 4,
+    billing_retry: 3,
+    expired: 2,
+    refunded: 1,
+    unknown: 0,
+  };
+  matchingSnapshots.sort((a, b) =>
+    (b.updatedAt - a.updatedAt) ||
+    ((b.latestProviderEventAt ?? 0) - (a.latestProviderEventAt ?? 0)) ||
+    (statusRank[b.status] - statusRank[a.status]),
+  );
+  const snapshot = matchingSnapshots[0] ?? null;
+  const state = toSubscriptionState(snapshot ?? undefined);
+  return { plan: resolveSubscriptionPlan(state, nowMs), snapshot };
+}
+
 /**
  * Return the account's effective plan for a stay. Subscription snapshot IDs
  * and provider identifiers are deliberately not included in the result.
@@ -97,40 +135,15 @@ export async function getEffectivePlanForStay(
   const owner = await resolveHouseholdOwnerForStay(ctx, stay);
   if (!owner.householdAccountId) return { ...owner, plan: "starter" };
 
-  const snapshots = await ctx.db
-    .query("subscriptionSnapshots")
-    .withIndex("by_household_account", (query) =>
-      query.eq("householdAccountId", owner.householdAccountId!),
-    )
-    .collect();
-
-  // Never let a purchase from one store environment authorize access in
-  // another. Missing environment metadata is also ineligible to grant a plan.
-  const matchingEnvironmentSnapshots = snapshots.filter(
-    (snapshot) => snapshot.environment === expectedEnvironment,
+  const subscription = await getEffectiveSubscriptionForAccount(
+    ctx,
+    owner.householdAccountId,
+    expectedEnvironment,
+    nowMs,
   );
 
-  // A household can have snapshots from more than one provider/environment.
-  // Use the most recently updated snapshot as the current provider view; ties
-  // are broken by provider-event timestamp and then conservatively by status.
-  const statusRank: Record<Doc<"subscriptionSnapshots">["status"], number> = {
-    active: 6,
-    grace_period: 5,
-    canceled: 4,
-    billing_retry: 3,
-    expired: 2,
-    refunded: 1,
-    unknown: 0,
-  };
-  matchingEnvironmentSnapshots.sort((a, b) =>
-    (b.updatedAt - a.updatedAt) ||
-    ((b.latestProviderEventAt ?? 0) - (a.latestProviderEventAt ?? 0)) ||
-    (statusRank[b.status] - statusRank[a.status]),
-  );
-
-  const state = toSubscriptionState(matchingEnvironmentSnapshots[0]);
   return {
     ...owner,
-    plan: resolveSubscriptionPlan(state, nowMs),
+    plan: subscription.plan,
   };
 }
