@@ -3,20 +3,51 @@ title: Privacy, data, and security
 description: Who can see household information, agreements, and financial records in Kouchd.
 ---
 
+<Tip>
+  Privacy by design: Each guest's financial terms, payment records, and ledger remain strictly between that guest and the stay host.
+</Tip>
+
 ## Sign-in and account access
 
-Kouchd uses its configured sign-in provider to authenticate accounts. Keep your account credentials private and use the account recovery options provided by that service.
+Kouchd uses its configured sign-in provider (Clerk) to authenticate accounts. Keep your account credentials private and use the account recovery options provided by that service.
 
 ## Household visibility
 
 Household members can see shared stay information, house rules, chores, and announcements. A guest’s agreement and financial ledger are visible to that guest and the host. Other guests do not see that guest’s private financial details.
 
-Private invite links may reveal the host’s name in link previews so recipients can recognize the invitation. Do not post private invite links publicly. Invite links expire.
+Private invite links use cryptographic SHA-256 tokens and may reveal the host’s name in link previews so recipients can recognize the invitation. Do not post private invite links publicly. Invite links expire automatically.
 
 ## Payment details and records
 
+<Info>
+  **Zero bank access:** Kouchd does not connect to bank accounts or process financial transactions. Contribution entries are mutual records agreed upon and confirmed by stay participants.
+</Info>
+
 A host may share PayPal, Cash App, Zelle, or Apple Pay contact details with household members. Those details direct the guest to an outside payment service or contact method. Kouchd does not access bank accounts or collect, hold, transfer, or process funds. A contribution entry records what household members report and confirm; it does not independently verify an external transaction.
 
-## Activity history
+## SMS communications and privacy commitment
 
-Kouchd records household contributions, confirmations, and other supported activity for the shared record. Use the in-app agreement and privacy controls to understand who can see each item.
+Wrelik Brands LLC maintains a strict privacy policy for SMS notifications:
+
+- **Zero third-party marketing sharing:** We do not sell or share your SMS opt-in data or personal information with third parties for marketing purposes.
+- **Transactional notifications only:** Text messages are used solely to deliver requested operational notices, such as chore reminders, stay agreement updates, and check-in logistics.
+- **Opt-out and support:** Reply **STOP** to cancel text alerts at any time, or **HELP** for customer support assistance. Message and data rates may apply.
+
+## Legal documentation
+
+Kouchd is operated by Wrelik Brands LLC. For complete legal policies and disclosures, visit our web application:
+
+- [Privacy Policy](https://kouchd.com/privacy)
+- [Terms & Conditions](https://kouchd.com/terms)
+- [Cookie Policy](https://kouchd.com/cookies)
+- [Acceptable Use Policy](https://kouchd.com/acceptable-use)
+- [SMS Acceptance Form](https://kouchd.com/sms-opt-in)
+
+<CardGroup cols={2}>
+  <Card title="Stay agreements" icon="file-text" href="/help/legal-trust/stay-agreements">
+    How agreement acceptance and custom guest terms work.
+  </Card>
+  <Card title="Quickstart" icon="bolt" href="/help/quickstart">
+    Get oriented with household roles and stay coordination.
+  </Card>
+</CardGroup>

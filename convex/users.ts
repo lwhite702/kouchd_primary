@@ -3,6 +3,7 @@ import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import { mutation, query } from "./_generated/server";
 import { requireCurrentUser } from "./lib/auth";
+import { resolveMemberName } from "./lib/names";
 import { assertPhone } from "./lib/validation";
 
 const guideStateValidator = v.object({
@@ -15,9 +16,13 @@ const guideProgressValidator = v.object({
 });
 
 export const syncCurrent = mutation({
-  args: {},
+  args: {
+    clerkName: v.optional(v.string()),
+    email: v.optional(v.string()),
+    imageUrl: v.optional(v.string()),
+  },
   returns: v.id("users"),
-  handler: async (ctx) => {
+  handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) throw new Error("Unauthenticated");
     const now = Date.now();
@@ -25,9 +30,21 @@ export const syncCurrent = mutation({
       .query("users")
       .withIndex("by_clerk_user_id", (query) => query.eq("clerkUserId", identity.subject))
       .unique();
-    const name = identity.name ?? identity.nickname ?? "Kouchd member";
-    const email = identity.email;
-    const imageUrl = identity.pictureUrl;
+    const clerkName = args.clerkName?.trim();
+    if (args.clerkName !== undefined && (!clerkName || clerkName.length > 80)) {
+      throw new Error("Name must be between 1 and 80 characters");
+    }
+    const name = resolveMemberName({
+      explicitName: clerkName,
+      identityName: identity.name,
+      givenName: identity.givenName,
+      familyName: identity.familyName,
+      nickname: identity.nickname,
+      preferredUsername: identity.preferredUsername,
+      email: args.email ?? identity.email,
+    });
+    const email = args.email?.trim() || identity.email || existing?.email;
+    const imageUrl = args.imageUrl || identity.pictureUrl || existing?.imageUrl;
     let userId = existing?._id;
     if (existing) {
       await ctx.db.patch(existing._id, { name, email, imageUrl, updatedAt: now });
@@ -48,7 +65,18 @@ export const viewer = query({
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) return null;
     const user = await ctx.db.query("users").withIndex("by_clerk_user_id", (query) => query.eq("clerkUserId", identity.subject)).unique();
-    return user ? { id: user._id, name: user.name, email: user.email, phone: user.phone, imageUrl: user.imageUrl, notifyEmail: user.notifyEmail ?? true, notifySms: user.notifySms ?? false, guideProgress: user.guideProgress } : null;
+    if (!user) return null;
+    return {
+      id: user._id,
+      // syncCurrent mirrors the Clerk profile into Convex for household queries.
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+      imageUrl: user.imageUrl,
+      notifyEmail: user.notifyEmail ?? true,
+      notifySms: user.notifySms ?? false,
+      guideProgress: user.guideProgress,
+    };
   },
 });
 
@@ -129,7 +157,12 @@ export const updatePreferences = mutation({
       });
     }
 
-    await ctx.db.patch(user._id, { phone, notifyEmail: args.notifyEmail, notifySms: args.notifySms, updatedAt: now });
+    await ctx.db.patch(user._id, {
+      phone,
+      notifyEmail: args.notifyEmail,
+      notifySms: args.notifySms,
+      updatedAt: now,
+    });
     await ctx.scheduler.runAfter(0, internal.knock.identifyUser, { userId: user._id });
     return null;
   },

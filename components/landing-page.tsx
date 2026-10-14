@@ -1,322 +1,207 @@
 "use client";
 
-import React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { SignInButton, SignUpButton } from "@clerk/nextjs";
+import { ArrowDown, ArrowRight, ArrowUpRight, BookOpen, Check, CircleHelp, ClipboardList, HeartHandshake, House, LockKeyhole, MessageCircle, Sparkles, Users } from "lucide-react";
 import { KouchdWordmark } from "@/components/brand/kouchd-logo";
+import { appVersion } from "@/lib/version";
+import { Tooltip } from "@/components/ui/tooltip";
+import { HELP_LINKS } from "@/lib/help-links";
+import { APP_ORIGIN } from "@/lib/app-domain";
+import "./landing-v21.css";
 
-interface LandingPageProps {
-  hasClerk?: boolean;
+interface LandingPageProps { hasClerk?: boolean }
+
+function StartButton({ hasClerk, secondary = false }: { hasClerk: boolean; secondary?: boolean }) {
+  const className = secondary ? "v21-button v21-button-outline" : "v21-button v21-button-lime";
+  return hasClerk ? (
+    <Link className={className} href={`${APP_ORIGIN}/sign-up`}>Start a stay <ArrowRight size={17} /></Link>
+  ) : (
+    <Link className={className} href="/?preview=true">Start a stay <ArrowRight size={17} /></Link>
+  );
 }
 
 export function LandingPage({ hasClerk = true }: LandingPageProps) {
   return (
-    <div className="landing-page-root">
-      {/* 13:39 Navigation */}
-      <header className="landing-nav-bar">
-        <Link href="/" className="landing-brand-link">
+    <main className="landing-v21">
+      <header className="v21-header">
+        <Link href="/" aria-label="Kouchd home" className="v21-brand">
           <KouchdWordmark size="md" />
         </Link>
-
-        <nav className="landing-nav-links">
+        <nav className="v21-nav" aria-label="Main navigation">
+          <a href="#features">Features</a>
           <a href="#how-it-works">How it works</a>
-          <a href="#hosts-and-guests">For hosts &amp; guests</a>
-          <a href="#trust">What’s next</a>
-          <a href="https://help.kouchd.com" target="_blank" rel="noopener noreferrer">Docs</a>
+          <a href="#privacy">Privacy</a>
+          <a href="#faq">FAQ</a>
+          <Tooltip content="Explore stay guides, ledger setup & house rules" position="bottom">
+            <a href={HELP_LINKS.home} target="_blank" rel="noopener noreferrer" className="v21-nav-help">
+              <BookOpen size={15} />
+              <span>Guides</span>
+              <ArrowUpRight size={13} style={{ opacity: 0.7 }} />
+            </a>
+          </Tooltip>
         </nav>
-
-        <div className="landing-nav-actions">
-          {hasClerk ? (
-            <SignInButton mode="modal">
-              <button type="button" className="landing-btn-secondary">
-                Sign in
-              </button>
-            </SignInButton>
-          ) : (
-            <Link href="/?preview=true" className="landing-btn-secondary">
-              Sign in
-            </Link>
+        <details className="v21-nav-compact">
+          <summary>Menu</summary>
+          <nav className="v21-nav-compact-panel" aria-label="Main navigation">
+            <a href="#features">Features</a>
+            <a href="#how-it-works">How it works</a>
+            <a href="#privacy">Privacy</a>
+            <a href="#faq">FAQ</a>
+            <a href={HELP_LINKS.home} target="_blank" rel="noopener noreferrer">Guides</a>
+          </nav>
+        </details>
+        <div className="v21-header-actions">
+          {hasClerk && (
+            <Tooltip content="Access your stays, ledger, or agreements" position="bottom">
+              <Link href={`${APP_ORIGIN}/sign-in`} className="v21-sign-in">Sign in</Link>
+            </Tooltip>
           )}
+          <Tooltip content="Create a stay or join an existing household" position="bottom">
+            <div style={{ display: "inline-flex" }}>
+              <StartButton hasClerk={hasClerk} />
+            </div>
+          </Tooltip>
         </div>
       </header>
 
-      {/* 13:50 Hero */}
-      <section className="landing-hero-section">
-        <div className="landing-hero-content">
-          <div className="landing-status-pill">
-            <span>COORDINATION &middot; CLARITY &middot; MUTUAL RESPECT</span>
-          </div>
-
-          <h1 className="landing-hero-title">
-            <span>A shared stay.</span>
-            <span>A softer landing.</span>
-          </h1>
-
-          <p className="landing-hero-desc">
-            Kouchd is a friendly communication and organization tool for hosts and guests. 
-            Keep track of dates, household contributions, chore rotations, and shared expectations in one comfortable space—so everyone stays on the same page.
-          </p>
-
-          <div className="landing-hero-action-group">
-            {hasClerk ? (
-              <SignUpButton mode="modal">
-                <button type="button" className="landing-btn-primary">
-                  Start a shared stay
-                </button>
-              </SignUpButton>
-            ) : (
-              <Link href="/?preview=true" className="landing-btn-primary">
-                Start a shared stay
-              </Link>
-            )}
-            <p className="landing-hero-hint">
-              Already invited? Open your invitation link.
-            </p>
-          </div>
+      <section className="v21-hero" aria-labelledby="v21-hero-title">
+        <div className="v21-hero-copy">
+          <p className="v21-eyebrow"><span /> A calmer way to share a home</p>
+          <h1 id="v21-hero-title">Make room for<br className="v21-desktop-break" /> a better stay.</h1>
+          <p className="v21-lede">Kouchd brings house details and updates, a contribution ledger, shared chores, and check-ins into one private space for hosts and guests.</p>
+          <div className="v21-hero-actions"><StartButton hasClerk={hasClerk} /><a className="v21-text-link" href="#features">Explore the tools <ArrowDown size={16} /></a></div>
+          <p className="v21-invite-note">Already invited? Open the link your host shared with you.</p>
         </div>
-
-        {/* 13:59 Authentic Hero Room Vector Artwork */}
-        <div className="landing-hero-visual" data-name="A room with space for everyone">
-          <Image
-            src="/hero-illustration.svg"
-            alt="A room with space for everyone — Kouchd illustration"
-            width={648}
-            height={464}
-            priority
-            className="landing-hero-img"
-          />
+        <div className="v21-hero-art" aria-label="Illustration of a welcoming shared living room">
+          <Image src="/landing-v21/room.svg" alt="A sunlit living room with a green sofa and a small table" fill priority sizes="(max-width: 760px) 100vw, 54vw" className="v21-room-desktop" />
+          <Image src="/landing-v21/room-mobile.svg" alt="A warm, welcoming shared living room" fill priority sizes="100vw" className="v21-room-mobile" />
+          <div className="v21-art-note"><span className="v21-note-icon"><House size={16} /></span><span><strong>One shared stay space</strong><small>Details, records, and to-dos together</small></span></div>
         </div>
       </section>
 
-      {/* 13:121 Product preview */}
-      <section className="landing-preview-section">
-        <h2 className="landing-preview-title">
-          <span>Less guessing.</span>
-          <span>More feeling at home.</span>
-        </h2>
+      <section className="v21-proof" aria-labelledby="v21-proof-title">
+        <div className="v21-proof-heading"><p className="v21-eyebrow v21-eyebrow-light">A clearer picture for everyone</p><h2 id="v21-proof-title">Your shared stay,<br className="v21-desktop-break" /> all in one place.</h2><p>See who is coming, what everyone agreed to, and what needs attention next.</p></div>
+        <div className="v21-proof-grid">
+          <article className="v21-proof-card"><span className="v21-proof-icon"><Users size={19} /></span><span className="v21-proof-label">Guests</span><strong>5</strong><small>3 confirmed · 2 pending</small></article>
+          <article className="v21-proof-card"><span className="v21-proof-icon"><ClipboardList size={19} /></span><span className="v21-proof-label">Contributions</span><strong className="v21-proof-word">Recorded</strong><small>Recorded outside Kouchd</small></article>
+          <article className="v21-proof-card"><span className="v21-proof-icon"><Check size={19} /></span><span className="v21-proof-label">Chores</span><strong>3</strong><small>1 needs an owner</small></article>
+          <article className="v21-proof-card"><span className="v21-proof-icon"><Sparkles size={19} /></span><span className="v21-proof-label">Next check-in</span><strong className="v21-proof-word">Friday</strong><small>Scheduled by the host</small></article>
+        </div>
+        <p className="v21-preview-disclaimer">Illustrative preview · Example details, not live household data</p>
+      </section>
 
-        <div className="landing-preview-grid">
-          {/* Stay Card (9:63) */}
-          <div className="landing-preview-card landing-card-stay">
-            <h3 className="landing-card-heading">Your stay at Jordan’s</h3>
-            <p className="landing-card-subtext">Sep 1 – Sep 21 · Shared with Alex</p>
-            <div className="landing-card-rule" />
-            <p className="landing-card-meta">Dates and expectations, agreed together</p>
-          </div>
-
-          {/* Contribution summary (13:129) */}
-          <div className="landing-preview-card landing-card-contrib">
-            <span className="landing-card-label">Next contribution</span>
-            <div className="landing-card-big-price">$200</div>
-            <p className="landing-card-subtext">Due Sep 8 · Recorded outside Kouchd</p>
-          </div>
-
-          {/* Chores preview (13:133) */}
-          <div className="landing-preview-card landing-card-chores">
-            <h3 className="landing-card-heading-dark">A little give and take.</h3>
-            <div className="landing-card-chores-list">
-              <p>Kitchen reset · Alex</p>
-              <p>Bins on Tuesday · Jordan</p>
-              <p>Sunday check-in · Together</p>
+      <section className="v21-product" aria-labelledby="v21-product-title">
+        <div className="v21-product-preview" aria-label="Example Kouchd stay dashboard preview">
+          <div className="v21-preview-window">
+            <div className="v21-preview-top"><span className="v21-preview-mark"><KouchdWordmark size="sm" /></span><span className="v21-preview-avatar">J</span></div>
+            <div className="v21-preview-inner"><span className="v21-preview-kicker">EXAMPLE STAY</span><h3>Everything that needs attention</h3>
+              <div className="v21-preview-summary"><span><strong>3</strong> confirmed</span><span><strong>2</strong> due</span></div>
+              <div className="v21-preview-row"><span className="v21-row-icon row-house"><House size={17} /></span><span><strong>House guide</strong><small>Parking, Wi-Fi, quiet hours</small></span><em className="tag-ready">Ready</em></div>
+              <div className="v21-preview-row"><span className="v21-row-icon row-ledger"><ClipboardList size={17} /></span><span><strong>Contribution</strong><small>Your share · recorded elsewhere</small></span><em className="tag-recorded">Recorded</em></div>
+              <div className="v21-preview-row"><span className="v21-row-icon row-chore"><Check size={17} /></span><span><strong>Groceries</strong><small>Assigned to guest</small></span><em className="tag-due">Due today</em></div>
             </div>
           </div>
+          <span className="v21-preview-orbit orbit-one" /><span className="v21-preview-orbit orbit-two" />
         </div>
-
-        <p className="landing-preview-footnote">
-          Illustrative product preview. Kouchd currently records contributions; it does not move money.
-        </p>
-        {/* Communication & Neutral Tool Clarification */}
-        <div style={{
-          maxWidth: 960,
-          margin: "0 auto",
-          padding: "24px 28px",
-          backgroundColor: "#fbf8f2",
-          border: "1px solid var(--kouchd-line, #ded8ce)",
-          borderRadius: "var(--kouchd-radius-24, 24px)",
-          display: "flex",
-          flexDirection: "column",
-          gap: "10px",
-          textAlign: "left"
-        }}>
-          <div style={{
-            fontSize: "0.75rem",
-            fontWeight: 800,
-            letterSpacing: "0.08em",
-            textTransform: "uppercase",
-            color: "var(--kouchd-forest, #184f3a)"
-          }}>
-            A tool for communication, not friction
-          </div>
-          <h3 style={{
-            margin: 0,
-            fontSize: "1.25rem",
-            fontWeight: 800,
-            color: "var(--kouchd-ink, #17251f)",
-            lineHeight: 1.35
-          }}>
-            Designed to support relationships, never to disparage or single anyone out.
-          </h3>
-          <p style={{
-            margin: 0,
-            fontSize: "0.95rem",
-            lineHeight: 1.6,
-            color: "var(--kouchd-muted, #59675f)"
-          }}>
-            Opening your home or staying with friends, family, or colleagues shouldn’t come with awkward guesswork. Kouchd isn’t a landlord app or an enforcement mechanism—it is simply a shared notebook where both host and guest communicate openly, organize household responsibilities, and celebrate contributions with mutual respect.
-          </p>
-        </div>
-
+        <div className="v21-product-copy"><p className="v21-eyebrow">A look inside Kouchd</p><h2 id="v21-product-title">Your shared stay,<br /> clearly organized.</h2><p>House details and updates, contribution records, chores, and check-ins—all in one view.</p><a className="v21-text-link" href="#features">Explore the tools <ArrowRight size={16} /></a></div>
       </section>
 
-      {/* 14:52 How it works */}
-      <section id="how-it-works" className="landing-how-section">
-        <h2 className="landing-how-title">
-          <span>A good stay starts</span>
-          <span>with the same page.</span>
-        </h2>
-
-        <div className="landing-steps-grid">
-          <div className="landing-step-box">
-            <span className="landing-step-num">01</span>
-            <h3 className="landing-step-heading">Make a little room.</h3>
-            <p className="landing-step-desc">
-              Set the dates, contribution rhythm, and house expectations.
-            </p>
-          </div>
-
-          <div className="landing-step-box">
-            <span className="landing-step-num">02</span>
-            <h3 className="landing-step-heading">Bring your guest in.</h3>
-            <p className="landing-step-desc">
-              Send a private invitation. Review and accept the same version together.
-            </p>
-          </div>
-
-          <div className="landing-step-box">
-            <span className="landing-step-num">03</span>
-            <h3 className="landing-step-heading">Keep it comfortable.</h3>
-            <p className="landing-step-desc">
-              Record contributions, share chores, and make time for a check-in.
-            </p>
-          </div>
+      <section className="v21-feature-tour" id="features" aria-labelledby="v21-feature-title">
+        <div className="v21-feature-intro">
+          <p className="v21-eyebrow">A shared place to come back to</p>
+          <h2 id="v21-feature-title">The details, the ledger, and the to-dos.</h2>
+          <p className="v21-feature-description">Kouchd brings the practical parts of sharing a stay together—so everyone can find the right information and know what is next.</p>
+          <p className="v21-feature-disclaimer">The screens below use illustrative example content.</p>
         </div>
 
-        {/* 14:67 For both sides of the stay */}
-        <div id="hosts-and-guests" className="landing-both-sides-grid">
-          <div className="landing-side-box landing-side-host">
-            <h3 className="landing-side-heading">For the person making room.</h3>
-            <p className="landing-side-desc">
-              Keep dates, contributions, and boundaries organized without repeating yourself.
-            </p>
+        <article className="v21-feature-row" aria-labelledby="v21-feature-guide-title">
+          <div className="v21-feature-copy">
+            <span className="v21-feature-index">01 <span>Stay information</span></span>
+            <h3 id="v21-feature-guide-title">Keep the house guide and updates close at hand.</h3>
+            <p>Share the details people need before and during a stay, then post updates in the same place guests already use to check their plans.</p>
+            <ul><li><Check size={16} /> House details guests can look up again</li><li><Check size={16} /> Stay updates alongside the shared context</li><li><Check size={16} /> Guest list and scheduled check-in date in view</li></ul>
           </div>
+          <div className="v21-feature-scene scene-guide" aria-hidden="true">
+            <div className="v21-scene-window">
+              <div className="v21-scene-top"><span><i className="scene-dot" /> JUNIPER HOUSE</span><span className="scene-date">OCT 10—13</span></div>
+              <div className="scene-tabs"><span className="selected">Overview</span><span>House guide</span><span>Updates</span></div>
+              <div className="scene-welcome"><span className="scene-house-icon"><House size={17} /></span><div><strong>Welcome to the house</strong><small>The useful details, all together</small></div></div>
+              <div className="scene-info-grid"><div><span>WI-FI</span><strong>JuniperGuest</strong><small>Ask Maya for the password</small></div><div><span>QUIET HOURS</span><strong>10 pm – 8 am</strong><small>Thanks for keeping it cozy</small></div></div>
+              <div className="scene-update"><span className="scene-avatar">M</span><div><strong>Update from Maya <small>Today</small></strong><p>Use the side entrance after 8. The porch light is on.</p></div></div>
+            </div>
+          </div>
+        </article>
 
-          <div className="landing-side-box landing-side-guest">
-            <h3 className="landing-side-heading">For the person settling in.</h3>
-            <p className="landing-side-desc">
-              Know what’s expected, see your own record, and have a voice in the agreement.
-            </p>
+        <article className="v21-feature-row v21-feature-row-reverse" aria-labelledby="v21-feature-ledger-title">
+          <div className="v21-feature-copy">
+            <span className="v21-feature-index">02 <span>Contribution ledger</span></span>
+            <h3 id="v21-feature-ledger-title">Keep a clear record of shared costs.</h3>
+            <p>Give each contribution a place in the stay record, with its note, status, and date easy to review.</p>
+            <ul><li><Check size={16} /> Entries stay connected to the household</li><li><Check size={16} /> Notes give each record useful context</li><li><Check size={16} /> A shared record helps everyone stay oriented</li></ul>
+            <p className="v21-feature-note">Kouchd records contributions; payment is arranged separately between people.</p>
           </div>
+          <div className="v21-feature-scene scene-ledger" aria-hidden="true">
+            <div className="v21-scene-window">
+              <div className="scene-ledger-head"><div><span className="scene-section-label">JUNIPER HOUSE · LEDGER</span><strong>Contribution records</strong></div><span className="scene-filter">This stay <ArrowDown size={12} /></span></div>
+              <div className="scene-ledger-summary"><span>RECENT ACTIVITY</span><strong>Shared costs, clearly noted</strong><small>Illustrative entries · recorded only</small></div>
+              <div className="scene-ledger-row"><span className="scene-ledger-icon"><House size={16} /></span><div><strong>Utilities</strong><small>Oct 8 · Shared expense</small></div><div className="scene-amount"><strong>$84.00</strong><small>Recorded</small></div></div>
+              <div className="scene-ledger-row"><span className="scene-ledger-icon grocery-icon"><Check size={16} /></span><div><strong>Shared groceries</strong><small>Oct 7 · Shared expense</small></div><div className="scene-amount"><strong>$36.50</strong><small>Recorded</small></div></div>
+              <div className="scene-ledger-foot"><ClipboardList size={15} /><span>Entries are a shared record—not a payment transfer.</span></div>
+            </div>
+          </div>
+        </article>
+
+        <article className="v21-feature-row" aria-labelledby="v21-feature-tasks-title">
+          <div className="v21-feature-copy">
+            <span className="v21-feature-index">03 <span>Chores and check-ins</span></span>
+            <h3 id="v21-feature-tasks-title">Make shared responsibilities easier to follow.</h3>
+            <p>Put a name and a due date beside a task, and keep the host-scheduled check-in date in view.</p>
+            <ul><li><Check size={16} /> See what needs doing and who owns it</li><li><Check size={16} /> Keep due dates from getting buried in a chat</li><li><Check size={16} /> Keep the scheduled check-in date easy to find</li></ul>
+          </div>
+          <div className="v21-feature-scene scene-tasks" aria-hidden="true">
+            <div className="v21-scene-window">
+              <div className="scene-tasks-heading"><div><span className="scene-section-label">JUNIPER HOUSE · TOGETHER</span><strong>Things to take care of</strong></div><span className="scene-task-count">2 open</span></div>
+              <div className="scene-task-row"><span className="scene-check"></span><div><strong>Take the bins to the curb</strong><small>Alex · Due Thursday</small></div><span className="scene-due">Tomorrow</span></div>
+              <div className="scene-task-row"><span className="scene-check done"><Check size={12} /></span><div><strong>Restock the coffee shelf</strong><small>Jordan · Done today</small></div><span className="scene-done">Done</span></div>
+              <div className="scene-checkin"><span className="scene-checkin-icon"><Users size={16} /></span><div><span className="scene-section-label">NEXT CHECK-IN</span><strong>Scheduled check-in</strong><small>Friday · Set by the host</small></div></div>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <section className="v21-how" id="how-it-works" aria-labelledby="v21-how-title">
+        <div className="v21-section-heading"><p className="v21-eyebrow">Simple from the start</p><h2 id="v21-how-title">Stay details, updates, and to-dos—together.</h2></div>
+        <div className="v21-steps">
+          <article><span className="v21-step-number">01</span><h3>Set up the stay</h3><p>Add people, dates, and the house details everyone should know.</p></article>
+          <article><span className="v21-step-number">02</span><h3>Get on the same page</h3><p>Share expectations and keep updates in one place everyone can return to.</p></article>
+          <article><span className="v21-step-number">03</span><h3>Keep things moving</h3><p>Track contributions, chores, and check-ins without another spreadsheet.</p></article>
         </div>
       </section>
 
-      {/* 14:96 Trust and next steps */}
-      <section id="trust" className="landing-trust-section">
-        <div className="landing-trust-banner">
-          <h3 className="landing-trust-banner-title">A shared record built on mutual trust.</h3>
-          <p className="landing-trust-banner-desc">
-            Kouchd provides an organized platform for communication, agreement clarity, and task organization. Private financial scoping protects privacy, and both host and guest maintain a clear voice in every expectation set.
-          </p>
-        </div>
-
-        <div className="landing-coming-soon-box">
-          <div className="landing-status-pill-sky">
-            <span>Coming soon</span>
-          </div>
-          <h3 className="landing-coming-soon-heading">More room to grow.</h3>
-          <div className="landing-coming-soon-desc">
-            <p>Multiple stays and guests. In-app payments. Native iOS and Android apps.</p>
-            <p>We’re designing the next chapter of Kouchd.</p>
-          </div>
-        </div>
-
-        <h3 className="landing-faq-title">A few things to know.</h3>
-
-        <div className="landing-faq-stack">
-          <div className="landing-faq-entry">
-            <h4 className="landing-faq-query">Is Kouchd an enforcement or collection tool?</h4>
-            <p className="landing-faq-response">
-              No. Kouchd is strictly an organizational and communication tool. It is never meant to be offensive, punitive, or disparaging. It simply gives hosts and guests a neutral, positive place to keep track of shared dates, household contributions, chores, and boundaries so nothing falls through the cracks.
-            </p>
-            <div className="landing-faq-sep" />
-          </div>
-
-          <div className="landing-faq-entry">
-            <h4 className="landing-faq-query">Can I find a place to stay here?</h4>
-            <p className="landing-faq-response">
-              Kouchd helps people who already know where they’re staying. There are no public listings or bookings.
-            </p>
-            <div className="landing-faq-sep" />
-          </div>
-
-          <div className="landing-faq-entry">
-            <h4 className="landing-faq-query">Does Kouchd collect payments?</h4>
-            <p className="landing-faq-response">
-              Not currently. You can record payments made elsewhere and other agreed contributions in your shared record.
-            </p>
-            <div className="landing-faq-sep" />
-          </div>
-
-          <div className="landing-faq-entry">
-            <h4 className="landing-faq-query">What if our plans change?</h4>
-            <p className="landing-faq-response">
-              Review updated expectations together. The shared record keeps the details easy to refer back to.
-            </p>
-            <div className="landing-faq-sep" />
-          </div>
-        </div>
-
-        {/* 14:118 Final Call to Action */}
-        <div className="landing-final-banner">
-          <h3 className="landing-final-banner-title">
-            <span>Make room for</span>
-            <span>a better stay.</span>
-          </h3>
-
-          <div>
-            {hasClerk ? (
-              <SignUpButton mode="modal">
-                <button type="button" className="landing-btn-secondary-large">
-                  Start a shared stay
-                </button>
-              </SignUpButton>
-            ) : (
-              <Link href="/?preview=true" className="landing-btn-secondary-large">
-                Start a shared stay
-              </Link>
-            )}
-          </div>
-        </div>
-
-        {/* 14:122 Footer */}
-        <footer className="landing-page-footer">
-          <Link href="/" className="landing-brand-link">
-            <KouchdWordmark size="md" />
-          </Link>
-          <div className="landing-page-footer-copy">
-            <p style={{ marginBottom: 8 }}>
-              <Link href="/privacy" style={{ color: "var(--kouchd-forest, #184f3a)", fontWeight: 700, textDecoration: "none", marginRight: 16 }}>Privacy Policy</Link>
-              <Link href="/terms" style={{ color: "var(--kouchd-forest, #184f3a)", fontWeight: 700, textDecoration: "none", marginRight: 16 }}>Terms &amp; Conditions</Link>
-              <Link href="/sms-opt-in" style={{ color: "var(--kouchd-forest, #184f3a)", fontWeight: 700, textDecoration: "none", marginRight: 16 }}>SMS Acceptance</Link>
-              <a href="https://help.kouchd.com" target="_blank" rel="noopener noreferrer" style={{ color: "var(--kouchd-muted, #59675f)", textDecoration: "none" }}>Help Center &rarr;</a>
-            </p>
-            <p style={{ marginBottom: 4 }}>Make room for clarity.</p>
-            <p style={{ marginBottom: 4 }}>Kouchd records shared expectations; it does not replace applicable housing rights.</p>
-            <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--kouchd-muted, #59675f)" }}>&copy; {new Date().getFullYear()} Wrelik Brands LLC. All rights reserved.</p>
-          </div>
-        </footer>
+      <section className="v21-people" aria-label="For hosts and guests">
+        <article className="v21-people-card"><span className="v21-people-symbol"><House size={20} /></span><div><p className="v21-eyebrow">For hosts</p><h2>Share the details once.</h2><p>Keep house information, agreements, and the stay’s moving pieces together for everyone.</p></div><span className="v21-people-art host-art"><House size={76} strokeWidth={1.1} /></span></article>
+        <article className="v21-people-card guest-card"><span className="v21-people-symbol"><HeartHandshake size={20} /></span><div><p className="v21-eyebrow">For guests</p><h2>Know what to expect.</h2><p>Find the house guide, your responsibilities, and your contribution record in one private view.</p></div><span className="v21-people-art guest-art"><Sparkles size={74} strokeWidth={1.1} /></span></article>
       </section>
-    </div>
+
+      <section className="v21-privacy" id="privacy" aria-labelledby="v21-privacy-title">
+        <div className="v21-privacy-copy"><p className="v21-eyebrow">Private by design</p><h2 id="v21-privacy-title">A shared space for the people in the stay.</h2><p>Kouchd is built around private households. Hosts and guests see the information relevant to their stay, with contributions recorded clearly for everyone involved.</p><div className="v21-privacy-points"><span><LockKeyhole size={17} /> Private household access</span><span><MessageCircle size={17} /> Updates and house details</span></div></div>
+        <div className="v21-coming-card"><span className="v21-coming-icon"><Sparkles size={18} /></span><p className="v21-eyebrow">On the horizon</p><h3>More ways to make shared living easier.</h3><ul><li>More household tools <span>Coming soon</span></li><li>Native iOS &amp; Android apps <span>Coming soon</span></li></ul><small>Contributions are currently recorded in Kouchd; payment happens separately between people.</small></div>
+      </section>
+
+      <section className="v21-faq" id="faq" aria-labelledby="v21-faq-title">
+        <div className="v21-faq-heading"><p className="v21-eyebrow"><CircleHelp size={16} /> A few common questions</p><h2 id="v21-faq-title">Good to know.</h2></div>
+        <div className="v21-faq-list">
+          <details><summary>What is Kouchd?</summary><p>A private shared-stay workspace for house details and updates, contribution records, chores, and check-ins.</p></details>
+          <details><summary>Does Kouchd move money?</summary><p>No. Kouchd helps people record contributions. Any payment is arranged and completed separately between the people involved.</p></details>
+          <details><summary>Is Kouchd a chat app?</summary><p>Kouchd keeps stay-related details and updates organized. It is not a general-purpose messaging app, so you can keep using the messaging tools you already prefer.</p></details>
+          <details><summary>Are iOS and Android apps available?</summary><p>Native apps are planned for the future. For now, Kouchd is available on the web.</p></details>
+        </div>
+      </section>
+
+      <section className="v21-cta"><KouchdWordmark size="md" theme="cream" /><h2>Make the next stay feel easier.</h2><p>Bring the people, details, and shared responsibilities together.</p><StartButton hasClerk={hasClerk} /><span className="v21-cta-sparkle"><Sparkles size={50} strokeWidth={1} /></span></section>
+
+      <footer className="v21-footer"><Link href="/" className="v21-footer-brand"><KouchdWordmark size="sm" /></Link><p>Shared living, with a little more clarity.</p><div><a href="https://help.kouchd.com" target="_blank" rel="noreferrer">Help center</a><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link><Link href="/sms-opt-in">SMS opt-in</Link><a href="#faq">FAQ</a></div><small>© {new Date().getFullYear()} Wrelik Brands LLC. Kouchd records shared expectations; it does not replace applicable housing rights. · v{appVersion}</small></footer>
+    </main>
   );
 }
-

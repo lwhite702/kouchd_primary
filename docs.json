@@ -13,6 +13,7 @@
     "dark": "#103627"
   },
   "background": {
+    "decoration": "gradient",
     "color": {
       "light": "#FFFDF8",
       "dark": "#FFFDF8"
@@ -74,7 +75,8 @@
         "group": "Trust & Legal",
         "pages": [
           "help/legal-trust/stay-agreements",
-          "help/legal-trust/privacy-and-security"
+          "help/legal-trust/privacy-and-security",
+          "help/legal-trust/terms-of-service"
         ]
       }
     ],

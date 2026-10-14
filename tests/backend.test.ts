@@ -33,6 +33,77 @@ async function createUser(t: ReturnType<typeof convexTest>, subject: string, nam
 }
 
 describe("shared stay authorization and audit rules", () => {
+  it("only exposes native admin access to granted accounts", async () => {
+    const t = convexTest(schema, modules);
+    const member = await createUser(t, "ordinary-member", "Member");
+    expect(await member.query(api.admin.canAccess, {})).toBe(false);
+    await expect(member.query(api.admin.getOverviewStats, {})).rejects.toThrow("Platform admin grant required");
+    await t.run(async (ctx) => {
+      const user = await ctx.db.query("users")
+        .withIndex("by_clerk_user_id", (q) => q.eq("clerkUserId", "ordinary-member"))
+        .unique();
+      if (!user) throw new Error("Missing test user");
+      await ctx.db.patch(user._id, { isAdmin: true });
+    });
+    expect(await member.query(api.admin.canAccess, {})).toBe(true);
+  });
+
+  it("accepts existing stays with an optional name field", async () => {
+    const t = convexTest(schema, modules);
+    await createUser(t, "named-stay-host", "Lee");
+    const stayId = await t.run(async ({ db }) => {
+      const host = await db.query("users").first();
+      if (!host) throw new Error("Expected test host to exist");
+      return db.insert("stays", {
+        hostUserId: host._id,
+        name: "WRE-162 Native Verification",
+        status: "active",
+        timezone: "America/New_York",
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+      });
+    });
+
+    const stay = await t.run(({ db }) => db.get(stayId));
+    expect(stay?.name).toBe("WRE-162 Native Verification");
+  });
+
+  it("keeps invite previews read-only and carries the guest name into membership", async () => {
+    const t = convexTest(schema, modules);
+    const host = await createUser(t, "invite-preview-host", "Lee");
+    const guest = await createUser(t, "invite-preview-guest", "Kouchd member");
+    const stayId = await host.mutation(api.stays.create, { timezone: "America/New_York", terms: firstTerms });
+    const tokenHash = "9".repeat(64);
+    await host.mutation(api.invites.create, { stayId, tokenHash, expiresAt: Date.now() + 86_400_000 });
+    const stay = await host.query(api.stays.getBundle, { stayId });
+
+    const preview = await guest.query(api.invites.preview, { tokenHash });
+    expect(preview).toMatchObject({
+      valid: true, hostName: "Lee", referralCode: stay.stay.referralCode,
+      stayName: "Shared stay", expiresAt: expect.any(Number),
+      terms: { version: 1, rateCents: firstTerms.rateCents, houseNotes: firstTerms.houseNotes },
+    });
+    expect(stay.members).toHaveLength(1);
+
+    await expect(guest.mutation(api.users.syncCurrent, { clerkName: "   " })).rejects.toThrow("Name must be between 1 and 80 characters");
+    await guest.mutation(api.users.syncCurrent, { clerkName: "Jordan Rivera" });
+    expect((await guest.query(api.users.viewer, {}))?.name).toBe("Jordan Rivera");
+    await guest.mutation(api.users.syncCurrent, { clerkName: "Jordan Rivera" });
+    expect((await guest.query(api.users.viewer, {}))?.name).toBe("Jordan Rivera");
+    await guest.mutation(api.invites.accept, { tokenHash });
+    await guest.mutation(api.users.updatePreferences, { notifyEmail: true, notifySms: false });
+    await guest.mutation(api.users.syncCurrent, { clerkName: "Jordan R." });
+
+    const joinedStay = await host.query(api.stays.getBundle, { stayId });
+    expect(joinedStay.members.some((member) => member.person.name === "Jordan R.")).toBe(true);
+    expect(await guest.query(api.invites.preview, { tokenHash })).toEqual({ valid: false, status: "used" });
+
+    const profileOwner = await createUser(t, "profile-name-owner", "Clerk Full Name");
+    await profileOwner.mutation(api.users.syncCurrent, { clerkName: "Preferred Display Name" });
+    await profileOwner.mutation(api.users.syncCurrent, { clerkName: "Clerk Full Name" });
+    expect((await profileOwner.query(api.users.viewer, {}))?.name).toBe("Clerk Full Name");
+  });
+
   it("keeps guest agreements and payment options private while allowing different terms", async () => {
     const t = convexTest(schema, modules);
     const host = await createUser(t, "household-host", "Lee");
@@ -41,6 +112,7 @@ describe("shared stay authorization and audit rules", () => {
     const startDate = new Date(Date.now() + 86_400_000).toISOString().slice(0, 10);
     const endDate = new Date(Date.now() + 15 * 86_400_000).toISOString().slice(0, 10);
     const stayId = await host.mutation(api.stays.create, {
+      name: "Maple House",
       timezone: "America/New_York",
       paymentOptions: [
         { provider: "paypal", detail: "https://paypal.me/lee" },
@@ -53,7 +125,13 @@ describe("shared stay authorization and audit rules", () => {
     await host.mutation(api.invites.create, { stayId, tokenHash: firstInviteHash, expiresAt: Date.now() + 86_400_000 });
     await host.mutation(api.invites.create, { stayId, tokenHash: secondInviteHash, expiresAt: Date.now() + 86_400_000 });
 
-    expect(await firstGuest.query(api.invites.preview, { tokenHash: firstInviteHash })).toEqual({ valid: true, hostName: "Lee", expiresAt: expect.any(Number) });
+    const preview = await firstGuest.query(api.invites.preview, { tokenHash: firstInviteHash });
+    expect(preview).toMatchObject({
+      valid: true, hostName: "Lee", stayName: "Maple House",
+      referralCode: expect.any(String), expiresAt: expect.any(Number),
+      terms: { version: 1, startDate, endDate, cadence: "weekly", rateCents: 20_000, houseNotes: "Quiet after 10:30 PM." },
+    });
+    expect(preview).not.toHaveProperty("paymentOptions");
     await firstGuest.mutation(api.invites.accept, { tokenHash: firstInviteHash });
     const firstMember = (await host.query(api.stays.getBundle, { stayId })).members.find((member) => member.person.name === "Marcus")!;
     await host.mutation(api.terms.updateGuest, { stayId, guestUserId: firstMember.person.id, terms: { ...firstTerms, startDate, endDate, rateCents: 11_000 } });
@@ -72,6 +150,10 @@ describe("shared stay authorization and audit rules", () => {
     await secondGuest.mutation(api.terms.acceptCurrent, { stayId });
 
     const hostBundle = await host.query(api.stays.getBundle, { stayId });
+    await expect(firstGuest.mutation(api.stays.updateName, { stayId, name: "Another House" }))
+      .rejects.toThrow();
+    await host.mutation(api.stays.updateName, { stayId, name: "Maple House East" });
+    expect((await firstGuest.query(api.stays.getBundle, { stayId })).stay.name).toBe("Maple House East");
     const firstBundle = await firstGuest.query(api.stays.getBundle, { stayId });
     const secondBundle = await secondGuest.query(api.stays.getBundle, { stayId });
     expect(hostBundle.members.find((member) => member.person.name === "Marcus")?.terms?.rateCents).toBe(11_000);
@@ -85,7 +167,7 @@ describe("shared stay authorization and audit rules", () => {
     ]);
     const publicCodePreview = await firstGuest.query(api.referral.preview, { referralCode: hostBundle.stay.referralCode! });
     expect(publicCodePreview).not.toHaveProperty("paymentOptions");
-    expect(await firstGuest.query(api.invites.preview, { tokenHash: firstInviteHash })).toEqual({ valid: false });
+    expect(await firstGuest.query(api.invites.preview, { tokenHash: firstInviteHash })).toEqual({ valid: false, status: "used" });
 
     const secondAcceptedTermsId = secondBundle.membership.acceptedTermsId;
     await host.mutation(api.terms.updateGuest, { stayId, guestUserId: firstMember.person.id, terms: { ...firstTerms, startDate, endDate, rateCents: 12_000 } });

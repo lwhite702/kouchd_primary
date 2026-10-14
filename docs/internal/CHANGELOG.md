@@ -2,6 +2,77 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-10-12 — iOS navigation bar modernization and auth sheet loop resolution
+
+- Standardized navigation bars and toolbars across Kouchd iOS using `.kouchdNavigationBar(title:)`, toolbar placements (`.topBarLeading`, `.topBarTrailing`, `.primaryAction`, `.confirmationAction`, `.cancellationAction`), and sticky navigation bar styling.
+- Resolved app freeze / watchdog termination on launch caused by `@AppStorage` observation looping when Clerk SDK writes to `UserDefaults` during auth sheet presentation.
+- Updated `AboutKouchdScreen` inline navigation title and fixed welcome screen navigation link hit-testing.
+- Synchronized package and iOS marketing versions to `0.4.3` with patch release classification.
+
+## 2026-10-10 — SwiftUI Navigation modernization and route typing
+
+- Modernized native SwiftUI navigation in Kouchd iOS to use data-driven, strongly-typed routing instead of eager closure-based destinations.
+- Introduced `KouchdRoute: Hashable` representing all in-app navigation targets across tabs, onboarding, host controls, and administrative records.
+- Created `View.kouchdDestinations(store:)` registering `.navigationDestination(for: KouchdRoute.self)` across all top-level `NavigationStack` instances.
+- Preserved individual user scope in administrative SMS consent views via dedicated `.adminUserSmsHistory(userID:)` route.
+- Synchronized package and iOS marketing versions to `0.4.2` with patch release classification.
+
+## 2026-10-09 — Landing-page claim corrections and tablet navigation
+
+- Removed contributor-attribution language from the public Ledger tour because the current Ledger UI does not identify the entry creator.
+- Replaced the guest-editable arrival-window example with the host-scheduled next check-in date already supported by the app.
+- Added an expandable tablet navigation menu so all header links remain available at widths where the desktop row does not fit.
+- Prepared package/iOS version `0.4.1` as a patch for the landing-page release gate. This is branch-only work; no release, deployment, or public changelog update is verified.
+- Made the release gate find the nearest versioned first-parent ancestor when the base snapshot has no version file, and added a regression test for that recovery case.
+- Validation: `npm run release:check` passed against the last complete baseline; 61 tests passed, the production build and version sync passed, and the release gate passed. Lint reports 15 existing warnings and no errors. The public Mintlify changelog remains unchanged.
+
+## 2026-10-05 — Landing header refresh, accessible tooltips, skeleton loaders, and canonical help links
+
+- Refreshed Landing Page Header (`components/landing-page.tsx`, `components/landing-v21.css`):
+  - Added brand badge ("By Wrelik") with informative tooltip explaining the brand ecosystem.
+  - Added a direct "Guides" link with book icon to canonical Mintlify documentation (`https://help.kouchd.com`).
+  - Added accessible tooltips to "Sign in" and "Start a stay" CTAs.
+  - Preserved carrier compliance footer elements verbatim (`tests/carrier-compliance.test.ts`).
+- Introduced Accessible Tooltip Component (`components/ui/tooltip.tsx`, `app/production.css`):
+  - Accessible wrapper supporting mouse hover and keyboard focus/blur with ARIA `role="tooltip"` and dynamic IDs.
+  - Configurable positions (`top`, `bottom`, `left`, `right`) with arrow indicator and subtle fade animation.
+  - Deployed tooltips across authenticated dashboard utilities (`Tour`, `All stays`, `Docs`, `Join with code`, `Settings`), action triggers (`Add contribution`, `Add charge`, chore toggles), external payment copy actions, and referral code copy buttons.
+- Expanded Skeleton Loading States (`components/skeleton-loader.tsx`):
+  - Added modular `CardSkeleton` (for overview cards, house info, and onboarding summaries) and `LedgerSkeleton` (for transaction rows and obligation tables).
+  - Replaced plain text loading states in `components/onboarding/guest-onboarding-flow.tsx` with smooth shimmer `CardSkeleton`.
+- Canonical Help Articles Integration (`lib/help-links.ts`):
+  - Created centralized `HELP_LINKS` dictionary mapping canonical Mintlify paths (`hostsGettingStarted`, `joiningAStay`, `pricingAndTerms`, `houseRulesAndChores`, `ledgerManagement`, `stayAgreements`, `quickstart`, etc.).
+  - Replaced hardcoded help URLs across onboarding wizards (`host-onboarding-wizard.tsx`, `guest-onboarding-flow.tsx`, `guided-tour.tsx`, `join-household.tsx`, `header-menu.tsx`, and `authenticated-home.tsx`).
+- Validation:
+  - Passed `vitest run` (13 test files, 52/52 tests passing).
+  - Passed `npx tsc --noEmit` with zero errors.
+  - Passed `git diff --check`.
+
+## 2026-10-05 — Master Wrelik legal policies and sibling product parity
+
+- Established canonical legal definitions in `lib/legal.ts` (`legalMeta`, `privacyPolicy`, `termsOfUse`, `cookiePolicy`, `acceptableUsePolicy`, `legalLinks`) mirroring sibling Wrelik products (`sporkd`, `DRX_Primary`, and `Klutr`).
+- Refactored `app/privacy/page.tsx` and `app/terms/page.tsx` to render comprehensive master sections and dedicated Kouchd addenda while strictly preserving carrier 10DLC compliance statements (`tests/carrier-compliance.test.ts`).
+- Created dedicated web application legal pages:
+  - `app/cookies/page.tsx`: Cookie & Tracking Policy.
+  - `app/acceptable-use/page.tsx`: Acceptable Use Policy & Community Guidelines.
+  - Route aliases for standard Wrelik URL conventions: `app/legal/privacy/page.tsx`, `app/legal/terms/page.tsx`, `app/legal/cookies/page.tsx`, and `app/legal/acceptable-use/page.tsx`.
+- Updated `components/legal/legal-page-layout.tsx` navigation and footer to link Privacy, Terms, Cookies, Acceptable Use, and SMS Opt-In.
+- Refreshed Help Center documentation:
+  - `help/legal-trust/privacy-and-security.mdx`: Aligned with canonical Wrelik privacy and SMS commitments.
+  - `help/legal-trust/terms-of-service.mdx`: New documentation covering platform role, stay agreements, and SMS terms.
+  - `docs.json`: Registered `terms-of-service` under the "Trust & Legal" navigation group.
+- Validation:
+  - Passed `vitest run` (all 13 test files, 52 unit tests passed including carrier compliance).
+  - Passed `mintlify validate` and `mintlify broken-links`.
+  - Passed `git diff --check`.
+
+## 2026-10-05 — Mintlify Help Center visual styling and color refresh
+
+- Added ambient `decoration: "gradient"` to `background` in `docs.json` to bring warm brand green gradient aura to all documentation pages.
+- Enriched help guides (`index.mdx`, `help/index.mdx`, `help/quickstart.mdx`, `help/hosts/getting-started.mdx`, `help/guests/joining-a-stay.mdx`, `help/guests/logging-contributions.mdx`, `help/product/roadmap.mdx`, `help/legal-trust/privacy-and-security.mdx`, `help/hosts/house-rules-and-chores.mdx`) with colorful callouts (`<Tip>`, `<Info>`, `<Note>`, `<Warning>`, `<Check>`), structured sequence `<Steps>`/`<Step>`, and complementary `<CardGroup>` links.
+- Corrected relative internal guide links to use the canonical `/help/...` pathing.
+- Passed `mintlify validate`, `mintlify broken-links`, `docs.json` JSON parsing, and `git diff --check`.
+
 ## 2026-09-28 — Guest payment schedule choice and approval
 
 - Added guest-selected daily or weekly billing at initial agreement acceptance, including an initial weekly payment weekday and clear rate/late-fee copy.

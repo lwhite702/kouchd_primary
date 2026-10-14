@@ -12,6 +12,7 @@ import { SUGGESTED_HOUSE_RULES, HouseRuleItem } from "@/lib/domain/houseRulesCat
 import { SUGGESTED_CONTRIBUTION_TASKS, SuggestedContributionTask } from "@/lib/domain/rewards";
 import { calculateStayChargeCents } from "@/lib/domain/pricing";
 import { HelpTip } from "@/components/onboarding/help-tip";
+import { HELP_LINKS } from "@/lib/help-links";
 
 const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
 
@@ -29,6 +30,7 @@ export function HostOnboardingWizard({
   const today = calendarDateInTimezone(new Date(), timezone);
 
   const [step, setStep] = useState<1 | 2 | 3 | 4 | 5>(1);
+  const [stayName, setStayName] = useState("");
   const [phone, setPhone] = useState("");
   const [optInSms, setOptInSms] = useState(false);
   const [startDate, setStartDate] = useState(today);
@@ -137,6 +139,7 @@ export function HostOnboardingWizard({
         .join("\n\n");
 
       const stayId = await createStay({
+        name: stayName.trim() || undefined,
         timezone,
         nextCheckInDate: nextCheckInDate || undefined,
         paymentOptions: (Object.entries(paymentDetails) as Array<[keyof typeof paymentDetails, string]>)
@@ -199,13 +202,23 @@ export function HostOnboardingWizard({
       {/* Step 1: Stay Basics & Cadence */}
       {step === 1 && (
         <div key="step-1" className="screen-transition">
-          <p className="eyebrow onboarding-eyebrow">Step 1 of 5 · Stay Schedule <HelpTip title="Set the stay dates" href="https://help.kouchd.com/hosts/getting-started">Choose the planned dates, contribution rhythm, and first check-in. The estimated total is a planning guide and excludes optional discounts, rewards, and one-off charges.</HelpTip></p>
+          <p className="eyebrow onboarding-eyebrow">Step 1 of 5 · Stay Schedule <HelpTip title="Set the stay dates" href={HELP_LINKS.hostsGettingStarted}>Choose the planned dates, contribution rhythm, and first check-in. The estimated total is a planning guide and excludes optional discounts, rewards, and one-off charges.</HelpTip></p>
           <h1>Set the dates and contribution cadence.</h1>
           <p className="subhead">
             Past start dates are welcome. Kouchd builds the historical ledger from day one.
           </p>
 
           <div className="form-grid" style={{ marginTop: "1.5rem" }}>
+            <label className="full">
+              <span>Stay name</span>
+              <input
+                name="stayName"
+                value={stayName}
+                onChange={(event) => setStayName(event.target.value)}
+                placeholder="Maple House"
+                maxLength={80}
+              />
+            </label>
             <label>
               <span>Start date</span>
               <input
@@ -293,7 +306,7 @@ export function HostOnboardingWizard({
       {/* Step 2: Guided House Rules & Boundaries */}
       {step === 2 && (
         <div key="step-2" className="screen-transition">
-          <p className="eyebrow onboarding-eyebrow">Step 2 of 5 · Living Expectations <HelpTip title="Choose house rules" href="https://help.kouchd.com/hosts/house-rules-and-chores">Select the expectations that fit your home, and add custom guidance where a suggestion does not cover it.</HelpTip></p>
+          <p className="eyebrow onboarding-eyebrow">Step 2 of 5 · Living Expectations <HelpTip title="Choose house rules" href={HELP_LINKS.houseRulesAndChores}>Select the expectations that fit your home, and add custom guidance where a suggestion does not cover it.</HelpTip></p>
           <h1>Establish clear house rules.</h1>
           <p className="subhead">
             We provide suggestions based on successful shared stays. Select what applies or add custom boundaries.
@@ -402,7 +415,7 @@ export function HostOnboardingWizard({
       {/* Step 3: Contribution Rewards & Household Economy */}
       {step === 3 && (
         <div key="step-3" className="screen-transition">
-          <p className="eyebrow onboarding-eyebrow">Step 3 of 5 · Contribution Rewards <HelpTip title="Optional rewards" href="https://help.kouchd.com/hosts/pricing-and-terms">Rewards let guests earn household credits for approved contributions. You can turn them off or adjust their value and limits.</HelpTip></p>
+          <p className="eyebrow onboarding-eyebrow">Step 3 of 5 · Contribution Rewards <HelpTip title="Optional rewards" href={HELP_LINKS.pricingAndTerms}>Rewards let guests earn household credits for approved contributions. You can turn them off or adjust their value and limits.</HelpTip></p>
           <h1>Reward household contributions.</h1>
           <p className="subhead">
             Allow members to earn points/coins by contributing to the household, which can turn into financial value toward their stay.
@@ -553,7 +566,7 @@ export function HostOnboardingWizard({
       {/* Step 4: Early Discount & Late Fee Rules + IN-APP PAYMENTS */}
       {step === 4 && (
         <div key="step-4" className="screen-transition">
-          <p className="eyebrow onboarding-eyebrow">Step 4 of 5 · Financial Rules <HelpTip title="Set clear timing rules" href="https://help.kouchd.com/hosts/pricing-and-terms">Early discounts and late fees are optional. Keep the rules understandable and agree on them before the stay begins.</HelpTip></p>
+          <p className="eyebrow onboarding-eyebrow">Step 4 of 5 · Financial Rules <HelpTip title="Set clear timing rules" href={HELP_LINKS.pricingAndTerms}>Early discounts and late fees are optional. Keep the rules understandable and agree on them before the stay begins.</HelpTip></p>
           <h1>Discounts and late fee terms.</h1>
           <p className="subhead">Optional incentives to encourage timely contributions. Both are off by default.</p>
 
@@ -674,10 +687,10 @@ export function HostOnboardingWizard({
       {/* Step 5: Final Review & Agreement Launch */}
       {step === 5 && (
         <div key="step-5" className="screen-transition">
-          <p className="eyebrow onboarding-eyebrow">Step 5 of 5 · Final Agreement <HelpTip title="Review before creating" href="https://help.kouchd.com/hosts/getting-started">Check the dates, amount, house rules, and optional financial rules. You can then invite guests to review and accept the agreement.</HelpTip></p>
+          <p className="eyebrow onboarding-eyebrow">Step 5 of 5 · Final Agreement <HelpTip title="Review before creating" href={HELP_LINKS.hostsGettingStarted}>Check the dates, amount, house rules, and optional financial rules. You can then invite guests to review and accept the agreement.</HelpTip></p>
           <h1>Review the House Agreement.</h1>
           <p className="subhead">
-            Check your terms and boundaries. Once launched, Kouchd generates your household referral code to invite guests.
+            Creating the stay records your acceptance as host. Each guest reviews and accepts these terms when joining; they only need to accept again if the agreement changes.
           </p>
 
           <div
@@ -813,7 +826,7 @@ export function HostOnboardingWizard({
               <ArrowLeft size={18} /> Back
             </button>
             <button className="button primary" type="button" onClick={handleFinalSubmit} disabled={saving}>
-              <Sparkles size={18} /> {saving ? "Creating household..." : "Launch Shared Stay"}
+              <Sparkles size={18} /> {saving ? "Creating household..." : "Create stay"}
             </button>
           </div>
         </div>

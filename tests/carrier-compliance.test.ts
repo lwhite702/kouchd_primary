@@ -96,11 +96,12 @@ describe("Carrier 10DLC & SMS compliance rules", () => {
     expect(hostContent.toLowerCase()).toContain("message and data rates may apply");
   });
 
-  it("ensures landing page footer links to Privacy Policy, Terms, and SMS Acceptance", () => {
+  it("ensures landing page footer links to Privacy Policy, Terms, and SMS opt-in", () => {
     const landingContent = fs.readFileSync(landingPagePath, "utf8");
     expect(landingContent).toContain('href="/privacy"');
     expect(landingContent).toContain('href="/terms"');
     expect(landingContent).toContain('href="/sms-opt-in"');
+    expect(landingContent).toContain('<Link href="/sms-opt-in">SMS opt-in</Link>');
     expect(landingContent).toContain("Wrelik Brands LLC");
   });
 });
