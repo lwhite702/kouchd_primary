@@ -13,6 +13,7 @@ const modules = import.meta.glob([
 
 const previousAuthorization = process.env.REVENUECAT_WEBHOOK_AUTHORIZATION;
 const previousAppId = process.env.REVENUECAT_APP_ID;
+const previousFoundingHostProducts = process.env.REVENUECAT_FOUNDING_HOST_PRODUCT_IDS;
 const authorization = "test-webhook-secret";
 const appId = "app_kouchd_test";
 
@@ -52,6 +53,8 @@ afterEach(() => {
   else process.env.REVENUECAT_WEBHOOK_AUTHORIZATION = previousAuthorization;
   if (previousAppId === undefined) delete process.env.REVENUECAT_APP_ID;
   else process.env.REVENUECAT_APP_ID = previousAppId;
+  if (previousFoundingHostProducts === undefined) delete process.env.REVENUECAT_FOUNDING_HOST_PRODUCT_IDS;
+  else process.env.REVENUECAT_FOUNDING_HOST_PRODUCT_IDS = previousFoundingHostProducts;
 });
 
 describe("RevenueCat webhook normalization", () => {
@@ -90,11 +93,60 @@ describe("RevenueCat webhook normalization", () => {
       .toMatchObject({ kind: "normalized", event: { status: "refunded" } });
   });
 
-  it("ignores transfers, unknown/ambiguous entitlements, wrong apps, and malformed timestamps", () => {
+  it("keeps independent entitlements and requires exact lifetime product evidence", () => {
     expect(normalizeRevenueCatEvent(payload({ type: "TRANSFER", app_user_id: undefined }), appId)).toEqual({ kind: "ignored" });
     expect(normalizeRevenueCatEvent(payload({ type: "TEST" }), appId)).toEqual({ kind: "ignored" });
     expect(normalizeRevenueCatEvent(payload({ entitlement_ids: ["kouchd_plus", "kouchd_pro"] }), appId))
-      .toEqual({ kind: "ignored" });
+      .toMatchObject({ kind: "normalized", event: { entitlements: ["plus", "pro"] } });
+    expect(normalizeRevenueCatEvent(payload({
+      type: "NON_RENEWING_PURCHASE",
+      product_id: "founding-host-product-test",
+      entitlement_ids: ["kouchd_founding_host"],
+      expiration_at_ms: null,
+    }), appId, ["founding-host-product-test"])).toMatchObject({
+      kind: "normalized",
+      event: { entitlements: ["founding_host"], currentPeriodEndsAt: undefined },
+    });
+    expect(normalizeRevenueCatEvent(payload({
+      type: "NON_RENEWING_PURCHASE",
+      product_id: "wrong-product",
+      entitlement_ids: ["kouchd_founding_host"],
+      expiration_at_ms: null,
+    }), appId, ["founding-host-product-test"])).toEqual({ kind: "ignored" });
+    expect(normalizeRevenueCatEvent(payload({
+      type: "NON_RENEWING_PURCHASE",
+      product_id: "founding-host-product-test",
+      entitlement_ids: ["kouchd_founding_host"],
+      expiration_at_ms: null,
+    }), appId)).toEqual({ kind: "ignored" });
+    expect(normalizeRevenueCatEvent(payload({
+      type: "INITIAL_PURCHASE",
+      product_id: "founding-host-product-test",
+      entitlement_ids: ["kouchd_founding_host"],
+      expiration_at_ms: null,
+    }), appId, ["founding-host-product-test"])).toEqual({ kind: "ignored" });
+    expect(normalizeRevenueCatEvent(payload({
+      type: "NON_RENEWING_PURCHASE",
+      product_id: "founding-host-product-test",
+      entitlement_ids: ["kouchd_founding_host"],
+      expiration_at_ms: "invalid",
+    }), appId, ["founding-host-product-test"])).toEqual({ kind: "ignored" });
+    expect(normalizeRevenueCatEvent(payload({
+      type: "NON_RENEWING_PURCHASE",
+      product_id: "founding-host-product-test",
+      entitlement_ids: ["kouchd_founding_host"],
+      expiration_at_ms: 1_802_000_000_000,
+    }), appId, ["founding-host-product-test"])).toEqual({ kind: "ignored" });
+    expect(normalizeRevenueCatEvent(payload({
+      type: "REFUND_REVERSED",
+      product_id: "founding-host-product-test",
+      entitlement_ids: ["kouchd_founding_host"],
+      transaction_id: "founder-txn-1",
+      expiration_at_ms: null,
+    }), appId, ["founding-host-product-test"])).toMatchObject({
+      kind: "normalized",
+      event: { status: "active", sourceKey: "transaction:founder-txn-1", entitlements: ["founding_host"] },
+    });
     expect(normalizeRevenueCatEvent(payload({ entitlement_ids: ["unknown"] }), appId)).toEqual({ kind: "ignored" });
     expect(normalizeRevenueCatEvent(payload({ app_id: "another-app" }), appId)).toEqual({ kind: "wrong_app" });
     expect(normalizeRevenueCatEvent(payload({ event_timestamp_ms: Number.MAX_SAFE_INTEGER + 1 }), appId))
@@ -140,30 +192,72 @@ describe("RevenueCat webhook endpoint", () => {
     const duplicate = await t.fetch("/revenuecat/webhook", requestBody(payload()));
     expect(await duplicate.json()).toMatchObject({ received: true, result: "duplicate" });
 
+    const sandboxPayload = payload({ id: "event-sandbox", environment: "SANDBOX", type: "RENEWAL" });
+    expect((await t.fetch("/revenuecat/webhook", requestBody(sandboxPayload))).status).toBe(200);
+
+    process.env.REVENUECAT_FOUNDING_HOST_PRODUCT_IDS = "founding-host-product-test";
+    const foundingPayload = payload({
+      id: "event-founding-host",
+      type: "NON_RENEWING_PURCHASE",
+      product_id: "founding-host-product-test",
+      entitlement_ids: ["kouchd_founding_host"],
+      transaction_id: "founding-transaction-test",
+      original_transaction_id: "founding-original-transaction-test",
+      expiration_at_ms: null,
+      event_timestamp_ms: 1_800_000_000_200,
+      will_renew: false,
+    });
+    expect(await (await t.fetch("/revenuecat/webhook", requestBody(foundingPayload))).json())
+      .toMatchObject({ received: true, result: "applied" });
+    const foundingRefund = payload({
+      id: "event-founding-refund",
+      type: "REFUND",
+      product_id: "founding-host-product-test",
+      entitlement_ids: ["kouchd_founding_host"],
+      transaction_id: "founding-transaction-test",
+      original_transaction_id: "founding-original-transaction-test",
+      expiration_at_ms: null,
+      event_timestamp_ms: 1_800_000_000_300,
+    });
+    expect(await (await t.fetch("/revenuecat/webhook", requestBody(foundingRefund))).json())
+      .toMatchObject({ received: true, result: "applied" });
+    const foundingRefundReversed = payload({
+      id: "event-founding-refund-reversed",
+      type: "REFUND_REVERSED",
+      product_id: "founding-host-product-test",
+      entitlement_ids: ["kouchd_founding_host"],
+      transaction_id: "founding-transaction-test",
+      original_transaction_id: "founding-original-transaction-test",
+      expiration_at_ms: null,
+      event_timestamp_ms: 1_800_000_000_400,
+    });
+    expect(await (await t.fetch("/revenuecat/webhook", requestBody(foundingRefundReversed))).json())
+      .toMatchObject({ received: true, result: "applied" });
+
     const cancellationPayload = payload({
       id: "event-cancel",
       type: "CANCELLATION",
-      event_timestamp_ms: 1_800_000_000_100,
+      event_timestamp_ms: 1_800_000_000_500,
       entitlement_ids: [],
       will_renew: false,
     });
     expect(await (await t.fetch("/revenuecat/webhook", requestBody(cancellationPayload))).json())
       .toMatchObject({ received: true, result: "applied" });
 
-    const sandboxPayload = payload({ id: "event-sandbox", environment: "SANDBOX", type: "RENEWAL" });
-    expect((await t.fetch("/revenuecat/webhook", requestBody(sandboxPayload))).status).toBe(200);
-
     const database = await t.run(async (ctx) => ({
       accounts: await ctx.db.query("householdAccounts").collect(),
       snapshots: await ctx.db.query("subscriptionSnapshots").collect(),
       events: await ctx.db.query("providerEvents").collect(),
+      grants: await ctx.db.query("subscriptionEntitlementGrants").collect(),
     }));
     expect(database.accounts).toHaveLength(1);
     expect(database.snapshots).toHaveLength(2);
-    expect(database.events).toHaveLength(3);
+    expect(database.events).toHaveLength(6);
     expect(database.snapshots.map((snapshot) => snapshot.environment).sort()).toEqual(["production", "sandbox"]);
     expect(database.snapshots.find((snapshot) => snapshot.environment === "production"))
       .toMatchObject({ status: "canceled", entitlement: "plus", willRenew: false });
+    expect(database.grants.find((grant) => grant.entitlement === "founding_host"))
+      .toMatchObject({ productId: "founding-host-product-test", status: "active", lifetime: true });
     expect(database.events.some((event) => "providerAppUserId" in event)).toBe(false);
   });
 

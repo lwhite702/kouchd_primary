@@ -2,7 +2,10 @@ import { httpRouter } from "convex/server";
 
 import { internal } from "./_generated/api";
 import { httpAction } from "./_generated/server";
-import { normalizeRevenueCatEvent } from "../lib/domain/revenuecatWebhook";
+import {
+  normalizeRevenueCatEvent,
+  parseRevenueCatProductIdAllowlist,
+} from "../lib/domain/revenuecatWebhook";
 
 const MAX_WEBHOOK_BYTES = 64 * 1024;
 
@@ -98,7 +101,11 @@ http.route({
       return jsonResponse(400, { error: "invalid_payload" });
     }
 
-    const parsed = normalizeRevenueCatEvent(payload, expectedAppId);
+    const parsed = normalizeRevenueCatEvent(
+      payload,
+      expectedAppId,
+      parseRevenueCatProductIdAllowlist(process.env.REVENUECAT_FOUNDING_HOST_PRODUCT_IDS),
+    );
     if (parsed.kind === "invalid") return jsonResponse(400, { error: "invalid_payload" });
     if (parsed.kind === "wrong_app") return jsonResponse(400, { error: "unexpected_app" });
     if (parsed.kind === "ignored") return jsonResponse(200, { received: true, ignored: true });

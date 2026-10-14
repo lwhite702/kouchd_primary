@@ -7,13 +7,17 @@ export type RevenueCatSnapshotStatus =
   | "expired"
   | "refunded";
 
+export type RevenueCatEntitlement = "plus" | "pro" | "founding_host";
+
 export interface NormalizedRevenueCatEvent {
   providerEventId: string;
   providerAppUserId: string;
   eventType: string;
   environment: RevenueCatEnvironment;
   status: RevenueCatSnapshotStatus;
+  sourceKey?: string;
   entitlement?: "plus" | "pro";
+  entitlements: RevenueCatEntitlement[];
   productId?: string;
   startedAt?: number;
   currentPeriodEndsAt?: number;
@@ -27,9 +31,10 @@ export type RevenueCatEventParseResult =
   | { kind: "ignored" }
   | { kind: "normalized"; event: NormalizedRevenueCatEvent };
 
-const KNOWN_ENTITLEMENTS = new Map<string, "plus" | "pro">([
+const KNOWN_ENTITLEMENTS = new Map<string, RevenueCatEntitlement>([
   ["kouchd_plus", "plus"],
   ["kouchd_pro", "pro"],
+  ["kouchd_founding_host", "founding_host"],
 ]);
 
 const GRANTING_EVENT_TYPES = new Set([
@@ -39,7 +44,16 @@ const GRANTING_EVENT_TYPES = new Set([
   "PRODUCT_CHANGE",
   "SUBSCRIPTION_EXTENDED",
   "REFUND_REVERSED",
+  "NON_RENEWING_PURCHASE",
 ]);
+
+export function parseRevenueCatProductIdAllowlist(value: string | undefined): string[] {
+  return value?.split(",").map((productId) => productId.trim()).filter(Boolean) ?? [];
+}
+
+export function isFoundingHostProductAllowed(productId: string | undefined, configuredIds: string | undefined): boolean {
+  return !!productId && parseRevenueCatProductIdAllowlist(configuredIds).includes(productId);
+}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
@@ -57,16 +71,13 @@ function optionalString(value: unknown): string | undefined {
 export function normalizeRevenueCatEvent(
   payload: unknown,
   expectedAppId: string,
+  foundingHostProductIds: readonly string[] = [],
 ): RevenueCatEventParseResult {
   if (!isRecord(payload) || !isRecord(payload.event)) return { kind: "invalid" };
 
   const event = payload.event;
   const eventType = optionalString(event.type);
   if (!eventType) return { kind: "invalid" };
-
-  // These event types are outside subscription lifecycle processing. In
-  // particular, TRANSFER payloads may omit app_user_id and must never be used
-  // to attach entitlements to another account.
   if (eventType === "TRANSFER" || eventType === "SUBSCRIPTION_PAUSED" || ![
     ...GRANTING_EVENT_TYPES,
     "CANCELLATION",
@@ -82,30 +93,36 @@ export function normalizeRevenueCatEvent(
   const providerEventId = optionalString(event.id);
   const providerAppUserId = optionalString(event.app_user_id);
   const occurredAt = event.event_timestamp_ms;
-  if (!providerEventId || !providerAppUserId || !validTimestamp(occurredAt)) {
-    return { kind: "invalid" };
-  }
+  if (!providerEventId || !providerAppUserId || !validTimestamp(occurredAt)) return { kind: "invalid" };
 
   let environment: RevenueCatEnvironment;
   if (event.environment === "PRODUCTION") environment = "production";
   else if (event.environment === "SANDBOX") environment = "sandbox";
   else return { kind: "ignored" };
 
+  const productId = optionalString(event.product_id);
+  const allowlistedFoundingProduct = !!productId && foundingHostProductIds.includes(productId);
+  const noExpiration = event.expiration_at_ms === undefined || event.expiration_at_ms === null;
+  const foundingPurchaseVerified = eventType === "NON_RENEWING_PURCHASE" && allowlistedFoundingProduct && noExpiration;
+  const foundingRefundReversalVerified = eventType === "REFUND_REVERSED" && allowlistedFoundingProduct && noExpiration;
+  const foundingLifecycleVerified = ["CANCELLATION", "EXPIRATION", "REFUND"].includes(eventType) && allowlistedFoundingProduct;
+  const foundingHostVerified = foundingPurchaseVerified || foundingRefundReversalVerified || foundingLifecycleVerified;
+
   const entitlementIds = Array.isArray(event.entitlement_ids)
     ? event.entitlement_ids.filter((id): id is string => typeof id === "string")
     : [];
-  const recognizedEntitlements = [...new Set(
-    entitlementIds
-      .map((id) => KNOWN_ENTITLEMENTS.get(id))
-      .filter((plan): plan is "plus" | "pro" => plan !== undefined),
-  )];
+  const entitlements = [...new Set(entitlementIds
+    .map((id) => {
+      const entitlement = KNOWN_ENTITLEMENTS.get(id);
+      return entitlement === "founding_host" && !foundingHostVerified ? undefined : entitlement;
+    })
+    .filter((entitlement): entitlement is RevenueCatEntitlement => entitlement !== undefined))];
 
-  // Never guess between simultaneous/ambiguous plan entitlements. Unsupported
-  // events and transfer events are acknowledged without granting or changing access.
-  if (recognizedEntitlements.length > 1) return { kind: "ignored" };
-  if (GRANTING_EVENT_TYPES.has(eventType) && recognizedEntitlements.length !== 1) {
-    return { kind: "ignored" };
-  }
+  const legacyEntitlementId = optionalString(event.entitlement_id);
+  const legacyEntitlement = legacyEntitlementId ? KNOWN_ENTITLEMENTS.get(legacyEntitlementId) : undefined;
+  if (entitlements.length === 0 && legacyEntitlement &&
+    (legacyEntitlement !== "founding_host" || foundingHostVerified)) entitlements.push(legacyEntitlement);
+  if (GRANTING_EVENT_TYPES.has(eventType) && entitlements.length === 0) return { kind: "ignored" };
 
   let status: RevenueCatSnapshotStatus;
   switch (eventType) {
@@ -116,21 +133,17 @@ export function normalizeRevenueCatEvent(
           : "billing_retry"
         : "canceled";
       break;
-    case "EXPIRATION":
-      status = "expired";
-      break;
-    case "REFUND":
-      status = "refunded";
-      break;
+    case "EXPIRATION": status = "expired"; break;
+    case "REFUND": status = "refunded"; break;
     case "BILLING_ISSUE":
       status = validTimestamp(event.grace_period_expiration_at_ms) && event.grace_period_expiration_at_ms > occurredAt
         ? "grace_period"
         : "billing_retry";
       break;
-    default:
-      status = "active";
+    default: status = "active";
   }
 
+  // A malformed non-null boundary is not treated as a lifetime purchase.
   const expiration = validTimestamp(event.expiration_at_ms) ? event.expiration_at_ms : undefined;
   const graceEnd = status === "grace_period" && validTimestamp(event.grace_period_expiration_at_ms)
     ? event.grace_period_expiration_at_ms
@@ -145,8 +158,16 @@ export function normalizeRevenueCatEvent(
       eventType,
       environment,
       status,
-      entitlement: recognizedEntitlements[0],
-      productId: optionalString(event.product_id),
+      sourceKey: optionalString(event.original_transaction_id)
+        ? `transaction:${optionalString(event.original_transaction_id)}`
+        : optionalString(event.transaction_id)
+          ? `transaction:${optionalString(event.transaction_id)}`
+          : productId
+            ? `product:${productId}`
+            : undefined,
+      entitlement: entitlements.find((entitlement) => entitlement === "plus" || entitlement === "pro"),
+      entitlements,
+      productId,
       startedAt: validTimestamp(event.purchased_at_ms) ? event.purchased_at_ms : undefined,
       currentPeriodEndsAt,
       willRenew: typeof event.will_renew === "boolean" ? event.will_renew : undefined,

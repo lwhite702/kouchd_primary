@@ -1,7 +1,9 @@
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
 import {
-  resolveSubscriptionPlan,
+  resolveEffectiveSubscriptionPlan,
+  type SubscriptionEntitlement,
+  type SubscriptionEntitlementGrant,
   type SubscriptionPlan,
   type SubscriptionState,
 } from "../../lib/domain/subscriptionPlans";
@@ -77,6 +79,23 @@ function toSubscriptionState(snapshot: Doc<"subscriptionSnapshots"> | undefined)
   }
 }
 
+function statusToGrantStatus(
+  status: Doc<"subscriptionSnapshots">["status"] | Doc<"subscriptionEntitlementGrants">["status"],
+): SubscriptionEntitlementGrant["status"] {
+  switch (status) {
+    case "active": return "active";
+    case "grace_period": return "grace";
+    case "canceled": return "canceledUntilPeriodEnd";
+    case "expired": return "expired";
+    case "refunded": return "refunded";
+    default: return "unknown";
+  }
+}
+
+function planToEntitlement(plan: Exclude<SubscriptionPlan, "starter">): SubscriptionEntitlement {
+  return plan === "householdPro" ? "pro" : "plus";
+}
+
 /**
  * Return the account's effective plan for a stay. Subscription snapshot IDs
  * and provider identifiers are deliberately not included in the result.
@@ -104,33 +123,39 @@ export async function getEffectivePlanForStay(
     )
     .collect();
 
-  // Never let a purchase from one store environment authorize access in
-  // another. Missing environment metadata is also ineligible to grant a plan.
-  const matchingEnvironmentSnapshots = snapshots.filter(
-    (snapshot) => snapshot.environment === expectedEnvironment,
-  );
+  const storedGrants = await ctx.db
+    .query("subscriptionEntitlementGrants")
+    .withIndex("by_household_account", (query) =>
+      query.eq("householdAccountId", owner.householdAccountId!),
+    )
+    .collect();
+  const expectedEnvironmentGrants = storedGrants.filter((grant) => grant.environment === expectedEnvironment);
+  const grants: SubscriptionEntitlementGrant[] = expectedEnvironmentGrants.map((grant) => ({
+    environment: grant.environment,
+    entitlement: grant.entitlement,
+    status: statusToGrantStatus(grant.status),
+    accessUntilMs: grant.currentPeriodEndsAt,
+    lifetime: grant.lifetime,
+  }));
 
-  // A household can have snapshots from more than one provider/environment.
-  // Use the most recently updated snapshot as the current provider view; ties
-  // are broken by provider-event timestamp and then conservatively by status.
-  const statusRank: Record<Doc<"subscriptionSnapshots">["status"], number> = {
-    active: 6,
-    grace_period: 5,
-    canceled: 4,
-    billing_retry: 3,
-    expired: 2,
-    refunded: 1,
-    unknown: 0,
-  };
-  matchingEnvironmentSnapshots.sort((a, b) =>
-    (b.updatedAt - a.updatedAt) ||
-    ((b.latestProviderEventAt ?? 0) - (a.latestProviderEventAt ?? 0)) ||
-    (statusRank[b.status] - statusRank[a.status]),
-  );
+  // Preserve older snapshots while reading new data. A legacy snapshot is
+  // used only until an independent row exists for that provider/entitlement.
+  const storedKeys = new Set(expectedEnvironmentGrants.map((grant) => `${grant.provider}:${grant.entitlement}`));
+  for (const snapshot of snapshots) {
+    if (snapshot.environment !== expectedEnvironment || !snapshot.entitlement ||
+      storedKeys.has(`${snapshot.provider}:${snapshot.entitlement}`)) continue;
+    const state = toSubscriptionState(snapshot);
+    if (!state?.plan) continue;
+    grants.push({
+      environment: snapshot.environment,
+      entitlement: planToEntitlement(state.plan),
+      status: state.status,
+      accessUntilMs: state.accessUntilMs,
+    });
+  }
 
-  const state = toSubscriptionState(matchingEnvironmentSnapshots[0]);
   return {
     ...owner,
-    plan: resolveSubscriptionPlan(state, nowMs),
+    plan: resolveEffectiveSubscriptionPlan(grants, expectedEnvironment, nowMs),
   };
 }

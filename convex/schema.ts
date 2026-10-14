@@ -71,6 +71,37 @@ export default defineSchema({
     .index("by_household_account", ["householdAccountId"])
     .index("by_household_account_provider_environment", ["householdAccountId", "provider", "environment"]),
 
+  // Independent verified sources keep Plus, Pro, and Founding Host grants
+  // from replacing one another. Legacy snapshots remain readable during the
+  // transition.
+  subscriptionEntitlementGrants: defineTable({
+    householdAccountId: v.id("householdAccounts"),
+    provider: v.string(),
+    providerAppUserId: v.string(),
+    environment: v.string(),
+    sourceKey: v.string(),
+    entitlement: v.union(v.literal("plus"), v.literal("pro"), v.literal("founding_host")),
+    status: v.union(
+      v.literal("active"),
+      v.literal("grace_period"),
+      v.literal("billing_retry"),
+      v.literal("canceled"),
+      v.literal("expired"),
+      v.literal("refunded"),
+      v.literal("unknown"),
+    ),
+    productId: v.optional(v.string()),
+    startedAt: v.optional(v.number()),
+    currentPeriodEndsAt: v.optional(v.number()),
+    lifetime: v.optional(v.boolean()),
+    willRenew: v.optional(v.boolean()),
+    latestProviderEventAt: v.optional(v.number()),
+    updatedAt: v.number(),
+  })
+    .index("by_household_account", ["householdAccountId"])
+    .index("by_household_provider_environment", ["householdAccountId", "provider", "environment"])
+    .index("by_household_provider_environment_entitlement_source", ["householdAccountId", "provider", "environment", "entitlement", "sourceKey"]),
+
   providerEvents: defineTable({
     provider: v.string(),
     providerEventId: v.string(),

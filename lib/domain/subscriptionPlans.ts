@@ -4,6 +4,7 @@
  */
 
 export type SubscriptionPlan = "starter" | "hostPlus" | "householdPro";
+export type SubscriptionEntitlement = "plus" | "pro" | "founding_host";
 
 export type SubscriptionStatus =
   | "trial"
@@ -20,6 +21,15 @@ export interface SubscriptionState {
   plan?: Exclude<SubscriptionPlan, "starter">;
   /** Unix milliseconds. Used to stop access after trial/grace/paid period ends. */
   accessUntilMs?: number;
+}
+
+/** A provider-verified entitlement source; lifetime is reserved for Founding Host. */
+export interface SubscriptionEntitlementGrant {
+  environment: string;
+  entitlement: SubscriptionEntitlement;
+  status: SubscriptionStatus;
+  accessUntilMs?: number;
+  lifetime?: boolean;
 }
 
 /**
@@ -46,6 +56,28 @@ export function resolveSubscriptionPlan(
   return state.plan;
 }
 
+function isEntitlementActive(grant: SubscriptionEntitlementGrant, nowMs: number): boolean {
+  if (["expired", "refunded", "unknown"].includes(grant.status)) return false;
+  if (grant.entitlement === "founding_host") {
+    return grant.status === "active" && grant.lifetime === true && grant.accessUntilMs === undefined;
+  }
+  return grant.lifetime !== true && grant.accessUntilMs !== undefined && nowMs < grant.accessUntilMs;
+}
+
+/** Resolve independent grants from only the expected provider environment. */
+export function resolveEffectiveSubscriptionPlan(
+  grants: readonly SubscriptionEntitlementGrant[],
+  expectedEnvironment: string,
+  nowMs: number,
+): SubscriptionPlan {
+  const active = new Set(grants
+    .filter((grant) => grant.environment === expectedEnvironment && isEntitlementActive(grant, nowMs))
+    .map((grant) => grant.entitlement));
+  if (active.has("pro")) return "householdPro";
+  if (active.has("plus") || active.has("founding_host")) return "hostPlus";
+  return "starter";
+}
+
 export interface PlanLimits {
   /** null means no commercial cap; separate abuse/system safeguards are needed. */
   maxActiveStays: number | null;
@@ -54,12 +86,8 @@ export interface PlanLimits {
 }
 
 export const PLAN_LIMITS: Readonly<Record<SubscriptionPlan, PlanLimits>> = {
-  starter: { maxActiveStays: 1, maxActiveGuests: 1 },
-  // The proposal describes Plus as supporting up to three active guests/rooms.
-  // Treat each concurrent room/stay as one slot for shadow measurement; keep
-  // this advisory until product confirms whether the limit is per guest, room,
-  // or both.
-  hostPlus: { maxActiveStays: 3, maxActiveGuests: 3 },
+  starter: { maxActiveStays: 1, maxActiveGuests: 2 },
+  hostPlus: { maxActiveStays: 1, maxActiveGuests: 5 },
   // TODO(product/engineering): define finite abuse and system guardrails before
   // launch. These null values mean no commercial product cap, not infinity.
   householdPro: { maxActiveStays: null, maxActiveGuests: null },
