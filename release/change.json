@@ -1,5 +1,5 @@
 {
-  "version": "0.4.1",
+  "version": "0.4.5",
   "type": "patch",
-  "reason": "Adds native introduction regression coverage and fixes Kouchd surfaces for dark appearance."
+  "reason": "Implement multi-tier feature flags, PostHog/Sentry integration, RevenueCat web paywall, and native introduction self-check."
 }
