@@ -1,5 +1,5 @@
 {
-  "version": "0.5.1",
+  "version": "0.5.2",
   "type": "patch",
-  "reason": "Implement multi-tier feature flags, PostHog/Sentry integration, RevenueCat web paywall, and native introduction self-check."
+  "reason": "Streamline webapp entry point to route authenticated household workspace directly following the marketing split."
 }

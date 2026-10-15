@@ -27,6 +27,7 @@
 
 ### Changed
 
+- Streamlined the web application entry route (`app/page.tsx`) to directly serve the authenticated household workspace and sign-in redirect on `app.kouchd.com`, retiring root host-header sniffing after moving the public marketing website to Astro.
 - Corrected public landing-page examples to match the current Ledger and host-scheduled check-in behavior; added compact tablet navigation while retaining access to all header links.
 - Native cream backgrounds, cards, text, separators, and controls now adapt to dark appearance while retaining Kouchd's forest-and-lime identity; taller introduction pages stay within the safe area and scroll behind an opaque footer.
 - Native screen entrances and primary-button feedback use restrained springs and respect Reduce Motion; live document lists retain stable IDs and stale account/stay responses are ignored.
