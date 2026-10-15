@@ -35,8 +35,8 @@ export default function OpenGraphImage() {
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
             <div style={{ fontSize: 20, fontWeight: 800, letterSpacing: 4, color: "#59675f" }}>A SHARED STAY, MADE CLEAR</div>
-            <div style={{ display: "flex", flexDirection: "column", fontSize: 60, fontWeight: 800, lineHeight: 1.12, letterSpacing: "-2px", color: "#184f3a" }}><span>Good stays start</span><span>with clear expectations.</span></div>
-            <div style={{ fontSize: 25, color: "#59675f" }}>Household agreements, contributions, chores, and check-ins in one place.</div>
+            <div style={{ display: "flex", flexDirection: "column", fontSize: 60, fontWeight: 800, lineHeight: 1.12, letterSpacing: "-2px", color: "#184f3a" }}><span>Your space. Your people.</span><span>Everyone on the same page.</span></div>
+            <div style={{ fontSize: 25, color: "#59675f" }}>Stay agreements, house details, contribution records, and chores.</div>
           </div>
           <div style={{ width: 96, height: 8, borderRadius: 8, background: "#dff25e" }} />
         </div>
