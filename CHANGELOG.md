@@ -8,6 +8,7 @@
 
 ### Added
 
+- Gated native RevenueCat subscription controls for household hosts, including store-provided offerings, purchase, restore, subscription management, Clerk identity coordination, and server-authoritative Convex plan status. Checked-in configurations keep native purchases disabled until App Store, RevenueCat, sandbox, and TestFlight verification is complete.
 - Twice-daily Knock reminders for unsigned stay agreements, role-aware host and guest payloads with direct terms deep links, and automated reminder cancellation on terms acceptance.
 - Native introduction UI regression tests with a Debug-only offline test host; Release entry behavior is unchanged.
 - Multi-tier feature flag system with client dev overrides, platform database kill-switches, PostHog Cloud synchronization, and typed code defaults.

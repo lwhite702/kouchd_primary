@@ -240,7 +240,14 @@ struct SettingsScreen: View {
       }
       Card {
         Text("Account").font(.headline)
-        if store.isHost {
+        if store.isSubscriptionSummaryLoading {
+          ProgressView("Checking subscription access")
+        } else if !store.subscriptionSummaryError.isEmpty {
+          Text("Kouchd couldn't check subscription access.")
+            .font(.footnote)
+            .foregroundStyle(Palette.muted)
+          Button("Try again") { store.loadAccount() }
+        } else if store.subscriptionSummary["canManageSubscription"].flag {
           NavigationLink("Subscription", value: KouchdRoute.subscription)
         }
         NavigationLink("About Kouchd", value: KouchdRoute.about)

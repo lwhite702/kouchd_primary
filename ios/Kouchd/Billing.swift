@@ -26,29 +26,38 @@ enum BillingPurchaseResult: Equatable, Sendable {
 @MainActor final class RevenueCatBillingClient: BillingClient {
   static let shared = RevenueCatBillingClient()
   private var packagesByID: [String: Package] = [:]
+  private var desiredUserID: String?
+  private var identityGeneration = 0
+  private var identityTransition: Task<Void, Error>?
 
   private init() {}
 
   func updateIdentity(_ userID: String?) async throws {
     guard AppConfig.purchasesEnabled else { return }
-    let purchases = Purchases.shared
-    guard let userID else {
-      if !purchases.isAnonymous { _ = try await purchases.logOut() }
-      packagesByID = [:]
-      return
-    }
-    if purchases.appUserID == userID { return }
-    if !purchases.isAnonymous { _ = try await purchases.logOut() }
-    _ = try await purchases.logIn(userID)
+    identityGeneration += 1
+    let generation = identityGeneration
+    desiredUserID = userID
+    // Invalidate before the first suspension so another screen cannot purchase
+    // a package fetched for the previous Clerk account.
     packagesByID = [:]
+    let previous = identityTransition
+    let transition = Task { @MainActor [weak self] in
+      _ = try? await previous?.value
+      guard let self, self.identityGeneration == generation else { return }
+      try await self.applyIdentity(userID, generation: generation)
+    }
+    identityTransition = transition
+    try await transition.value
   }
 
   func packages() async throws -> [BillingPackage] {
     guard AppConfig.purchasesEnabled else { return [] }
-    let available = (try await Purchases.shared.offerings().current?.availablePackages ?? []).filter {
+    let (purchases, userID, generation) = try await readyPurchases()
+    let available = (try await purchases.offerings().current?.availablePackages ?? []).filter {
       let productID = $0.storeProduct.productIdentifier
       return productID.hasPrefix("kouchd_plus") || productID.hasPrefix("kouchd_pro")
     }
+    try verifyIdentity(userID, generation: generation)
     packagesByID = Dictionary(uniqueKeysWithValues: available.map { ($0.identifier, $0) })
     return available.map {
       BillingPackage(
@@ -61,28 +70,82 @@ enum BillingPurchaseResult: Equatable, Sendable {
   }
 
   func purchase(packageID: String) async throws -> BillingPurchaseResult {
+    let (purchases, userID, generation) = try await readyPurchases()
     guard let package = packagesByID[packageID] else {
       throw BillingError.packageUnavailable
     }
-    let result = try await Purchases.shared.purchase(package: package)
+    try verifyIdentity(userID, generation: generation)
+    let result = try await purchases.purchase(package: package)
     return result.userCancelled ? .cancelled : .purchased
   }
 
   func restore() async throws {
-    _ = try await Purchases.shared.restorePurchases()
+    let (purchases, userID, generation) = try await readyPurchases()
+    try verifyIdentity(userID, generation: generation)
+    _ = try await purchases.restorePurchases()
   }
 
   func managementURL() async throws -> URL? {
-    try await Purchases.shared.customerInfo().managementURL
+    let (purchases, userID, generation) = try await readyPurchases()
+    let url = try await purchases.customerInfo().managementURL
+    try verifyIdentity(userID, generation: generation)
+    return url
+  }
+
+  private func applyIdentity(_ userID: String?, generation: Int) async throws {
+    let purchases = Purchases.shared
+    guard let userID else {
+      if !purchases.isAnonymous { _ = try await purchases.logOut() }
+      return
+    }
+    if purchases.appUserID == userID { return }
+    if !purchases.isAnonymous {
+      _ = try await purchases.logOut()
+      guard identityGeneration == generation else { return }
+    }
+    _ = try await purchases.logIn(userID)
+    try verifyIdentity(userID, generation: generation)
+  }
+
+  private func readyPurchases() async throws -> (Purchases, String, Int) {
+    if let identityTransition { _ = try? await identityTransition.value }
+    guard let userID = desiredUserID else { throw BillingError.identityNotReady }
+    let generation = identityGeneration
+    if Purchases.shared.appUserID != userID {
+      let previous = identityTransition
+      let transition = Task { @MainActor [weak self] in
+        _ = try? await previous?.value
+        guard let self,
+              self.identityGeneration == generation,
+              self.desiredUserID == userID else {
+          throw BillingError.identityNotReady
+        }
+        try await self.applyIdentity(userID, generation: generation)
+      }
+      identityTransition = transition
+      try await transition.value
+    }
+    try verifyIdentity(userID, generation: generation)
+    return (Purchases.shared, userID, generation)
+  }
+
+  private func verifyIdentity(_ userID: String, generation: Int) throws {
+    guard identityGeneration == generation,
+          desiredUserID == userID,
+          Purchases.shared.appUserID == userID else {
+      throw BillingError.identityNotReady
+    }
   }
 }
 
 enum BillingError: LocalizedError {
   case packageUnavailable
+  case identityNotReady
 
   var errorDescription: String? {
     switch self {
     case .packageUnavailable: "That subscription option is no longer available. Refresh and try again."
+    case .identityNotReady: "Your subscription account is still switching. Please wait and try again."
     }
   }
 }
