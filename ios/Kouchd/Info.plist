@@ -26,6 +26,10 @@
 	<string>$(CONVEX_URL)</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Use Face ID to sign in to your Kouchd account when you enable biometric sign-in.</string>
+	<key>REVENUECAT_PUBLIC_SDK_KEY</key>
+	<string>$(REVENUECAT_PUBLIC_SDK_KEY)</string>
+	<key>REVENUECAT_PURCHASES_ENABLED</key>
+	<string>$(REVENUECAT_PURCHASES_ENABLED)</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>Manrope.ttf</string>

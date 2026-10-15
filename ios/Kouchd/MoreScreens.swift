@@ -240,6 +240,9 @@ struct SettingsScreen: View {
       }
       Card {
         Text("Account").font(.headline)
+        if store.isHost {
+          NavigationLink("Subscription", value: KouchdRoute.subscription)
+        }
         NavigationLink("About Kouchd", value: KouchdRoute.about)
         UserButton()
         DataRow(title: "Kouchd version",
