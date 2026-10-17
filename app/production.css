@@ -464,44 +464,49 @@
   width: 40px;
   height: 40px;
   border-radius: 12px;
-  background: #e6eddf;
+  background: #e8efe5;
   color: var(--green);
   flex-shrink: 0;
 }
 
 .house-icon.wifi {
-  background: #e0f2fe;
-  color: #0369a1;
+  background: #e6f2f5;
+  color: #1d5b6d;
 }
 
 .house-icon.location {
-  background: #fef3c7;
-  color: #b45309;
+  background: #f9efe2;
+  color: #92582b;
 }
 
 .house-icon.access {
-  background: #ede9fe;
-  color: #6d28d9;
+  background: #e8f0e4;
+  color: #184f3a;
 }
 
 .house-icon.parking {
-  background: #f1f5f9;
-  color: #475569;
+  background: #eeeae2;
+  color: #46524c;
 }
 
 .house-icon.trash {
-  background: #f3f4f6;
-  color: #374151;
+  background: #e9ede6;
+  color: #3b5244;
 }
 
 .house-icon.emergency {
-  background: #fee2e2;
-  color: #b91c1c;
+  background: #fbeae5;
+  color: #a43e28;
 }
 
 .house-icon.notes {
-  background: #fef9c3;
-  color: #854d0e;
+  background: #f8f1df;
+  color: #85581a;
+}
+
+.house-icon.payment {
+  background: #e8efe5;
+  color: #184f3a;
 }
 
 .house-card-body {
@@ -1455,6 +1460,129 @@ body {
   box-sizing: border-box;
   width: 100%;
   overflow-wrap: break-word;
+}
+
+/* Organized Legal Footer */
+.legal-organized-footer {
+  width: 100%;
+  background: var(--kouchd-surface, #fffdf8);
+  border-top: 1px solid var(--kouchd-line, #ded8ce);
+  padding: 56px 24px 32px;
+  box-sizing: border-box;
+  color: var(--kouchd-ink, #17251f);
+}
+
+.legal-footer-inner {
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+.legal-footer-grid {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr;
+  gap: 36px;
+  margin-bottom: 40px;
+}
+
+.legal-footer-col-brand {
+  max-width: 320px;
+}
+
+.legal-footer-tagline {
+  margin: 12px 0 16px;
+  color: var(--kouchd-muted, #59675f);
+  font-size: 0.88rem;
+  line-height: 1.6;
+}
+
+.legal-footer-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 99px;
+  background: rgba(24, 79, 58, 0.08);
+  border: 1px solid rgba(24, 79, 58, 0.12);
+  color: var(--kouchd-forest, #184f3a);
+  font-size: 0.72rem;
+  font-weight: 750;
+  letter-spacing: 0.02em;
+}
+
+.legal-footer-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #2aa866;
+}
+
+.legal-footer-col-title {
+  margin: 0 0 14px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--kouchd-forest, #184f3a);
+}
+
+.legal-footer-links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.legal-footer-links a {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--kouchd-muted, #59675f);
+  text-decoration: none;
+  font-size: 0.88rem;
+  font-weight: 600;
+  transition: color 0.15s ease;
+}
+
+.legal-footer-links a:hover {
+  color: var(--kouchd-forest, #184f3a);
+}
+
+.legal-footer-bottom {
+  padding-top: 24px;
+  border-top: 1px solid var(--kouchd-line, #ded8ce);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.legal-footer-copy {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--kouchd-muted, #59675f);
+}
+
+.legal-footer-disclaimer {
+  margin: 0;
+  max-width: 500px;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--kouchd-muted, #59675f);
+}
+
+@media (max-width: 640px) {
+  .legal-footer-grid {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+  .legal-footer-bottom {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
 }
 
 /* Bottom Nav Frosted Glass Apple Style */

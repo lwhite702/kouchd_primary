@@ -910,72 +910,92 @@ function LiveStay({ stayId, onBackToHub }: { stayId: Id<"stays">; onBackToHub: (
             </Link>
           </div>
 
+          <div className="v21-top-bar-context">
+            <span>{stayTitle}</span>
+            <span aria-hidden="true">·</span>
+            <strong>
+              {visibleScreen === "home"
+                ? "Home"
+                : visibleScreen === "contributions"
+                  ? "Ledger"
+                  : visibleScreen === "chores"
+                    ? "Chores"
+                    : visibleScreen === "shopping"
+                      ? "Shopping"
+                      : visibleScreen === "checkins"
+                        ? "Check-ins"
+                        : "Stay details"}
+            </strong>
+          </div>
+
           <div className="v21-top-bar-actions">
-            {canShowTour && openTour && (
-              <Tooltip content="Interactive walkthrough of features" position="bottom">
+            <div className="topbar-desktop-only">
+              {canShowTour && openTour && (
+                <Tooltip content="Interactive walkthrough of features" position="bottom">
+                  <button
+                    aria-label="Take the guided tour"
+                    className="button soft compact tour-entry"
+                    onClick={openTour}
+                    title="Take the guided tour"
+                    type="button"
+                  >
+                    <Sparkles size={15} />
+                    <span>Tour</span>
+                  </button>
+                </Tooltip>
+              )}
+
+              <Tooltip content="Switch or view other household stays" position="bottom">
                 <button
-                  aria-label="Take the guided tour"
-                  className="button soft compact tour-entry"
-                  onClick={openTour}
-                  title="Take the guided tour"
+                  className="button soft compact stays-entry"
                   type="button"
+                  onClick={onBackToHub}
+                  title="Switch or view stays"
                 >
-                  <Sparkles size={15} />
-                  <span>Tour</span>
+                  <Users size={15} />
+                  <span>All stays</span>
                 </button>
               </Tooltip>
-            )}
 
-            <Tooltip content="Switch or view other household stays" position="bottom">
-              <button
-                className="button soft compact stays-entry"
-                type="button"
-                onClick={onBackToHub}
-                title="Switch or view stays"
-              >
-                <Users size={15} />
-                <span>All stays</span>
-              </button>
-            </Tooltip>
+              <Tooltip content="Browse setup guides, ledger instructions & rules" position="bottom">
+                <a
+                  className="button ghost compact docs-entry"
+                  href={HELP_LINKS.home}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ fontSize: "0.8rem", padding: "4px 10px", color: "var(--muted)", textDecoration: "none" }}
+                  title="Guides & Documentation"
+                >
+                  <BookOpen size={15} /> Docs
+                </a>
+              </Tooltip>
 
-            <Tooltip content="Browse setup guides, ledger instructions & rules" position="bottom">
-              <a
-                className="button ghost compact docs-entry"
-                href={HELP_LINKS.home}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ fontSize: "0.8rem", padding: "4px 10px", color: "var(--muted)", textDecoration: "none" }}
-                title="Guides & Documentation"
-              >
-                <BookOpen size={15} /> Docs
-              </a>
-            </Tooltip>
+              <Tooltip content="Enter a host referral code to join" position="bottom">
+                <button
+                  aria-label="Join with code"
+                  className="button soft compact join-code-entry"
+                  type="button"
+                  onClick={() => setJoinModalOpen(true)}
+                  style={{ fontSize: "0.8rem", padding: "4px 10px" }}
+                  title="Join household with referral code"
+                >
+                  <KeyRound size={15} />
+                  <span>Join with code</span>
+                </button>
+              </Tooltip>
 
-            <Tooltip content="Enter a host referral code to join" position="bottom">
-              <button
-                aria-label="Join with code"
-                className="button soft compact join-code-entry"
-                type="button"
-                onClick={() => setJoinModalOpen(true)}
-                style={{ fontSize: "0.8rem", padding: "4px 10px" }}
-                title="Join household with referral code"
-              >
-                <KeyRound size={15} />
-                <span>Join with code</span>
-              </button>
-            </Tooltip>
-
-            <Tooltip content="Notification delivery preferences" position="bottom">
-              <button
-                className="icon-button compact settings-entry"
-                type="button"
-                onClick={() => setPanel("settings")}
-                aria-label="Notification settings"
-                title="Notification delivery preferences"
-              >
-                <Settings size={19} />
-              </button>
-            </Tooltip>
+              <Tooltip content="Notification delivery preferences" position="bottom">
+                <button
+                  className="icon-button compact settings-entry"
+                  type="button"
+                  onClick={() => setPanel("settings")}
+                  aria-label="Notification settings"
+                  title="Notification delivery preferences"
+                >
+                  <Settings size={19} />
+                </button>
+              </Tooltip>
+            </div>
 
             <NotificationBellMenu notifications={notifications ?? []} onOpenSettings={() => setPanel("settings")} />
 
@@ -1073,7 +1093,7 @@ function LiveStay({ stayId, onBackToHub }: { stayId: Id<"stays">; onBackToHub: (
 
         {/* 3. Three Figma V2.1 Summary Tiles */}
         <section className="v21-summary-grid">
-          {/* Tile 1: Guests (Sky) */}
+          {/* Tile 1: Guests */}
           <button
             type="button"
             className="v21-summary-tile tile-guests"
@@ -1082,12 +1102,16 @@ function LiveStay({ stayId, onBackToHub }: { stayId: Id<"stays">; onBackToHub: (
           >
             <span className="v21-tile-label">Guests</span>
             <span className="v21-tile-metric">{guestMembers.length}</span>
-            <span className="v21-tile-note">
+            <span
+              className={`v21-tile-note ${
+                guestMembers.some((m) => !m.membership.acceptedTermsId) ? "note-pending" : "note-clear"
+              }`}
+            >
               {guestMembers.filter((m) => m.membership.acceptedTermsId).length} confirmed · {guestMembers.filter((m) => !m.membership.acceptedTermsId).length} pending
             </span>
           </button>
 
-          {/* Tile 2: Contributions (Surface) */}
+          {/* Tile 2: Contributions */}
           <button
             type="button"
             className="v21-summary-tile tile-contributions"
@@ -1096,12 +1120,16 @@ function LiveStay({ stayId, onBackToHub }: { stayId: Id<"stays">; onBackToHub: (
           >
             <span className="v21-tile-label">Contributions</span>
             <span className="v21-tile-metric">{formatMoney(credits)}</span>
-            <span className="v21-tile-note">
+            <span
+              className={`v21-tile-note ${
+                (obligations?.filter((o) => o.status !== "paid").length ?? 0) > 0 ? "note-pending" : "note-clear"
+              }`}
+            >
               {(obligations?.filter((o) => o.status !== "paid").length ?? 0)} records due
             </span>
           </button>
 
-          {/* Tile 3: Chores (Sage) */}
+          {/* Tile 3: Chores */}
           <button
             type="button"
             className="v21-summary-tile tile-chores"
@@ -1110,7 +1138,11 @@ function LiveStay({ stayId, onBackToHub }: { stayId: Id<"stays">; onBackToHub: (
           >
             <span className="v21-tile-label">Chores</span>
             <span className="v21-tile-metric">{openChores.length}</span>
-            <span className="v21-tile-note">
+            <span
+              className={`v21-tile-note ${
+                openChores.filter((c) => !c.assigneeUserId).length > 0 ? "note-pending" : "note-clear"
+              }`}
+            >
               {openChores.filter((c) => !c.assigneeUserId).length > 0
                 ? `${openChores.filter((c) => !c.assigneeUserId).length} need an owner`
                 : "All chores assigned"}
@@ -1119,7 +1151,7 @@ function LiveStay({ stayId, onBackToHub }: { stayId: Id<"stays">; onBackToHub: (
         </section>
 
         {/* 4. Needs Attention Cards */}
-        <section style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        <section className="v21-workspace-section">
           <div className="v21-section-heading">
             <h2>Needs attention</h2>
             <button
@@ -1131,7 +1163,16 @@ function LiveStay({ stayId, onBackToHub }: { stayId: Id<"stays">; onBackToHub: (
             </button>
           </div>
           <div className="v21-attention-grid">
-            <article className="v21-attention-card attention-sky">
+            <article
+              className={`v21-attention-card ${
+                guestMembers.some((m) => !m.membership.acceptedTermsId)
+                  ? "attention-needs-action"
+                  : "attention-calm"
+              }`}
+            >
+              <span className="v21-attention-kicker">
+                {guestMembers.some((m) => !m.membership.acceptedTermsId) ? "Action needed" : "Up to date"}
+              </span>
               <h3 className="v21-attention-title">Pending guest agreement</h3>
               <p className="v21-attention-desc">
                 {guestMembers.some((m) => !m.membership.acceptedTermsId)
@@ -1147,7 +1188,18 @@ function LiveStay({ stayId, onBackToHub }: { stayId: Id<"stays">; onBackToHub: (
               </button>
             </article>
 
-            <article className="v21-attention-card attention-lime">
+            <article
+              className={`v21-attention-card ${
+                obligations && obligations.some((o) => o.status === "due" || o.status === "late")
+                  ? "attention-needs-action"
+                  : "attention-calm"
+              }`}
+            >
+              <span className="v21-attention-kicker">
+                {obligations && obligations.some((o) => o.status === "due" || o.status === "late")
+                  ? "Contribution due"
+                  : "Clear"}
+              </span>
               <h3 className="v21-attention-title">Upcoming contribution</h3>
               <p className="v21-attention-desc">
                 {obligations && obligations.some((o) => o.status === "due" || o.status === "late")
@@ -1164,7 +1216,8 @@ function LiveStay({ stayId, onBackToHub }: { stayId: Id<"stays">; onBackToHub: (
             </article>
 
             <FeatureGate flag={FEATURE_FLAGS.CHECK_IN_BOARD}>
-              <article className="v21-attention-card">
+              <article className="v21-attention-card attention-calm">
+                <span className="v21-attention-kicker">Arrivals</span>
                 <h3 className="v21-attention-title">House check-in</h3>
                 <p className="v21-attention-desc">
                   {bundle.stay.nextCheckInDate
@@ -1182,7 +1235,8 @@ function LiveStay({ stayId, onBackToHub }: { stayId: Id<"stays">; onBackToHub: (
             </FeatureGate>
 
             <FeatureGate flag={FEATURE_FLAGS.SHOPPING_LIST}>
-              <article className="v21-attention-card attention-sky">
+              <article className="v21-attention-card attention-calm">
+                <span className="v21-attention-kicker">Shared list</span>
                 <h3 className="v21-attention-title">Shopping list</h3>
                 <p className="v21-attention-desc">Keep shared household needs and personal errands together.</p>
                 <button type="button" className="v21-attention-btn" onClick={() => setScreen("shopping")}>Open list</button>
@@ -1234,7 +1288,7 @@ function LiveStay({ stayId, onBackToHub }: { stayId: Id<"stays">; onBackToHub: (
         </section>
 
         {/* 7. Recent Activity (Figma V2.1 styling) */}
-        <section style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        <section className="v21-workspace-section">
           <div className="v21-section-heading">
             <h2>Recent activity</h2>
             <button
@@ -1306,7 +1360,7 @@ function LiveStay({ stayId, onBackToHub }: { stayId: Id<"stays">; onBackToHub: (
         <CheckInBoard stayId={stayId} viewerId={bundle.membership.userId} isHost={Boolean(isHost)} isEnded={isEnded} today={asOfDate ?? ""} guests={guestMembers.map((guest) => ({ id: guest.person.id, name: guest.person.name && guest.person.name !== "Kouchd member" ? guest.person.name : "Guest" }))} />
       </FeatureGate>
     )}
-    {visibleScreen === "stay" && <div key="stay" className="screen-transition"><div className="page-heading"><div><p className="eyebrow">The agreement</p><h1>Stay details</h1><p className="subhead">Everyone sees shared house guidelines, while guest money details stay private.</p><HelpTip title="Stay details" href={HELP_LINKS.stayAgreements}>Find the current terms, house rules, and household access information here.</HelpTip></div>{!isEnded && !isHost && !hasAccepted && <button className="button primary" type="button" onClick={() => setGuestOnboardingOpen(true)}>Review & accept agreement</button>}</div>{isHost && guestMembers.length > 0 && <GuestTabs guests={guestMembers} selected={financialGuestId} onSelect={setSelectedGuestId} />}<div className="agreement-callout"><div><Users size={22} /><div><strong>Terms version {displayedAgreementTerms?.version ?? 1}</strong><span>{isHost ? selectedGuestMember ? (displayedAgreementAccepted ? `${guestDisplayName} accepted this agreement` : `${guestDisplayName} needs to review this agreement`) : (hasAccepted ? "Your host terms are accepted" : "Host terms are set when the stay is created") : (hasAccepted ? "You accepted this agreement" : "Your agreement needs review")}</span></div></div><span className="accepted-pill">{bundle.stay.status}</span></div>{displayedAgreementTerms && <div className="details-grid"><article className="details-card" style={{ gridColumn: "1 / -1", background: "#f8fbf9", border: "1px dashed var(--green, #184f3a)" }}><div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.75rem" }}><div><p className="overline" style={{ margin: 0 }}>Household Referral Code</p><strong style={{ fontSize: "1.3rem", letterSpacing: "1.5px", color: "var(--green, #184f3a)" }}>{bundle.stay.referralCode ?? "KCH-SHARED"}</strong><p className="muted" style={{ margin: "3px 0 0", fontSize: "0.8rem" }}>Members can join this stay directly by entering this code on Kouchd.</p></div><Tooltip content="Copy invite code to share with household members"><button className="button soft compact" type="button" onClick={() => { void navigator.clipboard.writeText(bundle.stay.referralCode ?? ""); notify("Referral code copied!"); }}><Copy size={15} /> Copy code</button></Tooltip></div></article><article className="details-card"><p className="overline">Dates</p><p>{formatDate(displayedAgreementTerms.startDate)} to {formatDate(displayedAgreementTerms.endDate)}</p></article><article className="details-card"><p className="overline">Contribution plan</p><p>{formatMoney(displayedAgreementTerms.rateCents)} per {displayedAgreementTerms.cadence === "weekly" ? "week" : "day"}</p></article><article className="details-card"><p className="overline">Billable dates</p><p>{displayedAgreementTerms.billingBasis === "occupied_nights" ? "Only completed overnights recorded by the host" : "Every day within the agreement dates"}</p></article><article className="details-card"><p className="overline">Early rule</p><p>{displayedAgreementTerms.earlyDiscountEnabled ?? displayedAgreementTerms.earlyDiscountPercentage > 0 ? `${displayedAgreementTerms.earlyDiscountPercentage}% off when complete ${displayedAgreementTerms.earlyDiscountDays} days early` : "Off"}</p></article><article className="details-card"><p className="overline">Late rule</p><p>{displayedAgreementTerms.lateFeeEnabled ?? displayedAgreementTerms.lateFeeCents > 0 ? `${formatMoney(displayedAgreementTerms.lateFeeCents)} weekly after ${displayedAgreementTerms.graceDays} grace days` : "Off"}</p></article></div>}<HouseholdLogisticsCard houseInfo={bundle.stay.houseInfo} isHost={Boolean(isHost && !isEnded)} onEdit={() => setPanel("houseInfo")} onNotify={notify} />
+    {visibleScreen === "stay" && <div key="stay" className="screen-transition"><div className="page-heading"><div><p className="eyebrow">The agreement</p><h1>Stay details</h1><p className="subhead">Everyone sees shared house guidelines, while guest money details stay private.</p><HelpTip title="Stay details" href={HELP_LINKS.stayAgreements}>Find the current terms, house rules, and household access information here.</HelpTip></div>{!isEnded && !isHost && !hasAccepted && <button className="button primary" type="button" onClick={() => setGuestOnboardingOpen(true)}>Review & accept agreement</button>}</div>{isHost && guestMembers.length > 0 && <GuestTabs guests={guestMembers} selected={financialGuestId} onSelect={setSelectedGuestId} />}<div className="agreement-callout"><div><Users size={22} /><div><strong>Terms version {displayedAgreementTerms?.version ?? 1}</strong><span>{isHost ? selectedGuestMember ? (displayedAgreementAccepted ? `${guestDisplayName} accepted this agreement` : `${guestDisplayName} needs to review this agreement`) : (hasAccepted ? "Your host terms are accepted" : "Host terms are set when the stay is created") : (hasAccepted ? "You accepted this agreement" : "Your agreement needs review")}</span></div></div><span className="accepted-pill">{bundle.stay.status}</span></div>{displayedAgreementTerms && <div className="details-grid"><article className="details-card referral-code-card"><div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "0.75rem" }}><div><p className="overline" style={{ margin: 0 }}>Household Referral Code</p><strong style={{ fontSize: "1.3rem", letterSpacing: "1.5px", color: "var(--green, #184f3a)" }}>{bundle.stay.referralCode ?? "KCH-SHARED"}</strong><p className="muted" style={{ margin: "3px 0 0", fontSize: "0.8rem" }}>Members can join this stay directly by entering this code on Kouchd.</p></div><Tooltip content="Copy invite code to share with household members"><button className="button soft compact" type="button" onClick={() => { void navigator.clipboard.writeText(bundle.stay.referralCode ?? ""); notify("Referral code copied!"); }}><Copy size={15} /> Copy code</button></Tooltip></div></article><article className="details-card"><p className="overline">Dates</p><p>{formatDate(displayedAgreementTerms.startDate)} to {formatDate(displayedAgreementTerms.endDate)}</p></article><article className="details-card"><p className="overline">Contribution plan</p><p>{formatMoney(displayedAgreementTerms.rateCents)} per {displayedAgreementTerms.cadence === "weekly" ? "week" : "day"}</p></article><article className="details-card"><p className="overline">Billable dates</p><p>{displayedAgreementTerms.billingBasis === "occupied_nights" ? "Only completed overnights recorded by the host" : "Every day within the agreement dates"}</p></article><article className="details-card"><p className="overline">Early rule</p><p>{displayedAgreementTerms.earlyDiscountEnabled ?? displayedAgreementTerms.earlyDiscountPercentage > 0 ? `${displayedAgreementTerms.earlyDiscountPercentage}% off when complete ${displayedAgreementTerms.earlyDiscountDays} days early` : "Off"}</p></article><article className="details-card"><p className="overline">Late rule</p><p>{displayedAgreementTerms.lateFeeEnabled ?? displayedAgreementTerms.lateFeeCents > 0 ? `${formatMoney(displayedAgreementTerms.lateFeeCents)} weekly after ${displayedAgreementTerms.graceDays} grace days` : "Off"}</p></article></div>}<HouseholdLogisticsCard houseInfo={bundle.stay.houseInfo} isHost={Boolean(isHost && !isEnded)} onEdit={() => setPanel("houseInfo")} onNotify={notify} />
     <PaymentOptionsCard paymentOptions={bundle.stay.paymentOptions} isHost={Boolean(isHost && !isEnded)} onEdit={() => setPanel("paymentOptions")} onNotify={notify} />
         {terms && <PaymentScheduleCard key={`${financialGuestId ?? "host"}-${terms.cadence}`} stayId={stayId} isHost={isHost} hasAccepted={hasAccepted} cadence={terms.cadence} paymentDayOfWeek={terms.paymentDayOfWeek} ended={isEnded} onNotify={notify} />}
         {selectedGuestTerms?.billingBasis === "occupied_nights" && financialGuestId && <OccupancyCaptureCard stayId={stayId} guestUserId={financialGuestId} guestName={guestDisplayName} isHost={Boolean(isHost && !isEnded)} canRecord={!isEnded && (isHost ? guestMembers.find((item) => item.person.id === financialGuestId)?.membership.acceptedTermsId === selectedGuestTerms._id : hasAccepted)} onNotify={notify} />}

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import React from "react";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ArrowUpRight } from "lucide-react";
 
 import { KouchdWordmark } from "@/components/brand/kouchd-logo";
 
@@ -123,40 +123,98 @@ export function LegalPageLayout({ children, activeRoute }: LegalPageLayoutProps)
         </div>
       </main>
 
-      {/* Footer */}
-      <footer
-        style={{
-          borderTop: "1px solid var(--kouchd-line, #ded8ce)",
-          background: "var(--kouchd-surface, #fffdf8)",
-          padding: "1.75rem 1.5rem",
-          textAlign: "center",
-          fontSize: "0.85rem",
-          color: "var(--kouchd-muted, #59675f)",
-        }}
-      >
-        <p style={{ margin: "0 0 0.5rem" }}>
-          <strong>Kouchd</strong> is operated by <strong>Wrelik Brands LLC</strong>.
-        </p>
-        <p style={{ margin: "0 0 0.75rem", display: "flex", justifyContent: "center", gap: "1rem", flexWrap: "wrap" }}>
-          <Link href="/privacy" style={{ color: "var(--kouchd-forest, #184f3a)", textDecoration: "none" }}>
-            Privacy Policy
-          </Link>
-          <Link href="/terms" style={{ color: "var(--kouchd-forest, #184f3a)", textDecoration: "none" }}>
-            Terms &amp; Conditions
-          </Link>
-          <Link href="/cookies" style={{ color: "var(--kouchd-forest, #184f3a)", textDecoration: "none" }}>
-            Cookie Policy
-          </Link>
-          <Link href="/acceptable-use" style={{ color: "var(--kouchd-forest, #184f3a)", textDecoration: "none" }}>
-            Acceptable Use
-          </Link>
-          <Link href="/sms-opt-in" style={{ color: "var(--kouchd-forest, #184f3a)", textDecoration: "none" }}>
-            SMS Opt-In
-          </Link>
-        </p>
-        <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--kouchd-muted, #59675f)" }}>
-          &copy; {new Date().getFullYear()} Wrelik Brands LLC. All rights reserved.
-        </p>
+      {/* Organized Multi-Column Footer */}
+      <footer className="legal-organized-footer">
+        <div className="legal-footer-inner">
+          <div className="legal-footer-grid">
+            {/* Brand Column */}
+            <div className="legal-footer-col-brand">
+              <Link href="/" aria-label="Kouchd home" style={{ display: "inline-flex", textDecoration: "none" }}>
+                <KouchdWordmark size="sm" />
+              </Link>
+              <p className="legal-footer-tagline">
+                A calmer way to share a home. Keep house rules, contributions, chores, and check-ins in one private, shared record.
+              </p>
+              <div className="legal-footer-status">
+                <span className="legal-footer-status-dot" aria-hidden="true" />
+                <span>Private stay coordination</span>
+              </div>
+            </div>
+
+            {/* Trust & Legal Column */}
+            <div>
+              <h4 className="legal-footer-col-title">Trust &amp; Legal</h4>
+              <ul className="legal-footer-links">
+                <li>
+                  <Link href="/privacy" style={{ fontWeight: activeRoute === "privacy" ? 800 : 600 }}>
+                    Privacy Policy
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/terms" style={{ fontWeight: activeRoute === "terms" ? 800 : 600 }}>
+                    Terms &amp; Conditions
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/cookies" style={{ fontWeight: activeRoute === "cookies" ? 800 : 600 }}>
+                    Cookie Policy
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/acceptable-use" style={{ fontWeight: activeRoute === "acceptable-use" ? 800 : 600 }}>
+                    Acceptable Use
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/sms-opt-in" style={{ fontWeight: activeRoute === "sms-opt-in" ? 800 : 600 }}>
+                    SMS Acceptance
+                  </Link>
+                </li>
+              </ul>
+            </div>
+
+            {/* Resources Column */}
+            <div>
+              <h4 className="legal-footer-col-title">Resources</h4>
+              <ul className="legal-footer-links">
+                <li>
+                  <a href="https://help.kouchd.com" target="_blank" rel="noopener noreferrer">
+                    <span>Help Center &amp; Guides</span>
+                    <ArrowUpRight size={12} style={{ opacity: 0.6 }} />
+                  </a>
+                </li>
+                <li>
+                  <a href="https://help.kouchd.com/help/hosts/getting-started" target="_blank" rel="noopener noreferrer">
+                    <span>Host Setup Guide</span>
+                    <ArrowUpRight size={12} style={{ opacity: 0.6 }} />
+                  </a>
+                </li>
+                <li>
+                  <a href="https://help.kouchd.com/help/guests/joining-a-stay" target="_blank" rel="noopener noreferrer">
+                    <span>Guest Handbook</span>
+                    <ArrowUpRight size={12} style={{ opacity: 0.6 }} />
+                  </a>
+                </li>
+                <li>
+                  <a href="https://help.kouchd.com/help/legal-trust/stay-agreements" target="_blank" rel="noopener noreferrer">
+                    <span>Living Agreements</span>
+                    <ArrowUpRight size={12} style={{ opacity: 0.6 }} />
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          {/* Bottom Bar: Copyright & Payment Disclaimer */}
+          <div className="legal-footer-bottom">
+            <p className="legal-footer-copy">
+              &copy; {new Date().getFullYear()} Wrelik Brands LLC. All rights reserved.
+            </p>
+            <p className="legal-footer-disclaimer">
+              Contributions are recorded in Kouchd; payment happens separately between people. Kouchd does not collect or process money and does not replace applicable housing rights.
+            </p>
+          </div>
+        </div>
       </footer>
     </div>
   );
