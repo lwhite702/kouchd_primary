@@ -1,13 +1,15 @@
 import { ClerkProvider } from "@clerk/nextjs";
 import type { Metadata, Viewport } from "next";
-import { Manrope } from "next/font/google";
+import { Inter, Manrope } from "next/font/google";
 import { VercelAnalytics } from "../components/vercel-analytics";
 
 import { AppProviders } from "./providers";
 import "../styles.css";
 import "./production.css";
+import "./brand-system.css";
 
 const manrope = Manrope({ subsets: ["latin"], variable: "--font-manrope" });
+const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://kouchd.com"),
@@ -52,7 +54,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={manrope.variable}>
+    <html lang="en" className={`${manrope.variable} ${inter.variable}`}>
       <body>
         <ClerkProvider>
           <AppProviders>{children}</AppProviders>

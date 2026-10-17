@@ -1,0 +1,276 @@
+/**
+ * Kouchd Brand Building Design System Tokens & Primitives
+ * Adapted from Bettermade Brand Building Design System (Figma 3921:6636)
+ * Brand anchors: Manrope (Brand/Titles), Inter (Body Text), Forest Green, Lime, Warm Paper/Ink
+ */
+
+:root {
+  /* Typography Families */
+  --font-family-title: var(--font-manrope), "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-family-text: var(--font-inter), "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+
+  /* Primary 11-step Palette: Forest Canopy (Anchor 60: #184f3a) */
+  --kouchd-forest-0: #eef6f2;
+  --kouchd-forest-5: #dbece4;
+  --kouchd-forest-10: #b5d7c7;
+  --kouchd-forest-20: #88beaa;
+  --kouchd-forest-30: #5ea48c;
+  --kouchd-forest-40: #3f8b72;
+  --kouchd-forest-50: #296d55;
+  --kouchd-forest-60: #184f3a; /* Core Brand Forest */
+  --kouchd-forest-70: #133f2e;
+  --kouchd-forest-80: #0e2e22;
+  --kouchd-forest-90: #081d15;
+
+  /* Primary 11-step Palette: Electric Lime (Anchor 30: #dff25e) */
+  --kouchd-lime-0: #fcffe8;
+  --kouchd-lime-5: #f7ffd1;
+  --kouchd-lime-10: #f0fba8;
+  --kouchd-lime-20: #e7f77f;
+  --kouchd-lime-30: #dff25e; /* Core Brand Lime */
+  --kouchd-lime-40: #c9dd3e;
+  --kouchd-lime-50: #acc024;
+  --kouchd-lime-60: #8c9e13;
+  --kouchd-lime-70: #6b7a09;
+  --kouchd-lime-80: #4c5705;
+  --kouchd-lime-90: #2f3603;
+
+  /* Primary 11-step Palette: Warm Paper & Ink Neutral */
+  --kouchd-neutral-0: #fffdf8;  /* Surface */
+  --kouchd-neutral-5: #f5f0e8;  /* Paper / Canvas */
+  --kouchd-neutral-10: #ece5da;
+  --kouchd-neutral-20: #ded8ce; /* Line */
+  --kouchd-neutral-30: #c4bdad;
+  --kouchd-neutral-40: #9e9787;
+  --kouchd-neutral-50: #7a7364;
+  --kouchd-neutral-60: #59675f; /* Muted */
+  --kouchd-neutral-70: #37423c;
+  --kouchd-neutral-80: #17251f; /* Core Ink */
+  --kouchd-neutral-90: #0d1612;
+
+  /* Secondary 11-step Palette: Household Sage */
+  --kouchd-sage-0: #f4f8f0;
+  --kouchd-sage-5: #ecf3e7;
+  --kouchd-sage-10: #e5edde; /* Core Sage */
+  --kouchd-sage-20: #d0dec7;
+  --kouchd-sage-30: #b7cbab;
+  --kouchd-sage-40: #9cb58e;
+  --kouchd-sage-50: #7f9971;
+  --kouchd-sage-60: #627b56;
+  --kouchd-sage-70: #495e3f;
+  --kouchd-sage-80: #33432b;
+  --kouchd-sage-90: #1f2a1a;
+
+  /* Secondary 11-step Palette: Calm Sky */
+  --kouchd-sky-0: #f1f9fb;
+  --kouchd-sky-5: #e1f3f7;
+  --kouchd-sky-10: #c9e7f0; /* Core Sky */
+  --kouchd-sky-20: #a5d7e4;
+  --kouchd-sky-30: #7ec2d4;
+  --kouchd-sky-40: #59abc1;
+  --kouchd-sky-50: #3d8fa5;
+  --kouchd-sky-60: #297285;
+  --kouchd-sky-70: #1c5665;
+  --kouchd-sky-80: #123c47;
+  --kouchd-sky-90: #0a242c;
+
+  /* Secondary 11-step Palette: Warm Coral */
+  --kouchd-coral-0: #fdf2ef;
+  --kouchd-coral-5: #fae4df;
+  --kouchd-coral-10: #f5cac0;
+  --kouchd-coral-20: #f1ada0;
+  --kouchd-coral-30: #ee8f7d;
+  --kouchd-coral-40: #ed755c; /* Core Coral */
+  --kouchd-coral-50: #cf553b;
+  --kouchd-coral-60: #a93c24;
+  --kouchd-coral-70: #812814;
+  --kouchd-coral-80: #59190b;
+  --kouchd-coral-90: #340c05;
+
+  /* Functional / Semantic 11-step Palette (Exact Figma Values) */
+  /* Info Blue */
+  --kouchd-functional-info-0: #EBF4FF;
+  --kouchd-functional-info-5: #B0CFF3;
+  --kouchd-functional-info-10: #79ACE6;
+  --kouchd-functional-info-20: #3F82CF;
+  --kouchd-functional-info-30: #2269B9;
+  --kouchd-functional-info-40: #1154A2;
+  --kouchd-functional-info-50: #08458C;
+  --kouchd-functional-info-60: #033772;
+  --kouchd-functional-info-70: #012B5B;
+  --kouchd-functional-info-80: #001F42;
+  --kouchd-functional-info-90: #001124;
+
+  /* Grayscale Shades */
+  --kouchd-functional-gray-0: #F9F9F9;
+  --kouchd-functional-gray-5: #EBEBEB;
+  --kouchd-functional-gray-10: #DBDBDB;
+  --kouchd-functional-gray-20: #C7C7C7;
+  --kouchd-functional-gray-30: #ADADAD;
+  --kouchd-functional-gray-40: #949494;
+  --kouchd-functional-gray-50: #7A7A7A;
+  --kouchd-functional-gray-60: #666666;
+  --kouchd-functional-gray-70: #4D4D4D;
+  --kouchd-functional-gray-80: #313131;
+  --kouchd-functional-gray-90: #1C1C1C;
+
+  /* Success Green */
+  --kouchd-functional-success-0: #ECFFEB;
+  --kouchd-functional-success-5: #CBF3C9;
+  --kouchd-functional-success-10: #ADE7AB;
+  --kouchd-functional-success-20: #76CF72;
+  --kouchd-functional-success-30: #4BB847;
+  --kouchd-functional-success-40: #2E9D2A;
+  --kouchd-functional-success-50: #1B8717;
+  --kouchd-functional-success-60: #0E6F0B;
+  --kouchd-functional-success-70: #075804;
+  --kouchd-functional-success-80: #033C01;
+  --kouchd-functional-success-90: #012400;
+
+  /* Alert Orange */
+  --kouchd-functional-alert-0: #FFF6EB;
+  --kouchd-functional-alert-5: #FEDFB9;
+  --kouchd-functional-alert-10: #FCC178;
+  --kouchd-functional-alert-20: #F5A038;
+  --kouchd-functional-alert-30: #EB8A14;
+  --kouchd-functional-alert-40: #D47602;
+  --kouchd-functional-alert-50: #C26B00;
+  --kouchd-functional-alert-60: #AD5F00;
+  --kouchd-functional-alert-70: #754100;
+  --kouchd-functional-alert-80: #472700;
+  --kouchd-functional-alert-90: #2E1900;
+
+  /* Error Red */
+  --kouchd-functional-error-0: #FFF0F0;
+  --kouchd-functional-error-5: #FAD3D1;
+  --kouchd-functional-error-10: #FA817A;
+  --kouchd-functional-error-20: #F55A51;
+  --kouchd-functional-error-30: #D5332A;
+  --kouchd-functional-error-40: #B21D15;
+  --kouchd-functional-error-50: #99120B;
+  --kouchd-functional-error-60: #7C0903;
+  --kouchd-functional-error-70: #650601;
+  --kouchd-functional-error-80: #4C0501;
+  --kouchd-functional-error-90: #370401;
+
+  /* Shorthand Functional Aliases */
+  --kouchd-info-0: var(--kouchd-functional-info-0);
+  --kouchd-info-5: var(--kouchd-functional-info-5);
+  --kouchd-info-10: var(--kouchd-functional-info-10);
+  --kouchd-info-20: var(--kouchd-functional-info-20);
+  --kouchd-info-30: var(--kouchd-functional-info-30);
+  --kouchd-info-40: var(--kouchd-functional-info-40);
+  --kouchd-info-50: var(--kouchd-functional-info-50);
+  --kouchd-info-60: var(--kouchd-functional-info-60);
+  --kouchd-info-70: var(--kouchd-functional-info-70);
+  --kouchd-info-80: var(--kouchd-functional-info-80);
+  --kouchd-info-90: var(--kouchd-functional-info-90);
+
+  --kouchd-success-0: var(--kouchd-functional-success-0);
+  --kouchd-success-5: var(--kouchd-functional-success-5);
+  --kouchd-success-10: var(--kouchd-functional-success-10);
+  --kouchd-success-20: var(--kouchd-functional-success-20);
+  --kouchd-success-30: var(--kouchd-functional-success-30);
+  --kouchd-success-40: var(--kouchd-functional-success-40);
+  --kouchd-success-50: var(--kouchd-functional-success-50);
+  --kouchd-success-60: var(--kouchd-functional-success-60);
+  --kouchd-success-70: var(--kouchd-functional-success-70);
+  --kouchd-success-80: var(--kouchd-functional-success-80);
+  --kouchd-success-90: var(--kouchd-functional-success-90);
+
+  --kouchd-alert-0: var(--kouchd-functional-alert-0);
+  --kouchd-alert-5: var(--kouchd-functional-alert-5);
+  --kouchd-alert-10: var(--kouchd-functional-alert-10);
+  --kouchd-alert-20: var(--kouchd-functional-alert-20);
+  --kouchd-alert-30: var(--kouchd-functional-alert-30);
+  --kouchd-alert-40: var(--kouchd-functional-alert-40);
+  --kouchd-alert-50: var(--kouchd-functional-alert-50);
+  --kouchd-alert-60: var(--kouchd-functional-alert-60);
+  --kouchd-alert-70: var(--kouchd-functional-alert-70);
+  --kouchd-alert-80: var(--kouchd-functional-alert-80);
+  --kouchd-alert-90: var(--kouchd-functional-alert-90);
+
+  --kouchd-error-0: var(--kouchd-functional-error-0);
+  --kouchd-error-5: var(--kouchd-functional-error-5);
+  --kouchd-error-10: var(--kouchd-functional-error-10);
+  --kouchd-error-20: var(--kouchd-functional-error-20);
+  --kouchd-error-30: var(--kouchd-functional-error-30);
+  --kouchd-error-40: var(--kouchd-functional-error-40);
+  --kouchd-error-50: var(--kouchd-functional-error-50);
+  --kouchd-error-60: var(--kouchd-functional-error-60);
+  --kouchd-error-70: var(--kouchd-functional-error-70);
+  --kouchd-error-80: var(--kouchd-functional-error-80);
+  --kouchd-error-90: var(--kouchd-functional-error-90);
+
+  /* Soft Drop Shadows (Exact Figma Effects) */
+  --kouchd-shadow-xs: 0px 2px 8px -2px rgba(17, 17, 17, 0.09);
+  --kouchd-shadow-s: 0px 4px 12px -2px rgba(17, 17, 17, 0.12);
+  --kouchd-shadow-sm: var(--kouchd-shadow-s);
+  --kouchd-shadow-m: 0px 8px 24px -4px rgba(17, 17, 17, 0.12);
+  --kouchd-shadow-md: var(--kouchd-shadow-m);
+  --kouchd-shadow-l: 0px 14px 36px -7px rgba(17, 17, 17, 0.17);
+  --kouchd-shadow-lg: var(--kouchd-shadow-l);
+  --kouchd-shadow-xl: 0px 18px 48px -8px rgba(17, 17, 17, 0.18);
+  --kouchd-shadow-xxl: 0px 24px 56px -8px rgba(17, 17, 17, 0.20);
+  --kouchd-shadow-2xl: var(--kouchd-shadow-xxl);
+  --kouchd-shadow-xxxl: 0px 28px 68px -12px rgba(17, 17, 17, 0.22);
+  --kouchd-shadow-3xl: var(--kouchd-shadow-xxxl);
+
+  /* Spacers (4px increments) */
+  --kouchd-spacer-4: 4px;
+  --kouchd-spacer-8: 8px;
+  --kouchd-spacer-12: 12px;
+  --kouchd-spacer-16: 16px;
+  --kouchd-spacer-20: 20px;
+  --kouchd-spacer-24: 24px;
+  --kouchd-spacer-28: 28px;
+  --kouchd-spacer-32: 32px;
+  --kouchd-spacer-36: 36px;
+  --kouchd-spacer-40: 40px;
+  --kouchd-spacer-48: 48px;
+  --kouchd-spacer-56: 56px;
+  --kouchd-spacer-64: 64px;
+}
+
+/* Typography Utility Classes */
+/* Titles (Manrope, Bold or ExtraBold) */
+.title-xxl { font-family: var(--font-family-title); font-size: 120px; line-height: 128px; font-weight: 800; letter-spacing: -0.05em; }
+.title-xl { font-family: var(--font-family-title); font-size: 96px; line-height: 104px; font-weight: 800; letter-spacing: -0.04em; }
+.title-l { font-family: var(--font-family-title); font-size: 76px; line-height: 82px; font-weight: 800; letter-spacing: -0.035em; }
+.title-m { font-family: var(--font-family-title); font-size: 64px; line-height: 72px; font-weight: 800; letter-spacing: -0.03em; }
+.title-s { font-family: var(--font-family-title); font-size: 40px; line-height: 46px; font-weight: 800; letter-spacing: -0.025em; }
+.title-xs { font-family: var(--font-family-title); font-size: 24px; line-height: 32px; font-weight: 800; letter-spacing: -0.02em; }
+
+/* Mobile Titles */
+.title-mobile-xxl { font-family: var(--font-family-title); font-size: 42px; line-height: 50px; font-weight: 800; letter-spacing: -0.03em; }
+.title-mobile-xl { font-family: var(--font-family-title); font-size: 34px; line-height: 42px; font-weight: 800; letter-spacing: -0.025em; }
+.title-mobile-l { font-family: var(--font-family-title); font-size: 28px; line-height: 36px; font-weight: 800; letter-spacing: -0.02em; }
+.title-mobile-m { font-family: var(--font-family-title); font-size: 24px; line-height: 32px; font-weight: 800; letter-spacing: -0.02em; }
+.title-mobile-s { font-family: var(--font-family-title); font-size: 20px; line-height: 28px; font-weight: 800; letter-spacing: -0.015em; }
+.title-mobile-xs { font-family: var(--font-family-title); font-size: 18px; line-height: 24px; font-weight: 800; letter-spacing: -0.01em; }
+
+/* Body Text (Inter, Regular / Medium / Bold) */
+.text-spec-xxl { font-family: var(--font-family-text); font-size: 36px; line-height: 46px; font-weight: 400; }
+.text-spec-xl { font-family: var(--font-family-text); font-size: 24px; line-height: 34px; font-weight: 400; }
+.text-spec-l { font-family: var(--font-family-text); font-size: 20px; line-height: 30px; font-weight: 400; }
+.text-spec-m { font-family: var(--font-family-text); font-size: 16px; line-height: 24px; font-weight: 400; }
+.text-spec-s { font-family: var(--font-family-text); font-size: 14px; line-height: 20px; font-weight: 400; }
+.text-spec-xs { font-family: var(--font-family-text); font-size: 12px; line-height: 18px; font-weight: 400; }
+
+/* Grid Primitives */
+.brand-grid-12 {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 32px;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 0 80px;
+}
+
+@media (max-width: 768px) {
+  .brand-grid-12 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 16px;
+    padding: 0 16px;
+  }
+}
