@@ -95,3 +95,9 @@ Internal engineering record. This file is excluded from Mintlify navigation and 
 
 - Merged [PR #7](https://github.com/lwhite702/kouchd_primary/pull/7) to `main` (`d2f74f33bef7729398ea14bbf960326849bf05e2`) and verified the live Help Center route returns HTTP 200 with updated Mintlify page metadata.
 - Vercel preview and CodeRabbit passed; Mintlify PR check was skipped, so publication was confirmed by reading the live page after merge.
+### 2026-10-09 — WRE-179, WRE-180, WRE-181
+
+- Implemented stay-scoped shared/personal shopping items, private host/guest check-ins with response and follow-up status, and daily/weekly recurring chores with deduplicated due reminders.
+- Added daily advancement for overdue recurring chores and activity history for shopping and check-in actions.
+- Work is on `codex/wre-179-181-household-coordination`; not merged, deployed, or released. Public roadmap marks household coordination as in development.
+- `npm run typecheck` passed. ESLint on changed TypeScript files passed with 10 pre-existing `<img>` optimization warnings in `components/authenticated-home.tsx`. Tests were not run.
