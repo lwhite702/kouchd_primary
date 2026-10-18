@@ -153,6 +153,9 @@ export function LegalPageLayout({ children, activeRoute }: LegalPageLayoutProps)
           <Link href="/sms-opt-in" style={{ color: "var(--kouchd-forest, #184f3a)", textDecoration: "none" }}>
             SMS Opt-In
           </Link>
+          <Link href="/brand" style={{ color: "var(--kouchd-forest, #184f3a)", textDecoration: "none" }}>
+            Brand &amp; Design System
+          </Link>
         </p>
         <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--kouchd-muted, #59675f)" }}>
           &copy; {new Date().getFullYear()} Wrelik Brands LLC. All rights reserved.
