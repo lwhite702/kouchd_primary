@@ -65,4 +65,12 @@ describe("Wrelik release gate", () => {
     f.write("CHANGELOG.md", "## [Unreleased]\n");
     expect(f.run()).toContain("runtime changes: false");
   });
+  it("allows landing page and brand center edits to retain a released version without bump", () => {
+    const f = fixture(); f.git("tag", "v0.3.0");
+    f.write("components/brand/brand-system-portal.tsx", "export const brand = true;\n");
+    f.write("components/landing-page.tsx", "export const landing = true;\n");
+    f.write("app/brand/page.tsx", "export const brandPage = true;\n");
+    f.write("CHANGELOG.md", "## [Unreleased]\n");
+    expect(f.run()).toContain("runtime changes: false");
+  });
 });

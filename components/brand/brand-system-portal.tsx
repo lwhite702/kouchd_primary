@@ -23,8 +23,11 @@ import {
   XCircle,
   Smartphone,
   Laptop,
+  BookOpen,
+  Presentation,
 } from "lucide-react";
 
+import { BrandGuidelinesDocument } from "@/components/brand/brand-guidelines-document";
 import {
   KouchdLogoLockup,
   KouchdLogoClearspace,
@@ -99,7 +102,7 @@ export function BrandSystemPortal() {
                 : "text-[var(--kouchd-forest-70)] hover:bg-[var(--kouchd-neutral-10)]"
             }`}
           >
-            Guidelines Deck
+            Brand Guidelines
           </button>
           <button
             onClick={() => setActiveTab("assets")}
@@ -155,7 +158,13 @@ export function BrandSystemPortal() {
 
       {/* Main Tab Panels */}
       <main className="py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        {activeTab === "guidelines" && <GuidelinesDeckTab />}
+        {activeTab === "guidelines" && (
+          <BrandGuidelinesTab
+            copiedKey={copiedKey}
+            onCopy={copyToClipboard}
+            onDownload={downloadSvgFile}
+          />
+        )}
         {activeTab === "assets" && (
           <AssetsRepositoryTab
             copiedKey={copiedKey}
@@ -202,8 +211,77 @@ export function BrandSystemPortal() {
 }
 
 /* =========================================================================
-   1. BRAND GUIDELINES DECK (16:10 Presentation Viewer)
+   1. BRAND GUIDELINES (Document Mode + 16:10 Presentation Deck Toggle)
    ========================================================================= */
+
+interface BrandGuidelinesTabProps {
+  copiedKey: string | null;
+  onCopy: (text: string, key: string) => void;
+  onDownload: (svgContent: string, fileName: string) => void;
+}
+
+function BrandGuidelinesTab({ copiedKey, onCopy, onDownload }: BrandGuidelinesTabProps) {
+  const [viewMode, setViewMode] = React.useState<"document" | "deck">("document");
+
+  return (
+    <div className="space-y-6">
+      {/* Top View Mode Switcher Header */}
+      <div className="bg-[var(--kouchd-surface)] rounded-2xl border border-[var(--kouchd-neutral-20)] p-3 sm:p-4 shadow-sm flex flex-wrap items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-[var(--kouchd-forest-90)] text-[var(--kouchd-lime-40)] flex items-center justify-center font-bold">
+            <BookOpen className="w-5 h-5" />
+          </div>
+          <div>
+            <h2 className="font-heading text-sm sm:text-base font-bold text-[var(--kouchd-forest-90)]">
+              Brand Guidelines &amp; Identity Standards
+            </h2>
+            <p className="text-xs text-[var(--kouchd-neutral-60)]">
+              {viewMode === "document"
+                ? "Full scrollable editorial guide with interactive color tokens, SVG vector downloads & live type tester."
+                : "16:10 presentation deck viewer for team reviews and pitch meetings."}
+            </p>
+          </div>
+        </div>
+
+        {/* View Switch Buttons */}
+        <div className="flex items-center gap-1.5 bg-[var(--kouchd-neutral-10)] p-1 rounded-xl border border-[var(--kouchd-neutral-20)]">
+          <button
+            onClick={() => setViewMode("document")}
+            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              viewMode === "document"
+                ? "bg-[var(--kouchd-forest-90)] text-[#ffffff] shadow-sm"
+                : "text-[var(--kouchd-forest-70)] hover:text-[var(--kouchd-forest-90)]"
+            }`}
+          >
+            <BookOpen className="w-3.5 h-3.5" />
+            <span>Document View (Default)</span>
+          </button>
+          <button
+            onClick={() => setViewMode("deck")}
+            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+              viewMode === "deck"
+                ? "bg-[var(--kouchd-forest-90)] text-[#ffffff] shadow-sm"
+                : "text-[var(--kouchd-forest-70)] hover:text-[var(--kouchd-forest-90)]"
+            }`}
+          >
+            <Presentation className="w-3.5 h-3.5" />
+            <span>16:10 Presentation Deck</span>
+          </button>
+        </div>
+      </div>
+
+      {viewMode === "document" ? (
+        <BrandGuidelinesDocument
+          copiedKey={copiedKey}
+          onCopy={onCopy}
+          onDownload={onDownload}
+        />
+      ) : (
+        <GuidelinesDeckTab />
+      )}
+    </div>
+  );
+}
 
 interface SlideItem {
   id: string;
