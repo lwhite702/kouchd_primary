@@ -47,12 +47,19 @@ This document specifies the architecture, tokens, components, and interactive to
 ## Interactive Portal (`/brand`)
 - **Route**: `app/brand/page.tsx`
 - **Component**: `components/brand/brand-system-portal.tsx`
+- **Document View Component**: `components/brand/brand-guidelines-document.tsx`
 - Modules:
-  1. Guidelines Deck (16:10 presentation deck with 12 slides)
+  1. Brand Guidelines:
+     - **Document View (Default)**: Full-width, responsive, scrollable editorial reference with a sticky sub-navigation rail (01 Story, 02 Roles, 03 Voice & Rules, 04 Logos & Clearspace, 05 Color Scales, 06 Typography, 07 Shapes & Masks, 08 Physical Swag). Features an interactive live type tester, interactive color scales with copy-to-clipboard feedback, direct SVG logo downloads, and clearspace blueprints.
+     - **Presentation Deck Mode (16:10)**: Optional slide-by-slide presentation deck with keyboard arrow navigation and thumbnail jump rail.
   2. Brand Assets Repository (SVG direct download & color swatches)
   3. Social Media Kits (LinkedIn, Instagram, YouTube, X, Facebook)
   4. Marketing AIDA Carousels (10-slide template in Portrait 4:5 and Square 1:1)
   5. Web Elements Playground (Interactive component builder)
+
+## Release History
+- **Brand Center UI Overhaul**: Overhauled `/brand` guidelines from a cramped 16:10 box into a spacious, user-friendly, scrollable editorial document with sticky quick-jump navigation, interactive color swatches, live type tester, and an optional 16:10 presentation deck toggle (retaining version 0.6.0).
+- **v0.6.0**: Initial implementation of the Kouchd Brand Building Design System based on Figma specs.
 
 ## Policy & Language
 Per `AGENTS.md`:

@@ -28,6 +28,7 @@
 
 ### Changed
 
+- Redesigned the `/brand` brand guidelines tab into a user-friendly, responsive, scrollable editorial reference with sticky section quick-jump navigation, interactive 11-step color scale ramps with click-to-copy tokens, live typography playground, clearspace diagrams, approved vs. prohibited messaging matrix, and an optional 16:10 presentation deck viewer mode.
 - Corrected public landing-page examples to match the current Ledger and host-scheduled check-in behavior; added compact tablet navigation while retaining access to all header links.
 - Native cream backgrounds, cards, text, separators, and controls now adapt to dark appearance while retaining Kouchd's forest-and-lime identity; taller introduction pages stay within the safe area and scroll behind an opaque footer.
 - Native screen entrances and primary-button feedback use restrained springs and respect Reduce Motion; live document lists retain stable IDs and stale account/stay responses are ignored.
