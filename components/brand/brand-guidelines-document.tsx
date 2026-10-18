@@ -167,31 +167,49 @@ export function BrandGuidelinesDocument({
   return (
     <div className="space-y-16 max-w-6xl mx-auto pb-24">
       {/* Editorial Hero Header */}
-      <div className="bg-gradient-to-br from-[var(--kouchd-forest-90)] via-[var(--kouchd-forest-80)] to-[#103b2b] text-[#ffffff] rounded-3xl p-8 sm:p-14 relative overflow-hidden shadow-xl border border-[var(--kouchd-forest-70)]">
+      <div
+        className="bg-gradient-to-br from-[var(--kouchd-forest-90)] via-[var(--kouchd-forest-80)] to-[#103b2b] text-[#ffffff] rounded-3xl p-8 sm:p-14 relative overflow-hidden shadow-xl border border-[var(--kouchd-forest-70)]"
+        style={{
+          background: "linear-gradient(135deg, #081d15 0%, #0e2e22 50%, #103b2b 100%)",
+          color: "#ffffff",
+        }}
+      >
         <div className="absolute -right-24 -top-24 opacity-15 pointer-events-none">
           <BrandShape type="globe" size={540} color="var(--kouchd-lime-40)" />
         </div>
         <div className="relative z-10 max-w-3xl space-y-6">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-[var(--kouchd-forest-70)] border border-[var(--kouchd-forest-60)] text-[var(--kouchd-lime-40)]">
-            <Sparkles className="w-3.5 h-3.5" />
+          <div
+            className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-[var(--kouchd-forest-70)] border border-[var(--kouchd-forest-60)] text-[var(--kouchd-lime-40)]"
+            style={{ display: "inline-flex", alignItems: "center", gap: "8px", backgroundColor: "var(--kouchd-forest-70)", color: "var(--kouchd-lime-40)" }}
+          >
+            <Sparkles className="w-3.5 h-3.5" style={{ width: 14, height: 14, flexShrink: 0 }} />
             <span>Kouchd Official Brand Guidelines · Version 1.0</span>
           </div>
 
-          <h1 className="font-heading text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.1] text-white">
+          <h1
+            className="font-heading text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.1] text-white"
+            style={{ color: "#ffffff" }}
+          >
             Private shared living made easier to coordinate.
           </h1>
 
-          <p className="text-base sm:text-xl text-[var(--kouchd-neutral-20)] font-sans leading-relaxed max-w-2xl">
+          <p
+            className="text-base sm:text-xl text-[var(--kouchd-neutral-20)] font-sans leading-relaxed max-w-2xl"
+            style={{ color: "var(--kouchd-neutral-20)" }}
+          >
             Warm, homey, calm, and capable. Our mission, voice principles, typography, 11-step color ramp, logo clearspace, and physical touchpoint standards.
           </p>
 
-          <div className="pt-4 flex flex-wrap items-center gap-4 text-xs text-[var(--kouchd-neutral-30)]">
-            <span className="flex items-center gap-1.5 font-medium">
-              <ShieldCheck className="w-4 h-4 text-[var(--kouchd-lime-40)]" /> Operated by Wrelik Brands LLC
+          <div
+            className="pt-4 flex flex-wrap items-center gap-4 text-xs text-[var(--kouchd-neutral-30)]"
+            style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "16px", color: "var(--kouchd-neutral-30)" }}
+          >
+            <span className="flex items-center gap-1.5 font-medium" style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}>
+              <ShieldCheck className="w-4 h-4 text-[var(--kouchd-lime-40)]" style={{ width: 16, height: 16, flexShrink: 0 }} /> Operated by Wrelik Brands LLC
             </span>
-            <span className="inline-block w-1.5 h-1.5 rounded-full bg-[var(--kouchd-forest-60)]" />
+            <span className="inline-block w-1.5 h-1.5 rounded-full bg-[var(--kouchd-forest-60)]" style={{ display: "inline-block", width: 6, height: 6, borderRadius: "50%", backgroundColor: "var(--kouchd-forest-60)" }} />
             <span>Typography: Manrope &amp; Inter</span>
-            <span className="inline-block w-1.5 h-1.5 rounded-full bg-[var(--kouchd-forest-60)]" />
+            <span className="inline-block w-1.5 h-1.5 rounded-full bg-[var(--kouchd-forest-60)]" style={{ display: "inline-block", width: 6, height: 6, borderRadius: "50%", backgroundColor: "var(--kouchd-forest-60)" }} />
             <span>Primary Anchor: Forest 90 (#184f3a)</span>
           </div>
         </div>
@@ -201,6 +219,13 @@ export function BrandGuidelinesDocument({
       <nav
         aria-label="Brand Guidelines Sections"
         className="sticky top-[58px] z-30 bg-[var(--kouchd-surface)]/95 backdrop-blur-md border border-[var(--kouchd-neutral-20)] rounded-2xl p-2 shadow-md overflow-x-auto flex items-center gap-1 sm:gap-2"
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: "8px",
+          overflowX: "auto",
+          backgroundColor: "rgba(255, 253, 248, 0.95)",
+        }}
       >
         {sections.map((sec) => {
           const Icon = sec.icon;
@@ -214,8 +239,17 @@ export function BrandGuidelinesDocument({
                   ? "bg-[var(--kouchd-forest-90)] text-[#ffffff] shadow-sm scale-[1.02]"
                   : "text-[var(--kouchd-forest-70)] hover:bg-[var(--kouchd-neutral-10)] hover:text-[var(--kouchd-forest-90)]"
               }`}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "8px",
+                flexShrink: 0,
+                ...(isCurrent
+                  ? { backgroundColor: "var(--kouchd-forest-90)", color: "#ffffff" }
+                  : { color: "var(--kouchd-forest-70)" }),
+              }}
             >
-              <Icon className="w-3.5 h-3.5" />
+              <Icon className="w-3.5 h-3.5" style={{ width: 14, height: 14, flexShrink: 0 }} />
               <span>{sec.label}</span>
             </button>
           );

@@ -81,19 +81,30 @@ export function BrandSystemPortal() {
   return (
     <div className="min-h-screen bg-[var(--kouchd-neutral-0)] text-[var(--kouchd-forest-90)] font-sans selection:bg-[var(--kouchd-lime-40)] selection:text-[var(--kouchd-forest-90)]">
       {/* Brand Portal Header */}
-      <header className="sticky top-0 z-40 bg-[var(--kouchd-surface)]/95 backdrop-blur-md border-b border-[var(--kouchd-neutral-20)] px-4 sm:px-8 py-3.5 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Link href="/" className="inline-flex items-center hover:opacity-85 transition-opacity" aria-label="Kouchd Home">
+      <header
+        className="sticky top-0 z-40 bg-[var(--kouchd-surface)]/95 backdrop-blur-md border-b border-[var(--kouchd-neutral-20)] px-4 sm:px-8 py-3.5 flex items-center justify-between"
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          backgroundColor: "rgba(255, 253, 248, 0.95)",
+        }}
+      >
+        <div className="flex items-center gap-4" style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+          <Link href="/" className="inline-flex items-center hover:opacity-85 transition-opacity" aria-label="Kouchd Home" style={{ display: "inline-flex", alignItems: "center" }}>
             <KouchdLogoLockup variant="horizontal" theme="dark" size="sm" />
           </Link>
           <span className="hidden sm:inline-block h-4 w-px bg-[var(--kouchd-neutral-30)]" />
-          <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[var(--kouchd-lime-40)] text-[var(--kouchd-forest-90)] border border-[var(--kouchd-lime-60)]">
-            <Sparkles className="w-3 h-3" /> Design System v1.0
+          <span
+            className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[var(--kouchd-lime-40)] text-[var(--kouchd-forest-90)] border border-[var(--kouchd-lime-60)]"
+            style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
+          >
+            <Sparkles className="w-3 h-3" style={{ width: 12, height: 12, flexShrink: 0 }} /> Design System v1.0
           </span>
         </div>
 
         {/* Tab Navigation */}
-        <nav className="flex items-center gap-1 sm:gap-2">
+        <nav className="flex items-center gap-1 sm:gap-2" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
           <button
             onClick={() => setActiveTab("guidelines")}
             className={`px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold transition-all ${
@@ -101,6 +112,13 @@ export function BrandSystemPortal() {
                 ? "bg-[var(--kouchd-forest-90)] text-[#ffffff] shadow-sm"
                 : "text-[var(--kouchd-forest-70)] hover:bg-[var(--kouchd-neutral-10)]"
             }`}
+            style={{
+              padding: "6px 12px",
+              borderRadius: "8px",
+              ...(activeTab === "guidelines"
+                ? { backgroundColor: "var(--kouchd-forest-90)", color: "#ffffff" }
+                : { color: "var(--kouchd-forest-70)" }),
+            }}
           >
             Brand Guidelines
           </button>
@@ -111,6 +129,13 @@ export function BrandSystemPortal() {
                 ? "bg-[var(--kouchd-forest-90)] text-[#ffffff] shadow-sm"
                 : "text-[var(--kouchd-forest-70)] hover:bg-[var(--kouchd-neutral-10)]"
             }`}
+            style={{
+              padding: "6px 12px",
+              borderRadius: "8px",
+              ...(activeTab === "assets"
+                ? { backgroundColor: "var(--kouchd-forest-90)", color: "#ffffff" }
+                : { color: "var(--kouchd-forest-70)" }),
+            }}
           >
             Assets
           </button>
@@ -121,6 +146,13 @@ export function BrandSystemPortal() {
                 ? "bg-[var(--kouchd-forest-90)] text-[#ffffff] shadow-sm"
                 : "text-[var(--kouchd-forest-70)] hover:bg-[var(--kouchd-neutral-10)]"
             }`}
+            style={{
+              padding: "6px 12px",
+              borderRadius: "8px",
+              ...(activeTab === "social"
+                ? { backgroundColor: "var(--kouchd-forest-90)", color: "#ffffff" }
+                : { color: "var(--kouchd-forest-70)" }),
+            }}
           >
             Social Kits
           </button>
@@ -131,6 +163,13 @@ export function BrandSystemPortal() {
                 ? "bg-[var(--kouchd-forest-90)] text-[#ffffff] shadow-sm"
                 : "text-[var(--kouchd-forest-70)] hover:bg-[var(--kouchd-neutral-10)]"
             }`}
+            style={{
+              padding: "6px 12px",
+              borderRadius: "8px",
+              ...(activeTab === "carousel"
+                ? { backgroundColor: "var(--kouchd-forest-90)", color: "#ffffff" }
+                : { color: "var(--kouchd-forest-70)" }),
+            }}
           >
             Carousels
           </button>
@@ -141,17 +180,25 @@ export function BrandSystemPortal() {
                 ? "bg-[var(--kouchd-forest-90)] text-[#ffffff] shadow-sm"
                 : "text-[var(--kouchd-forest-70)] hover:bg-[var(--kouchd-neutral-10)]"
             }`}
+            style={{
+              padding: "6px 12px",
+              borderRadius: "8px",
+              ...(activeTab === "elements"
+                ? { backgroundColor: "var(--kouchd-forest-90)", color: "#ffffff" }
+                : { color: "var(--kouchd-forest-70)" }),
+            }}
           >
             Web Elements
           </button>
         </nav>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3" style={{ display: "flex", alignItems: "center", gap: "12px" }}>
           <Link
             href="/"
             className="hidden md:inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border border-[var(--kouchd-neutral-30)] hover:bg-[var(--kouchd-neutral-10)] text-[var(--kouchd-forest-80)] transition-colors"
+            style={{ display: "inline-flex", alignItems: "center", gap: "6px", padding: "6px 12px" }}
           >
-            <ArrowLeft className="w-3.5 h-3.5" /> Back to App
+            <ArrowLeft className="w-3.5 h-3.5" style={{ width: 14, height: 14, flexShrink: 0 }} /> Back to App
           </Link>
         </div>
       </header>
@@ -183,17 +230,43 @@ export function BrandSystemPortal() {
           <strong>Kouchd Brand Building Design System</strong> · Operated by{" "}
           <strong>Wrelik Brands LLC</strong>
         </p>
-        <p className="flex justify-center items-center gap-4 flex-wrap">
-          <Link href="/" className="hover:underline text-[var(--kouchd-forest-80)]">
+        <p
+          className="flex justify-center items-center gap-4 flex-wrap"
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            gap: "24px",
+            flexWrap: "wrap",
+            marginTop: "12px",
+          }}
+        >
+          <Link
+            href="/"
+            className="hover:underline text-[var(--kouchd-forest-80)]"
+            style={{ display: "inline-flex", padding: "6px 10px" }}
+          >
             Home
           </Link>
-          <Link href="/privacy" className="hover:underline text-[var(--kouchd-forest-80)]">
+          <Link
+            href="/privacy"
+            className="hover:underline text-[var(--kouchd-forest-80)]"
+            style={{ display: "inline-flex", padding: "6px 10px" }}
+          >
             Privacy Policy
           </Link>
-          <Link href="/terms" className="hover:underline text-[var(--kouchd-forest-80)]">
+          <Link
+            href="/terms"
+            className="hover:underline text-[var(--kouchd-forest-80)]"
+            style={{ display: "inline-flex", padding: "6px 10px" }}
+          >
             Terms of Service
           </Link>
-          <Link href="/sms-opt-in" className="hover:underline text-[var(--kouchd-forest-80)]">
+          <Link
+            href="/sms-opt-in"
+            className="hover:underline text-[var(--kouchd-forest-80)]"
+            style={{ display: "inline-flex", padding: "6px 10px" }}
+          >
             SMS Opt-In
           </Link>
           <a
@@ -201,6 +274,7 @@ export function BrandSystemPortal() {
             target="_blank"
             rel="noreferrer"
             className="hover:underline text-[var(--kouchd-forest-80)]"
+            style={{ display: "inline-flex", padding: "6px 10px" }}
           >
             Help Center
           </a>
@@ -244,7 +318,10 @@ function BrandGuidelinesTab({ copiedKey, onCopy, onDownload }: BrandGuidelinesTa
         </div>
 
         {/* View Switch Buttons */}
-        <div className="flex items-center gap-1.5 bg-[var(--kouchd-neutral-10)] p-1 rounded-xl border border-[var(--kouchd-neutral-20)]">
+        <div
+          className="flex items-center gap-1.5 bg-[var(--kouchd-neutral-10)] p-1 rounded-xl border border-[var(--kouchd-neutral-20)]"
+          style={{ display: "flex", alignItems: "center", gap: "6px" }}
+        >
           <button
             onClick={() => setViewMode("document")}
             className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
@@ -252,8 +329,18 @@ function BrandGuidelinesTab({ copiedKey, onCopy, onDownload }: BrandGuidelinesTa
                 ? "bg-[var(--kouchd-forest-90)] text-[#ffffff] shadow-sm"
                 : "text-[var(--kouchd-forest-70)] hover:text-[var(--kouchd-forest-90)]"
             }`}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "8px",
+              padding: "6px 12px",
+              borderRadius: "8px",
+              ...(viewMode === "document"
+                ? { backgroundColor: "var(--kouchd-forest-90)", color: "#ffffff" }
+                : { color: "var(--kouchd-forest-70)" }),
+            }}
           >
-            <BookOpen className="w-3.5 h-3.5" />
+            <BookOpen className="w-3.5 h-3.5" style={{ width: 14, height: 14, flexShrink: 0 }} />
             <span>Document View (Default)</span>
           </button>
           <button
@@ -263,8 +350,18 @@ function BrandGuidelinesTab({ copiedKey, onCopy, onDownload }: BrandGuidelinesTa
                 ? "bg-[var(--kouchd-forest-90)] text-[#ffffff] shadow-sm"
                 : "text-[var(--kouchd-forest-70)] hover:text-[var(--kouchd-forest-90)]"
             }`}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "8px",
+              padding: "6px 12px",
+              borderRadius: "8px",
+              ...(viewMode === "deck"
+                ? { backgroundColor: "var(--kouchd-forest-90)", color: "#ffffff" }
+                : { color: "var(--kouchd-forest-70)" }),
+            }}
           >
-            <Presentation className="w-3.5 h-3.5" />
+            <Presentation className="w-3.5 h-3.5" style={{ width: 14, height: 14, flexShrink: 0 }} />
             <span>16:10 Presentation Deck</span>
           </button>
         </div>
