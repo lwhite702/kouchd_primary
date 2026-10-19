@@ -316,12 +316,12 @@ struct CreateStayScreen: View {
       var terms: [String: ConvexEncodable?] = [
         "startDate": Display.date(start), "endDate": Display.date(end),
         "cadence": cadence,
-        "rateCents": Int((Double(rate) ?? 0) * 100),
-        "earlyDiscountEnabled": false, "earlyDiscountPercentage": 0,
-        "earlyDiscountDays": 0, "lateFeeEnabled": false,
-        "lateFeeCents": 0, "graceDays": 0, "houseNotes": notes
+        "rateCents": Double(Int((Double(rate) ?? 0) * 100)),
+        "earlyDiscountEnabled": false, "earlyDiscountPercentage": Double(0),
+        "earlyDiscountDays": Double(0), "lateFeeEnabled": false,
+        "lateFeeCents": Double(0), "graceDays": Double(0), "houseNotes": notes
       ]
-      if cadence == "weekly" { terms["paymentDayOfWeek"] = weekday }
+      if cadence == "weekly" { terms["paymentDayOfWeek"] = Double(weekday) }
       var args: [String: ConvexEncodable?] = [
         "name": name, "timezone": TimeZone.current.identifier, "terms": terms
       ]

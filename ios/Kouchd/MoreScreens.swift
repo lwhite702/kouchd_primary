@@ -31,7 +31,7 @@ struct ScheduleScreen: View {
               var args: [String: ConvexEncodable?] = [
                 "stayId": store.selectedStayID, "cadence": cadence
               ]
-              if cadence == "weekly" { args["paymentDayOfWeek"] = weekday }
+              if cadence == "weekly" { args["paymentDayOfWeek"] = Double(weekday) }
               _ = await store.mutate("paymentSchedule:requestChange", args)
             }
           }
@@ -148,7 +148,7 @@ struct RewardsScreen: View {
           PrimaryButton(title: "Submit for review") {
             Task {
               var args: [String: ConvexEncodable?] = [
-                "stayId": store.selectedStayID, "title": title, "points": Int(points) ?? 0,
+                "stayId": store.selectedStayID, "title": title, "points": Double(Int(points) ?? 0),
                 "note": note, "date": Display.date()
               ]
               if !selectedRule.isEmpty { args["ruleId"] = selectedRule }
@@ -158,7 +158,7 @@ struct RewardsScreen: View {
           TextField("Points to redeem", text: $redeemPoints).keyboardType(.numberPad)
           Button("Redeem toward balance") {
             Task { _ = await store.mutate("rewards:redeem", [
-              "stayId": store.selectedStayID, "points": Int(redeemPoints) ?? 0,
+              "stayId": store.selectedStayID, "points": Double(Int(redeemPoints) ?? 0),
               "date": Display.date()
             ]) }
           }.disabled((Int(redeemPoints) ?? 0) <= 0)
@@ -609,7 +609,7 @@ struct HouseholdGuideScreen: View {
   }
   private func save(status: String, close: Bool) {
     Task {
-      if await store.mutate("users:updateGuideProgress", ["role": role, "step": step, "status": status]), close { dismiss() }
+      if await store.mutate("users:updateGuideProgress", ["role": role, "step": Double(step), "status": status]), close { dismiss() }
     }
   }
 }

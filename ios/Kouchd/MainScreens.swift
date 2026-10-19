@@ -182,7 +182,7 @@ private struct StatCard: View {
       Text(number).font(.title.bold())
       Text(label).font(.caption)
     }
-    .foregroundStyle(Palette.forest)
+    .foregroundStyle(Palette.brandForest)
     .frame(maxWidth: .infinity, alignment: .leading)
     .padding(18)
     .background(Palette.lime, in: RoundedRectangle(cornerRadius: 20))
@@ -336,7 +336,7 @@ struct ContributionForm: View {
           Button("Record") {
             busy = true
             Task {
-              let cents = Int((Double(amount) ?? 0) * 100)
+              let cents = Double(Int((Double(amount) ?? 0) * 100))
               var args: [String: ConvexEncodable?] = [
                 "stayId": store.selectedStayID,
                 "type": type,
