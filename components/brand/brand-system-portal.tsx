@@ -37,9 +37,10 @@ import {
 } from "@/components/brand/kouchd-logo";
 import {
   BrandShape,
-  BrandShapeType,
   BrandImageMask,
   BrandIllustrationCard,
+  RELATABLE_BRAND_SHAPES,
+  RELATABLE_SHAPE_METADATA,
 } from "@/components/brand/brand-shapes";
 import { BrandButton, BrandSocialButton, BrandButtonVariant, BrandButtonSize } from "@/components/ui/brand-button";
 import { BrandTag, BrandTagVariant, BrandTagSize } from "@/components/ui/brand-tag";
@@ -401,7 +402,7 @@ function GuidelinesDeckTab() {
       render: () => (
         <div className="h-full w-full bg-[var(--kouchd-forest-90)] text-[#ffffff] p-8 md:p-14 flex flex-col justify-between relative overflow-hidden">
           <div className="absolute -right-20 -top-20 opacity-10">
-            <BrandShape type="globe" size={480} color="var(--kouchd-lime-40)" />
+            <BrandShape type="cushion" size={480} color="var(--kouchd-lime-40)" />
           </div>
           <div className="flex items-center justify-between z-10">
             <KouchdLogoLockup variant="horizontal" theme="cream" size="md" />
@@ -468,7 +469,7 @@ function GuidelinesDeckTab() {
                 </p>
               </div>
               <div className="pt-6 border-t border-[var(--kouchd-sage-30)] flex items-center gap-3">
-                <BrandShape type="halo" size={40} color="var(--kouchd-forest-70)" />
+                <BrandShape type="lamp" size={40} color="var(--kouchd-forest-70)" />
                 <span className="text-xs font-semibold text-[var(--kouchd-forest-80)]">
                   Harmony · Privacy · Clarity
                 </span>
@@ -841,24 +842,30 @@ function GuidelinesDeckTab() {
                 07 · Brand Graphics
               </span>
               <h2 className="font-heading text-2xl md:text-3xl font-extrabold text-[var(--kouchd-forest-90)]">
-                6 Geometric Shapes &amp; Asymmetric Masks
+                6 Relatable Home Motifs &amp; Asymmetric Masks
               </h2>
             </div>
             <KouchdLogoLockup variant="logomark" theme="dark" size="sm" />
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-6 gap-3 my-auto py-4">
-            {(["globe", "squares", "net", "triangle", "halo", "inception"] as BrandShapeType[]).map((st) => (
-              <div
-                key={st}
-                className="bg-[var(--kouchd-neutral-10)] p-3 rounded-2xl border border-[var(--kouchd-neutral-20)] flex flex-col items-center justify-center text-center space-y-2"
-              >
-                <BrandShape type={st} size={54} color="var(--kouchd-forest-80)" />
-                <span className="text-[11px] font-mono font-semibold capitalize text-[var(--kouchd-forest-80)]">
-                  {st}
-                </span>
-              </div>
-            ))}
+            {RELATABLE_BRAND_SHAPES.map((st) => {
+              const meta = RELATABLE_SHAPE_METADATA[st];
+              return (
+                <div
+                  key={st}
+                  className="bg-[var(--kouchd-neutral-10)] p-3 rounded-2xl border border-[var(--kouchd-neutral-20)] flex flex-col items-center justify-center text-center space-y-1.5"
+                >
+                  <BrandShape type={st} size={50} color="var(--kouchd-forest-80)" />
+                  <span className="text-[11px] font-heading font-bold text-[var(--kouchd-forest-90)]">
+                    {meta.name}
+                  </span>
+                  <span className="text-[9px] text-[var(--kouchd-forest-60)] leading-tight">
+                    {meta.subtitle}
+                  </span>
+                </div>
+              );
+            })}
           </div>
 
           <div className="bg-[var(--kouchd-sage-10)] p-4 rounded-xl border border-[var(--kouchd-sage-30)] flex items-center justify-between gap-6 text-xs">
@@ -1273,7 +1280,7 @@ function SocialMediaTab() {
           {/* Cover Banner Mock */}
           <div className="w-full h-44 sm:h-56 md:h-64 bg-gradient-to-r from-[var(--kouchd-forest-90)] via-[var(--kouchd-forest-80)] to-[#11382a] relative p-6 sm:p-10 flex flex-col justify-between overflow-hidden">
             <div className="absolute right-0 top-0 bottom-0 opacity-15 pointer-events-none">
-              <BrandShape type="squares" size={320} color="var(--kouchd-lime-40)" />
+              <BrandShape type="archway" size={320} color="var(--kouchd-lime-40)" />
             </div>
 
             <div className="z-10 flex items-center justify-between">
@@ -1580,7 +1587,7 @@ function MarketingCarouselTab() {
         >
           {/* Subtle background brand graphic */}
           <div className="absolute -right-10 -bottom-10 opacity-10 pointer-events-none">
-            <BrandShape type="inception" size={260} color="var(--kouchd-lime-40)" />
+            <BrandShape type="cushion" size={260} color="var(--kouchd-lime-40)" />
           </div>
 
           {/* Slide Top Metadata */}

@@ -30,8 +30,9 @@ import {
 } from "@/components/brand/kouchd-logo";
 import {
   BrandShape,
-  BrandShapeType,
   BrandImageMask,
+  RELATABLE_BRAND_SHAPES,
+  RELATABLE_SHAPE_METADATA,
 } from "@/components/brand/brand-shapes";
 
 interface BrandGuidelinesDocumentProps {
@@ -175,7 +176,7 @@ export function BrandGuidelinesDocument({
         }}
       >
         <div className="absolute -right-24 -top-24 opacity-15 pointer-events-none">
-          <BrandShape type="globe" size={540} color="var(--kouchd-lime-40)" />
+          <BrandShape type="cushion" size={540} color="var(--kouchd-lime-40)" />
         </div>
         <div className="relative z-10 max-w-3xl space-y-6">
           <div
@@ -295,7 +296,7 @@ export function BrandGuidelinesDocument({
               <span className="px-3 py-1 rounded-full text-xs font-semibold bg-[var(--kouchd-lime-40)] text-[var(--kouchd-forest-90)] border border-[var(--kouchd-lime-60)]">
                 Brand Promise
               </span>
-              <BrandShape type="halo" size={36} color="var(--kouchd-forest-70)" />
+              <BrandShape type="lamp" size={36} color="var(--kouchd-forest-70)" />
             </div>
             <blockquote className="font-heading text-lg sm:text-xl font-bold text-[var(--kouchd-forest-90)] italic leading-relaxed">
               &ldquo;A calm, private shared-stay workspace where everyone knows what to expect, what to contribute, and how to relax together.&rdquo;
@@ -1121,32 +1122,47 @@ export function BrandGuidelinesDocument({
               07 · Brand Graphics
             </span>
             <h2 className="font-heading text-2xl sm:text-3xl font-extrabold text-[var(--kouchd-forest-90)] mt-1">
-              6 Geometric Shapes &amp; Asymmetric Masks
+              6 Relatable Home Motifs &amp; Asymmetric Masks
             </h2>
           </div>
           <span className="text-xs font-medium text-[var(--kouchd-neutral-60)]">
-            Signature Visual Motifs
+            Warm · Domestic · Human Metaphors
           </span>
         </div>
 
+        {/* Narrative Context Banner */}
+        <div className="bg-[var(--kouchd-forest-5)] border border-[var(--kouchd-forest-20)] rounded-2xl p-5 text-xs sm:text-sm text-[var(--kouchd-forest-90)] leading-relaxed">
+          <p>
+            <strong>Grounded in Lived-In Living:</strong> Rather than cold, abstract tech geometry or crypto-style node networks, Kouchd’s signature brand motifs are drawn from everyday rituals of home and hospitality. They represent comfort, safety, morning connection, trusting boundaries, aligned expectations, and organic care.
+          </p>
+        </div>
+
         {/* 6 Shapes Gallery */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-          {(["globe", "squares", "net", "triangle", "halo", "inception"] as BrandShapeType[]).map((shape) => (
-            <div
-              key={shape}
-              className="bg-[var(--kouchd-surface)] p-5 rounded-2xl border border-[var(--kouchd-neutral-20)] flex flex-col items-center justify-center text-center space-y-3 shadow-xs hover:border-[var(--kouchd-forest-50)] transition-all"
-            >
-              <BrandShape type={shape} size={64} color="var(--kouchd-forest-80)" />
-              <div>
-                <span className="text-xs font-mono font-bold capitalize text-[var(--kouchd-forest-90)] block">
-                  {shape}
-                </span>
-                <span className="text-[10px] text-[var(--kouchd-neutral-50)] font-mono">
-                  SVG Motifs
-                </span>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+          {RELATABLE_BRAND_SHAPES.map((shape) => {
+            const meta = RELATABLE_SHAPE_METADATA[shape];
+            return (
+              <div
+                key={shape}
+                className="bg-[var(--kouchd-surface)] p-5 rounded-2xl border border-[var(--kouchd-neutral-20)] flex flex-col items-center justify-between text-center space-y-3 shadow-xs hover:border-[var(--kouchd-forest-50)] transition-all min-h-[220px]"
+              >
+                <div className="p-3 rounded-2xl bg-[var(--kouchd-neutral-5)] border border-[var(--kouchd-neutral-10)] flex items-center justify-center">
+                  <BrandShape type={shape} size={56} color="var(--kouchd-forest-80)" />
+                </div>
+                <div className="space-y-1 w-full">
+                  <span className="text-sm font-heading font-bold text-[var(--kouchd-forest-90)] block">
+                    {meta.name}
+                  </span>
+                  <span className="text-[11px] font-semibold text-[var(--kouchd-forest-60)] block">
+                    {meta.subtitle}
+                  </span>
+                  <p className="text-[10px] text-[var(--kouchd-neutral-60)] leading-tight pt-1">
+                    {meta.description}
+                  </p>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Asymmetric Image Mask Blueprint */}
