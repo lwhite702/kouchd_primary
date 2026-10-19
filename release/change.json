@@ -1,5 +1,5 @@
 {
-  "version": "0.5.2",
+  "version": "0.6.2",
   "type": "patch",
   "reason": "Streamline webapp entry point to route authenticated household workspace directly following the marketing split."
 }

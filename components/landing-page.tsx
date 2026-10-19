@@ -201,7 +201,7 @@ export function LandingPage({ hasClerk = true }: LandingPageProps) {
 
       <section className="v21-cta"><KouchdWordmark size="md" theme="cream" /><h2>Make the next stay feel easier.</h2><p>Bring the people, details, and shared responsibilities together.</p><StartButton hasClerk={hasClerk} /><span className="v21-cta-sparkle"><Sparkles size={50} strokeWidth={1} /></span></section>
 
-      <footer className="v21-footer"><Link href="/" className="v21-footer-brand"><KouchdWordmark size="sm" /></Link><p>Shared living, with a little more clarity.</p><div><a href="https://help.kouchd.com" target="_blank" rel="noreferrer">Help center</a><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link><Link href="/sms-opt-in">SMS opt-in</Link><a href="#faq">FAQ</a></div><small>© {new Date().getFullYear()} Wrelik Brands LLC. Kouchd records shared expectations; it does not replace applicable housing rights. · v{appVersion}</small></footer>
+      <footer className="v21-footer"><Link href="/" className="v21-footer-brand"><KouchdWordmark size="sm" /></Link><p>Shared living, with a little more clarity.</p><div><a href="https://help.kouchd.com" target="_blank" rel="noreferrer">Help center</a><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link><Link href="/sms-opt-in">SMS opt-in</Link><Link href="/brand">Brand</Link><a href="#faq">FAQ</a></div><small>© {new Date().getFullYear()} Wrelik Brands LLC. Kouchd records shared expectations; it does not replace applicable housing rights. · v{appVersion}</small></footer>
     </main>
   );
 }

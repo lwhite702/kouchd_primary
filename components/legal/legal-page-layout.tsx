@@ -201,6 +201,11 @@ export function LegalPageLayout({ children, activeRoute }: LegalPageLayoutProps)
                     <ArrowUpRight size={12} style={{ opacity: 0.6 }} />
                   </a>
                 </li>
+                <li>
+                  <Link href="/brand">
+                    <span>Brand &amp; Design System</span>
+                  </Link>
+                </li>
               </ul>
             </div>
           </div>

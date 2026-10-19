@@ -3,18 +3,55 @@ title: Managing the ledger
 description: Review guest-specific charges, confirm contributions, and keep payment progress accurate.
 ---
 
+<Tip>
+  The ledger is a mutual, transparent record between host and guest. Each guest has an independent financial ledger that is strictly private between that guest and the host.
+</Tip>
+
 ## Review a guest’s ledger
 
-Open **Ledger** and select a guest. Each guest’s financial details are private to that guest and the host. The ledger shows charges, due dates, confirmed credits, remaining balances, and visual payment progress for each charge.
+Open **Ledger** from the main navigation. If your stay has multiple guests, select the guest whose records you want to review.
+
+The ledger shows scheduled charges, due dates, confirmed credits, pending entries, and remaining balances, along with a visual progress bar indicating overall payment health.
 
 ![Stay ledger and contributions](/help/images/ledger-management.png)
 
 ## Confirm a contribution
 
-Guests can record money they sent or an agreed shared expense. A new entry stays pending until the other household member reviews it. Check the amount, date, and note, then confirm it if the details match. If something is unclear, contact the guest and discuss it before confirming. Confirmed credits apply to the oldest outstanding charge first.
+When a guest sends a payment outside Kouchd or covers an agreed shared expense (such as groceries or home supplies), they record it by choosing **Add contribution**. A new entry stays pending until you review and confirm it.
 
-Kouchd records payments made outside the app. It does not process a transaction or verify that money reached an external account. Use the payment details listed in **Stay** to pay the host separately.
+<Steps>
+  <Step title="Review the pending contribution">
+    Open **Ledger** and locate the entry tagged with **Pending confirmation**. Check the contribution category, reported dollar amount, date, and any attached note.
+  </Step>
+  <Step title="Verify outside receipt">
+    Confirm that the funds arrived in your external payment account (PayPal, Cash App, Zelle, Apple Pay, or direct bank transfer) or verify the grocery receipt.
+  </Step>
+  <Step title="Confirm in Kouchd">
+    Select **Confirm**. The status updates to **Confirmed**, and the credit is immediately applied to the guest’s oldest outstanding charge.
+  </Step>
+</Steps>
 
-## Add or correct a charge
+<Info>
+  **What if details do not match?** If the amount, date, or category does not match what you received or agreed, do not confirm the entry. Leave it unconfirmed and discuss the transaction directly with your guest so they can record a corrected contribution.
+</Info>
 
-Hosts can add an agreed one-time charge, cancel a one-time charge, or waive a late fee from the guest’s ledger. Keep changes consistent with the accepted guest agreement and discuss them with the guest.
+## Add or adjust a charge
+
+Hosts can also add or adjust charges directly on the ledger to reflect mutual agreements made during the stay:
+
+- **One-time household charges**: If you agreed to split a utility bill, an unexpected repair, or bulk household supplies, select **Add charge**, enter the amount, and include an explanatory note.
+- **Cancel a one-time charge**: If a charge was entered by mistake or resolved outside the ledger, you can cancel it with a note.
+- **Waive a late fee**: If a guest was delayed in paying due to agreed circumstances, locate the fee on the ledger and select **Waive fee**.
+
+<Warning>
+  **Outside payments only:** Kouchd records reported agreements and contributions. It does not process monetary transactions or verify that money moved in external bank accounts.
+</Warning>
+
+<CardGroup cols={2}>
+  <Card title="Pricing, payment timing, and terms" icon="circle-dollar-sign" href="/help/hosts/pricing-and-terms">
+    Configure guest rates, late fees, and grace periods.
+  </Card>
+  <Card title="Logging contributions" icon="receipt" href="/help/guests/logging-contributions">
+    See how guests record outside payments and track status.
+  </Card>
+</CardGroup>

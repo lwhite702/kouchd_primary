@@ -2,6 +2,7 @@ import ClerkKit
 import ClerkKitUI
 import ConvexMobile
 import CryptoKit
+import RevenueCat
 import SwiftUI
 
 @main struct KouchdApp: App {
@@ -12,6 +13,12 @@ import SwiftUI
     #endif
     if AppConfig.isConfigured {
       Clerk.configure(publishableKey: AppConfig.clerkKey)
+    }
+    if AppConfig.purchasesEnabled {
+      #if DEBUG
+      Purchases.logLevel = .debug
+      #endif
+      Purchases.configure(withAPIKey: AppConfig.revenueCatPublicKey)
     }
   }
   var body: some Scene {
@@ -79,6 +86,7 @@ struct RootView: View {
   @State private var inviteToken = ""
   @State private var invitePreview: Value = .null
   @State private var tab: Tab = .home
+  @State private var billing = BillingModel(client: RevenueCatBillingClient.shared)
 
   private func markIntroductionComplete() {
     introductionRevision = 1
@@ -194,12 +202,14 @@ struct RootView: View {
       if id == nil {
         destination = nil
         Task { await store.disconnectAuthenticatedSession() }
+        Task { await billing.updateIdentity(nil) }
       } else {
         markIntroductionComplete()
         if activeSheet?.id == "auth" {
           activeSheet = nil
         }
         Task { await store.connectAuthenticatedSession() }
+        Task { await billing.updateIdentity(id) }
         if !inviteToken.isEmpty {
           if invitePreview["valid"].flag {
             activeSheet = .invitation(token: inviteToken, preview: invitePreview)
