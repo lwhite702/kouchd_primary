@@ -67,8 +67,8 @@ export function buildPaymentReminderPayload({
       urgencyLevel = "normal";
       stageTitle = "Upcoming stay contribution due tomorrow";
       warningMessage = `Your scheduled contribution of ${formattedBalance} for ${stayName} is due tomorrow (${dueDate}).`;
-      consequences = "On-time settlement maintains your transparent household standing and locks in any applicable early payment discount.";
-      actionRequired = `Please submit ${formattedBalance} before ${dueDate}.`;
+      consequences = "Logging contributions on time keeps household records clear and locks in any applicable early payment discount.";
+      actionRequired = `Please submit or record your contribution of ${formattedBalance} before ${dueDate}.`;
       break;
 
     case "due_today":
@@ -76,53 +76,53 @@ export function buildPaymentReminderPayload({
       urgencyLevel = "moderate";
       stageTitle = "Stay contribution due today";
       warningMessage = `Your scheduled contribution of ${formattedBalance} for ${stayName} is due today (${dueDate}).`;
-      consequences = `Unpaid contributions enter the grace period after today. A late fee of ${formattedFee} will compound weekly if not resolved within ${terms.graceDays} days (by ${graceEnd}).`;
-      actionRequired = `Submit payment of ${formattedBalance} today to avoid entering delinquent grace status.`;
+      consequences = `Contributions not recorded by today enter the ${terms.graceDays}-day grace period (ending ${graceEnd}) before a late fee of ${formattedFee} is added.`;
+      actionRequired = `Submit or record your contribution of ${formattedBalance} today to stay on schedule.`;
       break;
 
     case "grace_overdue":
       periodLabel = `${baseTitle} [PAST DUE — GRACE PERIOD]`;
       urgencyLevel = "urgent";
-      stageTitle = "ACTION REQUIRED: Stay contribution past due";
+      stageTitle = "Friendly reminder: Stay contribution past due";
       warningMessage = `Your stay contribution of ${formattedBalance} was due on ${dueDate} and is now ${daysPastDue} day${daysPastDue === 1 ? "" : "s"} overdue.`;
-      consequences = `POTENTIAL CONSEQUENCES:\n• Late Fees: If unpaid by ${graceEnd}, a recurring late fee of ${formattedFee} will be charged immediately and will compound weekly.\n• Discount Forfeiture: Early payment discounts are cancelled.\n• Delinquency Record: Non-payment will be recorded against your stay profile.`;
-      actionRequired = `Submit ${formattedBalance} immediately before your grace period expires on ${graceEnd}.`;
+      consequences = `Important details:\n• Late Fees: If unpaid by ${graceEnd}, a recurring late fee of ${formattedFee} will be charged immediately and will compound weekly.\n• Discount Forfeiture: Early payment discounts are cancelled.\n• Flexible options: If you need more time, you can request an overdue plan with ${hostName}.`;
+      actionRequired = `Submit your contribution of ${formattedBalance} or propose a recovery plan before your grace period expires on ${graceEnd}.`;
       break;
 
     case "grace_final":
       periodLabel = `${baseTitle} [FINAL GRACE NOTICE — LATE FEE IMMINENT]`;
       urgencyLevel = "urgent";
-      stageTitle = "FINAL GRACE NOTICE: Late fee assessed tomorrow";
+      stageTitle = "Final day of grace period for stay contribution";
       warningMessage = `TODAY IS THE FINAL DAY of your grace period for ${baseTitle}. Outstanding balance: ${formattedBalance}.`;
-      consequences = `CONSEQUENCES TAKING EFFECT TOMORROW:\n• Financial Penalty: A ${formattedFee} late fee will be added to your ledger tomorrow morning and will compound weekly.\n• Host Escalation: Immediate delinquency notification delivered to host ${hostName}.\n• Stay Default: Initiates stay agreement non-compliance review.`;
-      actionRequired = `Submit ${formattedBalance} today to prevent late fees and agreement default.`;
+      consequences = `Scheduled updates taking effect tomorrow morning:\n• Late Fee: A ${formattedFee} late fee will be added to your ledger tomorrow morning and will compound weekly.\n• Host Update: A reminder will be shared with host ${hostName} to keep both sides aligned.\n• Overdue Recovery: You can request a flexible payment plan to pause further fees.`;
+      actionRequired = `Submit ${formattedBalance} today or request a recovery plan with ${hostName}.`;
       break;
 
     case "late_fee_assessed":
-      periodLabel = `${baseTitle} [URGENT: LATE FEE ASSESSED]`;
+      periodLabel = `${baseTitle} [NOTICE: LATE FEE ASSESSED]`;
       urgencyLevel = "urgent";
-      stageTitle = "URGENT NOTICE: Late fee assessed on overdue balance";
+      stageTitle = "Notice: Late fee assessed on overdue balance";
       warningMessage = `A late fee of ${formattedFee} has been charged to your ledger (Total late fees: ${formattedTotalFees}). Outstanding balance is now ${formattedBalance}.`;
-      consequences = `ACTIVE CONSEQUENCES & PENALTIES:\n• Compounding Penalties: An additional ${formattedFee} will compound every 7 days until cleared in full.\n• Delinquency Record: Formal non-payment status flagged on your profile.\n• Risk of Stay Termination: Persistent non-payment puts your stay agreement at risk of cancellation.`;
-      actionRequired = `Remit the full balance of ${formattedBalance} immediately to stop compounding late fees.`;
+      consequences = `Ledger Status:\n• Compounding Fees: An additional ${formattedFee} will compound every 7 days until cleared in full.\n• Household Alignment: Keeping host ${hostName} updated helps ensure shared expectations remain clear.\n• Overdue Plan: You can propose a host-reviewed recovery schedule at any time to adjust contributions.`;
+      actionRequired = `Submit your contribution of ${formattedBalance} or request a host-reviewed recovery plan.`;
       break;
 
     case "late_fee_warning":
-      periodLabel = `${baseTitle} [URGENT: LATE FEE COMPOUNDING SOON]`;
+      periodLabel = `${baseTitle} [NOTICE: LATE FEE OCCURRENCE SOON]`;
       urgencyLevel = "urgent";
-      stageTitle = "URGENT: Compounding late fee in 3 days";
+      stageTitle = "Notice: Additional late fee in 3 days";
       warningMessage = `Your balance of ${formattedBalance} is ${daysPastDue} days overdue. An additional ${formattedFee} will compound within 3 days.`;
-      consequences = `ACTIVE CONSEQUENCES:\n• Accruing Fees: Late fees compound weekly (${formattedTotalFees} assessed to date).\n• Host Alert: Host ${hostName} has been alerted to ongoing non-payment.\n• Impending Stay Cancellation: Host may begin formal stay termination proceedings upon continued default.`;
-      actionRequired = `Clear your balance of ${formattedBalance} now to prevent next compounding fee.`;
+      consequences = `Ledger Updates:\n• Accruing Fees: Late fees compound weekly (${formattedTotalFees} assessed to date).\n• Host Coordination: Host ${hostName} can review overdue balances and help coordinate adjustments.\n• Recovery Request: Propose a catch-up plan to resolve past-due amounts comfortably.`;
+      actionRequired = `Review your balance of ${formattedBalance} or request an overdue plan today.`;
       break;
 
     case "critical_delinquency":
-      periodLabel = `${baseTitle} [CRITICAL NOTICE: STAY TERMINATION RISK]`;
+      periodLabel = `${baseTitle} [ATTENTION NEEDED: OVERDUE BALANCE]`;
       urgencyLevel = "critical";
-      stageTitle = "CRITICAL NOTICE: Severe stay delinquency — Termination risk";
-      warningMessage = `FINAL DEMAND: Your stay balance of ${formattedBalance} is ${daysPastDue} days delinquent and remains unpaid despite repeated notices (${formattedTotalFees} in late fees).`;
-      consequences = `CRITICAL CONSEQUENCES IN EFFECT:\n• Immediate Stay Termination: Host ${hostName} may terminate your stay agreement and require immediate departure.\n• Household Access Revocation: Access codes, door codes, and wifi privileges may be revoked.\n• Profile Flag: Permanent default recorded on your Kouchd record.\n• Debt Recovery: Delinquent balance of ${formattedBalance} referred for recovery.`;
-      actionRequired = `Remit ${formattedBalance} immediately or contact ${hostName} right now to resolve this delinquency.`;
+      stageTitle = "Attention needed: Extended overdue stay balance";
+      warningMessage = `Notice: Your stay balance of ${formattedBalance} is ${daysPastDue} days overdue and remains open (${formattedTotalFees} in late fees).`;
+      consequences = `Important Notice:\n• Host Review: Host ${hostName} has been asked to check in directly to discuss your stay arrangement.\n• Household Standing: Open balances affect your shared household ledger.\n• Support Available: Propose a host-reviewed recovery plan right away to set up a sustainable catch-up schedule.`;
+      actionRequired = `Reach out to ${hostName} or submit an overdue recovery plan to resolve your balance of ${formattedBalance}.`;
       break;
   }
 

@@ -219,6 +219,23 @@ export default defineSchema({
     .index("by_stay_status", ["stayId", "status"])
     .index("by_guest_status", ["guestUserId", "status"]),
 
+  overdueRecoveryRequests: defineTable({
+    stayId: v.id("stays"),
+    guestUserId: v.id("users"),
+    obligationId: v.optional(v.id("obligations")),
+    proposedDate: v.string(),
+    proposedAmountCents: v.optional(v.number()),
+    note: v.string(),
+    status: v.union(v.literal("pending"), v.literal("approved"), v.literal("rejected")),
+    requestedAt: v.number(),
+    reviewedAt: v.optional(v.number()),
+    reviewedBy: v.optional(v.id("users")),
+    reviewNote: v.optional(v.string()),
+  })
+    .index("by_stay_status", ["stayId", "status"])
+    .index("by_guest_status", ["guestUserId", "status"])
+    .index("by_stay_guest", ["stayId", "guestUserId"]),
+
   occupiedNights: defineTable({
     stayId: v.id("stays"),
     guestUserId: v.id("users"),

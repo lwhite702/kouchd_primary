@@ -6,6 +6,7 @@ import { recordActivity } from "./lib/activity";
 import { assertCalendarDate, assertContributionRuleInput, assertPointClaimInput } from "./lib/validation";
 import { pointsToCents } from "../lib/domain/rewards";
 import { getAcceptedGuestTerms } from "./lib/stayTerms";
+import { listActiveGuestObligations } from "./lib/obligations";
 
 export const getSettings = query({
   args: { stayId: v.id("stays") },
@@ -368,6 +369,56 @@ export const redeem = mutation({
 
     const amountCents = pointsToCents(args.points, centsPerPoint);
     if (amountCents <= 0) throw new Error("Points redeem to 0 cents");
+
+    // Enforce outstanding balance limit
+    const [scopedObligations, scopedContributions] = await Promise.all([
+      listActiveGuestObligations(ctx, args.stayId, user._id),
+      ctx.db
+        .query("contributions")
+        .withIndex("by_stay_guest_and_date", (q) =>
+          q.eq("stayId", args.stayId).eq("guestUserId", user._id)
+        )
+        .collect(),
+    ]);
+
+    const totalObligationsCents = scopedObligations
+      .filter((o) => !o.voidedAt)
+      .reduce((sum, o) => sum + o.baseAmountCents, 0);
+
+    const totalCreditsCents = scopedContributions
+      .filter((c) => c.status === "confirmed" && c.countsTowardBalance)
+      .reduce((sum, c) => sum + c.amountCents, 0);
+
+    const outstandingBalanceCents = Math.max(0, totalObligationsCents - totalCreditsCents);
+    if (outstandingBalanceCents <= 0) {
+      throw new Error("You have no outstanding balance due. Reward points can only be redeemed toward an active balance.");
+    }
+    if (amountCents > outstandingBalanceCents) {
+      throw new Error(
+        `Redemption amount of $${(amountCents / 100).toFixed(2)} exceeds your current outstanding balance of $${(outstandingBalanceCents / 100).toFixed(2)}.`
+      );
+    }
+
+    // Enforce cumulative period credit cap
+    if (terms.rewards.maxCreditPerPeriodCents && terms.rewards.maxCreditPerPeriodCents > 0) {
+      const periodLimit = terms.rewards.maxCreditPerPeriodCents;
+      const matchingObligation = scopedObligations.find(
+        (o) => !o.voidedAt && o.periodStart <= args.date && args.date <= o.periodEnd
+      );
+      const periodStart = matchingObligation ? matchingObligation.periodStart : args.date;
+      const periodEnd = matchingObligation ? matchingObligation.periodEnd : args.date;
+
+      const periodRedeemedCents = redemptions
+        .filter((r) => r.date >= periodStart && r.date <= periodEnd)
+        .reduce((sum, r) => sum + r.amountCents, 0);
+
+      const remainingAllowance = Math.max(0, periodLimit - periodRedeemedCents);
+      if (amountCents > remainingAllowance) {
+        throw new Error(
+          `Redemption exceeds your period allowance. Remaining credit allowed this period: $${(remainingAllowance / 100).toFixed(2)}.`
+        );
+      }
+    }
 
     const now = Date.now();
 
