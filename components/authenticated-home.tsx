@@ -3,6 +3,7 @@
 import { Show, UserButton, useUser } from "@clerk/nextjs";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { ArrowRight, Bell, BookOpen, Check, ClipboardList, Copy, Home, KeyRound, Landmark, Megaphone, Plus, ReceiptText, Settings, ShoppingBasket, Sparkles, Users } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { FormEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -453,6 +454,7 @@ function LiveStay({ stayId, onBackToHub }: { stayId: Id<"stays">; onBackToHub: (
   const charge = (obligations ?? []).reduce((total, item) => total + item.effectiveChargeCents, 0);
   const balance = charge - credits;
   const openChores = (chores ?? []).filter((item) => !item.completedAt && !item.voidedAt);
+  const todayChores = asOfDate ? openChores.filter((item) => item.dueDate <= asOfDate) : openChores;
   const recent = useMemo(() => (activities ?? []).slice(0, 5), [activities]);
   const selectedGuestMember = guestMembers.find((item) => item.person.id === financialGuestId);
   const selectedGuest = selectedGuestMember?.person;
@@ -1047,6 +1049,192 @@ function LiveStay({ stayId, onBackToHub }: { stayId: Id<"stays">; onBackToHub: (
       <div key="home" className="screen-transition">
         <DashboardNotificationFeed notifications={notifications} onOpenSettings={() => setPanel("settings")} />
 
+        {isHost ? (
+          <div className="host-workspace-overview">
+            <Image className="host-workspace-glow host-workspace-glow-sage" src="/host-workspace/ambient-glass-sage-desktop.svg" width={590} height={510} alt="" aria-hidden="true" />
+            <Image className="host-workspace-glow host-workspace-glow-lime" src="/host-workspace/ambient-glass-lime-desktop.svg" width={530} height={490} alt="" aria-hidden="true" />
+            <Image className="host-workspace-glow host-workspace-glow-sage-mobile" src="/host-workspace/ambient-glass-sage-mobile.svg" width={480} height={430} alt="" aria-hidden="true" />
+            <Image className="host-workspace-glow host-workspace-glow-lime-mobile" src="/host-workspace/ambient-glass-lime-mobile.svg" width={440} height={410} alt="" aria-hidden="true" />
+
+            <section className="host-workspace-heading">
+              <div className="host-workspace-heading-copy">
+                <span className="host-workspace-eyebrow">Host workspace</span>
+                <h1>Good morning, {(viewer?.name && viewer.name !== "Kouchd member" ? viewer.name : "Host").split(" ")[0]}</h1>
+                <p>Here’s what needs attention at {stayTitle} today.</p>
+              </div>
+              {!isEnded && (
+                <button
+                  type="button"
+                  className="v21-invite-pill-btn host-workspace-invite"
+                  onClick={() => {
+                    setInviteUrl("");
+                    setInviteMode(null);
+                    setInviteError("");
+                    setPanel("invite");
+                  }}
+                >
+                  <Plus size={16} />
+                  <span>Invite people</span>
+                </button>
+              )}
+            </section>
+
+            <button className="host-workspace-stay-switcher" type="button" onClick={onBackToHub} title="Switch household or view all stays">
+              <span className="host-workspace-stay-mark" aria-hidden="true"><Home size={19} /></span>
+              <span className="host-workspace-stay-copy">
+                <strong>{stayTitle}</strong>
+                <span>{isEnded ? "Past stay" : "Host stay"} · {members.length} {members.length === 1 ? "person" : "people"} · {stayDatesSummary}</span>
+              </span>
+              <ArrowRight size={18} aria-hidden="true" />
+            </button>
+
+            <section className="host-workspace-members" aria-label="Household members">
+              <div className="host-workspace-section-kicker">Household · {members.length} {members.length === 1 ? "person" : "people"}</div>
+              <div className="host-workspace-member-strip">
+                <div className="host-workspace-avatar-list">
+                  {members.slice(0, 5).map((member, index) => {
+                    const name = member.person.name && member.person.name !== "Kouchd member"
+                      ? member.person.name
+                      : (member.membership.role === "host" ? "Host" : "Guest");
+                    const initials = name.split(" ").map((part) => part[0]).join("").slice(0, 2).toUpperCase();
+                    const color = member.membership.role === "host" ? "host" : index === 4 ? "other" : "guest";
+                    return <span className={`host-workspace-avatar ${color}`} key={member.person.id} title={`${name} · ${member.membership.role}`} aria-label={`${name}, ${member.membership.role}`}>
+                      {initials}
+                    </span>;
+                  })}
+                  {members.length > 5 && <span className="host-workspace-avatar other" aria-label={`${members.length - 5} more members`}>+{members.length - 5}</span>}
+                </div>
+                <p>{guestMembers.length === 0 ? "Your shared household, in one place." : `${guestMembers.length} ${guestMembers.length === 1 ? "guest is" : "guests are"} part of this stay.`}</p>
+              </div>
+            </section>
+
+            <section className="host-workspace-summary-grid" aria-label="Household summary">
+              <button className="host-workspace-summary-card" type="button" onClick={() => setScreen("chores")}>
+                <span>Chores</span><strong>{openChores.length}</strong><small>{todayChores.length} due or overdue</small>
+              </button>
+              <button className="host-workspace-summary-card" type="button" onClick={() => setScreen("contributions")}>
+                <span>Contributions</span><strong>{formatMoney(credits)}</strong><small>Confirmed records for selected guest</small>
+              </button>
+              <button className="host-workspace-summary-card" type="button" onClick={() => setScreen("stay")}>
+                <span>Household</span><strong>{members.length}</strong><small>{members.length === 1 ? "person in the stay" : "people in the stay"}</small>
+              </button>
+              <button className="host-workspace-summary-card host-workspace-summary-guide" type="button" onClick={() => setPanel("houseInfo")}>
+                <span>House guide</span><strong>Open</strong><small>Household essentials</small>
+              </button>
+            </section>
+
+            <section className="host-workspace-mobile-summary" aria-label="Today’s shared plan">
+              <span>Today’s shared plan</span>
+              <strong>{todayChores.length + activeContributions.filter((entry) => entry.status === "pending").length} {todayChores.length + activeContributions.filter((entry) => entry.status === "pending").length === 1 ? "item" : "items"}</strong>
+              <small>{todayChores.length} {todayChores.length === 1 ? "chore" : "chores"} due or overdue · {activeContributions.filter((entry) => entry.status === "pending").length} contribution {activeContributions.filter((entry) => entry.status === "pending").length === 1 ? "record" : "records"} to review</small>
+            </section>
+
+            <div className="host-workspace-columns">
+              <div className="host-workspace-primary-column">
+                <section className="host-workspace-card host-workspace-chores">
+                  <div className="host-workspace-card-heading">
+                    <div><span className="host-workspace-eyebrow">Shared plan</span><h2>A few things for today</h2></div>
+                    <button className="host-workspace-text-action" type="button" onClick={() => setScreen("chores")}>All chores <ArrowRight size={15} /></button>
+                  </div>
+                  {todayChores.length ? <div className="host-workspace-chore-list">
+                    {todayChores.slice(0, 3).map((item) => {
+                      const assigned = item.assigneeUserId ? members.find((member) => member.person.id === item.assigneeUserId)?.person.name : undefined;
+                      const assignee = assigned && assigned !== "Kouchd member" ? assigned : item.assigneeUserId ? "Guest" : item.assignee;
+                      return <article className="host-workspace-chore-row" key={item._id}>
+                        <Tooltip content={isEnded ? "This stay is read-only" : "Mark chore as completed"}>
+                          <button className="host-workspace-chore-check" type="button" disabled={isEnded} onClick={() => void toggleChore({ choreId: item._id })} aria-label={`Complete ${item.title}`}><Check size={17} /></button>
+                        </Tooltip>
+                        <span className="host-workspace-row-copy"><strong>{item.title}</strong><small>{assignee} · {asOfDate && item.dueDate < asOfDate ? "Overdue since" : "Due"} {formatDate(item.dueDate)}</small></span>
+                      </article>;
+                    })}
+                  </div> : <p className="host-workspace-empty">No chores are due today. You can see every open task on the chore board.</p>}
+                </section>
+
+                <section className="host-workspace-card host-workspace-contributions">
+                  <div className="host-workspace-card-heading">
+                    <div><span className="host-workspace-eyebrow">Shared record</span><h2>Contribution records</h2></div>
+                    <button className="host-workspace-text-action" type="button" onClick={() => setScreen("contributions")}>View records <ArrowRight size={15} /></button>
+                  </div>
+                  {activeContributions.length ? <div className="host-workspace-contribution-list">
+                    {activeContributions.slice(0, 2).map((entry) => {
+                      const contributor = members.find((member) => member.person.id === entry.createdBy)?.person.name;
+                      const contributorName = contributor && contributor !== "Kouchd member" ? contributor : "Household member";
+                      const contributionType = entry.type === "payment" ? "Contribution" : entry.type.replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
+                      const recordStatus = entry.status === "confirmed" ? "Confirmed" : entry.status === "disputed" ? "Disputed" : "Needs confirmation";
+                      return <article className="host-workspace-contribution-row" key={entry._id}>
+                        <div className="host-workspace-row-copy"><strong>{contributionType}</strong><small>{contributorName} · {recordStatus} · {formatDate(entry.date)}</small></div>
+                        <span className="host-workspace-contribution-amount">{formatMoney(entry.amountCents)}</span>
+                      </article>;
+                    })}
+                  </div> : <p className="host-workspace-empty">Contribution records will show here when someone adds one.</p>}
+                  <p className="host-workspace-record-note">These are shared records; payments happen outside Kouchd.</p>
+                </section>
+
+                <section className="host-workspace-card host-workspace-activity">
+                  <div className="host-workspace-card-heading">
+                    <div><span className="host-workspace-eyebrow">Household updates</span><h2>Recent activity</h2></div>
+                    <button className="host-workspace-text-action" type="button" onClick={() => setScreen("contributions")}>Full record <ArrowRight size={15} /></button>
+                  </div>
+                  {recent.length ? <div className="host-workspace-activity-list">
+                    {recent.slice(0, 3).map((item) => {
+                      const actor = members.find((member) => member.person.id === item.actorUserId);
+                      const actorName = actor?.person.name && actor.person.name !== "Kouchd member"
+                        ? actor.person.name
+                        : item.actorUserId === bundle.membership.userId ? "You" : "A household member";
+                      const initials = actorName.split(" ").map((part) => part[0]).join("").slice(0, 2).toUpperCase();
+                      const isContributionActivity = item.action.includes("contribution") || item.action.includes("payment");
+                      const isConfirmedActivity = item.action.includes("confirm");
+                      const activityLabel = isContributionActivity
+                        ? isConfirmedActivity ? "confirmed a contribution record" : "recorded a contribution"
+                        : item.action.includes("chore") ? "updated a shared chore" : item.action.replaceAll("_", " ");
+                      const activityStatus = isContributionActivity ? isConfirmedActivity ? "Confirmed" : "Recorded" : "Logged";
+                      return <article className="host-workspace-activity-row" key={item._id}>
+                        <span className={`host-workspace-avatar host-workspace-activity-avatar ${actor?.membership.role === "host" ? "host" : "guest"}`} aria-hidden="true">{initials}</span>
+                        <span className="host-workspace-row-copy"><strong>{actorName} {activityLabel}</strong><small>{item.detail} · {new Date(item.createdAt).toLocaleDateString()}</small></span>
+                        <span className={`host-workspace-status ${isConfirmedActivity ? "confirmed" : isContributionActivity ? "recorded" : "logged"}`}>{activityStatus}</span>
+                      </article>;
+                    })}
+                  </div> : <p className="host-workspace-empty">New household activity will appear here.</p>}
+                </section>
+              </div>
+
+              <aside className="host-workspace-secondary-column">
+                <section className="host-workspace-card host-workspace-household-card">
+                  <div className="host-workspace-card-heading"><div><span className="host-workspace-eyebrow">Your people</span><h2>At {stayTitle}</h2></div><button className="host-workspace-icon-action" type="button" onClick={() => setScreen("stay")} aria-label="View household members"><Users size={17} /></button></div>
+                  <div className="host-workspace-household-avatars">
+                    {members.map((member) => {
+                      const personName = member.person.name && member.person.name !== "Kouchd member" ? member.person.name : (member.membership.role === "host" ? "Host" : "Guest");
+                      const initials = personName.split(" ").map((part) => part[0]).join("").slice(0, 2).toUpperCase();
+                      return <span className={`host-workspace-avatar ${member.membership.role === "host" ? "host" : "guest"}`} key={member.person.id} title={`${personName} · ${member.membership.role}`} aria-label={`${personName}, ${member.membership.role}`}>
+                        {initials}
+                      </span>;
+                    })}
+                    {!members.length && <p className="host-workspace-empty">Household members will appear here.</p>}
+                  </div>
+                  <p className="host-workspace-household-copy">{guestMembers.length} {guestMembers.length === 1 ? "guest is" : "guests are"} included in this stay.</p>
+                  {!isEnded && <button className="host-workspace-secondary-action" type="button" onClick={() => { setInviteUrl(""); setInviteMode(null); setInviteError(""); setPanel("invite"); }}><Plus size={15} /> Invite someone</button>}
+                </section>
+
+                <section className="host-workspace-card host-workspace-upcoming-card">
+                  <span className="host-workspace-eyebrow">Coming up</span>
+                  <h2>Stay dates</h2>
+                  <p>{bundle.stay.nextCheckInDate ? `Next arrival · ${formatDate(bundle.stay.nextCheckInDate)}` : "No upcoming arrival date has been added."}</p>
+                  <div className="host-workspace-upcoming-divider" />
+                  <p>{stayDatesSummary}</p>
+                </section>
+
+                <section className="host-workspace-checkin-card">
+                  <span className="host-workspace-eyebrow">House guide</span>
+                  <h2>Keep the details close.</h2>
+                  <p>Review the household essentials and shared notes in one place.</p>
+                  <button type="button" onClick={() => setPanel("houseInfo")}>Open house guide <ArrowRight size={15} /></button>
+                </section>
+              </aside>
+            </div>
+          </div>
+        ) : (
+          <>
+
         {/* 1. Host Heading & Top Invite CTA */}
         <section className="v21-host-heading">
           <div className="v21-host-heading-copy">
@@ -1346,6 +1534,8 @@ function LiveStay({ stayId, onBackToHub }: { stayId: Id<"stays">; onBackToHub: (
             )}
           </div>
         </section>
+          </>
+        )}
       </div>
     )}
     {visibleScreen === "contributions" && <div key="contributions" className="screen-transition"><div className="page-heading"><div><p className="eyebrow">Private by guest</p><h1>{ledgerLabel}</h1><p className="subhead">Your money tab is completely private between you and your host.</p><HelpTip title="Contribution ledger" href={isHost ? HELP_LINKS.ledgerManagement : HELP_LINKS.loggingContributions}>Review charges and contributions here. Hosts can switch between guests; guests only see their own private ledger.</HelpTip></div><div className="heading-actions">{!isEnded && <><Tooltip content="Record a payment made or contribution credit"><button className="button primary" type="button" onClick={() => setPanel("contribution")} disabled={!financialGuestId}><Plus size={18} /> Add contribution</button></Tooltip>{isHost && <Tooltip content="Add a one-off charge or utility share"><button className="button soft" type="button" onClick={() => setPanel("adhoc")} disabled={!financialGuestId}><ReceiptText size={18} /> Add charge</button></Tooltip>}</>}</div></div>{isHost && guestMembers.length > 0 && <GuestTabs guests={guestMembers} selected={financialGuestId} onSelect={setSelectedGuestId} />}<div className="external-payment-note"><strong>Payments happen outside Kouchd.</strong> Use the host options in Stay details, then log completed contributions here. Kouchd does not collect or process payments. <button className="text-button" type="button" onClick={() => setScreen("stay")}>View payment options</button></div><div className="summary-strip"><div className="summary-item"><span>Total charges</span><strong>{formatMoney(charge)}</strong></div><div className="summary-item"><span>Confirmed credit</span><strong>{formatMoney(credits)}</strong></div><div className="summary-item"><span>Balance</span><strong>{formatMoney(balance)}</strong></div></div><section className="section-block"><div className="section-heading"><div><p className="eyebrow">Payment order</p><h2>Oldest shares are credited first</h2></div></div><div className="ledger-list">{obligations.map((item, index) => <article className="list-row contribution-row" key={item._id}><span className="list-icon"><ReceiptText size={19} /></span><div className="list-copy"><strong>{item.title ?? `Period ${index + 1}`} · due {formatDate(item.dueDate)}</strong><span>{formatMoney(item.baseAmountCents)} base{item.earlyDiscountCents ? ` · ${formatMoney(-item.earlyDiscountCents)} early discount` : ""}{item.lateFeeCents ? ` · ${formatMoney(item.lateFeeCents)} across ${item.lateFeeOccurrences} late-fee cycle${item.lateFeeOccurrences === 1 ? "" : "s"}` : ""}{item.lateFeeWaived ? " · fee waived" : ""}</span><span className="obligation-progress-copy">{formatMoney(item.creditedCents)} confirmed of {formatMoney(item.effectiveChargeCents)} due</span><span className="obligation-progress-track" role="progressbar" aria-label={`${item.title ?? `Period ${index + 1}`} payment progress`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={item.effectiveChargeCents > 0 ? Math.min(100, Math.round((item.creditedCents / item.effectiveChargeCents) * 100)) : 0}><span style={{ width: `${item.effectiveChargeCents > 0 ? Math.min(100, Math.max(0, (item.creditedCents / item.effectiveChargeCents) * 100)) : 0}%` }} /></span></div><div className="list-value">{formatMoney(item.balanceCents)}<small>{item.status}</small></div>{isHost && <div className="row-actions">{!isEnded && item.lateFeeCents > 0 && !item.lateFeeWaived && <button className="mini-button" type="button" onClick={() => void waiveLateFee({ obligationId: item._id }).then(() => notify("Late fee waived and updated."))}>Waive fee</button>}{!isEnded && item.type === "adhoc" && <button className="mini-button danger" type="button" onClick={() => setDestructiveAction({ type: "cancelCharge", obligationId: item._id, title: item.title ?? "One-off charge" })}>Cancel charge</button>}</div>}</article>)}{obligations.length === 0 && <p className="muted">Choose a guest, then activate terms or add a one-off charge.</p>}</div></section><FeatureGate flag={FEATURE_FLAGS.REWARDS_SYSTEM}><RewardsHub stayId={stayId} isHost={Boolean(isHost && !isEnded)} readOnly={isEnded} selectedGuestId={financialGuestId} currentBalanceCents={balance} onNotify={notify} /></FeatureGate><section className="section-block"><div className="section-heading"><div><p className="eyebrow">Transactions</p><h2>Contribution entries</h2></div></div><div className="ledger-list">{activeContributions.map((item) => <article className="list-row contribution-row" key={item._id}><span className="list-icon payment"><Landmark size={19} /></span><div className="list-copy"><strong>{item.type.replaceAll("_", " ")}</strong><span>{item.note || "No note"} · {item.status}</span></div><div className="list-value">{formatMoney(item.amountCents)}<small>{formatDate(item.date)}</small></div>{!isEnded && item.status === "pending" && item.createdBy !== bundle.membership.userId && <div className="row-actions"><button className="mini-button" type="button" onClick={() => void confirmContribution({ contributionId: item._id })}>Confirm</button></div>}</article>)}</div></section></div>}
