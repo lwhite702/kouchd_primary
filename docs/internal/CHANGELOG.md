@@ -8,6 +8,7 @@ Internal engineering record. This file is excluded from Mintlify navigation and 
 - Streamlined `app/page.tsx` on `app.kouchd.com` by retiring runtime HTTP `Host` header sniffing and the `LandingPage` fallback; unauthenticated requests route directly to `/sign-in` while authenticated sessions render the household workspace.
 - Synchronized package and iOS marketing versions to `0.5.2` with patch release classification.
 
+## 2026-10-12 — iOS navigation bar modernization and auth sheet loop resolution
 
 - Standardized navigation bars and toolbars across Kouchd iOS using `.kouchdNavigationBar(title:)`, toolbar placements (`.topBarLeading`, `.topBarTrailing`, `.primaryAction`, `.confirmationAction`, `.cancellationAction`), and sticky navigation bar styling.
 - Resolved app freeze / watchdog termination on launch caused by `@AppStorage` observation looping when Clerk SDK writes to `UserDefaults` during auth sheet presentation.
