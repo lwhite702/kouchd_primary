@@ -86,3 +86,20 @@
 - Changes: corrected unsupported Ledger creator attribution and guest arrival-window claims; added an expandable tablet navigation menu; prepared version `0.4.1` patch metadata and internal release notes to satisfy the repository release gate.
 - Evidence: `npm run release:check` passed against the last complete baseline `3a0c559`; version sync, typecheck, all 61 tests, Next.js production build, and release gate passed. Lint reports 15 existing warnings and no errors. Release-gate fallback now finds the nearest versioned first-parent ancestor when the base snapshot has no version file, with a regression test.
 - Release state: no production deployment, tag, public changelog entry, or customer availability is verified. Public Mintlify content was not changed.
+
+### Help Center documentation overhaul and screenshot refresh (2026-10-19)
+
+- Branch: `codex/help-documentation-refresh`; source PR: [#47](https://github.com/lwhite702/kouchd_primary/pull/47).
+- Commits: `83c59da` (initial comprehensive overhaul and screenshot refresh), `4bf327c` (remediation of 4 PR code review findings).
+- Changes:
+  - Overhauled 10 core Help Center guides in `help/` for brand voice consistency (warm, homey, calm, capable), sentence-case typography, and structured Mintlify components (`<Steps>`, `<Tip>`, `<Info>`, `<Note>`, `<Warning>`, `<Check>`).
+  - Captured and checked in 7 privacy-safe UI screenshots in `help/images/` adhering to the Brand Building / V2.1 design system with synthetic names and amounts (`Jordan Taylor`, `Alex Rivera`, `Maple Cottage Stay`, `KCH-OAK-4821`).
+  - Removed orphaned and redundant file `help/using-notifications.mdx`.
+  - Synchronized `help/product/changelog.mdx` with verified October 2026 product capabilities.
+  - Resolved 4 PR code review findings: aligned pre-join referral preview steps with actual fields; clarified membership creation vs. post-join terms acceptance button (`Accept Terms & Enter Household`); removed unenforced periodic reward cap claims; and documented the web-supported ledger recovery flow without unsupported dispute controls.
+- Evidence:
+  - `mintlify validate` passed with zero errors.
+  - `mintlify broken-links` passed with zero broken links found.
+  - `git diff --check` passed cleanly.
+  - All GitHub Actions and Vercel preview CI checks on PR #47 passed successfully.
+- Release state: PR #47 is open and ready. Merge to `main` and verification of live Mintlify deployment at `https://help.kouchd.com` require explicit user action-time approval per AGENTS.md policy.
