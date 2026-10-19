@@ -47,6 +47,10 @@ enum Value: Codable, ConvexEncodable {
     if case .number(let value) = self { return Int(value) }
     return 0
   }
+  var double: Double {
+    if case .number(let value) = self { return value }
+    return 0
+  }
   var flag: Bool {
     if case .bool(let value) = self { return value }
     return false
@@ -93,6 +97,7 @@ enum KouchdRoute: Hashable {
   case createStay
   case joinCode
   case hostControls
+  case subscription
   case termsEdit
   case houseInfo
   case paymentOptions

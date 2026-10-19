@@ -44,6 +44,17 @@
             parallelizable = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
+               BlueprintIdentifier = "FC95D780FD5701E326EA8172"
+               BuildableName = "KouchdTests.xctest"
+               BlueprintName = "KouchdTests"
+               ReferencedContainer = "container:Kouchd.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
                BlueprintIdentifier = "FCFE5E2182ED2BF5643EC386"
                BuildableName = "KouchdUITests.xctest"
                BlueprintName = "KouchdUITests"

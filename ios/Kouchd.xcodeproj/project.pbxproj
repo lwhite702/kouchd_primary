@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		02658DCCB5B3A7C59CE23249 /* BillingModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DC77B35B06634EFB0769E8DB /* BillingModelTests.swift */; };
 		2FF47254E3CA13D7C4C05DC0 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F456BBBC4E5A79C83B94DD4 /* Models.swift */; };
 		50DD2C11C824695D4C0B9F3F /* MainScreens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28FB67FA8ACEEF88028EB12D /* MainScreens.swift */; };
 		69A55372E4F1B37912C6F675 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D2113646E0AF990592F43C78 /* Assets.xcassets */; };
@@ -18,17 +19,26 @@
 		A61314890E4CDEF5A7E04DD0 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 2BE8061F9EFC705EDAEAAD24 /* LaunchScreen.storyboard */; };
 		B397985E8E53AD6B31F35333 /* ClerkConvex in Frameworks */ = {isa = PBXBuildFile; productRef = A5A3BB6BCAD94B5A27F1D007 /* ClerkConvex */; };
 		B3A075991B02C83DCE934D12 /* KouchdApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9D4E9A2F9C52E7B0F9D9EC5F /* KouchdApp.swift */; };
+		B4E50D93906B60F1733045AC /* RevenueCat in Frameworks */ = {isa = PBXBuildFile; productRef = 13C6BB1611F94C28C66319C8 /* RevenueCat */; };
 		B8DBADA83280A246F6DF6617 /* MoreScreens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D6C4CC4E2D25C8E55E007C5 /* MoreScreens.swift */; };
 		C75F49DD6AA1D187EE53C82E /* Manrope.ttf in Resources */ = {isa = PBXBuildFile; fileRef = C4EB31DF8EAC4F2515510B22 /* Manrope.ttf */; };
 		CB51A112F0C5EF73EEDBB3FB /* IntroductionFlowTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 94F34D6A302D22BE5484C401 /* IntroductionFlowTests.swift */; };
 		CDC623139610A1D52C5C6746 /* ClerkKit in Frameworks */ = {isa = PBXBuildFile; productRef = D5431C4ED24F969226376AC0 /* ClerkKit */; };
 		CDD1F2D952A10F4765EA55F4 /* ClerkKitUI in Frameworks */ = {isa = PBXBuildFile; productRef = 9FC00433A0A25EA43930C998 /* ClerkKitUI */; };
 		DA298C1816D701574257B0E6 /* StayScreens.swift in Sources */ = {isa = PBXBuildFile; fileRef = F05360FF67DCBF3824A3A69F /* StayScreens.swift */; };
+		DC81D5B48C6A02067A01688C /* Billing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14BFBC4F4B260BDA8824497E /* Billing.swift */; };
 		E90C1942A7C41B9622F10D59 /* OFL.txt in Resources */ = {isa = PBXBuildFile; fileRef = 2DC999A61B355E7B3842556B /* OFL.txt */; };
 		FAA0BC50A18183029D42D5B7 /* IntroductionTestHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A354F47AE7460DA68D2213C /* IntroductionTestHost.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		3A3B7443C2720B33AAD4E8AF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A5A09F22BC138A585E244FF8 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 13421FB217D56F14767E3B45;
+			remoteInfo = Kouchd;
+		};
 		94F89821B922B0C6912E7266 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = A5A09F22BC138A585E244FF8 /* Project object */;
@@ -40,6 +50,8 @@
 
 /* Begin PBXFileReference section */
 		0A354F47AE7460DA68D2213C /* IntroductionTestHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntroductionTestHost.swift; sourceTree = "<group>"; };
+		0FC5A6CDB48C13935513A8FF /* KouchdTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = KouchdTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		14BFBC4F4B260BDA8824497E /* Billing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Billing.swift; sourceTree = "<group>"; };
 		1BFE92274E81D4153B7707BC /* Service.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Service.swift; sourceTree = "<group>"; };
 		1F456BBBC4E5A79C83B94DD4 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
 		28FB67FA8ACEEF88028EB12D /* MainScreens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainScreens.swift; sourceTree = "<group>"; };
@@ -58,6 +70,7 @@
 		BACC878623220A9635F675DE /* Kouchd.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Kouchd.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C4EB31DF8EAC4F2515510B22 /* Manrope.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Manrope.ttf; sourceTree = "<group>"; };
 		D2113646E0AF990592F43C78 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		DC77B35B06634EFB0769E8DB /* BillingModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BillingModelTests.swift; sourceTree = "<group>"; };
 		F05360FF67DCBF3824A3A69F /* StayScreens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StayScreens.swift; sourceTree = "<group>"; };
 		F616736201895BB76DA76381 /* Kouchd.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Kouchd.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -71,16 +84,26 @@
 				CDD1F2D952A10F4765EA55F4 /* ClerkKitUI in Frameworks */,
 				B397985E8E53AD6B31F35333 /* ClerkConvex in Frameworks */,
 				74A2F0D8A622DB5FF5F0698E /* ConvexMobile in Frameworks */,
+				B4E50D93906B60F1733045AC /* RevenueCat in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		11EF55A549F2CD8C03E26A19 /* KouchdTests */ = {
+			isa = PBXGroup;
+			children = (
+				DC77B35B06634EFB0769E8DB /* BillingModelTests.swift */,
+			);
+			path = KouchdTests;
+			sourceTree = "<group>";
+		};
 		5296377909989FCAD4E8CB49 /* Kouchd */ = {
 			isa = PBXGroup;
 			children = (
 				D2113646E0AF990592F43C78 /* Assets.xcassets */,
+				14BFBC4F4B260BDA8824497E /* Billing.swift */,
 				4FAB50E0AF654FC7D39E3074 /* Design.swift */,
 				396286E31FFCC158CF46E208 /* HostExtras.swift */,
 				29080916D19B8B8E9E38022A /* Info.plist */,
@@ -104,6 +127,7 @@
 			children = (
 				B70BE05A5CD96B6107AADBFC /* Config */,
 				5296377909989FCAD4E8CB49 /* Kouchd */,
+				11EF55A549F2CD8C03E26A19 /* KouchdTests */,
 				8A78E0450AD0954546FC3DA8 /* KouchdUITests */,
 				A14398F8EA07739BB42CBFE5 /* Products */,
 			);
@@ -121,6 +145,7 @@
 			isa = PBXGroup;
 			children = (
 				BACC878623220A9635F675DE /* Kouchd.app */,
+				0FC5A6CDB48C13935513A8FF /* KouchdTests.xctest */,
 				49A1CA7350D893AD72B73968 /* KouchdUITests.xctest */,
 			);
 			name = Products;
@@ -166,10 +191,29 @@
 				9FC00433A0A25EA43930C998 /* ClerkKitUI */,
 				A5A3BB6BCAD94B5A27F1D007 /* ClerkConvex */,
 				BD61274E31847F6F50F197AB /* ConvexMobile */,
+				13C6BB1611F94C28C66319C8 /* RevenueCat */,
 			);
 			productName = Kouchd;
 			productReference = BACC878623220A9635F675DE /* Kouchd.app */;
 			productType = "com.apple.product-type.application";
+		};
+		FC95D780FD5701E326EA8172 /* KouchdTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4ECBB1E3EEDFCB585F4BB43D /* Build configuration list for PBXNativeTarget "KouchdTests" */;
+			buildPhases = (
+				78696AEE08D58069A5913425 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				53449D6B312E960D9887B5F2 /* PBXTargetDependency */,
+			);
+			name = KouchdTests;
+			packageProductDependencies = (
+			);
+			productName = KouchdTests;
+			productReference = 0FC5A6CDB48C13935513A8FF /* KouchdTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
 		};
 		FCFE5E2182ED2BF5643EC386 /* KouchdUITests */ = {
 			isa = PBXNativeTarget;
@@ -219,6 +263,7 @@
 				DDC49066CB2BF39D854FCE75 /* XCRemoteSwiftPackageReference "clerk-ios" */,
 				2AF050D3F22429006F9A1E2E /* XCRemoteSwiftPackageReference "clerk-convex-swift" */,
 				E5C9E6A92E8FA669513BD252 /* XCRemoteSwiftPackageReference "convex-swift" */,
+				BA9CEDCB10216893737FD858 /* XCRemoteSwiftPackageReference "purchases-ios" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = A14398F8EA07739BB42CBFE5 /* Products */;
@@ -226,6 +271,7 @@
 			projectRoot = "";
 			targets = (
 				13421FB217D56F14767E3B45 /* Kouchd */,
+				FC95D780FD5701E326EA8172 /* KouchdTests */,
 				FCFE5E2182ED2BF5643EC386 /* KouchdUITests */,
 			);
 		};
@@ -263,15 +309,24 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "if [ \"$CONFIGURATION\" = \"Release\" ]; then\n  case \"$CLERK_PUBLISHABLE_KEY\" in\n    pk_live_*) ;;\n    *) echo \"Release requires a production Clerk publishable key.\" >&2; exit 1 ;;\n  esac\n  case \"$CONVEX_URL\" in\n    https://*convex.cloud) ;;\n    *) echo \"Release requires a production Convex URL.\" >&2; exit 1 ;;\n  esac\nfi\n";
+			shellScript = "if [ \"$CONFIGURATION\" = \"Release\" ]; then\n  case \"$CLERK_PUBLISHABLE_KEY\" in\n    pk_live_*) ;;\n    *) echo \"Release requires a production Clerk publishable key.\" >&2; exit 1 ;;\n  esac\n  case \"$CONVEX_URL\" in\n    https://*convex.cloud) ;;\n    *) echo \"Release requires a production Convex URL.\" >&2; exit 1 ;;\n  esac\n  if [ \"$REVENUECAT_PURCHASES_ENABLED\" = \"YES\" ]; then\n    case \"$REVENUECAT_PUBLIC_SDK_KEY\" in\n      appl_*) ;;\n      *) echo \"Enabled RevenueCat purchases require an iOS public SDK key.\" >&2; exit 1 ;;\n    esac\n  fi\nfi\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		78696AEE08D58069A5913425 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				02658DCCB5B3A7C59CE23249 /* BillingModelTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		88BD9945FC9BEAB89DF12774 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DC81D5B48C6A02067A01688C /* Billing.swift in Sources */,
 				A51DD4977F27F67ABF3C779D /* Design.swift in Sources */,
 				979ED40CCDDC40CC6B8E855B /* HostExtras.swift in Sources */,
 				99554FEEDC942FF5659E53D4 /* Introduction.swift in Sources */,
@@ -296,6 +351,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		53449D6B312E960D9887B5F2 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 13421FB217D56F14767E3B45 /* Kouchd */;
+			targetProxy = 3A3B7443C2720B33AAD4E8AF /* PBXContainerItemProxy */;
+		};
 		E7C770897ED018ACD04FAB81 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 13421FB217D56F14767E3B45 /* Kouchd */;
@@ -321,6 +381,42 @@
 				TEST_TARGET_NAME = Kouchd;
 			};
 			name = Debug;
+		};
+		6726A91751926AE3BF692469 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.wrelikbrands.kouchd.tests;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Kouchd.app/Kouchd";
+			};
+			name = Debug;
+		};
+		705C68545FF5A2A04E4E2AE3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.wrelikbrands.kouchd.tests;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Kouchd.app/Kouchd";
+			};
+			name = Release;
 		};
 		CC2C607661DF83B71CF82D87 /* Release */ = {
 			isa = XCBuildConfiguration;
@@ -459,7 +555,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.6.0;
+				MARKETING_VERSION = 0.6.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.wrelikbrands.kouchd;
 				PROVISIONING_PROFILE_SPECIFIER = "$(KOUCHD_PROVISIONING_PROFILE_SPECIFIER)";
 				SDKROOT = iphoneos;
@@ -503,7 +599,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.6.0;
+				MARKETING_VERSION = 0.6.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.wrelikbrands.kouchd;
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 5.0;
@@ -519,6 +615,15 @@
 			buildConfigurations = (
 				F02740196CF5369FBCE8F87E /* Debug */,
 				D6C11B9A44C31D60D07B97FE /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		4ECBB1E3EEDFCB585F4BB43D /* Build configuration list for PBXNativeTarget "KouchdTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				6726A91751926AE3BF692469 /* Debug */,
+				705C68545FF5A2A04E4E2AE3 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
@@ -552,6 +657,14 @@
 				minimumVersion = 0.1.0;
 			};
 		};
+		BA9CEDCB10216893737FD858 /* XCRemoteSwiftPackageReference "purchases-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/RevenueCat/purchases-ios.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.95.0;
+			};
+		};
 		DDC49066CB2BF39D854FCE75 /* XCRemoteSwiftPackageReference "clerk-ios" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/clerk/clerk-ios.git";
@@ -571,6 +684,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		13C6BB1611F94C28C66319C8 /* RevenueCat */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = BA9CEDCB10216893737FD858 /* XCRemoteSwiftPackageReference "purchases-ios" */;
+			productName = RevenueCat;
+		};
 		9FC00433A0A25EA43930C998 /* ClerkKitUI */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = DDC49066CB2BF39D854FCE75 /* XCRemoteSwiftPackageReference "clerk-ios" */;

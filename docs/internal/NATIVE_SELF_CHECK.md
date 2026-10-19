@@ -15,7 +15,7 @@ The same screenshots showed the taller Stay and Chores pages expanding the root 
 ## Remaining acceptance
 
 - Native development settings are absent. Doppler project kouchd configs dev, dev_personal, stg and prd were previously checked; dev was checked again for this run. No Clerk publishable key or Convex URL was found.
-- Native purchase and restore integration is absent (WRE-190). This work does not fabricate purchase behavior or enable billing.
+- WRE-190 now provides gated native purchase, restore, and subscription-management code. Checked-in Debug and Release settings keep it disabled until App Store products, RevenueCat offerings and entitlements, sandbox account switching, purchase and restore, and TestFlight behavior are verified.
 - Host/guest authentication, invitations, real household screens, offline service failure handling, and purchase flows still need verification.
 - The primary checkout had unrelated documentation edits. Changes are isolated on codex/wre-194-native-self-check and are not merged, pushed, or deployed.
 
@@ -24,3 +24,9 @@ The same screenshots showed the taller Stay and Chores pages expanding the root 
 Simulator: iPhone 18 Pro Max, iOS 27.0, UDID 507BB2E9-DA19-4515-BAE1-5884A24B20C3. Xcode 27.0.
 
 Final build and test results are recorded in the Appto self-check artifact for October 12, 2026. Do not interpret the test harness as a functioning authenticated app or an offline household mode.
+
+## WRE-190 billing follow-up
+
+The native client uses the exact Clerk user ID as RevenueCat's App User ID and serializes account transitions before offerings, purchases, restore, or subscription management can run. Package caches are invalidated as soon as Clerk identity changes. A billing action must revalidate that RevenueCat is still bound to the current Clerk user, so a stale package cannot be purchased for a previous or anonymous account.
+
+Subscription navigation follows the account-level `subscriptions:currentAccountSummary.canManageSubscription` value rather than the role of the currently selected stay. A host who selects a stay where they participate as a guest therefore retains access to household subscription management. Guests remain free, and store callbacks do not grant backend features.

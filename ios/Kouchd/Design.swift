@@ -210,6 +210,7 @@ extension View {
       case .createStay: CreateStayScreen(store: store)
       case .joinCode: JoinCodeScreen(store: store)
       case .hostControls: HostControlsScreen(store: store)
+      case .subscription: SubscriptionScreen(store: store)
       case .termsEdit: TermsEditScreen(store: store)
       case .houseInfo: HouseInfoScreen(store: store)
       case .paymentOptions: PaymentOptionsScreen(store: store)

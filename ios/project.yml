@@ -14,6 +14,9 @@ packages:
   Convex:
     url: https://github.com/get-convex/convex-swift.git
     from: 0.8.1
+  RevenueCat:
+    url: https://github.com/RevenueCat/purchases-ios.git
+    from: 5.95.0
 targets:
   Kouchd:
     type: application
@@ -40,6 +43,9 @@ targets:
           - Manrope.ttf
         CLERK_PUBLISHABLE_KEY: $(CLERK_PUBLISHABLE_KEY)
         CONVEX_URL: $(CONVEX_URL)
+        REVENUECAT_PUBLIC_SDK_KEY: $(REVENUECAT_PUBLIC_SDK_KEY)
+        REVENUECAT_PURCHASES_ENABLED: $(REVENUECAT_PURCHASES_ENABLED)
+        NSFaceIDUsageDescription: Use Face ID to sign in to your Kouchd account when you enable biometric sign-in.
     configFiles:
       Debug: Config/Development.xcconfig
       Release: Config/Production.xcconfig
@@ -56,12 +62,18 @@ targets:
               https://*convex.cloud) ;;
               *) echo "Release requires a production Convex URL." >&2; exit 1 ;;
             esac
+            if [ "$REVENUECAT_PURCHASES_ENABLED" = "YES" ]; then
+              case "$REVENUECAT_PUBLIC_SDK_KEY" in
+                appl_*) ;;
+                *) echo "Enabled RevenueCat purchases require an iOS public SDK key." >&2; exit 1 ;;
+              esac
+            fi
           fi
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.wrelikbrands.kouchd
         DEVELOPMENT_TEAM: L8R42BJ54K
-        MARKETING_VERSION: 0.6.0
+        MARKETING_VERSION: 0.6.1
         CURRENT_PROJECT_VERSION: 1
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         SWIFT_VERSION: 5.0
@@ -83,6 +95,20 @@ targets:
         product: ClerkConvex
       - package: Convex
         product: ConvexMobile
+      - package: RevenueCat
+        product: RevenueCat
+  KouchdTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: KouchdTests
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.wrelikbrands.kouchd.tests
+        GENERATE_INFOPLIST_FILE: YES
+        SWIFT_VERSION: 5.0
+    dependencies:
+      - target: Kouchd
   KouchdUITests:
     type: bundle.ui-testing
     platform: iOS
@@ -106,6 +132,7 @@ schemes:
     test:
       config: Debug
       targets:
+        - KouchdTests
         - KouchdUITests
     archive:
       config: Release

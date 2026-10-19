@@ -1,5 +1,5 @@
 {
-  "version": "0.6.0",
-  "type": "none",
-  "reason": "Overhaul /brand guidelines with user-friendly scrollable editorial document, sticky quick-jump navigation, interactive live typography playground, and 16:10 presentation deck toggle."
+  "version": "0.6.1",
+  "type": "patch",
+  "reason": "Add gated native RevenueCat purchase, restore, subscription management, and identity-safety flows."
 }

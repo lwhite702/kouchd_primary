@@ -11,6 +11,13 @@ enum AppConfig {
   static var convexURL: String {
     Bundle.main.object(forInfoDictionaryKey: "CONVEX_URL") as? String ?? ""
   }
+  static var revenueCatPublicKey: String {
+    Bundle.main.object(forInfoDictionaryKey: "REVENUECAT_PUBLIC_SDK_KEY") as? String ?? ""
+  }
+  static var purchasesEnabled: Bool {
+    let value = Bundle.main.object(forInfoDictionaryKey: "REVENUECAT_PURCHASES_ENABLED") as? String
+    return value == "YES" && revenueCatPublicKey.hasPrefix("appl_")
+  }
   static var isConfigured: Bool {
     clerkKey.hasPrefix("pk_") && convexURL.hasPrefix("https://")
       && !convexURL.contains("missing")
@@ -105,6 +112,9 @@ private enum KouchdAuthError: LocalizedError {
   var nights: [Value] = []
   var wallet: Value = .null
   var rules: [Value] = []
+  var subscriptionSummary: Value = .null
+  var isSubscriptionSummaryLoading = true
+  var subscriptionSummaryError = ""
   var adminAccess: Value = .null
   var adminStats: Value = .null
   var adminUsers: Value = .null
@@ -208,9 +218,12 @@ private enum KouchdAuthError: LocalizedError {
 
   func loadAccount() {
     accountSubscriptions.removeAll()
+    isSubscriptionSummaryLoading = true
+    subscriptionSummaryError = ""
     watch("users:viewer", into: \.viewer, account: true)
     watch("stays:listMine", into: \.stays, account: true)
     watch("admin:canAccess", into: \.adminAccess, account: true)
+    watch("subscriptions:currentAccountSummary", into: \.subscriptionSummary, account: true)
   }
 
   func reset() {
@@ -239,6 +252,9 @@ private enum KouchdAuthError: LocalizedError {
     nights = []
     wallet = .null
     rules = []
+    subscriptionSummary = .null
+    isSubscriptionSummaryLoading = true
+    subscriptionSummaryError = ""
     clearAdmin()
     adminAccess = .null
     selectedStayID = ""
@@ -383,6 +399,10 @@ private enum KouchdAuthError: LocalizedError {
             self.error = failure.localizedDescription
           }
           if name == "stays:getBundle" { self.isStayLoading = false }
+          if name == "subscriptions:currentAccountSummary" {
+            self.isSubscriptionSummaryLoading = false
+            self.subscriptionSummaryError = failure.localizedDescription
+          }
           if financial { self.finishFinancialQuery(name) }
         }
       }, receiveValue: { [weak self] value in
@@ -390,6 +410,10 @@ private enum KouchdAuthError: LocalizedError {
         if !account && adminScope.isEmpty && (stayID != self.selectedStayID || stayEpoch != self.stayGeneration) { return }
         if financial && (guestID != self.selectedGuestID || financialEpoch != self.financialGeneration) { return }
         self[keyPath: keyPath] = value
+        if name == "subscriptions:currentAccountSummary" {
+          self.isSubscriptionSummaryLoading = false
+          self.subscriptionSummaryError = ""
+        }
         if name == "stays:listMine" {
           self.connectionTimeoutTask?.cancel()
           self.isLoading = false

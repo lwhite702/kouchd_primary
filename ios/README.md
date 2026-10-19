@@ -114,6 +114,20 @@ this unreleased branch. Passing the script is configuration evidence only.
 Complete release checks, archive and processing checks, internal group access,
 and installation on a real device before recording TestFlight availability.
 
+## RevenueCat purchases
+
+Native purchase code is present but remains off unless both
+`REVENUECAT_PURCHASES_ENABLED = YES` and an iOS public SDK key beginning with
+`appl_` are supplied through the ignored local xcconfig. The checked-in Debug
+and Release defaults keep purchases disabled. Only products whose identifiers
+begin with `kouchd_plus` or `kouchd_pro` are shown, and the native client always
+uses `subscriptions:currentAccountSummary` as the authority for household plan
+access. A store callback never unlocks features directly.
+
+Before enabling purchases, verify the matching App Store products, RevenueCat
+offerings and entitlements, sandbox purchase and restore behavior, account
+switching, and the Plus/Pro commercial contract. Guests remain free.
+
 
 ## Introduction and motion
 
