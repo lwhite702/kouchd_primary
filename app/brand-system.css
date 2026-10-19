@@ -747,3 +747,16 @@ footer a,
   .lg\:px-8 { padding-left: 32px; padding-right: 32px; }
   .lg\:text-6xl { font-size: 60px; line-height: 1.1; }
 }
+
+/* Stone utilities for modal compatibility */
+.bg-stone-900 { background-color: #1c1917 !important; }
+.bg-stone-800 { background-color: #292524 !important; }
+.bg-stone-100 { background-color: #f5f5f4 !important; }
+.text-stone-900 { color: #1c1917 !important; }
+.text-stone-600 { color: #57534e !important; }
+.text-stone-500 { color: #78716c !important; }
+.text-stone-400 { color: #a8a29e !important; }
+.text-stone-100 { color: #f5f5f4 !important; }
+.border-stone-800 { border-color: #292524 !important; }
+.border-stone-200 { border-color: #e7e5e4 !important; }
+.border-stone-100 { border-color: #f5f5f4 !important; }
