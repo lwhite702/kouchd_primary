@@ -79,7 +79,7 @@ export function BrandSystemPortal() {
   };
 
   return (
-    <div className="min-h-screen bg-[var(--kouchd-neutral-0)] text-[var(--kouchd-forest-90)] font-sans selection:bg-[var(--kouchd-lime-40)] selection:text-[var(--kouchd-forest-90)]">
+    <div className="brand-portal-root min-h-screen bg-[var(--kouchd-neutral-0)] text-[var(--kouchd-forest-90)] font-sans selection:bg-[var(--kouchd-lime-40)] selection:text-[var(--kouchd-forest-90)]">
       {/* Brand Portal Header */}
       <header
         className="sticky top-0 z-40 bg-[var(--kouchd-surface)]/95 backdrop-blur-md border-b border-[var(--kouchd-neutral-20)] px-4 sm:px-8 py-3.5 flex items-center justify-between"
@@ -97,7 +97,7 @@ export function BrandSystemPortal() {
           <span className="hidden sm:inline-block h-4 w-px bg-[var(--kouchd-neutral-30)]" />
           <span
             className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[var(--kouchd-lime-40)] text-[var(--kouchd-forest-90)] border border-[var(--kouchd-lime-60)]"
-            style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
+            style={{ alignItems: "center", gap: "6px" }}
           >
             <Sparkles className="w-3 h-3" style={{ width: 12, height: 12, flexShrink: 0 }} /> Design System v1.0
           </span>
@@ -196,7 +196,7 @@ export function BrandSystemPortal() {
           <Link
             href="/"
             className="hidden md:inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border border-[var(--kouchd-neutral-30)] hover:bg-[var(--kouchd-neutral-10)] text-[var(--kouchd-forest-80)] transition-colors"
-            style={{ display: "inline-flex", alignItems: "center", gap: "6px", padding: "6px 12px" }}
+            style={{ alignItems: "center", gap: "6px", padding: "6px 12px" }}
           >
             <ArrowLeft className="w-3.5 h-3.5" style={{ width: 14, height: 14, flexShrink: 0 }} /> Back to App
           </Link>
@@ -225,7 +225,7 @@ export function BrandSystemPortal() {
       </main>
 
       {/* Brand Portal Footer */}
-      <footer className="mt-20 border-t border-[var(--kouchd-neutral-20)] py-8 px-4 text-center text-xs text-[var(--kouchd-neutral-60)]">
+      <footer className="brand-portal-footer mt-20 border-t border-[var(--kouchd-neutral-20)] py-8 px-4 text-center text-xs text-[var(--kouchd-neutral-60)]">
         <p className="mb-2">
           <strong>Kouchd Brand Building Design System</strong> · Operated by{" "}
           <strong>Wrelik Brands LLC</strong>
