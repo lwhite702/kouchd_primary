@@ -58,12 +58,8 @@ describe("agreement-pending reminders and cancellation contract (WRE-176)", () =
     const now = new Date("2026-10-09T10:00:00Z").getTime();
     const candidatesMorning = await t.query(internal.notifications.agreementPendingCandidates, { now, slot: "am" });
 
-    // There should be 4 candidates:
-    // 1. Guest 1 candidate
-    // 2. Host candidate for Guest 1
-    // 3. Guest 2 candidate
-    // 4. Host candidate for Guest 2
-    expect(candidatesMorning).toHaveLength(4);
+    // Consolidated host reminders: exactly 3 candidates (Guest 1, Guest 2, and 1 consolidated Host reminder)
+    expect(candidatesMorning).toHaveLength(3);
 
     const guest1Candidate = candidatesMorning.find((c) => c.data.recipientRole === "guest" && c.data.guestName === "Alex Guest");
     expect(guest1Candidate).toBeDefined();
@@ -74,9 +70,12 @@ describe("agreement-pending reminders and cancellation contract (WRE-176)", () =
     expect(guest1Candidate?.data.rate).toBe("$250");
     expect(guest1Candidate?.data.cadence).toBe("weekly");
 
-    const hostForGuest1Candidate = candidatesMorning.find((c) => c.data.recipientRole === "host" && c.data.guestName === "Alex Guest");
-    expect(hostForGuest1Candidate).toBeDefined();
-    expect(hostForGuest1Candidate?.cancellationKey).toBe(`agreement-pending:${stayId}:${hostForGuest1Candidate?.userId}:${guest1Candidate?.userId}`);
+    const hostConsolidatedCandidate = candidatesMorning.find((c) => c.data.recipientRole === "host");
+    expect(hostConsolidatedCandidate).toBeDefined();
+    expect(hostConsolidatedCandidate?.data.unsignedGuestCount).toBe(2);
+    expect(hostConsolidatedCandidate?.data.guestName).toContain("Alex Guest");
+    expect(hostConsolidatedCandidate?.data.guestName).toContain("Taylor Guest");
+    expect(hostConsolidatedCandidate?.cancellationKey).toBe(`agreement-pending:${stayId}:${hostConsolidatedCandidate?.userId}`);
 
     // Verify deduplication: when recorded as sent, candidate is omitted
     await t.mutation(internal.notifications.recordSent, {
@@ -87,13 +86,17 @@ describe("agreement-pending reminders and cancellation contract (WRE-176)", () =
     });
 
     const candidatesAfterSent = await t.query(internal.notifications.agreementPendingCandidates, { now, slot: "am" });
-    expect(candidatesAfterSent).toHaveLength(3);
-    expect(candidatesAfterSent.find((c) => c.entityId === guest1Candidate!.entityId)).toBeUndefined();
+    expect(candidatesAfterSent).toHaveLength(2);
+    expect(candidatesAfterSent.find((c) => c.userId === guest1Candidate!.userId)).toBeUndefined();
 
-    // In evening slot ("pm"), a new entityId is generated so the candidate is ready for the evening notification
+    // Global daily cap: in evening slot on the same day, guest1 is suppressed (at most 1 reminder per day)
     const candidatesEvening = await t.query(internal.notifications.agreementPendingCandidates, { now, slot: "pm" });
-    expect(candidatesEvening.find((c) => c.userId === guest1Candidate!.userId)).toBeDefined();
-    expect(candidatesEvening.find((c) => c.userId === guest1Candidate!.userId)?.entityId).toContain(":pm");
+    expect(candidatesEvening.find((c) => c.userId === guest1Candidate!.userId)).toBeUndefined();
+
+    // On the next calendar day, if still unsigned, guest1 is eligible again
+    const nextDay = now + 86_400_000;
+    const candidatesNextDay = await t.query(internal.notifications.agreementPendingCandidates, { now: nextDay, slot: "am" });
+    expect(candidatesNextDay.find((c) => c.userId === guest1Candidate!.userId)).toBeDefined();
   });
 
   it("removes guest from candidates when guest accepts terms, and sets up cancellation call", async () => {
