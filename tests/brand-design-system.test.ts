@@ -2,6 +2,10 @@ import { describe, expect, it } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
 import { renderKouchdLogoSvgString } from "@/components/brand/kouchd-logo";
+import {
+  RELATABLE_BRAND_SHAPES,
+  RELATABLE_SHAPE_METADATA,
+} from "@/components/brand/brand-shapes";
 
 describe("Kouchd Brand Building Design System", () => {
   const rootDir = path.resolve(__dirname, "..");
@@ -90,5 +94,25 @@ describe("Kouchd Brand Building Design System", () => {
 
     // Must affirm that Kouchd does not move money
     expect(portal).toMatch(/does not move|never claim Kouchd moves|contributions are currently recorded/i);
+  });
+
+  it("verifies 6 relatable home motifs and metadata", () => {
+    expect(RELATABLE_BRAND_SHAPES).toEqual([
+      "cushion",
+      "lamp",
+      "mug",
+      "archway",
+      "common-ground",
+      "foliage",
+    ]);
+
+    for (const shape of RELATABLE_BRAND_SHAPES) {
+      const meta = RELATABLE_SHAPE_METADATA[shape];
+      expect(meta).toBeDefined();
+      expect(meta.name).toBeTruthy();
+      expect(meta.subtitle).toBeTruthy();
+      expect(meta.description).toBeTruthy();
+      expect(meta.metaphor).toBeTruthy();
+    }
   });
 });

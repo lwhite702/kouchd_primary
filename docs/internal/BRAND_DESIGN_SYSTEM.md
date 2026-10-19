@@ -34,7 +34,7 @@ This document specifies the architecture, tokens, components, and interactive to
    - Clearspace: `KouchdLogoClearspace` ($X/2$ rule).
    - SVG direct export: `renderKouchdLogoSvgString`.
 2. `BrandGraphic` / `BrandShape` (`components/brand/brand-shapes.tsx`):
-   - 6 geometric shapes: `globe`, `squares`, `net`, `triangle`, `halo`, `inception`.
+   - 6 signature relatable home motifs: `cushion` (open seat & comfort), `lamp` (evening glow & sanctuary), `mug` (morning cup & shared rituals), `archway` (open door & hospitality), `common-ground` (shared space & harmony), `foliage` (houseplants & lived-in care). Retains backwards compatibility for legacy types (`globe`, `squares`, `net`, `triangle`, `halo`, `inception`).
    - `BrandImageMask`: asymmetric rounded-corner masks (`16px 90px 16px 16px`).
    - `BrandIllustrationCard`: homey scene illustrations (`kitchen`, `ledger`, `agreement`, `checkin`).
 3. Web Elements:
