@@ -1182,11 +1182,12 @@ function LiveStay({ stayId, onBackToHub }: { stayId: Id<"stays">; onBackToHub: (
                         ? actor.person.name
                         : item.actorUserId === bundle.membership.userId ? "You" : "A household member";
                       const initials = actorName.split(" ").map((part) => part[0]).join("").slice(0, 2).toUpperCase();
-                      const isContributionActivity = item.action.includes("contribution") || item.action.includes("payment");
+                      const isContributionActivity = item.kind === "contribution" || item.action.includes("contribution") || item.action.includes("payment");
+                      const isChoreActivity = item.kind === "chore" || item.action.includes("chore");
                       const isConfirmedActivity = item.action.includes("confirm");
                       const activityLabel = isContributionActivity
                         ? isConfirmedActivity ? "confirmed a contribution record" : "recorded a contribution"
-                        : item.action.includes("chore") ? "updated a shared chore" : item.action.replaceAll("_", " ");
+                        : isChoreActivity ? "updated a shared chore" : item.action.replaceAll("_", " ");
                       const activityStatus = isContributionActivity ? isConfirmedActivity ? "Confirmed" : "Recorded" : "Logged";
                       return <article className="host-workspace-activity-row" key={item._id}>
                         <span className={`host-workspace-avatar host-workspace-activity-avatar ${actor?.membership.role === "host" ? "host" : "guest"}`} aria-hidden="true">{initials}</span>
