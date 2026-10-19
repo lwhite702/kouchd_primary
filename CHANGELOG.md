@@ -9,6 +9,7 @@
 ### Added
 
 - Gated native RevenueCat subscription controls for household hosts, including store-provided offerings, purchase, restore, subscription management, Clerk identity coordination, and server-authoritative Convex plan status. Checked-in configurations keep native purchases disabled until App Store, RevenueCat, sandbox, and TestFlight verification is complete.
+- Kouchd Brand Building Design System based on Figma specifications: 11-step color scales (forest, lime, warm paper/ink neutrals, sage, sky, coral, and functional tokens), Manrope and Inter typography pairing, brand logo lockups and vector SVG export, geometric brand shapes and asymmetric image masks, reusable web UI elements (BrandButton, BrandSocialButton, BrandTag, BrandSpacer, BrandDivider, BrandCard), and an interactive `/brand` guidelines portal with 16:10 deck viewer, asset repository, social media kits, and 10-slide marketing carousels.
 - Twice-daily Knock reminders for unsigned stay agreements, role-aware host and guest payloads with direct terms deep links, and automated reminder cancellation on terms acceptance.
 - Native introduction UI regression tests with a Debug-only offline test host; Release entry behavior is unchanged.
 - Multi-tier feature flag system with client dev overrides, platform database kill-switches, PostHog Cloud synchronization, and typed code defaults.
@@ -28,6 +29,7 @@
 
 ### Changed
 
+- Redesigned the `/brand` brand guidelines tab into a user-friendly, responsive, scrollable editorial reference with sticky section quick-jump navigation, interactive 11-step color scale ramps with click-to-copy tokens, live typography playground, clearspace diagrams, approved vs. prohibited messaging matrix, and an optional 16:10 presentation deck viewer mode.
 - Corrected public landing-page examples to match the current Ledger and host-scheduled check-in behavior; added compact tablet navigation while retaining access to all header links.
 - Native cream backgrounds, cards, text, separators, and controls now adapt to dark appearance while retaining Kouchd's forest-and-lime identity; taller introduction pages stay within the safe area and scroll behind an opaque footer.
 - Native screen entrances and primary-button feedback use restrained springs and respect Reduce Motion; live document lists retain stable IDs and stale account/stay responses are ignored.

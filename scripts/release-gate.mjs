@@ -48,7 +48,12 @@ try {
 }
 const runtime = changed.some((path) => {
   if (/\.(md|mdx)$/.test(path)) return false;
-  return /^(app|components|convex|ios|lib|worker|scripts)\//.test(path)
+  if (/^scripts\//.test(path)) return false;
+  // Edits to the landing page and the brand center do not affect the version number
+  if (/^(app\/brand|app\/brand-system\.css|components\/brand|components\/ui\/brand-|components\/landing|app\/page\.tsx|public\/brand|public\/landing)/.test(path)) {
+    return false;
+  }
+  return /^(app|components|convex|ios|lib|worker)\//.test(path)
     || /^(package(?:-lock)?\.json|next\.config\.ts)$/.test(path);
 });
 if (runtime && (!unreleased || unreleased.length < 60)) throw new Error("A substantive [Unreleased] changelog entry is required");

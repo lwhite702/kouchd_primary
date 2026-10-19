@@ -1,5 +1,5 @@
 {
-  "version": "0.5.2",
+  "version": "0.6.1",
   "type": "patch",
   "reason": "Add gated native RevenueCat purchase, restore, subscription management, and identity-safety flows."
 }

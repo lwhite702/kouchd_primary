@@ -4,52 +4,67 @@ description: Record payments made outside Kouchd and track confirmed credits in 
 ---
 
 <Tip>
-  The ledger is a transparent mutual ledger. You log contributions you make, and once confirmed by your host, credits are applied to your balance.
+  The ledger is a transparent mutual record. You record payments or expenses you cover, and once confirmed by your host, credits are applied to your balance.
 </Tip>
 
-Kouchd records contributions; it does not process payments. You and your host use the ledger to keep a shared record of what was agreed and what has been confirmed.
+Kouchd records contributions; it does not process payments. You and your host use the ledger to keep a shared, accurate record of what was agreed and what has been confirmed.
 
-## Pay the host outside Kouchd
+## Pay your host outside Kouchd
 
 <Info>
-  **Outside payment methods:** Open **Stay** to view payment handles your host provided for PayPal, Cash App, Zelle, or Apple Pay. Always verify account handles before sending money.
+  **Outside payment methods:** Open **Stay** to view the direct payment handles your host provided for PayPal, Cash App, Zelle, or Apple Pay. Always verify account handles before sending money.
 </Info>
 
 Kouchd does not collect or transfer money directly, so external payments are not automatically tracked until recorded in the ledger.
 
 ## Record a contribution
 
+![Record a contribution in Kouchd](/help/images/add-contribution-modal.png)
+
 <Steps>
-  <Step title="Open Ledger and choose Add contribution">
-    Navigate to **Ledger** and select the **Add contribution** button.
+  <Step title="Open Ledger and select Add contribution">
+    Navigate to **Ledger** in your app navigation and select the **+ Add contribution** button.
   </Step>
-  <Step title="Enter contribution details">
-    Choose the contribution type (direct payment, groceries, household supplies), enter the dollar amount, and pick the payment date.
+  <Step title="Choose contribution category">
+    Select the category that best describes your contribution:
+    - **Direct payment**: Money sent via PayPal, Cash App, Zelle, Apple Pay, or cash.
+    - **Groceries & pantry**: Shared food or kitchen restocks agreed with your host.
+    - **Household supplies**: Cleaning supplies, paper towels, or household staples.
+    - **Other agreed help**: Special shared costs discussed with your host.
   </Step>
-  <Step title="Submit for confirmation">
-    Add an optional note to help identify the transaction and submit. The entry remains pending until confirmed by your host.
+  <Step title="Enter amount and date">
+    Enter the exact dollar amount and select the date the payment was sent or the purchase was made.
+  </Step>
+  <Step title="Add a note and submit">
+    Add an optional note (such as "Week 2 contribution sent via Zelle") to help your host quickly identify and verify the transaction. Select **Record contribution**.
   </Step>
 </Steps>
 
+## Understanding status transitions
+
+- **Pending confirmation**: The entry is logged on your ledger and is visible to your host. Pending entries do not count toward confirmed progress until your host reviews them.
+- **Confirmed**: Your host has verified the outside payment or purchase receipt. The credit is immediately applied to your oldest outstanding obligation.
+- **Unconfirmed or mismatched entries**: If an entry's details require adjustment, leave it unconfirmed and coordinate with your host to re-record the contribution with the agreed amount and date.
+
+## Reading your progress display
+
+The progress bar on **Home** and **Ledger** shows the confirmed credit against scheduled charges, along with your remaining balance and upcoming due dates.
+
 <Note>
-  **Credit priority:** Once confirmed, contributions count toward the ledger. Kouchd automatically applies confirmed credits to the oldest outstanding charge first.
+  **Credit priority:** Once confirmed, contributions automatically apply to your oldest outstanding obligation first to keep payment accounting straightforward.
 </Note>
-
-## Read the progress display
-
-The progress bar shows the confirmed amount against that charge. The ledger also shows the remaining balance and due date. Pending or disputed entries do not count as confirmed progress.
 
 <CardGroup cols={2}>
   <Card title="Quickstart guide" icon="bolt" href="/help/quickstart">
     Overview of household setup and contribution tracking.
   </Card>
-  <Card title="Kouchd Coins & rewards" icon="coins" href="/help/guests/kouchd-coins">
+  <Card title="Kouchd Coins and house rewards" icon="coins" href="/help/guests/kouchd-coins">
     Earn ledger credits through approved chores and household tasks.
   </Card>
-  <Card title="Pricing & terms" icon="circle-dollar-sign" href="/help/hosts/pricing-and-terms">
+  <Card title="Pricing, payment timing, and terms" icon="circle-dollar-sign" href="/help/hosts/pricing-and-terms">
     Understand rates, grace periods, and late fees.
   </Card>
-  <Card title="Privacy & records" icon="shield-check" href="/help/legal-trust/privacy-and-security">
-    Review visibility and ledger access boundaries.
+  <Card title="Privacy, data, and security" icon="shield-check" href="/help/legal-trust/privacy-and-security">
+    Review visibility and bilateral ledger access boundaries.
   </Card>
 </CardGroup>
