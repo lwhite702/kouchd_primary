@@ -1,5 +1,5 @@
 {
-  "version": "0.6.1",
+  "version": "0.6.2",
   "type": "patch",
-  "reason": "Add gated native RevenueCat purchase, restore, subscription management, and identity-safety flows."
+  "reason": "Streamline webapp entry point to route authenticated household workspace directly following the marketing split."
 }

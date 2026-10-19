@@ -14,6 +14,12 @@ Internal engineering record. This file is excluded from Mintlify navigation and 
 - Addressed PR #47 review findings: aligned referral code preview steps with implemented fields and moved full guidelines review to post-join onboarding; distinguished active membership creation from agreement acceptance using exact `Accept Terms & Enter Household` button label; removed periodic reward cap claims unenforced by backend mutations; aligned ledger recovery guidance and screenshot row controls with web workspace actions.
 - Validated with `mintlify validate` (build passed), `mintlify broken-links` (zero broken links), and `git diff --check`.
 
+## 2026-10-15 — Webapp entry streamlining and marketing architecture decoupling
+
+- Decoupled public marketing traffic (`kouchd.com` and `www.kouchd.com`) to a standalone Astro project (`kouchd-marketing`), enabling zero-JS static delivery and independent releases.
+- Streamlined `app/page.tsx` on `app.kouchd.com` by retiring runtime HTTP `Host` header sniffing and the `LandingPage` fallback; unauthenticated requests route directly to `/sign-in` while authenticated sessions render the household workspace.
+- Synchronized package and iOS marketing versions to `0.6.2` with patch release classification.
+
 ## 2026-10-12 — iOS navigation bar modernization and auth sheet loop resolution
 
 - Standardized navigation bars and toolbars across Kouchd iOS using `.kouchdNavigationBar(title:)`, toolbar placements (`.topBarLeading`, `.topBarTrailing`, `.primaryAction`, `.confirmationAction`, `.cancellationAction`), and sticky navigation bar styling.
