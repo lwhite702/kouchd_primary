@@ -1118,7 +1118,7 @@ function LiveStay({ stayId, onBackToHub }: { stayId: Id<"stays">; onBackToHub: (
               <button className="host-workspace-summary-card" type="button" onClick={() => setScreen("stay")}>
                 <span>Household</span><strong>{members.length}</strong><small>{members.length === 1 ? "person in the stay" : "people in the stay"}</small>
               </button>
-              <button className="host-workspace-summary-card host-workspace-summary-guide" type="button" onClick={() => setPanel("houseInfo")}>
+              <button className="host-workspace-summary-card host-workspace-summary-guide" type="button" onClick={() => (isEnded ? setScreen("stay") : setPanel("houseInfo"))}>
                 <span>House guide</span><strong>Open</strong><small>Household essentials</small>
               </button>
             </section>
@@ -1228,7 +1228,7 @@ function LiveStay({ stayId, onBackToHub }: { stayId: Id<"stays">; onBackToHub: (
                   <span className="host-workspace-eyebrow">House guide</span>
                   <h2>Keep the details close.</h2>
                   <p>Review the household essentials and shared notes in one place.</p>
-                  <button type="button" onClick={() => setPanel("houseInfo")}>Open house guide <ArrowRight size={15} /></button>
+                  <button type="button" onClick={() => (isEnded ? setScreen("stay") : setPanel("houseInfo"))}>Open house guide <ArrowRight size={15} /></button>
                 </section>
               </aside>
             </div>
