@@ -8,6 +8,7 @@
 
 ### Added
 
+- Implemented responsive desktop and compact mobile host workspace views with tabbed household overview, financial summaries, guest rosters, and chore coordination.
 - Gated native RevenueCat subscription controls for household hosts, including store-provided offerings, purchase, restore, subscription management, Clerk identity coordination, and server-authoritative Convex plan status. Checked-in configurations keep native purchases disabled until App Store, RevenueCat, sandbox, and TestFlight verification is complete.
 - Kouchd Brand Building Design System based on Figma specifications: 11-step color scales (forest, lime, warm paper/ink neutrals, sage, sky, coral, and functional tokens), Manrope and Inter typography pairing, brand logo lockups and vector SVG export, geometric brand shapes and asymmetric image masks, reusable web UI elements (BrandButton, BrandSocialButton, BrandTag, BrandSpacer, BrandDivider, BrandCard), and an interactive `/brand` guidelines portal with 16:10 deck viewer, asset repository, social media kits, and 10-slide marketing carousels.
 - Twice-daily Knock reminders for unsigned stay agreements, role-aware host and guest payloads with direct terms deep links, and automated reminder cancellation on terms acceptance.

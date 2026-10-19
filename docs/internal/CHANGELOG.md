@@ -2,6 +2,14 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-10-19 — Host workspace desktop and compact mobile implementation (WRE-198)
+
+- Implemented responsive host workspace overview for desktop and compact mobile based on approved Figma frames (`509-84` and `509-218`).
+- Integrated household member strip, daily shared summary counts, chore overview, contribution records, and recent stay activity feed.
+- Added ambient glass artwork assets in `public/host-workspace/` with fallback for reduced transparency.
+- Ensured ended stays route house guide actions to the read-only Stay screen.
+- Synchronized package and iOS marketing versions to `0.6.3` with patch release classification.
+
 ## 2026-10-19 — Kouchd Help Center documentation enhancement and visual overhaul
 
 - Overhauled core Help Center guides across `help/` for consistent brand voice, plainspoken warmth, and respectful tone.
