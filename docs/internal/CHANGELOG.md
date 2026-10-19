@@ -11,6 +11,7 @@ Internal engineering record. This file is excluded from Mintlify navigation and 
 - Added dedicated `add-contribution-modal.png` screenshot and step-by-step contribution logging guidance in `help/guests/logging-contributions.mdx`.
 - Removed orphaned and unreferenced duplicate file `help/using-notifications.mdx`.
 - Synchronized public changelog (`help/product/changelog.mdx`) with verified October 2026 product updates (v0.5.2 patch, brand building design tokens, app subdomain routing, and reminder caps).
+- Addressed PR #47 review findings: aligned referral code preview steps with implemented fields and moved full guidelines review to post-join onboarding; distinguished active membership creation from agreement acceptance using exact `Accept Terms & Enter Household` button label; removed periodic reward cap claims unenforced by backend mutations; aligned ledger recovery guidance and screenshot row controls with web workspace actions.
 - Validated with `mintlify validate` (build passed), `mintlify broken-links` (zero broken links), and `git diff --check`.
 
 ## 2026-10-12 — iOS navigation bar modernization and auth sheet loop resolution
