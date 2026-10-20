@@ -1,5 +1,5 @@
 {
-  "version": "0.6.8",
+  "version": "0.6.9",
   "type": "patch",
-  "reason": "Enforce reward balance and cumulative period credit caps, preserve weekly schedule remainder cents, and support host-reviewed overdue catch-up plans."
+  "reason": "Serve Replay QA site ownership nonce at /.well-known/replay-qa-security-nonce without authentication for security verification."
 }
