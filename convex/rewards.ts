@@ -114,6 +114,7 @@ export const getWallet = query({
         availablePoints: 0,
         earnedPoints: 0,
         redeemedPoints: 0,
+        periodRedeemedCents: 0,
         dollarEquivalentCents: 0,
         settings: { enabled: false, coinName: "Coins", centsPerPoint: 100, maxCreditPerPeriodCents: 0 },
         claims: [],
@@ -138,6 +139,24 @@ export const getWallet = query({
       .order("desc")
       .take(100);
 
+    const obligations = await ctx.db
+      .query("obligations")
+      .withIndex("by_stay", (q) => q.eq("stayId", stayId))
+      .collect();
+    const guestObligations = obligations.filter(
+      (o) => !o.voidedAt && (!o.guestUserId || o.guestUserId === guestUserId)
+    );
+    const today = new Date().toISOString().slice(0, 10);
+    const matchingObligation = guestObligations.find(
+      (o) => o.periodStart <= today && today <= o.periodEnd
+    );
+    const periodStart = matchingObligation ? matchingObligation.periodStart : today;
+    const periodEnd = matchingObligation ? matchingObligation.periodEnd : today;
+
+    const periodRedeemedCents = redemptions
+      .filter((r) => r.date >= periodStart && r.date <= periodEnd)
+      .reduce((sum, r) => sum + r.amountCents, 0);
+
     const earnedPoints = claims
       .filter((c) => c.status === "confirmed")
       .reduce((sum, c) => sum + c.points, 0);
@@ -150,6 +169,7 @@ export const getWallet = query({
       availablePoints,
       earnedPoints,
       redeemedPoints,
+      periodRedeemedCents,
       dollarEquivalentCents,
       settings,
       claims,

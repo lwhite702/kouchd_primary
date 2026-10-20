@@ -1,5 +1,5 @@
 {
-  "version": "0.6.7",
+  "version": "0.6.8",
   "type": "patch",
-  "reason": "Encode native numeric arguments as Float64 across stay, term, and contribution mutations, and fix dark-mode stat contrast."
+  "reason": "Enforce reward balance and cumulative period credit caps, preserve weekly schedule remainder cents, and support host-reviewed overdue catch-up plans."
 }

@@ -58,6 +58,7 @@ export function RewardsHub({
       availablePoints: wallet.availablePoints,
       centsPerPoint,
       maxCreditPerPeriodCents: settings?.maxCreditPerPeriodCents,
+      periodRedeemedCents: wallet.periodRedeemedCents,
       currentBalanceCents: Math.max(0, currentBalanceCents),
     });
   }, [wallet, centsPerPoint, settings, currentBalanceCents]);

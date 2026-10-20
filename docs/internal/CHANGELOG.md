@@ -2,6 +2,16 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-10-19 — Enforce reward caps, preserve schedule totals, and overdue recovery (WRE-184)
+
+- Enforced outstanding stay balance limit and cumulative period credit caps (`maxCreditPerPeriodCents`) for reward redemptions on the backend.
+- Returned `periodRedeemedCents` from `getWallet` and wired to `calculateMaxRedeemablePoints` in the rewards hub dialog.
+- Preserved remainder cents across weekly obligation periods so total scheduled cents strictly equal expected total.
+- Replaced punitive overdue reminder notification copy with supportive household communication.
+- Implemented `overdueRecoveryRequests` table and host review workflow for catch-up plans.
+- Synchronized package and iOS marketing versions to `0.6.8` with patch release classification.
+
+
 ## 2026-10-19 — Encode native numeric arguments as Float64 and dark mode stat contrast (WRE-195)
 
 - Converted native Swift integer values to `Double` across stay terms, ad-hoc charges, contributions, schedule requests, reward points, and household guide progress to prevent Convex schema validation rejection.
