@@ -1,5 +1,5 @@
 {
-  "version": "0.6.3",
+  "version": "0.6.4",
   "type": "patch",
-  "reason": "Implement responsive host workspace desktop and mobile layouts with tabbed overview, financials, guests, and chores."
+  "reason": "Add dedicated responsive About page and align marketing navigation with verified shared-living positioning."
 }
