@@ -793,6 +793,22 @@
   align-items: center;
   gap: 14px;
   width: 100%;
+  color: var(--v21-ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.v21-activity-row:hover {
+  border-color: var(--v21-forest);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
+}
+
+.v21-activity-row:focus-visible {
+  outline: 3px solid var(--v21-forest);
+  outline-offset: 3px;
 }
 
 .v21-activity-avatar {

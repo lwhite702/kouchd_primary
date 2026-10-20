@@ -75,6 +75,7 @@ const termsInput = {
 export const create = mutation({
   args: {
     name: v.optional(v.string()),
+    creationRequestId: v.optional(v.string()),
     timezone: v.string(),
     nextCheckInDate: v.optional(v.string()),
     houseInfo: v.optional(v.object(houseInfoInput)),
@@ -84,6 +85,18 @@ export const create = mutation({
   returns: v.id("stays"),
   handler: async (ctx, args) => {
     const user = await requireCurrentUser(ctx);
+    const creationRequestId = args.creationRequestId?.trim();
+    if (args.creationRequestId !== undefined && (!creationRequestId || creationRequestId.length > 100)) {
+      throw new Error("Stay creation request ID must be between 1 and 100 characters");
+    }
+    if (creationRequestId) {
+      const existing = await ctx.db.query("stays")
+        .withIndex("by_host_and_creation_request", (query) =>
+          query.eq("hostUserId", user._id).eq("creationRequestId", creationRequestId),
+        )
+        .first();
+      if (existing) return existing._id;
+    }
     const name = args.name?.trim();
     if (name !== undefined && (name.length < 2 || name.length > 80)) throw new Error("Stay name must be 2–80 characters");
     assertTimezone(args.timezone);
@@ -99,6 +112,7 @@ export const create = mutation({
       hostUserId: user._id,
       name,
       householdAccountId,
+      creationRequestId,
       status: "pending",
       timezone: args.timezone,
       referralCode,

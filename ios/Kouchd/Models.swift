@@ -225,6 +225,7 @@ enum KouchdRoute: Hashable {
   case chores
   case rewards
   case stay
+  case stayDetails(String)
   case occupancy
   case schedule
   case settings

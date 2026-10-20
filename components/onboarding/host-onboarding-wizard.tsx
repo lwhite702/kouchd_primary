@@ -74,6 +74,7 @@ export function HostOnboardingWizard({
 
   // Step 5: Submission
   const [saving, setSaving] = useState(false);
+  const [creationRequestId] = useState(() => crypto.randomUUID());
   const [error, setError] = useState("");
 
   const estimatedStayCharge = useMemo(() => {
@@ -147,6 +148,7 @@ export function HostOnboardingWizard({
         .join("\n\n");
 
       const stayId = await createStay({
+        creationRequestId,
         name: stayName.trim() || undefined,
         timezone,
         nextCheckInDate: nextCheckInDate || undefined,

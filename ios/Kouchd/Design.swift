@@ -70,7 +70,7 @@ struct Pill: View {
     Text(text.uppercased())
       .font(.caption2.weight(.bold))
       .tracking(1)
-      .foregroundStyle(Palette.brandForest)
+      .foregroundStyle(Palette.ink)
       .padding(.horizontal, 12).padding(.vertical, 7)
       .background(Palette.lime, in: Capsule())
   }
@@ -202,6 +202,7 @@ extension View {
       case .chores: ChoresScreen(store: store)
       case .rewards: RewardsScreen(store: store)
       case .stay: StayScreen(store: store)
+      case .stayDetails(let stayID): StayDetailsDestination(store: store, stayID: stayID)
       case .occupancy: OccupancyScreen(store: store)
       case .schedule: ScheduleScreen(store: store)
       case .settings: SettingsScreen(store: store)
@@ -227,6 +228,20 @@ extension View {
       case .adminUser(let id): AdminUserScreen(store: store, userID: id)
       case .adminStay(let id): AdminStayScreen(store: store, stayID: id)
       }
+    }
+  }
+}
+
+private struct StayDetailsDestination: View {
+  let store: KouchdStore
+  let stayID: String
+
+  var body: some View {
+    LoadedStayContent(loading: store.isStayLoading) {
+      StayScreen(store: store)
+    }
+    .task {
+      if store.selectedStayID != stayID { store.selectStay(stayID) }
     }
   }
 }

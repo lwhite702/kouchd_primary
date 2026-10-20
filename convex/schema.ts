@@ -90,6 +90,7 @@ export default defineSchema({
     hostUserId: v.id("users"),
     householdAccountId: v.optional(v.id("householdAccounts")),
     name: v.optional(v.string()),
+    creationRequestId: v.optional(v.string()),
     status: v.union(v.literal("pending"), v.literal("active"), v.literal("ended")),
     timezone: v.string(),
     referralCode: v.optional(v.string()),
@@ -129,6 +130,7 @@ export default defineSchema({
     .index("by_household_account", ["householdAccountId"])
     .index("by_host_user_status", ["hostUserId", "status"])
     .index("by_household_account_status", ["householdAccountId", "status"])
+    .index("by_host_and_creation_request", ["hostUserId", "creationRequestId"])
     .index("by_status", ["status"])
     .index("by_referral_code", ["referralCode"])
     .index("by_next_check_in_date", ["nextCheckInDate"]),
