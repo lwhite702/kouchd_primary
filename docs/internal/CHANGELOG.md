@@ -2,6 +2,17 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-10-19 — Cap and consolidate daily reminders per user (WRE-200)
+
+- Enforced a global limit of at most 1 reminder notification per user per calendar day across payment, agreement, chore, and check-in workflows.
+- Prioritized critical payment notices first, followed by agreements, chores, and check-ins.
+- Consolidated host agreement reminders for multiple unsigned guests into a single notification.
+- Consolidated multiple chores due on the same day into one notification with chore counts.
+- Reduced agreement-pending cron frequency from twice-daily to once-daily (13:30 UTC).
+- Updated `docs/NOTIFICATIONS.md` and added test coverage in `tests/daily-reminder-cap.test.ts`.
+- Synchronized package and iOS marketing versions to `0.6.5` with patch release classification.
+
+
 ## 2026-10-19 — Host workspace desktop and compact mobile implementation (WRE-198)
 
 - Implemented responsive host workspace overview for desktop and compact mobile based on approved Figma frames (`509-84` and `509-218`).
