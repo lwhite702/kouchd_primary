@@ -2,6 +2,15 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-10-19 — Search engine discoverability and crawl policies (WRE-175)
+
+- Added targeted `app/robots.ts` crawl policy permitting public marketing, legal, and brand routes while disallowing private, console, and authentication endpoints.
+- Added dynamic `app/sitemap.ts` generating canonical URLs with appropriate change frequencies and priorities for public routes.
+- Added explicit `noindex, nofollow` robots metadata to single-use invitation tokens and authentication screens (`/sign-in`, `/sign-up`, `/invite/[token]`).
+- Added canonical URL alternate metadata to `/sms-opt-in` to consolidate signals with `/sms`.
+- Synchronized package and iOS marketing versions to `0.6.6` with patch release classification.
+
+
 ## 2026-10-19 — Cap and consolidate daily reminders per user (WRE-200)
 
 - Enforced a global limit of at most 1 reminder notification per user per calendar day across payment, agreement, chore, and check-in workflows.

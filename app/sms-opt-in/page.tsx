@@ -6,6 +6,9 @@ export const metadata: Metadata = {
   title: "Text Message Opt-In & Acceptance Form | Kouchd",
   description:
     "Official SMS notification acceptance and opt-in form for Kouchd, operated by Wrelik Brands LLC.",
+  alternates: {
+    canonical: "/sms-opt-in",
+  },
 };
 
 export default function SmsOptInPage() {

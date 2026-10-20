@@ -17,15 +17,15 @@ export default function robots(): MetadataRoute.Robots {
           "/legal/",
         ],
         disallow: [
-          "/api/",
-          "/console/",
-          "/sign-in/",
-          "/sign-up/",
-          "/invite/",
-          "/_next/",
+          "/api",
+          "/console",
+          "/sign-in",
+          "/sign-up",
+          "/invite",
+          "/_next",
         ],
       },
     ],
-    sitemap: "https://www.kouchd.com/sitemap.xml",
+    sitemap: "https://kouchd.com/sitemap.xml",
   };
 }
