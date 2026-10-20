@@ -24,6 +24,13 @@ This file governs agent activity in the Kouchd repository. Read it before planni
 - The Wrelik Linear workspace is used for scoped engineering work. Keep Kouchd issues clearly named for Kouchd; do not file them under another product's project. If an appropriate team/project cannot be identified, report that instead of misclassifying work.
 - Figma holds design exploration. A Figma or feature branch is not proof that a design or capability has shipped.
 
+## Notion project context
+
+- The [Kouchd Notion project home](https://app.notion.com/p/3fe11f2a539081a2b2acd73ce496ef3c) is the canonical shared context and decision record for the whole app, including product direction, GTM, plans, PRDs, roadmap, status reports, and progress tracking.
+- Before material product or roadmap work, read the relevant Notion context and linked decisions/tasks. After an approved decision or material documentation update, sync the canonical Notion page and the relevant repository document in the same task.
+- Keep Notion product intent and plans distinct from execution state: source code and tests establish implementation, Linear establishes engineering-task status, and deployment/release evidence establishes availability. When these sources disagree, record the mismatch and reconcile it; do not silently treat a Notion plan or Linear status as proof of shipped behavior.
+- Keep app-wide decisions and reusable product context in Notion. Do not make a local `AGENTS.md` the only home for product direction; this file should point agents to Notion and preserve only operating rules needed to work safely in the repository.
+
 ## Required work protocol
 
 1. Inspect the current directory, branch, remote, commit graph, staged/unstaged/untracked files, and worktrees before editing or pulling.
