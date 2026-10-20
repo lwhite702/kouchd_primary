@@ -221,7 +221,7 @@ export const cancelAgreementPending = internalAction({
       console.warn("Knock cancel (self) failed:", e);
     }
 
-    // If guest accepted, also cancel host's reminder for this guest
+    // If guest accepted, also cancel host's reminder for this guest (both single and consolidated)
     if (role === "guest" && stay?.hostUserId) {
       try {
         await knock.workflows.cancel("agreement-pending", {
@@ -229,6 +229,13 @@ export const cancelAgreementPending = internalAction({
         });
       } catch (e) {
         console.warn("Knock cancel (host-for-guest) failed:", e);
+      }
+      try {
+        await knock.workflows.cancel("agreement-pending", {
+          cancellation_key: `agreement-pending:${stayId}:${stay.hostUserId}`,
+        });
+      } catch (e) {
+        console.warn("Knock cancel (host-consolidated) failed:", e);
       }
     }
     return null;

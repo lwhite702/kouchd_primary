@@ -1,5 +1,5 @@
 {
-  "version": "0.6.4",
+  "version": "0.6.5",
   "type": "patch",
-  "reason": "Add dedicated responsive About page and align marketing navigation with verified shared-living positioning."
+  "reason": "Cap and consolidate daily reminders per user to reduce notification fatigue across payments, agreements, chores, and check-ins."
 }

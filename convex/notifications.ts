@@ -196,15 +196,101 @@ export const getRecipient = internalQuery({
   },
 });
 
+export const REMINDER_WORKFLOWS = new Set([
+  "payment-due-reminder",
+  "agreement-pending",
+  "chore-reminder",
+  "check-in-reminder",
+]);
+
+export function extractNotificationCalendarDate(
+  notification: Doc<"notifications">,
+  timezone: string,
+  referenceNow?: number,
+): string | null {
+  const entityId = notification.entityId ?? "";
+
+  if (entityId.startsWith("agreement-pending:")) {
+    const match = entityId.match(/:(\d{4}-\d{2}-\d{2})(?::|$)/);
+    if (match) return match[1];
+  }
+
+  if (entityId.startsWith("chore:")) {
+    const match = entityId.match(/:(\d{4}-\d{2}-\d{2})$/);
+    if (match) return match[1];
+  }
+
+  if (entityId.startsWith("check-in:")) {
+    const match = entityId.match(/:(\d{4}-\d{2}-\d{2})$/);
+    if (match) return addCalendarDays(match[1], -1);
+  }
+
+  if (entityId.startsWith("obligation:")) {
+    const dueSoonMatch = entityId.match(/:due-soon:(\d{4}-\d{2}-\d{2})$/);
+    if (dueSoonMatch) return addCalendarDays(dueSoonMatch[1], -1);
+
+    const dueTodayMatch = entityId.match(/:due-today:(\d{4}-\d{2}-\d{2})$/);
+    if (dueTodayMatch) return dueTodayMatch[1];
+
+    const trailingDateMatch = entityId.match(/:(\d{4}-\d{2}-\d{2})$/);
+    if (trailingDateMatch) return trailingDateMatch[1];
+  }
+
+  if (referenceNow === undefined || Math.abs(notification.sentAt - referenceNow) <= 36 * 60 * 60 * 1000) {
+    return calendarDateInTimezone(new Date(notification.sentAt), timezone);
+  }
+
+  return null;
+}
+
+export async function hasUserReceivedReminderOnDate(
+  ctx: QueryCtx,
+  userId: Id<"users">,
+  localDate: string,
+  timezone: string,
+  referenceNow: number,
+  cache?: Map<string, Doc<"notifications">[]>,
+): Promise<boolean> {
+  const key = userId.toString();
+  let userNotifications = cache?.get(key);
+  if (!userNotifications) {
+    userNotifications = await ctx.db
+      .query("notifications")
+      .withIndex("by_user", (query) => query.eq("userId", userId))
+      .collect();
+    cache?.set(key, userNotifications);
+  }
+  return userNotifications.some((n) => {
+    if (!REMINDER_WORKFLOWS.has(n.workflow)) return false;
+    return extractNotificationCalendarDate(n, timezone, referenceNow) === localDate;
+  });
+}
+
 export const wasSent = internalQuery({
-  args: { userId: v.id("users"), workflow: v.string(), entityId: v.optional(v.string()) },
+  args: {
+    userId: v.id("users"),
+    workflow: v.string(),
+    entityId: v.optional(v.string()),
+    stayId: v.optional(v.id("stays")),
+    now: v.optional(v.number()),
+  },
   returns: v.boolean(),
   handler: async (ctx, args) => {
     const existing = await ctx.db
       .query("notifications")
       .withIndex("by_user_workflow_and_entity", (query) => query.eq("userId", args.userId).eq("workflow", args.workflow).eq("entityId", args.entityId))
       .take(1);
-    return existing.length > 0;
+    if (existing.length > 0) return true;
+
+    if (REMINDER_WORKFLOWS.has(args.workflow)) {
+      const stay = args.stayId ? await ctx.db.get(args.stayId) : null;
+      const timezone = stay?.timezone ?? "UTC";
+      const now = args.now ?? Date.now();
+      const localToday = calendarDateInTimezone(new Date(now), timezone);
+      return await hasUserReceivedReminderOnDate(ctx, args.userId, localToday, timezone, now);
+    }
+
+    return false;
   },
 });
 
@@ -216,6 +302,7 @@ export const recordSent = internalMutation({
     entityId: v.optional(v.string()),
     detail: v.optional(v.string()),
     action: v.optional(v.string()),
+    sentAt: v.optional(v.number()),
   },
   returns: v.null(),
   handler: async (ctx, args) => {
@@ -224,12 +311,13 @@ export const recordSent = internalMutation({
       .withIndex("by_user_workflow_and_entity", (query) => query.eq("userId", args.userId).eq("workflow", args.workflow).eq("entityId", args.entityId))
       .take(1);
     if (existing.length === 0) {
+      const sentTime = args.sentAt ?? Date.now();
       await ctx.db.insert("notifications", {
         userId: args.userId,
         stayId: args.stayId,
         workflow: args.workflow,
         entityId: args.entityId,
-        sentAt: Date.now(),
+        sentAt: sentTime,
       });
       if (args.stayId && args.detail) {
         await ctx.db.insert("activity", {
@@ -240,7 +328,7 @@ export const recordSent = internalMutation({
           action: args.action ?? "payment_reminder",
           detail: args.detail,
           entityId: args.entityId,
-          createdAt: Date.now(),
+          createdAt: sentTime,
         });
       }
     }
@@ -259,39 +347,48 @@ export const reminderCandidates = internalQuery({
       entityId: string;
       data: Record<string, unknown>;
     }> = [];
+    const scheduledUsersToday = new Set<string>();
+    const userNotificationsCache = new Map<string, Doc<"notifications">[]>();
+
     const utcToday = calendarDateInTimezone(new Date(now), "UTC");
     const minDate = addCalendarDays(utcToday, -1);
     const maxDate = addCalendarDays(utcToday, 2);
 
-    const stays = await ctx.db.query("stays").withIndex("by_next_check_in_date", (query) =>
-      query.gte("nextCheckInDate", minDate).lte("nextCheckInDate", maxDate),
-    ).take(500);
-    for (const stay of stays) {
-      const localToday = calendarDateInTimezone(new Date(now), stay.timezone);
-      const localTomorrow = addCalendarDays(localToday, 1);
-      if (stay.status === "ended" || stay.nextCheckInDate !== localTomorrow) continue;
-      const members = await ctx.db.query("memberships").withIndex("by_stay", (query) => query.eq("stayId", stay._id)).take(20);
-      const host = members.find((member) => member.role === "host");
-      const hostUser = host ? await ctx.db.get(host.userId) : null;
-      for (const member of members.filter((item) => item.status === "active")) {
-        candidates.push({
-          userId: member.userId,
-          stayId: stay._id,
-          workflow: "check-in-reminder",
-          entityId: `check-in:${stay._id}:${localTomorrow}`,
-          data: { stayName: "Shared stay", hostName: hostUser?.name ?? "Your host", checkInDate: localTomorrow },
-        });
-      }
-    }
-
+    // =========================================================================
+    // 1. PAYMENT DUE REMINDERS (Priority 1: Most Urgent, 1 per user)
+    // =========================================================================
     const obligationMinDate = addCalendarDays(utcToday, -180);
     const obligationMaxDate = addCalendarDays(utcToday, 2);
     const obligations = await ctx.db.query("obligations").withIndex("by_due_date", (query) =>
       query.gte("dueDate", obligationMinDate).lte("dueDate", obligationMaxDate),
     ).order("desc").take(1_000);
+
+    const PAYMENT_STAGE_RANK: Record<PaymentReminderStage, number> = {
+      upcoming: 1,
+      due_today: 2,
+      grace_overdue: 3,
+      grace_final: 4,
+      late_fee_warning: 5,
+      late_fee_assessed: 6,
+      critical_delinquency: 7,
+    };
+
     const ledgersByGuest = new Map<string, ReturnType<typeof calculateObligationLedger>>();
     const termsById = new Map<string, Doc<"terms"> | null>();
     const currentTermsByGuest = new Map<string, Doc<"terms"> | null>();
+    const bestPaymentCandidateByUser = new Map<string, {
+      candidate: {
+        userId: Id<"users">;
+        stayId: Id<"stays">;
+        workflow: string;
+        entityId: string;
+        data: Record<string, unknown>;
+      };
+      stageRank: number;
+      daysPastDue: number;
+      dueDate: string;
+    }>();
+
     for (const obligation of obligations) {
       const guestUserId = obligation.guestUserId;
       if (!guestUserId || obligation.voidedAt) continue;
@@ -300,6 +397,13 @@ export const reminderCandidates = internalQuery({
       const localToday = calendarDateInTimezone(new Date(now), stay.timezone);
       const localTomorrow = addCalendarDays(localToday, 1);
       if (obligation.dueDate > localTomorrow) continue;
+
+      const userKey = guestUserId.toString();
+      if (await hasUserReceivedReminderOnDate(ctx, guestUserId, localToday, stay.timezone, now, userNotificationsCache)) {
+        scheduledUsersToday.add(userKey);
+        continue;
+      }
+
       const guestKey = `${obligation.stayId}:${guestUserId}`;
       let terms = currentTermsByGuest.get(guestKey);
       if (terms === undefined && !currentTermsByGuest.has(guestKey)) {
@@ -430,18 +534,48 @@ export const reminderCandidates = internalQuery({
         terms: obligationTerms,
       });
 
-      candidates.push({
+      const candidate = {
         userId: guestUserId,
         stayId: obligation.stayId,
         workflow: "payment-due-reminder",
         entityId,
         data: reminderData,
-      });
+      };
+
+      const stageRank = PAYMENT_STAGE_RANK[stage];
+      const existing = bestPaymentCandidateByUser.get(userKey);
+      if (!existing) {
+        bestPaymentCandidateByUser.set(userKey, { candidate, stageRank, daysPastDue, dueDate: obligation.dueDate });
+      } else {
+        if (
+          stageRank > existing.stageRank ||
+          (stageRank === existing.stageRank && daysPastDue > existing.daysPastDue) ||
+          (stageRank === existing.stageRank && daysPastDue === existing.daysPastDue && obligation.dueDate < existing.dueDate)
+        ) {
+          bestPaymentCandidateByUser.set(userKey, { candidate, stageRank, daysPastDue, dueDate: obligation.dueDate });
+        }
+      }
     }
 
+    for (const [userKey, best] of bestPaymentCandidateByUser) {
+      candidates.push(best.candidate);
+      scheduledUsersToday.add(userKey);
+    }
+
+    // =========================================================================
+    // 2. CHORE REMINDERS (Priority 2: Consolidated to at most 1 per user)
+    // =========================================================================
     const chores = await ctx.db.query("chores").withIndex("by_due_date", (query) =>
       query.gte("dueDate", minDate).lte("dueDate", maxDate),
     ).take(1_000);
+
+    const choresByUser = new Map<string, Array<{
+      chore: Doc<"chores">;
+      userId: Id<"users">;
+      stayId: Id<"stays">;
+      localToday: string;
+    }>>();
+
     for (const chore of chores) {
       if (chore.completedAt || chore.voidedAt) continue;
       const stay = await ctx.db.get(chore.stayId);
@@ -452,19 +586,96 @@ export const reminderCandidates = internalQuery({
       const recipients = chore.assigneeUserId
         ? members.filter((member) => member.userId === chore.assigneeUserId && member.status === "active")
         : members.filter((member) => member.status === "active" && (chore.assignee === "shared" || member.role === chore.assignee));
+
       for (const member of recipients) {
+        const userKey = member.userId.toString();
+        if (scheduledUsersToday.has(userKey)) continue;
+        if (await hasUserReceivedReminderOnDate(ctx, member.userId, localToday, stay.timezone, now, userNotificationsCache)) {
+          scheduledUsersToday.add(userKey);
+          continue;
+        }
+
         const entityId = `chore:${chore._id}:${localToday}`;
         const alreadySent = await ctx.db.query("notifications")
           .withIndex("by_user_workflow_and_entity", (query) => query.eq("userId", member.userId).eq("workflow", "chore-reminder").eq("entityId", entityId))
           .first();
         if (alreadySent) continue;
+
+        let list = choresByUser.get(userKey);
+        if (!list) {
+          list = [];
+          choresByUser.set(userKey, list);
+        }
+        list.push({ chore, userId: member.userId, stayId: chore.stayId, localToday });
+      }
+    }
+
+    for (const [userKey, choreItems] of choresByUser) {
+      if (choreItems.length === 0 || scheduledUsersToday.has(userKey)) continue;
+      const first = choreItems[0];
+      const choreTitle = choreItems.length === 1
+        ? first.chore.title
+        : `${first.chore.title} and ${choreItems.length - 1} more chore${choreItems.length - 1 === 1 ? "" : "s"}`;
+
+      candidates.push({
+        userId: first.userId,
+        stayId: first.stayId,
+        workflow: "chore-reminder",
+        entityId: `chore:${first.chore._id}:${first.localToday}`,
+        data: {
+          choreTitle,
+          dueDate: first.chore.dueDate,
+          choreCount: choreItems.length,
+          additionalChoresCount: choreItems.length - 1,
+        },
+      });
+      scheduledUsersToday.add(userKey);
+    }
+
+    // =========================================================================
+    // 3. CHECK-IN REMINDERS (Priority 3: Upcoming stay check-in tomorrow)
+    // =========================================================================
+    const stays = await ctx.db.query("stays").withIndex("by_next_check_in_date", (query) =>
+      query.gte("nextCheckInDate", minDate).lte("nextCheckInDate", maxDate),
+    ).take(500);
+
+    for (const stay of stays) {
+      const localToday = calendarDateInTimezone(new Date(now), stay.timezone);
+      const localTomorrow = addCalendarDays(localToday, 1);
+      if (stay.status === "ended" || stay.nextCheckInDate !== localTomorrow) continue;
+      const members = await ctx.db.query("memberships").withIndex("by_stay", (query) => query.eq("stayId", stay._id)).take(20);
+      const host = members.find((member) => member.role === "host");
+      const hostUser = host ? await ctx.db.get(host.userId) : null;
+
+      for (const member of members.filter((item) => item.status === "active")) {
+        const userKey = member.userId.toString();
+        if (scheduledUsersToday.has(userKey)) continue;
+        if (await hasUserReceivedReminderOnDate(ctx, member.userId, localToday, stay.timezone, now, userNotificationsCache)) {
+          scheduledUsersToday.add(userKey);
+          continue;
+        }
+
+        const entityId = `check-in:${stay._id}:${localTomorrow}`;
+        const alreadySent = await ctx.db
+          .query("notifications")
+          .withIndex("by_user_workflow_and_entity", (query) =>
+            query.eq("userId", member.userId).eq("workflow", "check-in-reminder").eq("entityId", entityId),
+          )
+          .first();
+        if (alreadySent) continue;
+
         candidates.push({
           userId: member.userId,
-          stayId: chore.stayId,
-          workflow: "chore-reminder",
+          stayId: stay._id,
+          workflow: "check-in-reminder",
           entityId,
-          data: { choreTitle: chore.title, dueDate: chore.dueDate },
+          data: {
+            stayName: stay.houseInfo?.streetAddress ? `Stay at ${stay.houseInfo.streetAddress}` : stay.name ?? "Shared stay",
+            hostName: hostUser?.name ?? "Your host",
+            checkInDate: localTomorrow,
+          },
         });
+        scheduledUsersToday.add(userKey);
       }
     }
 
@@ -557,6 +768,8 @@ async function collectAgreementPendingCandidatesForStays(
     guestUserId?: Id<"users">;
     data: Record<string, unknown>;
   }> = [];
+  const scheduledUsersToday = new Set<string>();
+  const userNotificationsCache = new Map<string, Doc<"notifications">[]>();
 
   for (const stay of stays) {
     if (stay.status === "ended" || !stay.currentTermsId) continue;
@@ -573,6 +786,11 @@ async function collectAgreementPendingCandidatesForStays(
     if (!defaultTerms) continue;
 
     const termsUrl = buildTermsUrl(stay._id);
+    const unsignedGuestsForStay: Array<{
+      guestMembership: Doc<"memberships">;
+      guestUser: Doc<"users"> | null;
+      termsToUse: Doc<"terms">;
+    }> = [];
 
     // Check each guest
     for (const guestMembership of guestMemberships) {
@@ -582,104 +800,181 @@ async function collectAgreementPendingCandidatesForStays(
 
       const isGuestUnsigned = !guestMembership.acceptedTermsId || guestMembership.acceptedTermsId !== termsToUse._id;
       if (isGuestUnsigned) {
-        // Candidate for guest
-        const guestEntityId = `agreement-pending:${stay._id}:${guestMembership.userId}:${localDate}:${determinedSlot}`;
-        const guestCancellationKey = `agreement-pending:${stay._id}:${guestMembership.userId}`;
+        unsignedGuestsForStay.push({ guestMembership, guestUser, termsToUse });
 
-        const guestAlreadySent = await ctx.db
-          .query("notifications")
-          .withIndex("by_user_workflow_and_entity", (query) =>
-            query.eq("userId", guestMembership.userId).eq("workflow", "agreement-pending").eq("entityId", guestEntityId),
-          )
-          .first();
+        const guestUserKey = guestMembership.userId.toString();
+        if (!scheduledUsersToday.has(guestUserKey)) {
+          const alreadyReceived = await hasUserReceivedReminderOnDate(
+            ctx,
+            guestMembership.userId,
+            localDate,
+            stay.timezone,
+            now,
+            userNotificationsCache,
+          );
+          if (!alreadyReceived) {
+            const guestEntityId = `agreement-pending:${stay._id}:${guestMembership.userId}:${localDate}:${determinedSlot}`;
+            const guestCancellationKey = `agreement-pending:${stay._id}:${guestMembership.userId}`;
 
-        if (!guestAlreadySent) {
-          candidates.push({
-            userId: guestMembership.userId,
-            stayId: stay._id,
-            workflow: "agreement-pending",
-            entityId: guestEntityId,
-            cancellationKey: guestCancellationKey,
-            expectedTermsId: termsToUse._id,
-            recipientRole: "guest",
-            guestUserId: guestMembership.userId,
-            data: buildAgreementPendingPayload({
-              recipientRole: "guest",
-              stay,
-              hostUser,
-              guestUser,
-              terms: termsToUse,
-              termsUrl,
-            }),
-          });
-        }
+            const guestAlreadySent = await ctx.db
+              .query("notifications")
+              .withIndex("by_user_workflow_and_entity", (query) =>
+                query.eq("userId", guestMembership.userId).eq("workflow", "agreement-pending").eq("entityId", guestEntityId),
+              )
+              .first();
 
-        // Candidate for host (alerting host about this unsigned guest)
-        if (hostMembership && stay.hostUserId) {
-          const hostEntityId = `agreement-pending:${stay._id}:${stay.hostUserId}:${guestMembership.userId}:${localDate}:${determinedSlot}`;
-          const hostCancellationKey = `agreement-pending:${stay._id}:${stay.hostUserId}:${guestMembership.userId}`;
-
-          const hostAlreadySent = await ctx.db
-            .query("notifications")
-            .withIndex("by_user_workflow_and_entity", (query) =>
-              query.eq("userId", stay.hostUserId).eq("workflow", "agreement-pending").eq("entityId", hostEntityId),
-            )
-            .first();
-
-          if (!hostAlreadySent) {
-            candidates.push({
-              userId: stay.hostUserId,
-              stayId: stay._id,
-              workflow: "agreement-pending",
-              entityId: hostEntityId,
-              cancellationKey: hostCancellationKey,
-              expectedTermsId: termsToUse._id,
-              recipientRole: "host",
-              guestUserId: guestMembership.userId,
-              data: buildAgreementPendingPayload({
-                recipientRole: "host",
-                stay,
-                hostUser,
-                guestUser,
-                terms: termsToUse,
-                termsUrl,
-              }),
-            });
+            if (!guestAlreadySent) {
+              candidates.push({
+                userId: guestMembership.userId,
+                stayId: stay._id,
+                workflow: "agreement-pending",
+                entityId: guestEntityId,
+                cancellationKey: guestCancellationKey,
+                expectedTermsId: termsToUse._id,
+                recipientRole: "guest",
+                guestUserId: guestMembership.userId,
+                data: buildAgreementPendingPayload({
+                  recipientRole: "guest",
+                  stay,
+                  hostUser,
+                  guestUser,
+                  terms: termsToUse,
+                  termsUrl,
+                }),
+              });
+              scheduledUsersToday.add(guestUserKey);
+            }
           }
         }
       }
     }
 
-    // If host themself has not accepted currentTermsId
-    if (hostMembership && stay.hostUserId && (!hostMembership.acceptedTermsId || hostMembership.acceptedTermsId !== stay.currentTermsId)) {
-      const hostSelfEntityId = `agreement-pending:${stay._id}:${stay.hostUserId}:${localDate}:${determinedSlot}`;
-      const hostSelfCancellationKey = `agreement-pending:${stay._id}:${stay.hostUserId}`;
+    // Consolidated host agreement reminder: at most 1 per host/stay per day
+    if (hostMembership && stay.hostUserId) {
+      const hostUserKey = stay.hostUserId.toString();
+      if (!scheduledUsersToday.has(hostUserKey)) {
+        const hostAlreadyReceived = await hasUserReceivedReminderOnDate(
+          ctx,
+          stay.hostUserId,
+          localDate,
+          stay.timezone,
+          now,
+          userNotificationsCache,
+        );
+        if (!hostAlreadyReceived) {
+          if (unsignedGuestsForStay.length > 0) {
+            if (unsignedGuestsForStay.length === 1) {
+              const single = unsignedGuestsForStay[0];
+              const hostEntityId = `agreement-pending:${stay._id}:${stay.hostUserId}:${single.guestMembership.userId}:${localDate}:${determinedSlot}`;
+              const hostCancellationKey = `agreement-pending:${stay._id}:${stay.hostUserId}:${single.guestMembership.userId}`;
 
-      const hostSelfAlreadySent = await ctx.db
-        .query("notifications")
-        .withIndex("by_user_workflow_and_entity", (query) =>
-          query.eq("userId", stay.hostUserId).eq("workflow", "agreement-pending").eq("entityId", hostSelfEntityId),
-        )
-        .first();
+              const hostAlreadySent = await ctx.db
+                .query("notifications")
+                .withIndex("by_user_workflow_and_entity", (query) =>
+                  query.eq("userId", stay.hostUserId).eq("workflow", "agreement-pending").eq("entityId", hostEntityId),
+                )
+                .first();
 
-      if (!hostSelfAlreadySent) {
-        candidates.push({
-          userId: stay.hostUserId,
-          stayId: stay._id,
-          workflow: "agreement-pending",
-          entityId: hostSelfEntityId,
-          cancellationKey: hostSelfCancellationKey,
-          expectedTermsId: defaultTerms._id,
-          recipientRole: "host",
-          data: buildAgreementPendingPayload({
-            recipientRole: "host",
-            stay,
-            hostUser,
-            guestUser: null,
-            terms: defaultTerms,
-            termsUrl,
-          }),
-        });
+              if (!hostAlreadySent) {
+                candidates.push({
+                  userId: stay.hostUserId,
+                  stayId: stay._id,
+                  workflow: "agreement-pending",
+                  entityId: hostEntityId,
+                  cancellationKey: hostCancellationKey,
+                  expectedTermsId: single.termsToUse._id,
+                  recipientRole: "host",
+                  guestUserId: single.guestMembership.userId,
+                  data: buildAgreementPendingPayload({
+                    recipientRole: "host",
+                    stay,
+                    hostUser,
+                    guestUser: single.guestUser,
+                    terms: single.termsToUse,
+                    termsUrl,
+                  }),
+                });
+                scheduledUsersToday.add(hostUserKey);
+              }
+            } else {
+              // Multiple unsigned guests: consolidate into at most 1 reminder
+              const primary = unsignedGuestsForStay[0];
+              const guestNames = unsignedGuestsForStay.map((g) =>
+                g.guestUser?.name && g.guestUser.name !== "Kouchd member" ? g.guestUser.name : "Guest",
+              );
+              const hostEntityId = `agreement-pending:${stay._id}:${stay.hostUserId}:consolidated:${localDate}:${determinedSlot}`;
+              const hostCancellationKey = `agreement-pending:${stay._id}:${stay.hostUserId}`;
+
+              const hostAlreadySent = await ctx.db
+                .query("notifications")
+                .withIndex("by_user_workflow_and_entity", (query) =>
+                  query.eq("userId", stay.hostUserId).eq("workflow", "agreement-pending").eq("entityId", hostEntityId),
+                )
+                .first();
+
+              if (!hostAlreadySent) {
+                const formattedRate = formatCents(primary.termsToUse.rateCents);
+                const detail = `Agreement pending review by ${unsignedGuestsForStay.length} guests (${guestNames.join(", ")}) (${formattedRate} / ${primary.termsToUse.cadence})`;
+                candidates.push({
+                  userId: stay.hostUserId,
+                  stayId: stay._id,
+                  workflow: "agreement-pending",
+                  entityId: hostEntityId,
+                  cancellationKey: hostCancellationKey,
+                  expectedTermsId: primary.termsToUse._id,
+                  recipientRole: "host",
+                  guestUserId: primary.guestMembership.userId,
+                  data: {
+                    ...buildAgreementPendingPayload({
+                      recipientRole: "host",
+                      stay,
+                      hostUser,
+                      guestUser: primary.guestUser,
+                      terms: primary.termsToUse,
+                      termsUrl,
+                    }),
+                    guestName: guestNames.join(", "),
+                    unsignedGuestCount: unsignedGuestsForStay.length,
+                    detail,
+                  },
+                });
+                scheduledUsersToday.add(hostUserKey);
+              }
+            }
+          } else if (!hostMembership.acceptedTermsId || hostMembership.acceptedTermsId !== stay.currentTermsId) {
+            // Host themself has not accepted currentTermsId
+            const hostSelfEntityId = `agreement-pending:${stay._id}:${stay.hostUserId}:${localDate}:${determinedSlot}`;
+            const hostSelfCancellationKey = `agreement-pending:${stay._id}:${stay.hostUserId}`;
+
+            const hostSelfAlreadySent = await ctx.db
+              .query("notifications")
+              .withIndex("by_user_workflow_and_entity", (query) =>
+                query.eq("userId", stay.hostUserId).eq("workflow", "agreement-pending").eq("entityId", hostSelfEntityId),
+              )
+              .first();
+
+            if (!hostSelfAlreadySent) {
+              candidates.push({
+                userId: stay.hostUserId,
+                stayId: stay._id,
+                workflow: "agreement-pending",
+                entityId: hostSelfEntityId,
+                cancellationKey: hostSelfCancellationKey,
+                expectedTermsId: defaultTerms._id,
+                recipientRole: "host",
+                data: buildAgreementPendingPayload({
+                  recipientRole: "host",
+                  stay,
+                  hostUser,
+                  guestUser: null,
+                  terms: defaultTerms,
+                  termsUrl,
+                }),
+              });
+              scheduledUsersToday.add(hostUserKey);
+            }
+          }
+        }
       }
     }
   }
@@ -810,6 +1105,14 @@ export const checkAgreementPendingEligibility = internalQuery({
     const stay = await ctx.db.get(args.stayId);
     if (!stay || stay.status === "ended") return false;
 
+    // Daily cap: check if user already received any reminder today
+    const now = Date.now();
+    const entityDateMatch = args.entityId.match(/:(\d{4}-\d{2}-\d{2})(?::|$)/);
+    const targetDate = entityDateMatch ? entityDateMatch[1] : calendarDateInTimezone(new Date(now), stay.timezone);
+    if (await hasUserReceivedReminderOnDate(ctx, args.userId, targetDate, stay.timezone, now)) {
+      return false;
+    }
+
     if (args.recipientRole === "guest") {
       const guestMembership = await ctx.db
         .query("memberships")
@@ -831,6 +1134,24 @@ export const checkAgreementPendingEligibility = internalQuery({
         .withIndex("by_stay_user", (query) => query.eq("stayId", args.stayId).eq("userId", args.userId))
         .first();
       if (!hostMembership || hostMembership.status !== "active") return false;
+
+      if (args.entityId.includes(":consolidated:")) {
+        const members = await ctx.db
+          .query("memberships")
+          .withIndex("by_stay", (query) => query.eq("stayId", args.stayId))
+          .collect();
+        const activeGuests = members.filter((m) => m.status === "active" && m.role === "guest");
+        let hasAnyUnsigned = false;
+        for (const guest of activeGuests) {
+          const guestTerms = await getCurrentGuestTerms(ctx, args.stayId, guest.userId);
+          const termsToUse = guestTerms ?? (stay.currentTermsId ? await ctx.db.get(stay.currentTermsId) : null);
+          if (termsToUse && (!guest.acceptedTermsId || guest.acceptedTermsId !== termsToUse._id)) {
+            hasAnyUnsigned = true;
+            break;
+          }
+        }
+        return hasAnyUnsigned;
+      }
 
       if (args.guestUserId) {
         const guestMembership = await ctx.db
