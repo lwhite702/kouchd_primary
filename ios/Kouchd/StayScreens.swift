@@ -137,7 +137,7 @@ struct AgreementScreen: View {
                 "stayId": store.selectedStayID,
                 "initialCadence": cadence
               ]
-              if cadence == "weekly" { args["initialPaymentDayOfWeek"] = weekday }
+              if cadence == "weekly" { args["initialPaymentDayOfWeek"] = Double(weekday) }
               _ = await store.mutate("terms:acceptCurrent", args)
             }
           }

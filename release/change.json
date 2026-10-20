@@ -1,5 +1,5 @@
 {
-  "version": "0.6.6",
+  "version": "0.6.7",
   "type": "patch",
-  "reason": "Add targeted robots.txt crawl policy and dynamic sitemap for public pages and brand routes with noindex rules for private views."
+  "reason": "Encode native numeric arguments as Float64 across stay, term, and contribution mutations, and fix dark-mode stat contrast."
 }

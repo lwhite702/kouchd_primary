@@ -2,6 +2,14 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-10-19 — Encode native numeric arguments as Float64 and dark mode stat contrast (WRE-195)
+
+- Converted native Swift integer values to `Double` across stay terms, ad-hoc charges, contributions, schedule requests, reward points, and household guide progress to prevent Convex schema validation rejection.
+- Fixed weekly agreement acceptance in `StayScreens.swift` to pass `initialPaymentDayOfWeek` as `Double(weekday)`.
+- Improved dark-mode contrast on lime account and summary stat cards using `Palette.brandForest`.
+- Synchronized package and iOS marketing versions to `0.6.7` with patch release classification.
+
+
 ## 2026-10-19 — Search engine discoverability and crawl policies (WRE-175)
 
 - Added targeted `app/robots.ts` crawl policy permitting public marketing, legal, and brand routes while disallowing private, console, and authentication endpoints.
