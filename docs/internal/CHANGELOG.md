@@ -2,6 +2,12 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-10-25 — Main website newsletter signup with Loops integration (WRE-213)
+
+- Added accessible newsletter signup to main landing page with explicit, unchecked consent.
+- Added server-side `/api/newsletter` route for Loops contact synchronization with input validation, honeypot field, and IP rate limiting.
+- Synchronized release candidate version to `1.0.0-rc.4`.
+
 ## 2026-10-25 — Improve iOS navigation and dashboard activity (WRE-210, WRE-211, WRE-212)
 
 - Fixed iOS stay creation idempotency across ambiguous network responses and retries to prevent duplicate stays.
