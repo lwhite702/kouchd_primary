@@ -1,5 +1,5 @@
 {
-  "version": "0.6.5",
+  "version": "0.6.6",
   "type": "patch",
-  "reason": "Cap and consolidate daily reminders per user to reduce notification fatigue across payments, agreements, chores, and check-ins."
+  "reason": "Add targeted robots.txt crawl policy and dynamic sitemap for public pages and brand routes with noindex rules for private views."
 }
