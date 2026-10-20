@@ -52,6 +52,11 @@ export interface ObligationLedgerItem extends ObligationRecord {
 export function buildObligationPeriods(terms: ObligationTerms): ObligationPeriod[] {
   const periods: ObligationPeriod[] = [];
   let periodStart = terms.startDate;
+  const totalDays = stayDays(terms.startDate, terms.endDate);
+  const totalExpectedCents = terms.cadence === "weekly"
+    ? Math.round((totalDays * terms.rateCents) / 7)
+    : totalDays * terms.rateCents;
+  let runningCents = 0;
 
   while (periodStart <= terms.endDate) {
     let proposedEnd = periodStart;
@@ -64,13 +69,21 @@ export function buildObligationPeriods(terms: ObligationTerms): ObligationPeriod
     }
     const periodEnd = proposedEnd < terms.endDate ? proposedEnd : terms.endDate;
     const periodDays = stayDays(periodStart, periodEnd);
+    const isFinalPeriod = periodEnd === terms.endDate;
+
+    const baseAmountCents = isFinalPeriod && terms.cadence === "weekly"
+      ? totalExpectedCents - runningCents
+      : terms.cadence === "weekly"
+        ? Math.round((periodDays * terms.rateCents) / 7)
+        : terms.rateCents;
+
+    runningCents += baseAmountCents;
+
     periods.push({
       periodStart,
       periodEnd,
       dueDate: periodEnd,
-      baseAmountCents: terms.cadence === "weekly"
-        ? Math.round((periodDays * terms.rateCents) / 7)
-        : terms.rateCents,
+      baseAmountCents,
     });
     periodStart = addCalendarDays(periodEnd, 1);
   }

@@ -106,4 +106,18 @@ describe("obligation ledger", () => {
     expect(ledger.map((item) => item.creditedCents)).toEqual([2_500, 1_500]);
     expect(ledger.map((item) => item.balanceCents)).toEqual([0, 1_000]);
   });
+
+  it("preserves total expected cents on weekly cadence with remainder days", () => {
+    const terms = {
+      ...weeklyTerms,
+      startDate: "2026-09-01",
+      endDate: "2026-09-11", // 11 days
+      cadence: "weekly" as const,
+      rateCents: 10_000,
+    };
+    const periods = buildObligationPeriods(terms);
+    const sumCents = periods.reduce((sum, p) => sum + p.baseAmountCents, 0);
+    const expectedTotal = Math.round((11 * 10_000) / 7);
+    expect(sumCents).toBe(expectedTotal);
+  });
 });

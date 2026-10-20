@@ -161,12 +161,12 @@ describe("progressive payment reminder system with urgent language and consequen
     expect(lateFeeAssessed).toBeDefined();
     expect(lateFeeAssessed?.data.stage).toBe("late_fee_assessed");
     expect(lateFeeAssessed?.data.urgencyLevel).toBe("urgent");
-    expect(lateFeeAssessed?.data.periodLabel).toContain("[URGENT: LATE FEE ASSESSED]");
+    expect(lateFeeAssessed?.data.periodLabel).toContain("[NOTICE: LATE FEE ASSESSED]");
     // Balance now includes $15 late fee: $150 + $15 = $165 ($16,500 cents)
     expect(lateFeeAssessed?.data.amountDue).toBe(16_500);
     expect(lateFeeAssessed?.data.balance).toBe(16_500);
-    expect(lateFeeAssessed?.data.consequences).toContain("Compounding Penalties");
-    expect(lateFeeAssessed?.data.consequences).toContain("Risk of Stay Termination");
+    expect(lateFeeAssessed?.data.consequences).toContain("Compounding Fees");
+    expect(lateFeeAssessed?.data.consequences).toContain("Overdue Plan");
 
     // =========================================================================
     // 6. STAGE: CRITICAL DELINQUENCY NOTICE (Day 18 past due: 2026-09-25)
@@ -180,10 +180,10 @@ describe("progressive payment reminder system with urgent language and consequen
     expect(critical).toBeDefined();
     expect(critical?.data.stage).toBe("critical_delinquency");
     expect(critical?.data.urgencyLevel).toBe("critical");
-    expect(critical?.data.periodLabel).toContain("[CRITICAL NOTICE: STAY TERMINATION RISK]");
-    expect(critical?.data.consequences).toContain("Immediate Stay Termination");
-    expect(critical?.data.consequences).toContain("Household Access Revocation");
-    expect(critical?.data.consequences).toContain("Debt Recovery");
+    expect(critical?.data.periodLabel).toContain("[ATTENTION NEEDED: OVERDUE BALANCE]");
+    expect(critical?.data.consequences).toContain("Host Review");
+    expect(critical?.data.consequences).toContain("Household Standing");
+    expect(critical?.data.consequences).toContain("Support Available");
 
     // =========================================================================
     // 7. STOPS ONCE PAID (Guest pays off remaining balance)

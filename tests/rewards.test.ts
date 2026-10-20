@@ -119,4 +119,130 @@ describe("Contribution Points & Rewards System", () => {
     expect(ledger[0].creditedCents).toBe(2_000);
     expect(ledger[0].balanceCents).toBe(18_000);
   });
+
+  it("enforces outstanding balance limits and cumulative period credit caps", async () => {
+    const t = convexTest(schema, modules);
+    const host = await createUser(t, "host-rew-cap", "Taylor Host");
+    const guest = await createUser(t, "guest-rew-cap", "Morgan Guest");
+
+    const stayId = await host.mutation(api.stays.create, {
+      timezone: "America/New_York",
+      terms: {
+        ...rewardsTerms,
+        rateCents: 5_000, // $50/week = $150 total for 3 weeks
+        rewards: {
+          enabled: true,
+          coinName: "Points",
+          centsPerPoint: 100, // 1 point = $1.00
+          maxCreditPerPeriodCents: 3_000, // Max $30 per period
+        },
+      },
+    });
+
+    const bundle = await host.query(api.stays.getBundle, { stayId });
+    await guest.mutation(api.referral.joinWithCode, { referralCode: bundle.stay.referralCode! });
+    await guest.mutation(api.terms.acceptCurrent, { stayId });
+
+    // Seed rule and claim 50 points ($50.00)
+    const rules = await guest.query(api.rewards.listRules, { stayId });
+    const claimId = await guest.mutation(api.rewards.submitClaim, {
+      stayId,
+      ruleId: rules[0]._id,
+      title: rules[0].title,
+      points: 50,
+      note: "Helped with multiple tasks",
+      date: "2026-09-02",
+    });
+    await host.mutation(api.rewards.confirmClaim, { claimId });
+
+    // 1. Enforce cumulative period credit cap (max $30 per period)
+    // Attempting to redeem 35 points ($35.00 > $30.00 allowance) should throw
+    await expect(
+      guest.mutation(api.rewards.redeem, {
+        stayId,
+        points: 35,
+        date: "2026-09-03",
+      })
+    ).rejects.toThrow(/exceeds your period allowance/i);
+
+    // Redeeming 25 points ($25.00 <= $30.00) succeeds
+    await guest.mutation(api.rewards.redeem, {
+      stayId,
+      points: 25,
+      date: "2026-09-03",
+    });
+
+    // Attempting another 10 points ($10.00) in same period should throw since remaining allowance is $5.00
+    await expect(
+      guest.mutation(api.rewards.redeem, {
+        stayId,
+        points: 10,
+        date: "2026-09-04",
+      })
+    ).rejects.toThrow(/exceeds your period allowance/i);
+
+    // 2. Enforce outstanding balance limit
+    // Pay off all remaining stay balance ($150 - $25 = $125)
+    const payoffId = await guest.mutation(api.contributions.create, {
+      stayId,
+      type: "payment",
+      amountCents: 12_500,
+      date: "2026-09-05",
+      note: "Full payoff",
+      countsTowardBalance: true,
+    });
+    await host.mutation(api.contributions.confirm, { contributionId: payoffId });
+
+    // Now balance is $0, attempting any redemption should throw
+    await expect(
+      guest.mutation(api.rewards.redeem, {
+        stayId,
+        points: 5,
+        date: "2026-09-08",
+      })
+    ).rejects.toThrow(/no outstanding balance due/i);
+  });
+
+  it("supports guest overdue recovery plan requests and host reviews", async () => {
+    const t = convexTest(schema, modules);
+    const host = await createUser(t, "host-plan", "Jordan Host");
+    const guest = await createUser(t, "guest-plan", "Casey Guest");
+
+    const stayId = await host.mutation(api.stays.create, {
+      timezone: "America/New_York",
+      terms: rewardsTerms,
+    });
+
+    const bundle = await host.query(api.stays.getBundle, { stayId });
+    await guest.mutation(api.referral.joinWithCode, { referralCode: bundle.stay.referralCode! });
+    await guest.mutation(api.terms.acceptCurrent, { stayId });
+
+    // Guest submits an overdue recovery plan request
+    const requestId = await guest.mutation(api.obligations.requestOverduePlan, {
+      stayId,
+      proposedDate: "2026-09-15",
+      proposedAmountCents: 10_000,
+      note: "Starting new contract next Monday, will catch up on 9/15",
+    });
+    expect(requestId).toBeDefined();
+
+    // Host views pending recovery plans
+    const hostPlans = await host.query(api.obligations.listOverduePlans, { stayId });
+    expect(hostPlans.length).toBe(1);
+    expect(hostPlans[0].status).toBe("pending");
+    expect(hostPlans[0].proposedDate).toBe("2026-09-15");
+    expect(hostPlans[0].note).toContain("new contract");
+
+    // Host approves the recovery plan
+    await host.mutation(api.obligations.reviewOverduePlan, {
+      requestId,
+      decision: "approve",
+      reviewNote: "Sounds good, thanks for letting me know Casey!",
+    });
+
+    // Check plan status is approved
+    const updatedPlans = await guest.query(api.obligations.listOverduePlans, { stayId });
+    expect(updatedPlans[0].status).toBe("approved");
+    expect(updatedPlans[0].reviewNote).toBe("Sounds good, thanks for letting me know Casey!");
+  });
 });
