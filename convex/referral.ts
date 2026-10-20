@@ -5,7 +5,7 @@ import { requireCurrentUser, requireHost } from "./lib/auth";
 import { recordActivity } from "./lib/activity";
 import { assertReferralCode } from "./lib/validation";
 import { generateReferralCode, normalizeReferralCode } from "../lib/referral";
-import { ensureGuestTerms } from "./lib/stayTerms";
+import { ensureGuestTerms, offerGuestAgreement } from "./lib/stayTerms";
 
 export const preview = query({
   args: { referralCode: v.string() },
@@ -79,7 +79,8 @@ export const joinWithCode = mutation({
       }
       // Re-activate if left
       await ctx.db.patch(existingMembership._id, { status: "active", joinedAt: Date.now() });
-      await ensureGuestTerms(ctx, stay._id, user._id, stay.hostUserId);
+      const guestTerms = await ensureGuestTerms(ctx, stay._id, user._id, stay.hostUserId);
+      await offerGuestAgreement(ctx, { stayId: stay._id, termsId: guestTerms._id, guestUserId: user._id, offeredBy: stay.hostUserId });
       await recordActivity(ctx, {
         stayId: stay._id,
         actorUserId: user._id,
@@ -109,7 +110,8 @@ export const joinWithCode = mutation({
       status: "active",
       joinedAt: now,
     });
-    await ensureGuestTerms(ctx, stay._id, user._id, stay.hostUserId);
+    const guestTerms = await ensureGuestTerms(ctx, stay._id, user._id, stay.hostUserId);
+    await offerGuestAgreement(ctx, { stayId: stay._id, termsId: guestTerms._id, guestUserId: user._id, offeredBy: stay.hostUserId });
 
     await recordActivity(ctx, {
       stayId: stay._id,

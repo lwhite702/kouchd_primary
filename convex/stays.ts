@@ -8,6 +8,7 @@ import { assertCalendarDate, assertHouseInfoInput, assertPaymentOptionsInput, as
 import { generateReferralCode } from "../lib/referral";
 import { SUGGESTED_CONTRIBUTION_TASKS } from "../lib/domain/rewards";
 import { getCurrentGuestTerms } from "./lib/stayTerms";
+import { internal } from "./_generated/api";
 import { resolveMemberName } from "./lib/names";
 
 const houseInfoInput = {
@@ -90,6 +91,8 @@ export const create = mutation({
       name,
       status: "pending",
       timezone: args.timezone,
+      agreementAutoAcceptEnabled: true,
+      agreementAutoAcceptHours: 24,
       referralCode,
       nextCheckInDate: args.nextCheckInDate,
       houseInfo: args.houseInfo,
@@ -100,7 +103,7 @@ export const create = mutation({
     await ctx.db.insert("memberships", { stayId, userId: user._id, role: "host", status: "active", joinedAt: now });
     const termsId = await ctx.db.insert("terms", { stayId, version: 1, ...args.terms, billingBasis: args.terms.billingBasis ?? "continuous", createdBy: user._id, createdAt: now });
     await ctx.db.patch(stayId, { currentTermsId: termsId });
-    await ctx.db.insert("termsAcceptances", { stayId, termsId, userId: user._id, acceptedAt: now });
+    await ctx.db.insert("termsAcceptances", { stayId, termsId, userId: user._id, acceptedAt: now, method: "host" });
     const membership = await ctx.db.query("memberships").withIndex("by_stay_user", (query) => query.eq("stayId", stayId).eq("userId", user._id)).unique();
     if (membership) await ctx.db.patch(membership._id, { acceptedTermsId: termsId });
 
@@ -119,8 +122,35 @@ export const create = mutation({
       }
     }
 
-    await recordActivity(ctx, { stayId, actorUserId: user._id, kind: "stay", action: "created", detail: "Stay and first terms version created", entityId: stayId });
+    await recordActivity(ctx, { stayId, actorUserId: user._id, kind: "terms", action: "created", detail: "Agreement version 1 created", entityId: termsId });
+    await recordActivity(ctx, { stayId, actorUserId: user._id, kind: "terms", action: "accepted", detail: "Host accepted the initial agreement", entityId: termsId });
+    await recordActivity(ctx, { stayId, actorUserId: user._id, kind: "stay", action: "created", detail: "Stay created", entityId: stayId });
     return stayId;
+  },
+});
+
+export const updateAgreementAutoAccept = mutation({
+  args: { stayId: v.id("stays"), enabled: v.boolean(), hours: v.number() },
+  returns: v.null(),
+  handler: async (ctx, { stayId, enabled, hours }) => {
+    const { user } = await requireHost(ctx, stayId);
+    const stay = await ctx.db.get(stayId);
+    if (!stay || stay.status === "ended") throw new Error("Ended stays cannot be edited");
+    if (!Number.isInteger(hours) || hours < 1 || hours > 720) throw new Error("Choose between 1 and 720 hours");
+    const now = Date.now();
+    await ctx.db.patch(stayId, { agreementAutoAcceptEnabled: enabled, agreementAutoAcceptHours: hours, updatedAt: now });
+    const pending = await ctx.db.query("agreementOffers").withIndex("by_stay_status", (query) => query.eq("stayId", stayId).eq("status", "pending")).take(500);
+    for (const offer of pending) {
+      if (!enabled) {
+        await ctx.db.patch(offer._id, { autoAcceptAt: undefined });
+      } else {
+        const autoAcceptAt = now + hours * 60 * 60 * 1000;
+        await ctx.db.patch(offer._id, { autoAcceptAt });
+        await ctx.scheduler.runAfter(autoAcceptAt - now, internal.terms.autoAcceptOffer, { offerId: offer._id });
+      }
+    }
+    await recordActivity(ctx, { stayId, actorUserId: user._id, kind: "terms", action: "auto_accept_settings_updated", detail: enabled ? `Automatic acceptance enabled after ${hours} hours; pending agreement timers restarted` : "Automatic acceptance disabled for pending agreements", entityId: stayId });
+    return null;
   },
 });
 
@@ -194,6 +224,11 @@ export const getBundle = query({
         const guestTerms = membership.role === "host"
           ? item.role === "guest" ? await getCurrentGuestTerms(ctx, stayId, item.userId) : terms
           : null;
+        const agreementOffer = membership.role === "host" && item.role === "guest"
+          ? (await ctx.db.query("agreementOffers")
+            .withIndex("by_stay_guest", (query) => query.eq("stayId", stayId).eq("guestUserId", item.userId))
+            .take(100)).sort((left, right) => right.offeredAt - left.offeredAt)[0] ?? null
+          : null;
         const displayName = resolveMemberName({
           existingName: person.name,
           email: person.email,
@@ -201,12 +236,45 @@ export const getBundle = query({
         });
         members.push({
           membership: item,
-          person: { id: person._id, name: displayName, imageUrl: person.imageUrl },
+          person: {
+            id: person._id,
+            name: item.preferredName ?? displayName,
+            imageUrl: person.imageUrl,
+            ...(membership.role === "host" && item.role === "guest" ? { email: person.email, phone: person.phone } : {}),
+          },
           ...(membership.role === "host" ? { terms: guestTerms } : {}),
+          ...(membership.role === "host" && item.role === "guest" ? { agreementOffer } : {}),
         });
       }
     }
     return { stay, terms, membership, members };
+  },
+});
+
+export const updateGuestPreferredName = mutation({
+  args: { stayId: v.id("stays"), guestUserId: v.id("users"), preferredName: v.string() },
+  returns: v.null(),
+  handler: async (ctx, { stayId, guestUserId, preferredName }) => {
+    const { user } = await requireHost(ctx, stayId);
+    const name = preferredName.trim();
+    if (!name || name.length > 80) throw new Error("Preferred name must be between 1 and 80 characters");
+    const membership = await ctx.db.query("memberships")
+      .withIndex("by_stay_user", (query) => query.eq("stayId", stayId).eq("userId", guestUserId))
+      .unique();
+    if (!membership || membership.role !== "guest" || membership.status !== "active") {
+      throw new Error("Choose an active guest in this household");
+    }
+    await ctx.db.patch(membership._id, { preferredName: name });
+    await recordActivity(ctx, {
+      stayId,
+      actorUserId: user._id,
+      guestUserId,
+      kind: "stay",
+      action: "preferred_name_updated",
+      detail: "Guest preferred name updated",
+      entityId: guestUserId,
+    });
+    return null;
   },
 });
 

@@ -1,12 +1,13 @@
 import { v } from "convex/values";
 
 import type { Doc } from "./_generated/dataModel";
-import { mutation } from "./_generated/server";
+import { internal } from "./_generated/api";
+import { internalMutation, mutation } from "./_generated/server";
 import { requireHost, requireMembership } from "./lib/auth";
 import { recordActivity } from "./lib/activity";
 import { ensureObligationsForTerms } from "./lib/obligations";
 import { assertStayTerms } from "./lib/validation";
-import { ensureGuestTerms, getCurrentGuestTerms } from "./lib/stayTerms";
+import { acceptGuestTermsAutomatically, ensureGuestTerms, getCurrentGuestTerms, offerGuestAgreement } from "./lib/stayTerms";
 import { addCalendarDays, calendarDateInTimezone, stayDays } from "../lib/domain/dates";
 import { buildObligationPeriods } from "../lib/domain/obligations";
 
@@ -83,8 +84,14 @@ export const acceptCurrent = mutation({
       terms = { ...terms, cadence: initialCadence, rateCents: selectedRate, paymentDayOfWeek: initialCadence === "weekly" ? initialPaymentDayOfWeek : undefined, ...(lateFeeEnabled ? { lateFeeEnabled: true, lateFeeCents: selectedFee } : {}) };
     }
     const termsId = terms._id;
+    if (membership.acceptedTermsId === termsId) {
+      return stay.status === "active" ? "active" : "pending";
+    }
     const existing = await ctx.db.query("termsAcceptances").withIndex("by_terms_user", (query) => query.eq("termsId", termsId).eq("userId", user._id)).unique();
-    if (!existing) await ctx.db.insert("termsAcceptances", { stayId, termsId, userId: user._id, acceptedAt: Date.now() });
+    const acceptedAt = Date.now();
+    if (!existing) await ctx.db.insert("termsAcceptances", { stayId, termsId, userId: user._id, acceptedAt, method: membership.role === "guest" ? "guest" : "host" });
+    const pendingOffers = await ctx.db.query("agreementOffers").withIndex("by_terms_guest", (query) => query.eq("termsId", termsId).eq("guestUserId", user._id)).take(10);
+    for (const offer of pendingOffers) if (offer.status === "pending") await ctx.db.patch(offer._id, { status: "accepted", acceptedAt, acceptedBy: user._id });
     if (membership.acceptedTermsId !== termsId) await ctx.db.patch(membership._id, { acceptedTermsId: termsId });
     if (membership.role === "guest") {
       if (terms.effectiveFrom && membership.acceptedTermsId !== termsId) {
@@ -160,7 +167,14 @@ export const acceptCurrent = mutation({
     if (allAccepted) {
       if (stay.status !== "active") await ctx.db.patch(stayId, { status: "active", updatedAt: Date.now() });
     }
-    await recordActivity(ctx, { stayId, actorUserId: user._id, kind: "terms", action: "accepted", detail: "Current stay terms accepted", entityId: termsId });
+    await recordActivity(ctx, {
+      stayId,
+      actorUserId: user._id,
+      kind: "terms",
+      action: "accepted",
+      detail: membership.role === "guest" ? "Guest accepted agreement" : "Host accepted agreement",
+      entityId: termsId,
+    });
     return stay.status === "active" || allAccepted ? "active" : "pending";
   },
 });
@@ -177,9 +191,16 @@ export const updateCurrent = mutation({
     const now = Date.now();
     const termsId = await ctx.db.insert("terms", { stayId, version: (previous?.version ?? 0) + 1, ...terms, createdBy: user._id, createdAt: now });
     await ctx.db.patch(stayId, { currentTermsId: termsId, status: "pending", updatedAt: now });
-    await ctx.db.insert("termsAcceptances", { stayId, termsId, userId: user._id, acceptedAt: now });
+    await ctx.db.insert("termsAcceptances", { stayId, termsId, userId: user._id, acceptedAt: now, method: "host" });
     await ctx.db.patch(membership._id, { acceptedTermsId: termsId });
     await recordActivity(ctx, { stayId, actorUserId: user._id, kind: "terms", action: "updated", detail: `Terms version ${(previous?.version ?? 0) + 1} created`, entityId: termsId });
+    await recordActivity(ctx, { stayId, actorUserId: user._id, kind: "terms", action: "accepted", detail: "Host accepted the updated agreement", entityId: termsId });
+    const guests = await ctx.db.query("memberships").withIndex("by_stay", (query) => query.eq("stayId", stayId)).take(50);
+    for (const guest of guests) {
+      if (guest.role !== "guest" || guest.status !== "active") continue;
+      const guestTerms = await getCurrentGuestTerms(ctx, stayId, guest.userId);
+      if (guestTerms?._id === termsId) await offerGuestAgreement(ctx, { stayId, termsId, guestUserId: guest.userId, offeredBy: user._id });
+    }
     return termsId;
   },
 });
@@ -217,6 +238,7 @@ export const updateGuest = mutation({
       createdBy: user._id,
       createdAt: now,
     });
+    await offerGuestAgreement(ctx, { stayId, termsId, guestUserId, offeredBy: user._id });
     await recordActivity(ctx, {
       stayId,
       actorUserId: user._id,
@@ -227,5 +249,37 @@ export const updateGuest = mutation({
       entityId: termsId,
     });
     return termsId;
+  },
+});
+
+export const autoAcceptOffer = internalMutation({
+  args: { offerId: v.id("agreementOffers") },
+  returns: v.null(),
+  handler: async (ctx, { offerId }) => {
+    const offer = await ctx.db.get(offerId);
+    if (!offer || offer.status !== "pending" || offer.autoAcceptAt === undefined) return null;
+    const stay = await ctx.db.get(offer.stayId);
+    if (!stay || stay.status === "ended" || !(stay.agreementAutoAcceptEnabled ?? true)) return null;
+    const now = Date.now();
+    if (offer.autoAcceptAt > now) {
+      await ctx.scheduler.runAfter(offer.autoAcceptAt - now, internal.terms.autoAcceptOffer, { offerId });
+      return null;
+    }
+    const membership = await ctx.db.query("memberships")
+      .withIndex("by_stay_user", (query) => query.eq("stayId", offer.stayId).eq("userId", offer.guestUserId))
+      .unique();
+    if (!membership || membership.role !== "guest" || membership.status !== "active") return null;
+    const currentTerms = await getCurrentGuestTerms(ctx, offer.stayId, offer.guestUserId);
+    if (currentTerms?._id !== offer.termsId) {
+      await ctx.db.patch(offerId, { status: "replaced" });
+      return null;
+    }
+    if (membership.acceptedTermsId === offer.termsId) {
+      await ctx.db.patch(offerId, { status: "accepted", acceptedAt: now, acceptedBy: offer.guestUserId });
+      return null;
+    }
+    await acceptGuestTermsAutomatically(ctx, { stayId: offer.stayId, guestUserId: offer.guestUserId, actorUserId: offer.offeredBy, membership, terms: currentTerms });
+    await ctx.db.patch(offerId, { status: "auto_accepted", acceptedAt: now, systemAutoApprovedAt: now });
+    return null;
   },
 });

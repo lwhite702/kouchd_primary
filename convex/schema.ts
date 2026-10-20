@@ -46,6 +46,8 @@ export default defineSchema({
     timezone: v.string(),
     referralCode: v.optional(v.string()),
     currentTermsId: v.optional(v.id("terms")),
+    agreementAutoAcceptEnabled: v.optional(v.boolean()),
+    agreementAutoAcceptHours: v.optional(v.number()),
     paymentOptions: v.optional(v.array(v.object({
       provider: v.union(v.literal("paypal"), v.literal("cashapp"), v.literal("zelle"), v.literal("applepay")),
       detail: v.string(),
@@ -80,6 +82,7 @@ export default defineSchema({
     role: v.union(v.literal("host"), v.literal("guest")),
     status: v.union(v.literal("active"), v.literal("left")),
     acceptedTermsId: v.optional(v.id("terms")),
+    preferredName: v.optional(v.string()),
     joinedAt: v.number(),
   })
     .index("by_stay", ["stayId"])
@@ -148,9 +151,27 @@ export default defineSchema({
     termsId: v.id("terms"),
     userId: v.id("users"),
     acceptedAt: v.number(),
+    method: v.optional(v.union(v.literal("guest"), v.literal("host"), v.literal("system_auto"))),
+    systemAutoApprovedAt: v.optional(v.number()),
   })
     .index("by_terms_user", ["termsId", "userId"])
     .index("by_stay_terms", ["stayId", "termsId"]),
+
+  agreementOffers: defineTable({
+    stayId: v.id("stays"),
+    termsId: v.id("terms"),
+    guestUserId: v.id("users"),
+    offeredBy: v.id("users"),
+    offeredAt: v.number(),
+    autoAcceptAt: v.optional(v.number()),
+    status: v.union(v.literal("pending"), v.literal("accepted"), v.literal("auto_accepted"), v.literal("replaced")),
+    acceptedAt: v.optional(v.number()),
+    acceptedBy: v.optional(v.id("users")),
+    systemAutoApprovedAt: v.optional(v.number()),
+  })
+    .index("by_stay_status", ["stayId", "status"])
+    .index("by_stay_guest", ["stayId", "guestUserId"])
+    .index("by_terms_guest", ["termsId", "guestUserId"]),
 
   paymentScheduleRequests: defineTable({
     stayId: v.id("stays"),
