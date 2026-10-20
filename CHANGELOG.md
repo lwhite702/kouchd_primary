@@ -26,6 +26,7 @@
 
 ### Added
 
+- Host-configurable delayed guest agreement auto-acceptance with guest manual acceptance, system-approval tags and timestamps, and audited offer, acceptance, replacement, and setting changes. Hosts can also edit guest preferred names and view guest contact details.
 - Main website newsletter signup with explicit consent, server-side Loops contact sync, and matching privacy disclosures.
 - Added a More tab for secondary stay, account, and help actions, with short descriptions and clearer grouping. Moved less-used links off the bottoms of Home, Ledger, Chores, and Stay.
 - Peer-to-peer (P2P) contribution routing across Venmo, Cash App, Zelle, PayPal, and manual bank transfers with deep links, clean payment URI formatting, error-correcting Level-H QR code generation, and copy-to-clipboard fallbacks.

@@ -141,3 +141,11 @@
   - `mintlify broken-links` passed cleanly (`success no broken links found`).
   - `git diff --check` passed with zero formatting errors.
 - Release state: Ready for pull request review and merge approval.
+
+### Delayed agreement acceptance and guest profile controls (2026-10-20)
+
+- Linear issue: WRE-216.
+- Scope: host-configurable 1–720 hour delay (24-hour default) or off; guest manual acceptance; system approval labels/timestamps; agreement activity audit; host-only preferred-name editing and guest contact details.
+- Current task branch: `codex/WRE-216-guest-agreement-profile-pr`.
+- Verification on current `main`: TypeScript syntax parsing, `git diff --check`, and `node scripts/release-version.mjs check` passed. Full typecheck ran for more than three minutes without output and was interrupted; tests were not run.
+- Release state: branch-only; not merged, deployed, or publicly available.
