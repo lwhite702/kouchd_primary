@@ -2,6 +2,12 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-10-25 — Polish motion and adopt Liquid Glass surfaces (WRE-219)
+
+- Refined motion easing, spring transitions, and reduced-motion accessibility rules across `app/production.css` and `styles.css`.
+- Adopted translucent Liquid Glass surface modifiers and refined elevation in `ios/Kouchd/Design.swift`.
+- Synchronized release candidate version to `1.0.0-rc.6`.
+
 ## 2026-10-25 — Delayed agreement acceptance and host guest profiles (WRE-216)
 
 - Added host-configurable agreement auto-acceptance after a 1–720 hour delay, defaulting to 24 hours; hosts can disable it, and guests can accept manually at any time.
