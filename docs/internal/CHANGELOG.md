@@ -2,6 +2,12 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-10-25 — Patch vulnerable framework and sanitizer dependencies (WRE-224)
+
+- Patched DOMPurify to `3.4.17`, refreshed compatible lockfile dependencies, and bumped Vitest to `^5.0.5`.
+- Recorded security patch verification notes in `docs/internal/SECURITY_PATCH.md`.
+- Synchronized release candidate version to `1.0.0-rc.7`.
+
 ## 2026-10-25 — Polish motion and adopt Liquid Glass surfaces (WRE-219)
 
 - Refined motion easing, spring transitions, and reduced-motion accessibility rules across `app/production.css` and `styles.css`.
