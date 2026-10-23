@@ -1,16 +1,17 @@
 "use client";
 
-import React, { useCallback, useEffect, useRef, useState, useTransition } from "react";
-import "@revenuecat/purchases-js/styles";
+import { useQuery } from "convex/react";
+import { useEffect, useRef, useState } from "react";
+import type { CustomerInfo, Package } from "@revenuecat/purchases-js";
+import { api } from "@/convex/_generated/api";
 import {
-  presentRevenueCatPaywall,
-  checkKouchdPlusAccess,
-  openCustomerCenter,
   getCustomerInfo,
+  getSubscriptionOfferings,
+  openCustomerCenter,
+  purchaseSubscriptionPackage,
 } from "@/lib/revenuecat";
 import { useFeatureFlag } from "@/components/flags/feature-gate";
 import { FEATURE_FLAGS } from "@/lib/flags/config";
-import type { CustomerInfo } from "@revenuecat/purchases-js";
 
 interface PaywallModalProps {
   userId?: string;
@@ -27,180 +28,184 @@ export function PaywallModal({
   onClose,
   onPurchaseSuccess,
 }: PaywallModalProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [, startTransition] = useTransition();
-
-  const isBillingEnabled = useFeatureFlag(FEATURE_FLAGS.BILLING_PORTAL);
-  const isPaywallFlagEnabled = useFeatureFlag(FEATURE_FLAGS.REVENUECAT_PAYWALL);
-  const isPaywallAvailable = isBillingEnabled || isPaywallFlagEnabled;
-
+  const dialog = useRef<HTMLDialogElement>(null);
+  const target = useRef<HTMLDivElement>(null);
+  const mounted = useRef(false);
+  const submitting = useRef(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [attempt, setAttempt] = useState(0);
+  const [options, setOptions] = useState<
+    Array<{ label: string; package: Package }>
+  >([]);
+  const summary = useQuery(
+    api.subscriptions.currentAccountSummary,
+    userId ? {} : "skip",
+  );
+  const enabled = useFeatureFlag(FEATURE_FLAGS.BILLING_PORTAL);
+  const available = enabled && summary?.canManageSubscription;
   useEffect(() => {
-    if (!isOpen || !isPaywallAvailable || !containerRef.current) return;
-
-    let isMounted = true;
-    setError(null);
-
-    startTransition(async () => {
-      try {
-        if (!containerRef.current) return;
-        const result = await presentRevenueCatPaywall({
-          htmlTarget: containerRef.current,
-          customerEmail: userEmail,
-          onBack: (close) => {
-            close();
-            onClose();
-          },
-          onVisitCustomerCenter: async () => {
-            await openCustomerCenter(userId);
-          },
-        });
-
-        if (isMounted && result?.customerInfo) {
-          onPurchaseSuccess?.(result.customerInfo);
-          onClose();
-        }
-      } catch (err: unknown) {
-        if (isMounted) {
-          const message = err instanceof Error ? err.message : "Failed to load paywall.";
-          setError(message);
-        }
-      }
-    });
-
+    mounted.current = true;
     return () => {
-      isMounted = false;
+      mounted.current = false;
     };
-  }, [isOpen, isPaywallAvailable, userId, userEmail, onClose, onPurchaseSuccess]);
-
-  if (!isOpen) return null;
-
+  }, []);
+  useEffect(() => {
+    const element = dialog.current;
+    if (isOpen && element && !element.open) element.showModal();
+    if (!isOpen && element?.open) element.close();
+  }, [isOpen]);
+  useEffect(() => {
+    if (!isOpen || !available || !userId) return;
+    let active = true;
+    void getSubscriptionOfferings(userId)
+      .then((result) => {
+        if (active)
+          setOptions([
+            ...(result.monthlyPackage
+              ? [{ label: "Monthly", package: result.monthlyPackage }]
+              : []),
+            ...(result.yearlyPackage
+              ? [{ label: "Annual", package: result.yearlyPackage }]
+              : []),
+          ]);
+      })
+      .catch((reason) => {
+        if (active)
+          setError(
+            reason instanceof Error
+              ? reason.message
+              : "We could not load Plus. Please try again.",
+          );
+      });
+    return () => {
+      active = false;
+    };
+  }, [isOpen, available, userId, attempt]);
+  async function purchase(rcPackage: Package) {
+    if (submitting.current || !userId || !available) return;
+    submitting.current = true;
+    setBusy(true);
+    setError("");
+    try {
+      const result = await purchaseSubscriptionPackage(rcPackage, {
+        appUserId: userId,
+        customerEmail: userEmail,
+        htmlTarget: target.current ?? undefined,
+      });
+      if (mounted.current) {
+        onPurchaseSuccess?.(result.customerInfo);
+        onClose();
+      }
+    } catch (reason) {
+      if (mounted.current)
+        setError(
+          reason instanceof Error
+            ? reason.message
+            : "Checkout could not be completed. Please try again.",
+        );
+    } finally {
+      submitting.current = false;
+      if (mounted.current) setBusy(false);
+    }
+  }
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="relative w-full max-w-2xl bg-white dark:bg-stone-900 rounded-2xl shadow-2xl overflow-hidden border border-stone-200 dark:border-stone-800">
-        <div className="flex justify-between items-center p-4 border-b border-stone-100 dark:border-stone-800">
-          <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">
-            Kouchd Plus
-          </h2>
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-1 rounded-full text-stone-500 hover:text-stone-900 dark:hover:text-stone-100 transition-colors"
-            aria-label="Close"
-          >
-            ✕
-          </button>
-        </div>
-
-        <div className="p-4 min-h-[400px] flex flex-col justify-center">
-          {!isPaywallAvailable ? (
-            <div className="text-center p-6 space-y-4">
-              <div className="w-12 h-12 mx-auto rounded-full bg-stone-100 dark:bg-stone-800 flex items-center justify-center text-stone-500 text-xl font-bold">
-                ✨
-              </div>
-              <div className="space-y-1">
-                <h3 className="text-base font-medium text-stone-900 dark:text-stone-100">
-                  Early Access Preview
-                </h3>
-                <p className="text-sm text-stone-600 dark:text-stone-400 max-w-md mx-auto">
-                  Kouchd Plus subscription billing is currently in rollout and invite-only. Stay tuned for wider availability!
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-4 py-2 bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
-              >
-                Got it
-              </button>
-            </div>
-          ) : error ? (
-            <div className="text-center p-6 space-y-3">
-              <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-4 py-2 bg-stone-100 dark:bg-stone-800 rounded-lg text-sm font-medium"
-              >
-                Dismiss
-              </button>
-            </div>
-          ) : (
-            <div ref={containerRef} className="w-full h-full min-h-[380px]" />
-          )}
-        </div>
+    <dialog
+      ref={dialog}
+      className="modal-card billing-dialog"
+      aria-labelledby="billing-title"
+      onCancel={(event) => {
+        if (submitting.current) event.preventDefault();
+        else onClose();
+      }}
+      onClose={onClose}
+    >
+      <div className="dialog-heading">
+        <h2 id="billing-title">Kouchd Plus</h2>
+        <button
+          type="button"
+          className="icon-button"
+          onClick={onClose}
+          disabled={busy}
+          aria-label="Close billing"
+        >
+          ×
+        </button>
       </div>
-    </div>
+      {!available ? (
+        <p>Plus billing is being prepared. Guests always join for free.</p>
+      ) : (
+        <>
+          <p>
+            Up to three active stays and three guest memberships across your
+            host account.
+          </p>
+          {!options.length && !error && (
+            <p role="status">Loading current subscription options…</p>
+          )}
+          {options.map((option) => (
+            <button
+              className="button soft"
+              type="button"
+              key={option.package.identifier}
+              disabled={busy}
+              onClick={() => void purchase(option.package)}
+            >
+              {option.label} ·{" "}
+              {option.package.product.currentPrice.formattedPrice}
+            </button>
+          ))}
+          {error && (
+            <div role="alert">
+              <p>{error}</p>
+              {!options.length && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setError("");
+                    setAttempt((value) => value + 1);
+                  }}
+                >
+                  Try again
+                </button>
+              )}
+            </div>
+          )}
+          <div ref={target} aria-busy={busy} />
+        </>
+      )}
+      <p className="muted">
+        Your plan updates after your subscription is verified. Household
+        contributions happen outside Kouchd.
+      </p>
+    </dialog>
   );
 }
 
-/**
- * React hook to manage Kouchd Plus subscription state and Customer Center access.
- */
+/** Server summary is the only authority for paid access. */
 export function useKouchdPlus(userId?: string) {
-  const isEntitlementEnforced = useFeatureFlag(FEATURE_FLAGS.KOUCHD_PLUS_ENTITLEMENT);
-  const isCustomerCenterEnabled = useFeatureFlag(FEATURE_FLAGS.CUSTOMER_CENTER);
-
-  const [entitled, setEntitled] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(isEntitlementEnforced);
-  const [customerInfo, setCustomerInfo] = useState<CustomerInfo | null>(null);
-
-  const refreshStatus = useCallback(async () => {
-    if (!isEntitlementEnforced) return;
-
-    setIsLoading(true);
-    try {
-      const isEntitled = await checkKouchdPlusAccess(userId);
-      setEntitled(isEntitled);
-      const info = await getCustomerInfo(userId);
-      setCustomerInfo(info);
-    } catch (err) {
-      console.error("Error checking Kouchd Plus status:", err);
-      setEntitled(false);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [userId, isEntitlementEnforced]);
-
-  useEffect(() => {
-    if (!isEntitlementEnforced) return;
-
-    let cancelled = false;
-
-    void (async () => {
-      try {
-        const isEntitled = await checkKouchdPlusAccess(userId);
-        if (!cancelled) setEntitled(isEntitled);
-        const info = await getCustomerInfo(userId);
-        if (!cancelled) setCustomerInfo(info);
-      } catch (err) {
-        console.error("Error checking Kouchd Plus status:", err);
-        if (!cancelled) setEntitled(false);
-      } finally {
-        if (!cancelled) setIsLoading(false);
-      }
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [userId, isEntitlementEnforced]);
-
-  const manageSubscription = async () => {
-    if (!isCustomerCenterEnabled) {
-      console.warn("Customer Center is disabled by feature flag.");
-      return null;
-    }
-    return await openCustomerCenter(userId);
-  };
-
-  const hasPlus = !isEntitlementEnforced || entitled;
-
+  const summary = useQuery(
+    api.subscriptions.currentAccountSummary,
+    userId ? {} : "skip",
+  );
+  const customerCenterEnabled = useFeatureFlag(FEATURE_FLAGS.CUSTOMER_CENTER);
+  const [snapshot, setSnapshot] = useState<{
+    userId: string;
+    info: CustomerInfo;
+  } | null>(null);
+  const customerInfo =
+    snapshot && snapshot.userId === userId ? snapshot.info : null;
   return {
-    hasPlus,
-    isLoading: isEntitlementEnforced ? isLoading : false,
+    hasPlus: Boolean(
+      summary?.canManageSubscription &&
+      (summary.plan === "hostPlus" || summary.plan === "householdPro"),
+    ),
+    isLoading: Boolean(userId && summary === undefined),
     customerInfo,
-    refreshStatus,
-    manageSubscription,
+    refreshStatus: async () => {
+      if (userId) setSnapshot({ userId, info: await getCustomerInfo(userId) });
+    },
+    manageSubscription: async () =>
+      userId && customerCenterEnabled ? openCustomerCenter(userId) : null,
   };
 }

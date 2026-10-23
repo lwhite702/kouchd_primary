@@ -838,14 +838,13 @@ input[type="radio"] {
 
 /* Smooth page/screen transition with Apple ease-out cubic curve */
 .screen-transition {
-  animation: appleScreenIn 260ms cubic-bezier(0.16, 1, 0.3, 1) both;
-  will-change: opacity, transform;
+  animation: appleScreenIn 320ms cubic-bezier(.22, 1, .36, 1) both;
 }
 
 @keyframes appleScreenIn {
   from {
     opacity: 0;
-    transform: translateY(8px) scale(0.995);
+    transform: translateY(6px);
   }
   to {
     opacity: 1;
@@ -863,8 +862,8 @@ input[type="radio"] {
 .icon-button,
 .stay-switcher-button {
   transition: transform 160ms cubic-bezier(0.2, 0.8, 0.4, 1),
-              background 180ms ease,
-              box-shadow 200ms ease,
+              background-color 220ms ease,
+              box-shadow 220ms ease,
               opacity 160ms ease,
               border-color 180ms ease !important;
   user-select: none;
@@ -875,7 +874,14 @@ input[type="radio"] {
 .mini-button:active,
 .icon-button:active,
 .stay-switcher-button:active {
-  transform: scale(0.96) !important;
+  transform: translateY(1px) scale(0.98) !important;
+}
+
+.button.primary:active,
+.mini-button:active,
+.icon-button:active,
+.stay-switcher-button:active {
+  box-shadow: 0 2px 8px rgba(17, 32, 25, .12) !important;
 }
 
 .chore-check:active {
@@ -898,24 +904,23 @@ textarea:focus-visible {
 
 /* Skeleton shimmer & loading pulse */
 .skeleton-shimmer {
-  background: linear-gradient(
-    90deg,
-    rgba(222, 216, 206, 0.35) 0%,
-    rgba(255, 253, 248, 0.85) 50%,
-    rgba(222, 216, 206, 0.35) 100%
-  );
-  background-size: 200% 100%;
-  animation: shimmerMove 1.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-  will-change: background-position;
+  position: relative;
+  overflow: hidden;
+  background: rgba(222, 216, 206, 0.42);
+}
+
+.skeleton-shimmer::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255, 253, 248, .78), transparent);
+  animation: shimmerMove 1.8s cubic-bezier(.4, 0, .2, 1) infinite;
+  will-change: transform;
 }
 
 @keyframes shimmerMove {
-  0% {
-    background-position: 200% 0;
-  }
-  100% {
-    background-position: -200% 0;
-  }
+  to { transform: translateX(100%); }
 }
 
 .skeleton-dashboard-wrap {
@@ -1264,20 +1269,20 @@ body {
 }
 
 ::view-transition-old(root) {
-  animation: 140ms ease-out both routeFadeOut;
+  animation: 160ms ease-out both routeFadeOut;
 }
 
 ::view-transition-new(root) {
-  animation: 220ms cubic-bezier(.22, 1, .36, 1) both routeFadeIn;
+  animation: 260ms cubic-bezier(.22, 1, .36, 1) both routeFadeIn;
 }
 
 @keyframes routeFadeOut {
-  to { opacity: 0; transform: translateY(-3px); }
+  to { opacity: 0; }
 }
 
 @keyframes routeFadeIn {
-  from { opacity: 0; transform: translateY(7px) scale(.997); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -2230,3 +2235,6 @@ body {
 }
 
 
+
+.workspace-dialog, .billing-dialog { margin: auto; border: 0; max-height: 90dvh; overflow-y: auto; }
+.workspace-dialog::backdrop, .billing-dialog::backdrop { background: rgba(17, 32, 25, .45); }
