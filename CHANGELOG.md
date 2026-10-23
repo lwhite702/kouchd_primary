@@ -9,6 +9,13 @@
 
 ### Added
 
+- Prepared account-wide Starter and Plus capacity checks with preserved existing access and a separate enforcement rollout switch.
+- Consolidated manual and scheduled agreement acceptance, corrected guest-specific updates, and retained clear system audit events.
+- Added native shopping and check-in destinations, scoped secondary feature subscriptions, typed ledger/subscription contracts, and keyboard dismissal.
+- Split the web workspace into lazy-loaded screens and forms, added compact server-authoritative financial totals, and corrected activity navigation and private shopping activity.
+- Updated dependencies and disabled automatic session recording; optional billing and newsletter remain gated pending provider verification.
+- Retained one public QA ownership route without a conflicting static file.
+
 - Enforced reward redemption balance checks and cumulative period credit caps on the backend, preserved remainder cents across weekly schedule totals, replaced punitive overdue reminder payloads with supportive household copy, and added host-reviewed overdue catch-up recovery plans.
 - Targeted crawl policy in robots.ts and dynamic sitemap.xml for public marketing and legal routes (including /about, /brand, /privacy, /terms, and /sms-opt-in), paired with explicit noindex and nofollow robots metadata on dynamic single-use invitation tokens and sign-in/sign-up authentication routes.
 - Implemented responsive desktop and compact mobile host workspace views with tabbed household overview, financial summaries, guest rosters, and chore coordination.

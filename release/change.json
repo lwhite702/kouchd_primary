@@ -1,5 +1,5 @@
 {
-  "version": "0.6.8",
-  "type": "patch",
-  "reason": "Enforce reward balance and cumulative period credit caps, preserve weekly schedule remainder cents, and support host-reviewed overdue catch-up plans."
+  "version": "0.7.0",
+  "type": "minor",
+  "reason": "Prepare the public launch with account-wide Starter and Plus capacity safeguards, shared agreement acceptance, corrected native navigation and coordination screens, scoped subscriptions, compact financial summaries, privacy fixes and dependency remediation."
 }

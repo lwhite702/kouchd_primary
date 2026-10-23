@@ -14,6 +14,9 @@ packages:
   Convex:
     url: https://github.com/get-convex/convex-swift.git
     from: 0.8.1
+  PostHog:
+    url: https://github.com/PostHog/posthog-ios.git
+    from: 3.86.1
   RevenueCat:
     url: https://github.com/RevenueCat/purchases-ios.git
     from: 5.95.0
@@ -43,6 +46,8 @@ targets:
           - Manrope.ttf
         CLERK_PUBLISHABLE_KEY: $(CLERK_PUBLISHABLE_KEY)
         CONVEX_URL: $(CONVEX_URL)
+        POSTHOG_API_KEY: $(POSTHOG_API_KEY)
+        POSTHOG_HOST: $(POSTHOG_HOST)
         REVENUECAT_PUBLIC_SDK_KEY: $(REVENUECAT_PUBLIC_SDK_KEY)
         REVENUECAT_PURCHASES_ENABLED: $(REVENUECAT_PURCHASES_ENABLED)
         NSFaceIDUsageDescription: Use Face ID to sign in to your Kouchd account when you enable biometric sign-in.
@@ -73,8 +78,8 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.wrelikbrands.kouchd
         DEVELOPMENT_TEAM: L8R42BJ54K
-        MARKETING_VERSION: 0.6.8
-        CURRENT_PROJECT_VERSION: 1
+        MARKETING_VERSION: 0.7.0
+        CURRENT_PROJECT_VERSION: 2
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         SWIFT_VERSION: 5.0
         EXCLUDED_ARCHS[sdk=iphonesimulator*]: x86_64
@@ -95,6 +100,8 @@ targets:
         product: ClerkConvex
       - package: Convex
         product: ConvexMobile
+      - package: PostHog
+        product: PostHog
       - package: RevenueCat
         product: RevenueCat
   KouchdTests:
