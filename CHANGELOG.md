@@ -4,6 +4,8 @@
 
 ### Fixed
 
+- Patch Next.js to 16.4.3 and DOMPurify to 3.4.17, align the framework lint configuration, and refresh compatible dependencies. Local full and runtime audits report zero advisories; release requires its own promotion approval.
+
 - Encoded native numeric arguments as Float64 across stay creation, agreement acceptance, ad-hoc charges, contribution amounts, schedule weekdays, reward points, and household guide progress to prevent Convex validation failures; fixed dark-mode contrast on lime account and summary surfaces.
 - Native tour completion uses local revision state with explicit persistence so Clerk authentication preference writes cannot repeatedly invalidate the root sheet host; the host retains a stable ZStack. Adds the Face ID usage description required by biometric sign-in.
 
