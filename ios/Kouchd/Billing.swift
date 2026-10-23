@@ -55,7 +55,7 @@ enum BillingPurchaseResult: Equatable, Sendable {
     let (purchases, userID, generation) = try await readyPurchases()
     let available = (try await purchases.offerings().current?.availablePackages ?? []).filter {
       let productID = $0.storeProduct.productIdentifier
-      return productID.hasPrefix("kouchd_plus") || productID.hasPrefix("kouchd_pro")
+      return ["kouchd_plus_monthly", "kouchd_plus_yearly"].contains(productID)
     }
     try verifyIdentity(userID, generation: generation)
     packagesByID = Dictionary(uniqueKeysWithValues: available.map { ($0.identifier, $0) })
@@ -238,7 +238,7 @@ struct SubscriptionScreen: View {
           .font(.footnote).foregroundStyle(Palette.muted)
       }
 
-      if !store.subscriptionSummary["canManageSubscription"].flag {
+      if store.typedSubscriptionSummary?.canManageSubscription != true {
         EmptyCard(title: "Guests stay free", message: "Only the household host manages a Kouchd subscription. Your agreements, records, ledger, chores, and participation remain available.")
       } else if !AppConfig.purchasesEnabled {
         EmptyCard(title: "Subscriptions are coming soon", message: "Purchase options will appear after Kouchd finishes App Store and plan verification.")
@@ -280,7 +280,7 @@ struct SubscriptionScreen: View {
   }
 
   private var planName: String {
-    switch store.subscriptionSummary["plan"].text {
+    switch store.typedSubscriptionSummary?.plan ?? "starter" {
     case "hostPlus": "Host Plus"
     case "householdPro": "Household Pro"
     default: "Starter"
@@ -288,11 +288,11 @@ struct SubscriptionScreen: View {
   }
 
   private var statusName: String {
-    store.subscriptionSummary["status"].text.replacingOccurrences(of: "_", with: " ").capitalized
+    (store.typedSubscriptionSummary?.status ?? "unknown").replacingOccurrences(of: "_", with: " ").capitalized
   }
 
   private var periodEnd: Date? {
-    let value = store.subscriptionSummary["currentPeriodEndsAt"].double
+    let value = store.typedSubscriptionSummary?.currentPeriodEndsAt ?? 0
     return value > 0 ? Date(timeIntervalSince1970: value / 1000) : nil
   }
 }

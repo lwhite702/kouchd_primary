@@ -5,6 +5,10 @@ import SwiftUI
 
 struct HomeScreen: View {
   let store: KouchdStore
+  let openLedger: () -> Void
+  let openMore: (KouchdRoute?) -> Void
+  let openActivity: (String, String) -> Void
+  private var nextContribution: LedgerRecord? { store.typedLedger.filter { $0.balanceCents > 0 }.min { $0.dueDate < $1.dueDate } }
   var body: some View {
     ScrollView {
       VStack(alignment: .leading, spacing: 24) {
@@ -31,9 +35,7 @@ struct HomeScreen: View {
           Text("Your stays").font(Palette.section)
           ForEach(store.stays.indices, id: \.self) { index in
             let stay = store.stays[index]["stay"]
-            Button {
-              store.selectStay(stay["_id"].text)
-            } label: {
+            NavigationLink(value: KouchdRoute.stayDetails(stay["_id"].text)) {
               VStack(alignment: .leading, spacing: 14) {
                 Text(stay["name"].text.isEmpty ? "Shared stay" : stay["name"].text)
                   .font(.title3.bold()).foregroundStyle(Palette.forest)
@@ -50,18 +52,20 @@ struct HomeScreen: View {
         } else {
           VStack(alignment: .leading, spacing: 18) {
             Text("NEXT CONTRIBUTION").font(.caption.bold()).foregroundStyle(Palette.lime)
-            Text(Display.money(store.ledger.first?["balanceCents"].int ?? 0))
+            Text(nextContribution.map { Display.money($0.balanceCents) } ?? "All caught up")
               .font(.largeTitle.bold()).foregroundStyle(.white)
-            Text("Due \(store.ledger.first?["dueDate"].text ?? "later")")
+            Text(nextContribution.map { "Due \($0.dueDate)" } ?? "No contribution is currently due.")
               .font(.subheadline).foregroundStyle(.white.opacity(0.85))
-            NavigationLink("View contributions", value: KouchdRoute.ledger)
-              .font(.headline).foregroundStyle(Palette.ink)
-              .frame(maxWidth: .infinity).padding(14)
-              .background(Palette.surface, in: RoundedRectangle(cornerRadius: 14))
+            Button(action: openLedger) {
+              Text("View contributions")
+                .font(.headline).foregroundStyle(Palette.ink)
+                .frame(maxWidth: .infinity).padding(14)
+                .background(Palette.surface, in: RoundedRectangle(cornerRadius: 14))
+            }
           }
           .padding(24).frame(maxWidth: .infinity, alignment: .leading)
           .background(Palette.brandForest, in: RoundedRectangle(cornerRadius: 24))
-          if let next = store.chores.first(where: { !$0["completed"].flag && $0["voidedAt"].text.isEmpty && $0["assignee"].text != "host" && ($0["assigneeUserId"].text.isEmpty || $0["assigneeUserId"].text == store.viewer["id"].text) }) {
+          if let next = store.chores.first(where: {  $0["completedAt"].text.isEmpty && $0["voidedAt"].text.isEmpty && $0["assignee"].text != "host" && ($0["assigneeUserId"].text.isEmpty || $0["assigneeUserId"].text == store.viewer["id"].text) }) {
             Card {
               Text(next.title).font(.headline)
               Text("Your turn · \(next["dueDate"].text)")
@@ -98,17 +102,17 @@ struct HomeScreen: View {
         }
       }
       Card {
-        Text("Contribution balance").font(.subheadline).foregroundStyle(Palette.muted)
-        Text(Display.money(store.ledger.reduce(0) { $0 + $1["balanceCents"].int }))
+        Text("Remaining scheduled contributions").font(.subheadline).foregroundStyle(Palette.muted)
+        Text(Display.money(store.typedLedger.reduce(0) { $0 + $1.balanceCents }))
           .font(.system(size: 38, weight: .bold, design: .rounded))
           .foregroundStyle(Palette.forest)
-        NavigationLink("Open ledger", value: KouchdRoute.ledger)
+        Button("Open ledger", action: openLedger)
       }
       HStack(spacing: 12) {
         NavigationLink(value: KouchdRoute.chores) {
-          StatCard(number: "\(store.chores.filter { !$0["completed"].flag && $0["voidedAt"].text.isEmpty }.count)", label: "Open chores")
+          StatCard(number: "\(store.chores.filter {  $0["completedAt"].text.isEmpty && $0["voidedAt"].text.isEmpty }.count)", label: "Open chores")
         }
-        NavigationLink(value: KouchdRoute.rewards) {
+        Button { openMore(.rewards) } label: {
           StatCard(number: "\(store.wallet["availablePoints"].int)", label: "Reward points")
         }
       }
@@ -120,17 +124,28 @@ struct HomeScreen: View {
         }
       }
       Card {
-        Text("Your next steps").font(.headline)
-        NavigationLink("Stay details and agreement", value: KouchdRoute.stay)
-        NavigationLink("Occupied nights", value: KouchdRoute.occupancy)
-        NavigationLink("Schedule requests", value: KouchdRoute.schedule)
+        Text("More stay tools").font(.headline)
+        Text("Find agreements, schedule requests, rewards, and account options together.")
+          .font(.subheadline).foregroundStyle(Palette.muted)
+        Button { openMore(nil) } label: {
+          Label("Browse all tools", systemImage: "ellipsis.circle")
+            .font(.subheadline.weight(.semibold)).foregroundStyle(Palette.forest)
+        }
       }
       if !store.activity.isEmpty {
         Card {
           Text("Recent activity").font(.headline)
           ForEach(Array(store.activity.prefix(3)), id: \.id) { item in
-            Text(item["detail"].text)
-              .font(.subheadline).foregroundStyle(Palette.muted)
+            Button { openActivity(item["kind"].text, item["action"].text) } label: {
+              HStack(alignment: .top, spacing: 10) {
+                Text(item["detail"].text).font(.subheadline).foregroundStyle(Palette.ink)
+                  .frame(maxWidth: .infinity, alignment: .leading)
+                Image(systemName: "arrow.up.right").font(.caption.bold()).foregroundStyle(Palette.forest)
+              }
+              .padding(.vertical, 7).contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityHint("Opens the related section")
           }
         }
       }
@@ -161,10 +176,10 @@ struct HomeScreen: View {
         .accessibilityLabel("Switch stay, current stay: \(store.stayName)")
       }
       ToolbarItem(placement: .topBarTrailing) {
-        NavigationLink(value: KouchdRoute.settings) {
+        Button { openMore(.settings) } label: {
           Text(String(store.viewer["name"].text.prefix(2)).uppercased())
             .font(.caption2.bold())
-            .foregroundStyle(Palette.forest)
+            .foregroundStyle(Palette.ink)
             .frame(width: 32, height: 32)
             .background(Palette.lime, in: Circle())
         }
@@ -282,8 +297,6 @@ struct LedgerScreen: View {
           }
         }
       }
-      NavigationLink("Contribution rewards", value: KouchdRoute.rewards)
-      NavigationLink("Schedule changes", value: KouchdRoute.schedule)
     }
     .toolbar {
       if !store.isEnded {
@@ -397,7 +410,6 @@ struct ChoresScreen: View {
           }
         }
       }
-      NavigationLink("Occupied nights", value: KouchdRoute.occupancy)
     }
     .toolbar {
       if !store.isEnded {

@@ -2,6 +2,8 @@ CLERK_PUBLISHABLE_KEY = missing_production_key
 CONVEX_URL = https:/$()/missing-production.example
 REVENUECAT_PUBLIC_SDK_KEY = missing_revenuecat_public_sdk_key
 REVENUECAT_PURCHASES_ENABLED = NO
+POSTHOG_API_KEY = missing_posthog_project_token
+POSTHOG_HOST = https:/$()/us.i.posthog.com
 KOUCHD_CODE_SIGN_STYLE = Manual
 KOUCHD_PROVISIONING_PROFILE_SPECIFIER = Kouchd TestFlight
 #include? "Production.local.xcconfig"

@@ -2,4 +2,6 @@ CLERK_PUBLISHABLE_KEY = missing_development_key
 CONVEX_URL = https:/$()/missing-development.example
 REVENUECAT_PUBLIC_SDK_KEY = missing_revenuecat_public_sdk_key
 REVENUECAT_PURCHASES_ENABLED = NO
+POSTHOG_API_KEY = missing_posthog_project_token
+POSTHOG_HOST = https:/$()/us.i.posthog.com
 #include? "Local.xcconfig"

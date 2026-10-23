@@ -4,6 +4,7 @@ import ConvexMobile
 import CryptoKit
 import RevenueCat
 import SwiftUI
+import UIKit
 
 @main struct KouchdApp: App {
   init() {
@@ -11,6 +12,7 @@ import SwiftUI
     if IntroductionTestHost.isEnabled { return }
     initConvexLogging()
     #endif
+    KouchdAnalytics.configure()
     if AppConfig.isConfigured {
       Clerk.configure(publishableKey: AppConfig.clerkKey)
     }
@@ -51,13 +53,14 @@ import SwiftUI
 }
 
 private enum Tab: String, CaseIterable {
-  case home = "Home", ledger = "Ledger", chores = "Chores", stay = "Stay"
+  case home = "Home", ledger = "Ledger", chores = "Chores", stay = "Stay", more = "More"
   var symbol: String {
     switch self {
     case .home: "house.fill"
     case .ledger: "list.bullet.rectangle"
     case .chores: "checkmark.circle"
     case .stay: "bed.double"
+    case .more: "ellipsis.circle"
     }
   }
 }
@@ -87,6 +90,27 @@ struct RootView: View {
   @State private var invitePreview: Value = .null
   @State private var tab: Tab = .home
   @State private var billing = BillingModel(client: RevenueCatBillingClient.shared)
+  @State private var morePath = NavigationPath()
+
+  private func openMore(_ route: KouchdRoute? = nil) {
+    morePath = NavigationPath()
+    if let route { morePath.append(route) }
+    tab = .more
+  }
+
+  private func openActivity(_ kind: String, action: String) {
+    switch kind {
+    case "contribution", "obligation": tab = .ledger
+    case "chore": tab = .chores
+    case "check_in": openMore(.checkins)
+    case "shopping": openMore(.shopping)
+    case "reward": openMore(.rewards)
+    case "terms": openMore(action.hasPrefix("payment_schedule_") ? .schedule : .agreement)
+    case "stay", "invite": tab = .stay
+    case "announcement": tab = .home
+    default: openMore(.activity)
+    }
+  }
 
   private func markIntroductionComplete() {
     introductionRevision = 1
@@ -119,14 +143,19 @@ struct RootView: View {
       } else {
         TabView(selection: $tab) {
           NavigationStack {
-            LoadedStayContent(loading: store.isStayLoading || store.isFinancialLoading) {
-              HomeScreen(store: store)
+            LoadedStayContent(loading: store.isStayLoading || store.isFinancialLoading, error: store.financialError, retry: store.retryFinancialData) {
+              HomeScreen(
+                store: store,
+                openLedger: { tab = .ledger },
+                openMore: { openMore($0) },
+                openActivity: { openActivity($0, action: $1) }
+              )
             }
             .kouchdDestinations(store: store)
           }
             .tabItem { Label(Tab.home.rawValue, systemImage: Tab.home.symbol) }.tag(Tab.home)
           NavigationStack {
-            LoadedStayContent(loading: store.isStayLoading || store.isFinancialLoading) {
+            LoadedStayContent(loading: store.isStayLoading || store.isFinancialLoading, error: store.financialError, retry: store.retryFinancialData) {
               LedgerScreen(store: store)
             }
             .kouchdDestinations(store: store)
@@ -146,6 +175,13 @@ struct RootView: View {
             .kouchdDestinations(store: store)
           }
             .tabItem { Label(Tab.stay.rawValue, systemImage: Tab.stay.symbol) }.tag(Tab.stay)
+          NavigationStack(path: $morePath) {
+            LoadedStayContent(loading: store.isStayLoading) {
+              MoreScreen(store: store)
+            }
+            .kouchdDestinations(store: store)
+          }
+            .tabItem { Label(Tab.more.rawValue, systemImage: Tab.more.symbol) }.tag(Tab.more)
         }
         .tint(Palette.forest)
       }
@@ -172,6 +208,16 @@ struct RootView: View {
       switch sheet {
       case .auth:
         AuthView()
+          .scrollDismissesKeyboard(.interactively)
+          .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+              Spacer()
+              Button("Done") {
+                UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+              }
+              .accessibilityIdentifier("auth.dismissKeyboard")
+            }
+          }
       case .invitation(let token, let preview):
         InvitationScreen(store: store, token: token, preview: preview) {
           inviteToken = ""
@@ -199,6 +245,7 @@ struct RootView: View {
       }
     }
     .onChange(of: clerk.user?.id, initial: true) { _, id in
+      KouchdAnalytics.identify(id)
       if id == nil {
         destination = nil
         Task { await store.disconnectAuthenticatedSession() }
@@ -218,6 +265,9 @@ struct RootView: View {
           }
         }
       }
+    }
+    .onChange(of: phase, initial: true) { _, currentPhase in
+      KouchdAnalytics.screenViewed(currentPhase)
     }
     .onChange(of: store.stays.count) { _, count in
       if store.selectedStayID.isEmpty, let first = store.stays.first, count > 0 {

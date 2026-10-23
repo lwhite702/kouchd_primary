@@ -70,7 +70,7 @@ struct Pill: View {
     Text(text.uppercased())
       .font(.caption2.weight(.bold))
       .tracking(1)
-      .foregroundStyle(Palette.brandForest)
+      .foregroundStyle(Palette.ink)
       .padding(.horizontal, 12).padding(.vertical, 7)
       .background(Palette.lime, in: Capsule())
   }
@@ -82,11 +82,11 @@ struct PrimaryButton: View {
   let action: () -> Void
   var body: some View {
     Button(action: action) {
-      Text(title).font(.headline).frame(maxWidth: .infinity)
+      Text(title).font(.headline).foregroundStyle(.white).frame(maxWidth: .infinity)
         .padding(.vertical, 15)
         .contentShape(Rectangle())
     }
-    .buttonStyle(KouchdButtonStyle())
+    .kouchdPrimaryButtonStyle()
     .fixedSize(horizontal: false, vertical: true)
     .opacity(isEnabled ? 1 : 0.5)
   }
@@ -158,7 +158,7 @@ private struct KouchdEntrance: ViewModifier {
   var delay: Double
   func body(content: Content) -> some View {
     content.opacity(visible ? 1 : 0)
-      .offset(y: visible || reduceMotion ? 0 : 10)
+      .offset(y: visible || reduceMotion ? 0 : 6)
       .onAppear {
         withAnimation(KouchdMotion.animation(reduceMotion).delay(reduceMotion ? 0 : delay)) { visible = true }
       }
@@ -173,18 +173,24 @@ private struct KouchdNavigationBarModifier: ViewModifier {
       content
         .navigationTitle(title.replacingOccurrences(of: "\n", with: " "))
         .navigationBarTitleDisplayMode(.inline)
-        .toolbarBackground(Palette.cream, for: .navigationBar)
-        .toolbarBackground(.visible, for: .navigationBar)
     } else {
       content
         .navigationBarTitleDisplayMode(.inline)
-        .toolbarBackground(Palette.cream, for: .navigationBar)
-        .toolbarBackground(.visible, for: .navigationBar)
     }
   }
 }
 
 extension View {
+  @ViewBuilder
+  func kouchdPrimaryButtonStyle() -> some View {
+    if #available(iOS 26.0, *) {
+      self.buttonStyle(.glassProminent)
+        .tint(Palette.brandForest)
+    } else {
+      self.buttonStyle(KouchdButtonStyle())
+    }
+  }
+
   func kouchdNavigationBar(title: String? = nil) -> some View {
     modifier(KouchdNavigationBarModifier(title: title))
   }
@@ -202,10 +208,13 @@ extension View {
       case .chores: ChoresScreen(store: store)
       case .rewards: RewardsScreen(store: store)
       case .stay: StayScreen(store: store)
+      case .stayDetails(let stayID): StayDetailsDestination(store: store, stayID: stayID)
       case .occupancy: OccupancyScreen(store: store)
       case .schedule: ScheduleScreen(store: store)
       case .settings: SettingsScreen(store: store)
       case .activity: ActivityScreen(store: store)
+      case .shopping: ShoppingScreen(store: store)
+      case .checkins: CheckInsScreen(store: store)
       case .householdGuide: HouseholdGuideScreen(store: store)
       case .createStay: CreateStayScreen(store: store)
       case .joinCode: JoinCodeScreen(store: store)
@@ -219,14 +228,33 @@ extension View {
       case .about: AboutKouchdScreen()
       case .admin: AdminScreen(store: store)
       case .adminFinancial: AdminFinancialScreen(store: store)
-      case .adminSmsHistory: AdminSMSHistory(events: store.adminSms)
+      case .adminSmsHistory:
+        AdminSMSHistory(events: store.adminSms)
+          .task { store.loadAdminSMS() }
+          .onDisappear { store.stopAdmin("sms") }
       case .adminUserSmsHistory(let userID):
         AdminSMSHistory(events: store.adminUserDetail["user"].id == userID
           ? store.adminUserDetail["smsEvents"].items
           : [])
+          .task { store.loadAdminUser(userID) }
+          .onDisappear { store.stopAdmin("user") }
       case .adminUser(let id): AdminUserScreen(store: store, userID: id)
       case .adminStay(let id): AdminStayScreen(store: store, stayID: id)
       }
+    }
+  }
+}
+
+private struct StayDetailsDestination: View {
+  let store: KouchdStore
+  let stayID: String
+
+  var body: some View {
+    LoadedStayContent(loading: store.isStayLoading) {
+      StayScreen(store: store)
+    }
+    .task {
+      if store.selectedStayID != stayID { store.selectStay(stayID) }
     }
   }
 }
@@ -236,10 +264,16 @@ private struct KouchdButtonStyle: ButtonStyle {
   func makeBody(configuration: Configuration) -> some View {
     configuration.label.foregroundStyle(.white)
       .background(Palette.brandForest, in: RoundedRectangle(cornerRadius: 16))
+      .shadow(
+        color: Palette.brandForest.opacity(configuration.isPressed ? 0.08 : 0.2),
+        radius: configuration.isPressed ? 3 : 10,
+        x: 0,
+        y: configuration.isPressed ? 1 : 5
+      )
       .contentShape(RoundedRectangle(cornerRadius: 16))
-      .scaleEffect(configuration.isPressed && !reduceMotion ? 0.98 : 1)
-      .opacity(configuration.isPressed ? 0.85 : 1)
-      .animation(KouchdMotion.animation(reduceMotion), value: configuration.isPressed)
+      .scaleEffect(configuration.isPressed && !reduceMotion ? 0.985 : 1)
+      .offset(y: configuration.isPressed && !reduceMotion ? 1 : 0)
+      .animation(reduceMotion ? .easeOut(duration: 0.1) : .spring(duration: 0.28, bounce: 0.12), value: configuration.isPressed)
   }
 }
 
@@ -247,15 +281,23 @@ private struct KouchdButtonStyle: ButtonStyle {
 // Keep each navigation stack mounted while a selected stay or guest loads.
 struct LoadedStayContent<Content: View>: View {
   let loading: Bool
+  var error: String = ""
+  var retry: (() -> Void)? = nil
   @ViewBuilder let content: Content
   @Environment(\.accessibilityReduceMotion) private var reduceMotion
   var body: some View {
-    content.opacity(loading ? 0 : 1).disabled(loading).accessibilityHidden(loading)
+    content.opacity(loading || !error.isEmpty ? 0 : 1).disabled(loading || !error.isEmpty).accessibilityHidden(loading || !error.isEmpty)
       .overlay {
         if loading {
           ProgressView("Opening your stay")
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Palette.cream.ignoresSafeArea()).transition(.opacity)
+        } else if !error.isEmpty {
+          VStack(spacing: 16) {
+            Text(error).multilineTextAlignment(.center)
+            if let retry { Button("Try again", action: retry) }
+          }.padding().frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Palette.cream.ignoresSafeArea())
         }
       }
       .animation(KouchdMotion.animation(reduceMotion), value: loading)

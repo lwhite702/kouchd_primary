@@ -3,6 +3,7 @@ import Combine
 import ConvexMobile
 import Foundation
 import Observation
+import PostHog
 
 enum AppConfig {
   static var clerkKey: String {
@@ -18,9 +19,47 @@ enum AppConfig {
     let value = Bundle.main.object(forInfoDictionaryKey: "REVENUECAT_PURCHASES_ENABLED") as? String
     return value == "YES" && revenueCatPublicKey.hasPrefix("appl_")
   }
+  static var postHogApiKey: String {
+    Bundle.main.object(forInfoDictionaryKey: "POSTHOG_API_KEY") as? String ?? ""
+  }
+  static var postHogHost: String {
+    Bundle.main.object(forInfoDictionaryKey: "POSTHOG_HOST") as? String ?? "https://us.i.posthog.com"
+  }
+  static var analyticsEnabled: Bool {
+    postHogApiKey.hasPrefix("phc_") && postHogHost.hasPrefix("https://")
+  }
   static var isConfigured: Bool {
     clerkKey.hasPrefix("pk_") && convexURL.hasPrefix("https://")
       && !convexURL.contains("missing")
+  }
+}
+
+enum KouchdAnalytics {
+  private static let screens: Set<String> = ["introduction", "welcome", "setup", "home"]
+
+  static func configure() {
+    guard AppConfig.analyticsEnabled else { return }
+    let config = PostHogConfig(projectToken: AppConfig.postHogApiKey, host: AppConfig.postHogHost)
+    config.captureApplicationLifecycleEvents = false
+    config.captureScreenViews = false
+    config.captureElementInteractions = false
+    config.enableSwizzling = false
+    config.sessionReplay = false
+    PostHogSDK.shared.setup(config)
+  }
+
+  static func identify(_ userID: String?) {
+    guard AppConfig.analyticsEnabled else { return }
+    if let userID, !userID.isEmpty {
+      PostHogSDK.shared.identify(userID)
+    } else {
+      PostHogSDK.shared.reset()
+    }
+  }
+
+  static func screenViewed(_ screen: String) {
+    guard AppConfig.analyticsEnabled, screens.contains(screen) else { return }
+    PostHogSDK.shared.capture("screen_viewed", properties: ["screen": screen])
   }
 }
 
@@ -103,6 +142,7 @@ private enum KouchdAuthError: LocalizedError {
   var viewer: Value = .null
   var stays: [Value] = []
   var bundle: Value = .null
+  var typedAgreement: AgreementRecord?
   var ledger: [Value] = []
   var contributions: [Value] = []
   var chores: [Value] = []
@@ -112,7 +152,11 @@ private enum KouchdAuthError: LocalizedError {
   var nights: [Value] = []
   var wallet: Value = .null
   var rules: [Value] = []
+  var shopping: [Value] = []
+  var checkins: [Value] = []
   var subscriptionSummary: Value = .null
+  var typedSubscriptionSummary: AccountSubscriptionSummary?
+  var typedLedger: [LedgerRecord] = []
   var isSubscriptionSummaryLoading = true
   var subscriptionSummaryError = ""
   var adminAccess: Value = .null
@@ -130,6 +174,7 @@ private enum KouchdAuthError: LocalizedError {
   var isLoading = true
   var isStayLoading = false
   var isFinancialLoading = false
+  var financialError = ""
   private var stayGeneration = 0
   private var financialGeneration = 0
   private var pendingFinancialQueries: Set<String> = []
@@ -142,7 +187,13 @@ private enum KouchdAuthError: LocalizedError {
   private var accountSubscriptions: [AnyCancellable] = []
   private var staySubscriptions: [AnyCancellable] = []
   private var financialSubscriptions: [AnyCancellable] = []
+  private var featureSubscriptions: [StayFeature: [AnyCancellable]] = [:]
+  private var featureMembers: [StayFeature: Set<UUID>] = [:]
+  private var featureGeneration = 0
+  private var featureVersions: [StayFeature: Int] = [:]
+  var featureLoading: Set<StayFeature> = []
   private var adminSubscriptions: [String: [AnyCancellable]] = [:]
+  private var adminVersions: [String: Int] = [:]
 
   init() {
     client = ConvexClientWithAuth(
@@ -240,10 +291,16 @@ private enum KouchdAuthError: LocalizedError {
     accountSubscriptions.removeAll()
     staySubscriptions.removeAll()
     financialSubscriptions.removeAll()
+    featureSubscriptions.removeAll()
+    featureMembers.removeAll()
+    featureLoading.removeAll()
+    featureGeneration += 1
     viewer = .null
     stays = []
     bundle = .null
+    typedAgreement = nil
     ledger = []
+    typedLedger = []
     contributions = []
     chores = []
     announcements = []
@@ -252,7 +309,10 @@ private enum KouchdAuthError: LocalizedError {
     nights = []
     wallet = .null
     rules = []
+    shopping = []
+    checkins = []
     subscriptionSummary = .null
+    typedSubscriptionSummary = nil
     isSubscriptionSummaryLoading = true
     subscriptionSummaryError = ""
     clearAdmin()
@@ -265,6 +325,7 @@ private enum KouchdAuthError: LocalizedError {
   }
 
   private func clearAdmin() {
+    for scope in ["overview", "user", "stay", "financial", "sms"] { stopAdmin(scope) }
     adminSubscriptions.removeAll()
     adminStats = .null
     adminUsers = .null
@@ -277,7 +338,7 @@ private enum KouchdAuthError: LocalizedError {
 
   func loadAdmin() {
     guard adminAccess.flag else { return }
-    adminSubscriptions["overview"] = []
+    stopAdmin("overview")
     watch("admin:getOverviewStats", into: \.adminStats, adminScope: "overview")
     watch("admin:listUsers", into: \.adminUsers, adminScope: "overview")
     watch("admin:listStays", into: \.adminStays, adminScope: "overview")
@@ -287,16 +348,33 @@ private enum KouchdAuthError: LocalizedError {
 
   func loadAdminUser(_ id: String) {
     guard adminAccess.flag else { return }
-    adminSubscriptions["user"] = []
+    stopAdmin("user")
     adminUserDetail = .null
     watch("admin:getUserDetail", args: ["userId": id], into: \.adminUserDetail, adminScope: "user")
   }
 
   func loadAdminStay(_ id: String) {
     guard adminAccess.flag else { return }
-    adminSubscriptions["stay"] = []
+    stopAdmin("stay")
     adminStayDetail = .null
     watch("admin:getStayDetail", args: ["stayId": id], into: \.adminStayDetail, adminScope: "stay")
+  }
+
+  func stopAdmin(_ scope: String) {
+    adminVersions[scope, default: 0] += 1
+    adminSubscriptions[scope] = nil
+  }
+
+  func loadAdminFinancial() {
+    guard adminAccess.flag else { return }
+    stopAdmin("financial")
+    watch("admin:listDisputesAndLedgers", into: \.adminFinancials, adminScope: "financial")
+  }
+
+  func loadAdminSMS() {
+    guard adminAccess.flag else { return }
+    stopAdmin("sms")
+    watch("admin:listSmsComplianceEvents", into: \.adminSms, adminScope: "sms")
   }
 
   func syncUser(name: String?) async {
@@ -329,8 +407,12 @@ private enum KouchdAuthError: LocalizedError {
     selectedGuestID = ""
     staySubscriptions.removeAll()
     financialSubscriptions.removeAll()
+    featureSubscriptions.removeAll()
+    featureGeneration += 1
     bundle = .null
+    typedAgreement = nil
     ledger = []
+    typedLedger = []
     contributions = []
     chores = []
     announcements = []
@@ -339,13 +421,14 @@ private enum KouchdAuthError: LocalizedError {
     nights = []
     wallet = .null
     rules = []
+    shopping = []
+    checkins = []
     let args: [String: ConvexEncodable?] = ["stayId": id]
     watch("stays:getBundle", args: args, into: \.bundle)
     watch("chores:list", args: args, into: \.chores)
     watch("announcements:list", args: args, into: \.announcements)
     watch("activity:list", args: args, into: \.activity)
-    watch("paymentSchedule:list", args: args, into: \.schedule)
-    watch("rewards:listRules", args: args, into: \.rules)
+
   }
 
   func selectGuest(_ id: String) {
@@ -356,20 +439,66 @@ private enum KouchdAuthError: LocalizedError {
   private func loadGuestData() {
     guard !selectedStayID.isEmpty else { return }
     financialGeneration += 1
-    pendingFinancialQueries = ["contributions:list", "occupancy:list", "rewards:getWallet", "obligations:list"]
+    pendingFinancialQueries = ["contributions:list", "rewards:getWallet", "obligations:list"]
     isFinancialLoading = true
+    financialError = ""
     financialSubscriptions.removeAll()
     contributions = []
     ledger = []
+    typedLedger = []
     nights = []
     wallet = .null
     var args: [String: ConvexEncodable?] = ["stayId": selectedStayID]
     if !selectedGuestID.isEmpty { args["guestUserId"] = selectedGuestID }
     watch("contributions:list", args: args, into: \.contributions, financial: true)
-    watch("occupancy:list", args: args, into: \.nights, financial: true)
     watch("rewards:getWallet", args: args, into: \.wallet, financial: true)
-    args["asOfDate"] = Display.date()
+    args["asOfDate"] = Display.date(timezone: bundle["stay"]["timezone"].text)
     watch("obligations:list", args: args, into: \.ledger, financial: true)
+    reloadFeatures()
+  }
+
+  func retryFinancialData() { loadGuestData() }
+
+  func beginFeature(_ feature: StayFeature, owner: UUID) {
+    featureMembers[feature, default: []].insert(owner)
+    if featureSubscriptions[feature] == nil { loadFeature(feature) }
+  }
+
+  func endFeature(_ feature: StayFeature, owner: UUID) {
+    featureMembers[feature]?.remove(owner)
+    if featureMembers[feature, default: []].isEmpty {
+      featureSubscriptions.removeValue(forKey: feature)
+      featureVersions[feature, default: 0] += 1
+      featureLoading.remove(feature)
+    }
+  }
+
+  private func reloadFeatures() {
+    featureGeneration += 1
+    featureSubscriptions.removeAll()
+    for feature in StayFeature.allCases where !featureMembers[feature, default: []].isEmpty {
+      loadFeature(feature)
+    }
+  }
+
+  private func loadFeature(_ feature: StayFeature) {
+    guard !selectedStayID.isEmpty, !isStayLoading else { return }
+    featureLoading.insert(feature)
+    featureVersions[feature, default: 0] += 1
+    var args: [String: ConvexEncodable?] = ["stayId": selectedStayID]
+    switch feature {
+    case .shopping:
+      watch("shopping:list", args: args, into: \.shopping, feature: feature)
+    case .checkins:
+      watch("checkIns:list", args: args, into: \.checkins, feature: feature)
+    case .schedule:
+      watch("paymentSchedule:list", args: args, into: \.schedule, feature: feature)
+    case .rewards:
+      watch("rewards:listRules", args: args, into: \.rules, feature: feature)
+    case .occupancy:
+      if !selectedGuestID.isEmpty { args["guestUserId"] = selectedGuestID }
+      watch("occupancy:list", args: args, into: \.nights, financial: true, feature: feature)
+    }
   }
 
   private func watch<T: Decodable>(
@@ -378,8 +507,12 @@ private enum KouchdAuthError: LocalizedError {
     into keyPath: ReferenceWritableKeyPath<KouchdStore, T>,
     account: Bool = false,
     financial: Bool = false,
-    adminScope: String = ""
+    adminScope: String = "",
+    feature: StayFeature? = nil
   ) {
+    let featureEpoch = featureGeneration
+    let adminVersion = adminVersions[adminScope, default: 0]
+    let featureVersion = feature.map { featureVersions[$0, default: 0] }
     let generation = accountGeneration
     let stayEpoch = stayGeneration
     let financialEpoch = financialGeneration
@@ -389,6 +522,8 @@ private enum KouchdAuthError: LocalizedError {
       .receive(on: DispatchQueue.main)
       .sink(receiveCompletion: { [weak self] result in
         guard let self, generation == self.accountGeneration else { return }
+        if !adminScope.isEmpty && adminVersion != self.adminVersions[adminScope, default: 0] { return }
+        if let feature, featureEpoch != self.featureGeneration || featureVersion != self.featureVersions[feature, default: 0] || self.featureMembers[feature, default: []].isEmpty { return }
         if !account && adminScope.isEmpty && (stayID != self.selectedStayID || stayEpoch != self.stayGeneration) { return }
         if financial && (guestID != self.selectedGuestID || financialEpoch != self.financialGeneration) { return }
         if case .failure(let failure) = result {
@@ -404,12 +539,30 @@ private enum KouchdAuthError: LocalizedError {
             self.subscriptionSummaryError = failure.localizedDescription
           }
           if financial { self.finishFinancialQuery(name) }
+          if financial { self.financialError = "Kouchd couldn't load the complete shared record. Please try again." }
+          if let feature { self.featureLoading.remove(feature) }
         }
       }, receiveValue: { [weak self] value in
         guard let self, generation == self.accountGeneration else { return }
+        if !adminScope.isEmpty && adminVersion != self.adminVersions[adminScope, default: 0] { return }
+        if let feature, featureEpoch != self.featureGeneration || featureVersion != self.featureVersions[feature, default: 0] || self.featureMembers[feature, default: []].isEmpty { return }
         if !account && adminScope.isEmpty && (stayID != self.selectedStayID || stayEpoch != self.stayGeneration) { return }
         if financial && (guestID != self.selectedGuestID || financialEpoch != self.financialGeneration) { return }
         self[keyPath: keyPath] = value
+        if name == "stays:getBundle", let bundle = value as? Value {
+          self.typedAgreement = bundle["terms"].decoded(AgreementRecord.self)
+        }
+        if name == "subscriptions:currentAccountSummary", let summary = value as? Value {
+          self.typedSubscriptionSummary = summary.decoded(AccountSubscriptionSummary.self)
+        }
+        if name == "obligations:list", let rows = value as? [Value] {
+          if let decoded = Value.array(rows).decoded([LedgerRecord].self) {
+            self.typedLedger = decoded
+          } else {
+            self.financialError = "Kouchd couldn't read the complete ledger. Please try again."
+          }
+        }
+        if let feature { self.featureLoading.remove(feature) }
         if name == "subscriptions:currentAccountSummary" {
           self.isSubscriptionSummaryLoading = false
           self.subscriptionSummaryError = ""
@@ -428,7 +581,8 @@ private enum KouchdAuthError: LocalizedError {
           self.loadGuestData()
         }
       })
-    if !adminScope.isEmpty { adminSubscriptions[adminScope, default: []].append(token) }
+    if let feature { featureSubscriptions[feature, default: []].append(token) }
+    else if !adminScope.isEmpty { adminSubscriptions[adminScope, default: []].append(token) }
     else if account { accountSubscriptions.append(token) }
     else if financial { financialSubscriptions.append(token) }
     else { staySubscriptions.append(token) }
@@ -440,11 +594,18 @@ private enum KouchdAuthError: LocalizedError {
   }
 
   func mutateValue(_ name: String, _ args: [String: ConvexEncodable?]) async -> Value? {
+    let accountEpoch = accountGeneration
+    let stayEpoch = stayGeneration
+    let guestEpoch = financialGeneration
+    let scoped = !name.hasPrefix("users:") && !name.hasPrefix("admin:") &&
+      !["stays:create", "referral:joinWithCode", "invites:accept"].contains(name)
     do {
       let result: Value = try await client.mutation(name, with: args)
+      guard accountEpoch == accountGeneration, !scoped || (stayEpoch == stayGeneration && guestEpoch == financialGeneration) else { return nil }
       error = ""
       return result
     } catch {
+      guard accountEpoch == accountGeneration, !scoped || (stayEpoch == stayGeneration && guestEpoch == financialGeneration) else { return nil }
       self.error = error.localizedDescription
       return nil
     }
@@ -456,8 +617,10 @@ private enum KouchdAuthError: LocalizedError {
   }
 
   func joinOrCreateStay(_ name: String, _ args: [String: ConvexEncodable?]) async -> Bool {
+    let stayEpoch = stayGeneration
     guard let result = await mutateValue(name, args) else { return false }
     let id = result.text.isEmpty ? result["stayId"].text : result.text
+    guard stayEpoch == stayGeneration || selectedStayID == id else { return false }
     if !id.isEmpty { selectStay(id) }
     return true
   }

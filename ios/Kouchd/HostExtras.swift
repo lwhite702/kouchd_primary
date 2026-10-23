@@ -339,6 +339,7 @@ struct RewardRulesScreen: View {
           .disabled(isRuleInvalid)
       }
     }
+    .stayFeature(.rewards, store: store)
   }
 
   private var isRuleInvalid: Bool {

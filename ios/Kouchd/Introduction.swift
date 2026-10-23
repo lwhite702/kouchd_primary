@@ -158,6 +158,8 @@ struct AboutKouchdScreen: View {
       Image("CouchMark").resizable().scaledToFit().frame(width: 64, height: 64).accessibilityHidden(true)
       Text("Kouchd helps hosts and guests manage a shared stay with clearer expectations and fewer scattered conversations.")
         .foregroundStyle(Palette.muted)
+      Text("Built by Wrelik Brands, Kouchd brings stay details, house expectations, chores, and contribution records together so people can share a home with more clarity.")
+        .font(.subheadline).foregroundStyle(Palette.muted)
       Card {
         Text("Your stay, in one place").font(.headline)
         Text("Stay · Agreements and house details\nLedger · Outside contribution records\nChores · Tasks, check-ins and rewards\nHome · What needs your attention")
@@ -165,9 +167,15 @@ struct AboutKouchdScreen: View {
       Text("Payments happen outside Kouchd. Contribution records can be confirmed or disputed by the people involved.")
         .font(.footnote).foregroundStyle(Palette.muted)
       PrimaryButton(title: "Preview the features") { previewPresented = true }
-      Link("Help", destination: URL(string: "https://help.kouchd.com")!)
-      Link("Privacy", destination: URL(string: "https://kouchd.com/privacy")!)
-      Link("Terms", destination: URL(string: "https://kouchd.com/terms")!)
+      DisclosureGroup("Help, privacy & terms") {
+        Text("Get support or review the details behind your account and stay information.")
+          .font(.footnote).foregroundStyle(Palette.muted)
+        Link("Email Kouchd support", destination: URL(string: "mailto:support@kouchd.com")!)
+        Link("Help center", destination: URL(string: "https://help.kouchd.com")!)
+        Link("Privacy policy", destination: URL(string: "https://kouchd.com/privacy")!)
+        Link("Terms & Conditions", destination: URL(string: "https://kouchd.com/terms")!)
+      }
+      .font(.subheadline.weight(.semibold))
       Text("Version \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "—") · A Wrelik Brands app")
         .font(.caption).foregroundStyle(Palette.muted)
     }
