@@ -20,8 +20,8 @@ export type LegalDocumentData = {
 
 export const legalMeta = {
   provider: "Wrelik Brands LLC",
-  effectiveDate: "September 17, 2026",
-  lastUpdated: "September 18, 2026",
+  effectiveDate: "October 23, 2026",
+  lastUpdated: "October 23, 2026",
   email: "legal@wrelik.com",
   privacyEmail: "privacy@wrelik.com",
   supportEmail: "support@kouchd.com",
