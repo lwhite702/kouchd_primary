@@ -1,24 +1,22 @@
 "use client";
 
+import { analyticsRoute } from "@/lib/telemetry-privacy";
+
 import posthog from "posthog-js";
 import { PostHogProvider as PHProvider } from "posthog-js/react";
 import { useAuth } from "@clerk/nextjs";
-import { usePathname, useSearchParams } from "next/navigation";
-import { useEffect, Suspense } from "react";
+import { usePathname } from "next/navigation";
+import { useEffect } from "react";
 
 function PostHogPageView() {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
 
   useEffect(() => {
     if (pathname && typeof window !== "undefined" && posthog.__loaded) {
-      let url = window.origin + pathname;
-      if (searchParams && searchParams.toString()) {
-        url = `${url}?${searchParams.toString()}`;
-      }
-      posthog.capture("$pageview", { $current_url: url });
+      const route = analyticsRoute(pathname);
+      posthog.capture("$pageview", { $current_url: `${window.location.origin}${route}` });
     }
-  }, [pathname, searchParams]);
+  }, [pathname]);
 
   return null;
 }
@@ -40,24 +38,9 @@ function PostHogAuthSync() {
 }
 
 export function PostHogProvider({ children }: { children: React.ReactNode }) {
-  useEffect(() => {
-    const posthogKey = process.env.NEXT_PUBLIC_POSTHOG_KEY;
-    if (!posthogKey) return;
-
-    posthog.init(posthogKey, {
-      api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://us.i.posthog.com",
-      person_profiles: "identified_only",
-      capture_pageview: false,
-      capture_pageleave: true,
-      autocapture: true,
-    });
-  }, []);
-
   return (
     <PHProvider client={posthog}>
-      <Suspense fallback={null}>
-        <PostHogPageView />
-      </Suspense>
+      <PostHogPageView />
       <PostHogAuthSync />
       {children}
     </PHProvider>
