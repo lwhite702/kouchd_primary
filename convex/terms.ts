@@ -231,6 +231,19 @@ export const updateCurrent = mutation({
         }
       }
       assertStayTerms(inherited);
+      // Legacy weekly schedules ended six days after their start. Preserve that
+      // due weekday when older clients and automatically accepted terms omit it.
+      if (
+        inherited.cadence === "weekly" &&
+        inherited.paymentDayOfWeek === undefined
+      ) {
+        const previousStart =
+          oldGuestTerms?.cadence === "weekly"
+            ? oldGuestTerms.startDate
+            : inherited.startDate;
+        inherited.paymentDayOfWeek =
+          (new Date(`${previousStart}T00:00:00.000Z`).getUTCDay() + 6) % 7;
+      }
       if (
         inherited.cadence === "weekly" &&
         (inherited.paymentDayOfWeek === undefined ||

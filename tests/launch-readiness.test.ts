@@ -201,6 +201,28 @@ describe("launch agreement safeguards", () => {
     ).toBe("active");
   });
 
+  it("allows a legacy weekly household update without changing its default due weekday", async () => {
+    const f = await setup({ cadence: "weekly" });
+    await f.guest.mutation(api.terms.acceptCurrent, { stayId: f.stayId });
+    await f.host.mutation(api.terms.updateCurrent, {
+      stayId: f.stayId,
+      terms: {
+        ...terms,
+        cadence: "weekly",
+        houseNotes: "Updated shared notes",
+      },
+    });
+    const bundle = await f.guest.query(api.stays.getBundle, {
+      stayId: f.stayId,
+    });
+    expect(bundle.terms).toMatchObject({
+      cadence: "weekly",
+      paymentDayOfWeek: 3,
+      houseNotes: "Updated shared notes",
+    });
+    await f.guest.mutation(api.terms.acceptCurrent, { stayId: f.stayId });
+  });
+
   it("retains optional weekly guest overrides when a daily household update omits them", async () => {
     const f = await setup();
     await f.guest.mutation(api.terms.acceptCurrent, {
