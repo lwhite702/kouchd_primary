@@ -106,7 +106,7 @@ account deletion need authenticated verification.
   matching lint configuration and DOMPurify 3.4.17. A separate 0.6.9 security
   branch is prepared to avoid waiting for the wider 0.7.0 refactor.
 - Marketing audit after dependency cleanup: zero advisories.
-- App: typecheck, 142 tests across 28 suites, production build and release-artifact
+- App: typecheck, 143 tests across 28 suites, production build and release-artifact
   gate passed on October 23. Lint has zero errors and 15 existing warnings.
 - Native: simulator build and 10 financial/agreement/subscription unit tests
   passed; two introduction UI tests passed in light and dark appearance. Fixed
@@ -139,9 +139,9 @@ account deletion need authenticated verification.
 
 | Layer       | Candidate                                                  | Verified released version | Rollback                                                                                                                                   |
 | ----------- | ---------------------------------------------------------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| Web/backend | 0.7.0, local branch; exact commit pending                  | Not verified in this task | Restore previous verified deployment; disable new enforcement before reverting clients. Keep additive fields/indexes and retained records. |
-| Marketing   | Local WRE-224 branch; exact commit pending                 | Not verified in this task | Restore previous verified static deployment; leave newsletter disabled.                                                                    |
-| iOS         | Existing bundle `com.wrelikbrands.kouchd`; candidate 0.7.0 | Not verified in this task | Halt distribution, restore previous verified build if available; preserve compatible backend endpoints.                                    |
+| Web/backend | 0.7.0, source `b8d786d`                  | Not verified in this task | Restore previous verified deployment; disable new enforcement before reverting clients. Keep additive fields/indexes and retained records. |
+| Marketing   | Source `c5eda03`                 | Not verified in this task | Restore previous verified static deployment; leave newsletter disabled.                                                                    |
+| iOS         | Bundle `com.wrelikbrands.kouchd`; 0.7.0 build 2; source included in `b8d786d` | Not verified in this task | Halt distribution, restore previous verified build if available; preserve compatible backend endpoints.                                    |
 
 Public launch remains blocked until every required layer has evidence and no
 critical/high product defects remain. Unavailable authenticated or physical-device
@@ -165,3 +165,61 @@ provider-priced copy/metadata, newsletter confirmation boundaries and policy dat
 All reviews apply to the prepared candidate diffs; original remote PR diffs were
 not rewritten or reviewed again by CodeRabbit. Their replacement/closure awaits
 the integration decision and explicit remote-action approval.
+
+Final compatibility follow-up: legacy weekly terms may omit a due weekday. New
+household updates infer the original default (start plus six days) and retain
+explicit guest choices; both paths have regressions. Policy last-updated metadata
+now matches the source revision. The native Starter-summary warning was verified
+as inapplicable: the existing server return validator requires plan/status strings
+and every host/guest branch returns them, including a host without a snapshot.
+Strict native decoding is retained so malformed financial/access data is visible.
+
+## Exact source candidates and final checks
+
+| Candidate | Branch | Source commit | Checks / disposition |
+| --- | --- | --- | --- |
+| App security patch 0.6.9 | `codex/WRE-224-security-dependencies` | `f7444c0c6e9a934c8a90cb79b68414c02aa8a8d8` | 114 tests; release check; full audit zero; one conditional review issue disproved against baseline and gate. |
+| App launch 0.7.0 | `codex/WRE-224-launch-readiness` | `b8d786dd11b4850381b13d9d9352dca04735bc1c` | 143 tests; typecheck, lint, build, version and release gate pass; native 10 unit + 2 intro UI tests pass. |
+| Marketing | `codex/WRE-224-marketing-launch` | `c5eda034c7f1371bb448829de2fee073ce474808` | Check/build pass; audit zero; final full CodeRabbit review raised 0 issues. |
+
+The app candidate contains the security patch as an ancestor; the 0.7.0 minor
+release gate also passes with 0.6.9 as its explicit base. Documentation-only
+handoff commits may follow these source identities. No remote branch was changed.
+Seven open PRs were rechecked on October 23; the inventory is unchanged.
+
+The app's final broad review raised three issues. Legacy weekly defaults and
+policy dates were corrected; the Starter native-contract concern was disproved
+by the existing required server return fields. The correction review raised one
+minor issue about matching effective/updated dates; both dates are now October 23.
+Its requested recheck failed: **“Rate limit exceeded”**, CLI wait time **22 minutes**.
+Do not claim that recheck passed. Retry after reset or obtain a fresh review on
+the approved remote candidate. No billing setting was changed to buy reviews.
+
+Detailed local evidence: app test/build/audit logs use `/tmp/kouchd-wre224-*`;
+latest native result is `Test-Kouchd-2026.10.23_14-10-42--0400.xcresult` in the
+configured derived-data Logs/Test folder. The synthetic production expired-invite
+screenshot is `/tmp/kouchd-wre224-production-expired-invite.png`. Do not publish
+production account details, invitation tokens or environment configuration.
+
+## Work still required before the full plan is complete
+
+- Refresh or replace the original PRs on GitHub and run required remote CI and
+  fresh reviews on their final candidates; this local consolidation does not
+  complete the originally proposed per-PR stack or authorize closing it.
+- Complete guest, unrelated-household and administrator journeys on web/native,
+  accessibility, interrupted network/relaunch and rapid account/guest switching.
+- Verify production billing lifecycle/webhooks, entitlement ownership backfill,
+  provider notifications, newsletter abuse/confirmation cases, storefront
+  availability, Apple sign-in and physical-device distribution.
+- The native store now scopes feature subscriptions and typed contracts, but
+  dedicated session/stay/financial stores remain further structural cleanup.
+  Activity has a new paginated endpoint; large financial histories still use
+  retained-record bounds and need a separate paginated history design.
+- Complete identical-dataset timing, rendering, subscription-count and backend
+  read benchmarks. Payload reduction alone does not establish faster rendering.
+
+Next reviewable remote actions are three draft PRs: security to main first,
+launch against the security branch, and marketing against main. Prepared bodies
+are `/tmp/kouchd-wre224-security-pr.md`, `/tmp/kouchd-wre224-launch-pr.md` and
+`/tmp/kouchd-wre224-marketing-pr.md`. Pushing and creating these requires approval
+under repository policy; merging, deployment and distribution remain later gates.

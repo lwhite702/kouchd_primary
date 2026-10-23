@@ -212,7 +212,7 @@ evidence, provider gates and rollback. No production or store release is claimed
 - Fixed mixed billing offerings, modal submit guards, legacy agreement rows,
   account-wide ownership capacity reads and privacy regression cases.
 - Typed native agreement data and guarded mutation completions across account,
-  stay and guest changes. App 142 tests and native 10 unit tests pass.
+  stay and guest changes. App 143 tests and native 10 unit tests pass.
 - Production synthetic host journey passed and its stay is ended with history
   retained. Signed device verification is blocked by a profile missing Apple
   sign-in capability; provider settings and production code remain unchanged.
