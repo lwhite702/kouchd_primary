@@ -1,4 +1,6 @@
 import { v } from "convex/values";
+import schema from "./schema";
+import { assertPlanCapacity } from "./lib/planCapacity";
 
 import { mutation, query } from "./_generated/server";
 import { requireCurrentUser, requireHost, requireMembership } from "./lib/auth";
@@ -8,6 +10,7 @@ import { assertCalendarDate, assertHouseInfoInput, assertPaymentOptionsInput, as
 import { generateReferralCode } from "../lib/referral";
 import { SUGGESTED_CONTRIBUTION_TASKS } from "../lib/domain/rewards";
 import { getCurrentGuestTerms } from "./lib/stayTerms";
+import { internal } from "./_generated/api";
 import { resolveMemberName } from "./lib/names";
 import { getOrCreateHouseholdAccount } from "./householdOwnership";
 
@@ -67,6 +70,7 @@ const termsInput = {
 export const create = mutation({
   args: {
     name: v.optional(v.string()),
+    creationRequestId: v.optional(v.string()),
     timezone: v.string(),
     nextCheckInDate: v.optional(v.string()),
     houseInfo: v.optional(v.object(houseInfoInput)),
@@ -76,6 +80,18 @@ export const create = mutation({
   returns: v.id("stays"),
   handler: async (ctx, args) => {
     const user = await requireCurrentUser(ctx);
+    const creationRequestId = args.creationRequestId?.trim();
+    if (args.creationRequestId !== undefined && (!creationRequestId || creationRequestId.length > 100)) {
+      throw new Error("Stay creation request ID must be between 1 and 100 characters");
+    }
+    if (creationRequestId) {
+      const existing = await ctx.db.query("stays")
+        .withIndex("by_host_and_creation_request", (query) =>
+          query.eq("hostUserId", user._id).eq("creationRequestId", creationRequestId),
+        )
+        .first();
+      if (existing) return existing._id;
+    }
     const name = args.name?.trim();
     if (name !== undefined && (name.length < 2 || name.length > 80)) throw new Error("Stay name must be 2–80 characters");
     assertTimezone(args.timezone);
@@ -86,13 +102,17 @@ export const create = mutation({
     assertPaymentOptionsInput(paymentOptions);
     const now = Date.now();
     const referralCode = generateReferralCode();
+    await assertPlanCapacity(ctx, user._id, "stay");
     const householdAccountId = await getOrCreateHouseholdAccount(ctx, user._id);
     const stayId = await ctx.db.insert("stays", {
       hostUserId: user._id,
       name,
       householdAccountId,
+      creationRequestId,
       status: "pending",
       timezone: args.timezone,
+      agreementAutoAcceptEnabled: true,
+      agreementAutoAcceptHours: 24,
       referralCode,
       nextCheckInDate: args.nextCheckInDate,
       houseInfo: args.houseInfo,
@@ -103,7 +123,7 @@ export const create = mutation({
     await ctx.db.insert("memberships", { stayId, userId: user._id, role: "host", status: "active", joinedAt: now });
     const termsId = await ctx.db.insert("terms", { stayId, version: 1, ...args.terms, billingBasis: args.terms.billingBasis ?? "continuous", createdBy: user._id, createdAt: now });
     await ctx.db.patch(stayId, { currentTermsId: termsId });
-    await ctx.db.insert("termsAcceptances", { stayId, termsId, userId: user._id, acceptedAt: now });
+    await ctx.db.insert("termsAcceptances", { stayId, termsId, userId: user._id, acceptedAt: now, method: "host" });
     const membership = await ctx.db.query("memberships").withIndex("by_stay_user", (query) => query.eq("stayId", stayId).eq("userId", user._id)).unique();
     if (membership) await ctx.db.patch(membership._id, { acceptedTermsId: termsId });
 
@@ -122,8 +142,35 @@ export const create = mutation({
       }
     }
 
-    await recordActivity(ctx, { stayId, actorUserId: user._id, kind: "stay", action: "created", detail: "Stay and first terms version created", entityId: stayId });
+    await recordActivity(ctx, { stayId, actorUserId: user._id, kind: "terms", action: "created", detail: "Agreement version 1 created", entityId: termsId });
+    await recordActivity(ctx, { stayId, actorUserId: user._id, kind: "terms", action: "accepted", detail: "Host accepted the initial agreement", entityId: termsId });
+    await recordActivity(ctx, { stayId, actorUserId: user._id, kind: "stay", action: "created", detail: "Stay created", entityId: stayId });
     return stayId;
+  },
+});
+
+export const updateAgreementAutoAccept = mutation({
+  args: { stayId: v.id("stays"), enabled: v.boolean(), hours: v.number() },
+  returns: v.null(),
+  handler: async (ctx, { stayId, enabled, hours }) => {
+    const { user } = await requireHost(ctx, stayId);
+    const stay = await ctx.db.get(stayId);
+    if (!stay || stay.status === "ended") throw new Error("Ended stays cannot be edited");
+    if (!Number.isInteger(hours) || hours < 1 || hours > 720) throw new Error("Choose between 1 and 720 hours");
+    const now = Date.now();
+    await ctx.db.patch(stayId, { agreementAutoAcceptEnabled: enabled, agreementAutoAcceptHours: hours, updatedAt: now });
+    const pending = await ctx.db.query("agreementOffers").withIndex("by_stay_status", (query) => query.eq("stayId", stayId).eq("status", "pending")).take(500);
+    for (const offer of pending) {
+      if (!enabled) {
+        await ctx.db.patch(offer._id, { autoAcceptAt: undefined });
+      } else {
+        const autoAcceptAt = now + hours * 60 * 60 * 1000;
+        await ctx.db.patch(offer._id, { autoAcceptAt });
+        await ctx.scheduler.runAfter(autoAcceptAt - now, internal.terms.autoAcceptOffer, { offerId: offer._id });
+      }
+    }
+    await recordActivity(ctx, { stayId, actorUserId: user._id, kind: "terms", action: "auto_accept_settings_updated", detail: enabled ? `Automatic acceptance enabled after ${hours} hours; pending agreement timers restarted` : "Automatic acceptance disabled for pending agreements", entityId: stayId });
+    return null;
   },
 });
 
@@ -163,25 +210,32 @@ export const updatePaymentOptions = mutation({
   },
 });
 
+const stayDocument = v.object({ ...schema.tables.stays.validator.fields, _id: v.id("stays"), _creationTime: v.number() });
+const memberDocument = v.object({ ...schema.tables.memberships.validator.fields, _id: v.id("memberships"), _creationTime: v.number() });
+const termsDocument = v.object({ ...schema.tables.terms.validator.fields, _id: v.id("terms"), _creationTime: v.number() });
+const offerDocument = v.object({ ...schema.tables.agreementOffers.validator.fields, _id: v.id("agreementOffers"), _creationTime: v.number() });
+
 export const listMine = query({
   args: {},
-  returns: v.array(v.any()),
+  returns: v.array(v.object({ stay: stayDocument, membership: memberDocument })),
   handler: async (ctx) => {
     const user = await requireCurrentUser(ctx);
     const memberships = await ctx.db.query("memberships").withIndex("by_user", (query) => query.eq("userId", user._id)).take(50);
-    const results = [];
-    for (const membership of memberships) {
-      if (membership.status !== "active") continue;
+    const results = await Promise.all(memberships.filter(m => m.status === "active").map(async membership => {
       const stay = await ctx.db.get(membership.stayId);
-      if (stay) results.push({ stay, membership });
-    }
-    return results;
+      return stay ? { stay, membership } : null;
+    }));
+    return results.filter((result): result is NonNullable<typeof result> => result !== null);
   },
 });
 
 export const getBundle = query({
   args: { stayId: v.id("stays") },
-  returns: v.any(),
+  returns: v.object({ stay: stayDocument, terms: v.union(termsDocument, v.null()), membership: memberDocument,
+    members: v.array(v.object({ membership: memberDocument, person: v.object({
+      id: v.id("users"), name: v.string(), imageUrl: v.optional(v.string()), email: v.optional(v.string()), phone: v.optional(v.string()),
+    }), terms: v.optional(v.union(termsDocument, v.null())), agreementOffer: v.optional(v.union(offerDocument, v.null())) })),
+  }),
   handler: async (ctx, { stayId }) => {
     const { membership } = await requireMembership(ctx, stayId);
     const stay = await ctx.db.get(stayId);
@@ -190,26 +244,68 @@ export const getBundle = query({
       ? await getCurrentGuestTerms(ctx, stayId, membership.userId)
       : stay.currentTermsId ? await ctx.db.get(stay.currentTermsId) : null;
     const memberships = await ctx.db.query("memberships").withIndex("by_stay", (query) => query.eq("stayId", stayId)).take(50);
-    const members = [];
-    for (const item of memberships) {
+    const membersWithMissing = await Promise.all(memberships.map(async item => {
       const person = await ctx.db.get(item.userId);
       if (person) {
         const guestTerms = membership.role === "host"
           ? item.role === "guest" ? await getCurrentGuestTerms(ctx, stayId, item.userId) : terms
+          : null;
+        const agreementOffer = membership.role === "host" && item.role === "guest"
+          ? (await ctx.db.query("agreementOffers")
+            .withIndex("by_stay_guest", (query) => query.eq("stayId", stayId).eq("guestUserId", item.userId))
+            .order("desc").first())
           : null;
         const displayName = resolveMemberName({
           existingName: person.name,
           email: person.email,
           role: item.role,
         });
-        members.push({
+        return {
           membership: item,
-          person: { id: person._id, name: displayName, imageUrl: person.imageUrl },
+          person: {
+            id: person._id,
+            name: item.preferredName ?? displayName,
+            imageUrl: person.imageUrl,
+            ...(membership.role === "host" && item.role === "guest" ? { email: person.email, phone: person.phone } : {}),
+          },
           ...(membership.role === "host" ? { terms: guestTerms } : {}),
-        });
+          ...(membership.role === "host" && item.role === "guest" ? { agreementOffer } : {}),
+        };
       }
-    }
+      return null;
+    }));
+    const members = membersWithMissing.filter((member): member is NonNullable<typeof member> => member !== null);
+
     return { stay, terms, membership, members };
+  },
+});
+
+export const updateGuestPreferredName = mutation({
+  args: { stayId: v.id("stays"), guestUserId: v.id("users"), preferredName: v.string() },
+  returns: v.null(),
+  handler: async (ctx, { stayId, guestUserId, preferredName }) => {
+    const { user } = await requireHost(ctx, stayId);
+    const stay = await ctx.db.get(stayId);
+    if (!stay || stay.status === "ended") throw new Error("Ended stays cannot be edited");
+    const name = preferredName.trim();
+    if (!name || name.length > 80) throw new Error("Preferred name must be between 1 and 80 characters");
+    const membership = await ctx.db.query("memberships")
+      .withIndex("by_stay_user", (query) => query.eq("stayId", stayId).eq("userId", guestUserId))
+      .unique();
+    if (!membership || membership.role !== "guest" || membership.status !== "active") {
+      throw new Error("Choose an active guest in this household");
+    }
+    await ctx.db.patch(membership._id, { preferredName: name });
+    await recordActivity(ctx, {
+      stayId,
+      actorUserId: user._id,
+      guestUserId,
+      kind: "stay",
+      action: "preferred_name_updated",
+      detail: "Guest preferred name updated",
+      entityId: guestUserId,
+    });
+    return null;
   },
 });
 
@@ -237,7 +333,7 @@ export const updateHouseInfo = mutation({
   handler: async (ctx, { stayId, houseInfo }) => {
     const { user } = await requireHost(ctx, stayId);
     const stay = await ctx.db.get(stayId);
-    if (!stay) throw new Error("Stay not found");
+    if (!stay || stay.status === "ended") throw new Error("Ended stays cannot be edited");
     assertHouseInfoInput(houseInfo);
     const now = Date.now();
     await ctx.db.patch(stayId, {

@@ -1,3 +1,4 @@
+import { assertPlanCapacity } from "./lib/planCapacity";
 import { v } from "convex/values";
 
 import { internal } from "./_generated/api";
@@ -5,7 +6,7 @@ import { mutation, query } from "./_generated/server";
 import { requireCurrentUser, requireHost } from "./lib/auth";
 import { recordActivity } from "./lib/activity";
 import { assertInvite, assertInviteHash } from "./lib/validation";
-import { ensureGuestTerms } from "./lib/stayTerms";
+import { ensureGuestTerms, offerGuestAgreement } from "./lib/stayTerms";
 import { scheduleSubscriptionLimitShadow } from "./subscriptionShadow";
 
 export const preview = query({
@@ -100,11 +101,15 @@ export const accept = mutation({
     if (existing) throw new Error("Already a member of this stay");
     const memberCount = await ctx.db.query("memberships").withIndex("by_stay", (query) => query.eq("stayId", invite.stayId)).take(21);
     if (memberCount.filter((member) => member.status === "active").length >= 20) throw new Error("This stay has reached its member limit");
+    const joiningStay = await ctx.db.get(invite.stayId);
+    if (!joiningStay || joiningStay.status === "ended") throw new Error("Invite is invalid or expired");
+    await assertPlanCapacity(ctx, joiningStay.hostUserId, "guest", joiningStay.householdAccountId);
     const now = Date.now();
     await ctx.db.insert("memberships", { stayId: invite.stayId, userId: user._id, role: "guest", status: "active", joinedAt: now });
     const stay = await ctx.db.get(invite.stayId);
     if (!stay) throw new Error("Stay not found");
-    await ensureGuestTerms(ctx, invite.stayId, user._id, stay.hostUserId);
+    const guestTerms = await ensureGuestTerms(ctx, invite.stayId, user._id, stay.hostUserId);
+    await offerGuestAgreement(ctx, { stayId: invite.stayId, termsId: guestTerms._id, guestUserId: user._id, offeredBy: stay.hostUserId });
     await ctx.db.patch(invite._id, { usedAt: now, usedBy: user._id });
     if (stay.status === "active") {
       await scheduleSubscriptionLimitShadow(ctx, stay._id, "guest_joined", "active_guest_memberships");

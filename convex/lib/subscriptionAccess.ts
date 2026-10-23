@@ -89,10 +89,9 @@ export async function getEffectiveSubscriptionForAccount(
 }> {
   const snapshots = await ctx.db
     .query("subscriptionSnapshots")
-    .withIndex("by_household_account", (query) =>
-      query.eq("householdAccountId", householdAccountId),
-    )
-    .collect();
+    .withIndex("by_household_environment_updated", q => q.eq("householdAccountId", householdAccountId).eq("environment", expectedEnvironment))
+    .order("desc")
+    .take(100);
   const matchingSnapshots = snapshots.filter(
     (snapshot) => snapshot.environment === expectedEnvironment,
   );

@@ -243,7 +243,7 @@ export const reviewRequest = mutation({
       }
       await ctx.db.patch(obligation._id, { voidedAt: now, voidedBy: user._id });
     }
-    await ctx.db.insert("termsAcceptances", { stayId: request.stayId, termsId: nextTermsId, userId: request.guestUserId, acceptedAt: now });
+    await ctx.db.insert("termsAcceptances", { stayId: request.stayId, termsId: nextTermsId, userId: request.guestUserId, acceptedAt: now, method: "guest" });
     await ctx.db.patch(membership._id, { acceptedTermsId: nextTermsId });
     await ensureObligationsForTerms(ctx, request.stayId, nextTermsId, request.guestUserId, user._id);
     await ctx.db.patch(requestId, { status: "approved", reviewedAt: now, reviewedBy: user._id, appliedTermsId: nextTermsId });

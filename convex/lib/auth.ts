@@ -43,23 +43,25 @@ export async function resolveFinancialGuest(
     }
     const memberships = await ctx.db
       .query("memberships")
-      .withIndex("by_stay", (query) => query.eq("stayId", stayId))
-      .take(21);
+      .withIndex("by_stay_role_status", (query) => query.eq("stayId", stayId).eq("role", "guest").eq("status", "active"))
+      .take(2);
     const guestCount = memberships.filter((membership) => membership.status === "active" && membership.role === "guest").length;
     return { ...result, guestUserId: result.user._id, includeLegacyUnscoped: guestCount === 1 };
   }
 
   const memberships = await ctx.db
     .query("memberships")
-    .withIndex("by_stay", (query) => query.eq("stayId", stayId))
-    .take(21);
+    .withIndex("by_stay_role_status", (query) => query.eq("stayId", stayId).eq("role", "guest").eq("status", "active"))
+    .take(2);
   const guests = memberships.filter((membership) => membership.status === "active" && membership.role === "guest");
   const target = requestedGuestUserId ?? (guests.length === 1 ? guests[0]?.userId : undefined);
   if (!target) {
     if (guests.length === 0) return { ...result, guestUserId: undefined, includeLegacyUnscoped: false };
     throw new Error("Choose a guest to view financial records");
   }
-  if (!guests.some((membership) => membership.userId === target)) {
+  const targetMembership = await ctx.db.query("memberships")
+    .withIndex("by_stay_user", query => query.eq("stayId", stayId).eq("userId", target)).unique();
+  if (!targetMembership || targetMembership.role !== "guest" || targetMembership.status !== "active") {
     throw new Error("Guest is not an active member of this stay");
   }
   return { ...result, guestUserId: target, includeLegacyUnscoped: guests.length === 1 };

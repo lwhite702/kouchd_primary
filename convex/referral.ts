@@ -1,21 +1,28 @@
+import { assertPlanCapacity } from "./lib/planCapacity";
 import { v } from "convex/values";
+import schema from "./schema";
 
 import { mutation, query } from "./_generated/server";
 import { requireCurrentUser, requireHost } from "./lib/auth";
 import { recordActivity } from "./lib/activity";
 import { assertReferralCode } from "./lib/validation";
 import { generateReferralCode, normalizeReferralCode } from "../lib/referral";
-import { ensureGuestTerms } from "./lib/stayTerms";
+import { ensureGuestTerms, offerGuestAgreement } from "./lib/stayTerms";
 import { scheduleSubscriptionLimitShadow } from "./subscriptionShadow";
 
 export const preview = query({
   args: { referralCode: v.string() },
-  returns: v.any(),
+  returns: v.union(v.object({ valid: v.literal(false), error: v.string() }), v.object({
+    valid: v.literal(true), stayId: v.id("stays"), hostName: v.string(), hostImage: v.optional(v.string()),
+    status: schema.tables.stays.validator.fields.status, timezone: v.string(), startDate: v.optional(v.string()), endDate: v.optional(v.string()),
+    cadence: v.optional(schema.tables.terms.validator.fields.cadence), rateCents: v.optional(v.number()), houseNotes: v.optional(v.string()),
+    houseRules: schema.tables.terms.validator.fields.houseRules, rewards: schema.tables.terms.validator.fields.rewards,
+  })),
   handler: async (ctx, args) => {
     try {
       assertReferralCode(args.referralCode);
     } catch (reason) {
-      return { valid: false, error: reason instanceof Error ? reason.message : "Invalid code" };
+      return { valid: false as const, error: reason instanceof Error ? reason.message : "Invalid code" };
     }
 
     const normalized = normalizeReferralCode(args.referralCode);
@@ -25,14 +32,14 @@ export const preview = query({
       .first();
 
     if (!stay || stay.status === "ended") {
-      return { valid: false, error: "This household referral code was not found or the stay has ended." };
+      return { valid: false as const, error: "This household referral code was not found or the stay has ended." };
     }
 
     const host = await ctx.db.get(stay.hostUserId);
     const terms = stay.currentTermsId ? await ctx.db.get(stay.currentTermsId) : null;
 
     return {
-      valid: true,
+      valid: true as const,
       stayId: stay._id,
       hostName: host?.name ?? "Household Host",
       hostImage: host?.imageUrl,
@@ -78,9 +85,11 @@ export const joinWithCode = mutation({
       if (existingMembership.status === "active") {
         return { stayId: stay._id, alreadyMember: true };
       }
+      await assertPlanCapacity(ctx, stay.hostUserId, "guest", stay.householdAccountId);
       // Re-activate if left
       await ctx.db.patch(existingMembership._id, { status: "active", joinedAt: Date.now() });
-      await ensureGuestTerms(ctx, stay._id, user._id, stay.hostUserId);
+      const guestTerms = await ensureGuestTerms(ctx, stay._id, user._id, stay.hostUserId);
+      await offerGuestAgreement(ctx, { stayId: stay._id, termsId: guestTerms._id, guestUserId: user._id, offeredBy: stay.hostUserId });
       if (stay.status === "active") {
         await scheduleSubscriptionLimitShadow(ctx, stay._id, "guest_rejoined", "active_guest_memberships");
       }
@@ -105,6 +114,7 @@ export const joinWithCode = mutation({
       throw new Error("This household has reached its member limit of 20");
     }
 
+    await assertPlanCapacity(ctx, stay.hostUserId, "guest", stay.householdAccountId);
     const now = Date.now();
     await ctx.db.insert("memberships", {
       stayId: stay._id,
@@ -113,7 +123,8 @@ export const joinWithCode = mutation({
       status: "active",
       joinedAt: now,
     });
-    await ensureGuestTerms(ctx, stay._id, user._id, stay.hostUserId);
+    const guestTerms = await ensureGuestTerms(ctx, stay._id, user._id, stay.hostUserId);
+    await offerGuestAgreement(ctx, { stayId: stay._id, termsId: guestTerms._id, guestUserId: user._id, offeredBy: stay.hostUserId });
     if (stay.status === "active") {
       await scheduleSubscriptionLimitShadow(ctx, stay._id, "guest_joined", "active_guest_memberships");
     }

@@ -1,4 +1,5 @@
 import { v } from "convex/values";
+import schema from "./schema";
 
 import type { MutationCtx } from "./_generated/server";
 import type { Id } from "./_generated/dataModel";
@@ -28,7 +29,7 @@ async function requireItemEditor(ctx: MutationCtx, itemId: Id<"shoppingItems">) 
 
 export const list = query({
   args: { stayId: v.id("stays") },
-  returns: v.array(v.any()),
+  returns: v.array(v.object({ ...schema.tables.shoppingItems.validator.fields, _id: v.id("shoppingItems"), _creationTime: v.number() })),
   handler: async (ctx, { stayId }) => {
     const { user, membership } = await requireMembership(ctx, stayId);
     const items = await ctx.db.query("shoppingItems")
@@ -66,7 +67,7 @@ export const create = mutation({
       createdAt: now,
       updatedAt: now,
     });
-    await recordActivity(ctx, { stayId: args.stayId, actorUserId: user._id, kind: "shopping", action: "item_added", detail: `${args.title.trim()} added to the ${args.visibility} list`, entityId: itemId });
+    await recordActivity(ctx, { stayId: args.stayId, actorUserId: user._id, guestUserId: args.visibility === "personal" ? user._id : undefined, kind: "shopping", action: "item_added", detail: `${args.title.trim()} added to the ${args.visibility} list`, entityId: itemId });
     return itemId;
   },
 });
@@ -87,7 +88,7 @@ export const update = mutation({
       throw new Error("Only the creator or host can make this item personal");
     }
     await ctx.db.patch(item._id, { title: args.title.trim(), quantity: args.quantity.trim(), note: args.note.trim(), visibility: args.visibility, updatedAt: Date.now() });
-    await recordActivity(ctx, { stayId: item.stayId, actorUserId: user._id, kind: "shopping", action: "item_updated", detail: `${args.title.trim()} updated`, entityId: item._id });
+    await recordActivity(ctx, { stayId: item.stayId, actorUserId: user._id, guestUserId: args.visibility === "personal" ? item.createdBy : undefined, kind: "shopping", action: "item_updated", detail: `${args.title.trim()} updated`, entityId: item._id });
     return null;
   },
 });
@@ -99,7 +100,7 @@ export const toggle = mutation({
     const { item, user } = await requireItemEditor(ctx, itemId);
     const checked = !item.checkedAt;
     await ctx.db.patch(item._id, { checkedAt: checked ? Date.now() : undefined, checkedBy: checked ? user._id : undefined, updatedAt: Date.now() });
-    await recordActivity(ctx, { stayId: item.stayId, actorUserId: user._id, kind: "shopping", action: checked ? "item_checked" : "item_unchecked", detail: item.title, entityId: item._id });
+    await recordActivity(ctx, { stayId: item.stayId, actorUserId: user._id, guestUserId: item.visibility === "personal" ? item.createdBy : undefined, kind: "shopping", action: checked ? "item_checked" : "item_unchecked", detail: item.title, entityId: item._id });
     return checked;
   },
 });
@@ -111,7 +112,7 @@ export const remove = mutation({
     const { item, user } = await requireItemEditor(ctx, itemId);
     const now = Date.now();
     await ctx.db.patch(item._id, { deletedAt: now, updatedAt: now });
-    await recordActivity(ctx, { stayId: item.stayId, actorUserId: user._id, kind: "shopping", action: "item_removed", detail: item.title, entityId: item._id });
+    await recordActivity(ctx, { stayId: item.stayId, actorUserId: user._id, guestUserId: item.visibility === "personal" ? item.createdBy : undefined, kind: "shopping", action: "item_removed", detail: item.title, entityId: item._id });
     return null;
   },
 });
