@@ -103,3 +103,20 @@
   - `git diff --check` passed cleanly.
   - All GitHub Actions and Vercel preview CI checks on PR #47 passed successfully.
 - Release state: PR #47 is open and ready. Merge to `main` and verification of live Mintlify deployment at `https://help.kouchd.com` require explicit user action-time approval per AGENTS.md policy.
+
+## WRE-224 — launch candidate, October 22, 2026
+
+Continue on `codex/WRE-224-launch-readiness` in the isolated WRE-224 checkout,
+with the matching marketing branch. Preserve existing dirty worktrees. Candidate
+version 0.7.0; production/store availability remains unverified. Read
+`docs/internal/LAUNCH_READINESS.md` for the original PR dispositions, approved
+account-wide limits, validation and promotion gates. Never promote the local
+anonymous Convex configuration to production.
+
+### WRE-224 launch candidate — October 23, 2026
+
+See [the launch checklist](LAUNCH_READINESS.md) for the current candidate, PR
+dispositions, source checks, production host test, rollout/rollback and remaining
+provider/device/account gates. Candidate 0.7.0 is local and unreleased; a separate
+0.6.9 branch contains the urgent dependency patch. Shared dirty worktrees remain
+untouched. No push, merge, production deployment or publication is authorized.

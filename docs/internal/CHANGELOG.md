@@ -197,3 +197,22 @@ Internal engineering record. This file is excluded from Mintlify navigation and 
 - Defined 14 canonical flags in `lib/flags/config.ts` covering household coordination, core roadmap features, onboarding, messaging, and RevenueCat monetization. Provisioned all 14 flags in PostHog project `Kouchd` (`595950`).
 - Integrated RevenueCat Web SDK and created responsive `PaywallModal` and `useKouchdPlus` gated behind `feature_revenuecat_paywall`, `feature_billing_portal`, `feature_kouchd_plus_entitlement`, and `feature_customer_center`.
 - Added automated unit and integration tests in `tests/feature-flags.test.ts`. Verified `npx convex codegen`, `npm run typecheck` (0 errors), `npm run test` (all 17 test suites, 77 tests pass), and `npm run lint`.
+
+## 2026-10-22 — WRE-224 launch candidate (unreleased)
+
+Prepared the isolated launch candidate with PR remediation, shared agreement
+acceptance, account capacity safeguards, lazy workspace screens, compact financial
+summaries, scoped native subscriptions and coordination screens, telemetry and
+personal-shopping privacy corrections. See LAUNCH_READINESS.md for decisions,
+evidence, provider gates and rollback. No production or store release is claimed.
+
+## 2026-10-23 — Launch validation follow-up (WRE-224)
+
+- Patched Next.js 16.4.3 and DOMPurify 3.4.17; full dependency audit is clear.
+- Fixed mixed billing offerings, modal submit guards, legacy agreement rows,
+  account-wide ownership capacity reads and privacy regression cases.
+- Typed native agreement data and guarded mutation completions across account,
+  stay and guest changes. App 142 tests and native 10 unit tests pass.
+- Production synthetic host journey passed and its stay is ended with history
+  retained. Signed device verification is blocked by a profile missing Apple
+  sign-in capability; provider settings and production code remain unchanged.
