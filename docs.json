@@ -61,7 +61,9 @@
       {
         "group": "iPhone app",
         "pages": [
-          "help/ios/using-kouchd-on-ios"
+          "help/ios/using-kouchd-on-ios",
+          "help/ios/ledger-and-contributions",
+          "help/ios/chores-and-stay"
         ]
       },
       {

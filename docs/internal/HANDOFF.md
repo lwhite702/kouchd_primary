@@ -1,6 +1,24 @@
 # Kouchd help center and repository-policy handoff
 
-**Issue:** [WRE-145](https://linear.app/wrelik/issue/WRE-145/kouchd-apply-repository-agent-policy-and-sync-mintlify-help-roadmap)
+**Issue:** [WRE-226](https://linear.app/wrelik/issue/WRE-226/kouchd-modularize-ios-help-documentation-into-dedicated-topic-guides)
+**Task branch:** `codex/wre-226-modular-ios-help`
+**Canonical repository:** `https://github.com/lwhite702/kouchd_primary`
+**Task worktree:** `/Volumes/Projects/CodexWorktrees/kouchd-wre-226-modular-ios-help`
+**State:** Local task branch ready for review.
+
+## Summary of changes
+
+- Partitioned single 120-line iOS guide into 3 modular topic pages matching Kouchd's help pacing:
+  - `help/ios/using-kouchd-on-ios.mdx`: Overview, 4 tabs, joining a stay, reminders.
+  - `help/ios/ledger-and-contributions.mdx`: Outside payments, recording, confirming/disputing, voiding.
+  - `help/ios/chores-and-stay.mdx`: Household chores, occupied nights, stay guidelines, house notes.
+- Updated root `docs.json` navigation under "iPhone app".
+- Updated cross-links across web guides to point directly to specific iOS topic pages.
+- Validation: `mintlify validate` and `mintlify broken-links` passed with zero errors.
+
+---
+
+# Previous handoff (WRE-145)
 **Task branch:** `codex/wre-145-kouchd-help-center-refresh`
 **Canonical repository:** `/Volumes/Projects/Projects/kouchd_primary`
 **Task worktree:** `/Volumes/Projects/CodexWorktrees/kouchd-help-center-refresh`
