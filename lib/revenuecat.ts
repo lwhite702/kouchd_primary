@@ -47,10 +47,14 @@ export async function getRevenueCatClient(appUserId?: string): Promise<Purchases
     return configurePromise;
   }
 
+  if (!appUserId) {
+    throw new Error("RevenueCat Purchases Web SDK requires an authenticated appUserId for initialization.");
+  }
+
   configurePromise = (async () => {
     const instance = Purchases.configure({
       apiKey: REVENUECAT_WEB_API_KEY,
-      appUserId: appUserId || Purchases.generateRevenueCatAnonymousAppUserId(),
+      appUserId,
     });
     return instance;
   })();
@@ -65,7 +69,10 @@ export async function getRevenueCatClient(appUserId?: string): Promise<Purchases
 /**
  * Retrieve the latest CustomerInfo for the subscriber.
  */
-export async function getCustomerInfo(appUserId?: string): Promise<CustomerInfo> {
+export async function getCustomerInfo(appUserId?: string): Promise<CustomerInfo | null> {
+  if (!appUserId && !Purchases.isConfigured()) {
+    return null;
+  }
   const client = await getRevenueCatClient(appUserId);
   return await client.getCustomerInfo();
 }
@@ -74,6 +81,9 @@ export async function getCustomerInfo(appUserId?: string): Promise<CustomerInfo>
  * Check whether the customer currently has the active `kouchd_plus` entitlement.
  */
 export async function checkKouchdPlusAccess(appUserId?: string): Promise<boolean> {
+  if (!appUserId && !Purchases.isConfigured()) {
+    return false;
+  }
   try {
     const client = await getRevenueCatClient(appUserId);
     return await client.isEntitledTo(ENTITLEMENT_KOUCHD_PLUS);
@@ -108,11 +118,12 @@ export async function getSubscriptionOfferings(appUserId?: string): Promise<{
 export async function purchaseSubscriptionPackage(
   rcPackage: Package,
   options?: {
+    appUserId?: string;
     customerEmail?: string;
     htmlTarget?: HTMLElement;
   }
 ): Promise<PurchaseResult> {
-  const client = await getRevenueCatClient();
+  const client = await getRevenueCatClient(options?.appUserId);
   try {
     return await client.purchase({
       rcPackage,
@@ -134,13 +145,14 @@ export async function purchaseSubscriptionPackage(
  * Renders into `htmlTarget` if specified, or as a full-screen overlay if omitted.
  */
 export async function presentRevenueCatPaywall(params?: {
+  appUserId?: string;
   htmlTarget?: HTMLElement;
   customerEmail?: string;
   offering?: Offering;
   onBack?: (close: () => void) => void;
   onVisitCustomerCenter?: () => void;
 }) {
-  const client = await getRevenueCatClient();
+  const client = await getRevenueCatClient(params?.appUserId);
   const paywallParams: PresentPaywallParams = {
     htmlTarget: params?.htmlTarget,
     customerEmail: params?.customerEmail,
@@ -157,8 +169,11 @@ export async function presentRevenueCatPaywall(params?: {
  * On Web Billing, redirects to the Stripe/RevenueCat management portal URL.
  */
 export async function openCustomerCenter(appUserId?: string): Promise<string | null> {
+  if (!appUserId && !Purchases.isConfigured()) {
+    return null;
+  }
   const info = await getCustomerInfo(appUserId);
-  if (info.managementURL) {
+  if (info?.managementURL) {
     window.open(info.managementURL, "_blank", "noopener,noreferrer");
     return info.managementURL;
   }

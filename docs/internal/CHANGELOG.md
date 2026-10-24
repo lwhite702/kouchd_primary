@@ -10,9 +10,17 @@ Internal engineering record. This file is excluded from Mintlify navigation and 
   - `help/ios/chores-and-stay.mdx`: Dedicated guide covering household chore assignments, marking tasks complete/incomplete, adding chores, occupied nights tracking, stay guidelines, house notes (Wi-Fi, parking, door codes), outside payment handles, and host controls.
 - Updated root `docs.json` navigation to register all 3 pages under the "iPhone app" group.
 - Updated cross-platform links in `help/quickstart.mdx`, `help/guests/joining-a-stay.mdx`, `help/hosts/ledger-management.mdx`, `help/guests/logging-contributions.mdx`, and `help/hosts/house-rules-and-chores.mdx` to route directly to their specific mobile topic guides.
-- Preserved release integrity: documentation-only changes do not bump SemVer; version 0.6.9 remains synchronized.
+- Preserved release integrity: documentation-only changes do not bump SemVer; version 0.6.10 remains synchronized.
 - Validation: passed `mintlify validate` (0 build errors), `mintlify broken-links` (0 broken links), and `git diff --check`.
 
+
+## 2026-10-24 — Prevent anonymous RevenueCat customer profile creation (WRE-207)
+
+- Enforced authenticated Clerk user ID requirement before initializing RevenueCat Web Billing SDK, eliminating anonymous customer registration.
+- Forwarded authenticated `userId` to `presentRevenueCatPaywall` and `openCustomerCenter` in `PaywallModal`.
+- Short-circuited unauthenticated entitlement and customer info checks in `checkKouchdPlusAccess`, `getCustomerInfo`, and `useKouchdPlus` so unauthenticated renders and guest views never trigger RevenueCat SDK initialization.
+- Added comprehensive unit tests in `tests/revenuecat-client.test.ts`.
+- Synchronized release versions to `0.6.10` with patch classification in `release/change.json`.
 
 ## 2026-10-24 — Add iOS help guidance and brand-aligned mobile UI screenshots (WRE-209)
 
