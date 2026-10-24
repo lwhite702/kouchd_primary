@@ -2,6 +2,15 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-10-19 — Serve Replay QA site ownership nonce without authentication (WRE-206)
+
+- Added static route handler at `app/.well-known/replay-qa-security-nonce/route.ts` returning HTTP 200 with raw `text/plain; charset=utf-8` and exact 54-byte token without trailing newline.
+- Added matching static verification file at `public/.well-known/replay-qa-security-nonce`.
+- Excluded `\.well-known` from Clerk authentication proxy matcher in `proxy.ts`.
+- Added unit and route tests in `tests/replay-qa-nonce.test.ts`.
+- Synchronized package and iOS marketing versions to `0.6.9` with patch release classification.
+
+
 ## 2026-10-19 — Enforce reward caps, preserve schedule totals, and overdue recovery (WRE-184)
 
 - Enforced outstanding stay balance limit and cumulative period credit caps (`maxCreditPerPeriodCents`) for reward redemptions on the backend.

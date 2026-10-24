@@ -9,6 +9,7 @@
 
 ### Added
 
+- Replay QA site ownership verification nonce at `/.well-known/replay-qa-security-nonce` served with raw `text/plain; charset=utf-8` and excluded from authentication proxy middleware.
 - Enforced reward redemption balance checks and cumulative period credit caps on the backend, preserved remainder cents across weekly schedule totals, replaced punitive overdue reminder payloads with supportive household copy, and added host-reviewed overdue catch-up recovery plans.
 - Targeted crawl policy in robots.ts and dynamic sitemap.xml for public marketing and legal routes (including /about, /brand, /privacy, /terms, and /sms-opt-in), paired with explicit noindex and nofollow robots metadata on dynamic single-use invitation tokens and sign-in/sign-up authentication routes.
 - Implemented responsive desktop and compact mobile host workspace views with tabbed household overview, financial summaries, guest rosters, and chore coordination.
