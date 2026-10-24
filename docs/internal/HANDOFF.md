@@ -2,9 +2,10 @@
 
 **Issue:** [WRE-226](https://linear.app/wrelik/issue/WRE-226/kouchd-modularize-ios-help-documentation-into-dedicated-topic-guides)
 **Task branch:** `codex/wre-226-modular-ios-help`
+**Pull request:** [PR #63](https://github.com/lwhite702/kouchd_primary/pull/63)
 **Canonical repository:** `https://github.com/lwhite702/kouchd_primary`
 **Task worktree:** `/Volumes/Projects/CodexWorktrees/kouchd-wre-226-modular-ios-help`
-**State:** Local task branch ready for review.
+**State:** Open PR #63 under review; CI passing; merge, deployment, and live publication remain unverified action gates.
 
 ## Summary of changes
 
@@ -12,6 +13,8 @@
   - `help/ios/using-kouchd-on-ios.mdx`: Overview, 4 tabs, joining a stay, reminders.
   - `help/ios/ledger-and-contributions.mdx`: Outside payments, recording, confirming/disputing, voiding.
   - `help/ios/chores-and-stay.mdx`: Household chores, occupied nights, stay guidelines, house notes.
+- Corrected payment handle examples to strictly supported providers (`PayPal`, `Cash App`, `Apple Pay`, `Zelle`).
+- Preserved financial disclosure: contribution records are shared records and do not prove money moved.
 - Updated root `docs.json` navigation under "iPhone app".
 - Updated cross-links across web guides to point directly to specific iOS topic pages.
 - Validation: `mintlify validate` and `mintlify broken-links` passed with zero errors.
