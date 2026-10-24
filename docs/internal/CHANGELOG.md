@@ -2,6 +2,13 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-10-24 — Update Replay QA site ownership nonce for security verification (WRE-227)
+
+- Updated static route handler at `app/.well-known/replay-qa-security-nonce/route.ts` with new Replay QA security verification token (`loopqa-sec-9TrCmqrdLQkZh1UIU1Qew_Ql6bEQ36iILYviGiS25V0`).
+- Updated matching static verification file at `public/.well-known/replay-qa-security-nonce`.
+- Updated test expectations in `tests/replay-qa-nonce.test.ts`.
+- Synchronized package and iOS marketing versions to `0.6.11` with patch release classification.
+
 ## 2026-10-24 — Modularize iOS help documentation into dedicated topic guides (WRE-226)
 
 - Refactored single monolithic iOS guide into 3 focused, bite-sized guides under the "iPhone app" Mintlify navigation group:

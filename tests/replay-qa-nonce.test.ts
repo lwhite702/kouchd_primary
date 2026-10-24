@@ -4,7 +4,7 @@ import * as path from "node:path";
 import { GET, HEAD, REPLAY_QA_SECURITY_NONCE } from "../app/.well-known/replay-qa-security-nonce/route";
 import { config as proxyConfig } from "../proxy";
 
-const EXPECTED_NONCE = "loopqa-sec-3bAFRdzS2bM3tBVyOSeOy8MvDU8J2Z1BExfQyMLmljc";
+const EXPECTED_NONCE = "loopqa-sec-9TrCmqrdLQkZh1UIU1Qew_Ql6bEQ36iILYviGiS25V0";
 
 describe("Replay QA site ownership nonce", () => {
   it("exports the exact expected 54-byte nonce", () => {
