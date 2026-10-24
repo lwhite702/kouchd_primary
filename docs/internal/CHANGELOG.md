@@ -2,6 +2,16 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-10-24 — Add iOS help guidance and brand-aligned mobile UI screenshots (WRE-209)
+
+- Created dedicated Help Center guide `help/ios/using-kouchd-on-ios.mdx` covering the native SwiftUI app: Home, Ledger, Chores, and Stay tab navigation; recording and confirming contributions; chore coordination; stay details and guidelines; Apple Sign-In; and optional SMS reminders with full disclosure.
+- Registered the new guide in `docs.json` navigation under a dedicated "iPhone app" group.
+- Added cross-platform "On iPhone" accordion sections to core guides (`help/quickstart.mdx`, `help/guests/logging-contributions.mdx`, `help/hosts/ledger-management.mdx`, `help/hosts/house-rules-and-chores.mdx`, `help/guests/joining-a-stay.mdx`).
+- Generated 5 high-resolution Retina mobile device mockups in `help/images/` (`ios-home-overview.png`, `ios-ledger-screen.png`, `ios-record-contribution.png`, `ios-chores-screen.png`, `ios-stay-guidelines.png`) adhering to the Brand Building design system and native SwiftUI source.
+- Preserved strict release integrity: documentation-only changes do not bump the version; notes in all public guides clearly specify that the iPhone app is in active development and not yet distributed on the App Store.
+- Validation: passed `mintlify validate` (build validation passed), `mintlify broken-links` (zero broken links), and `git diff --check`.
+
+
 ## 2026-10-19 — Serve Replay QA site ownership nonce without authentication (WRE-206)
 
 - Added static route handler at `app/.well-known/replay-qa-security-nonce/route.ts` returning HTTP 200 with raw `text/plain; charset=utf-8` and exact 54-byte token without trailing newline.

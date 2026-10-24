@@ -102,4 +102,20 @@
   - `mintlify broken-links` passed with zero broken links found.
   - `git diff --check` passed cleanly.
   - All GitHub Actions and Vercel preview CI checks on PR #47 passed successfully.
-- Release state: PR #47 is open and ready. Merge to `main` and verification of live Mintlify deployment at `https://help.kouchd.com` require explicit user action-time approval per AGENTS.md policy.
+- Release state: PR #47 was squash-merged to `main` as commit `20667da` on 2026-10-19. Live Mintlify Help Center returned HTTP 200 at `https://help.kouchd.com/help`.
+
+### iOS Help Guidance and UI Screenshots (2026-10-24)
+
+- Linear issue: [WRE-209](https://linear.app/wrelik/issue/WRE-209/kouchd-add-ios-help-guidance-and-brand-aligned-mobile-images-to-help)
+- Branch: `codex/wre-209-ios-help-guidance` in isolated worktree `/Volumes/Projects/CodexWorktrees/kouchd-wre-209-ios-help`.
+- Changes:
+  - Added dedicated guide `help/ios/using-kouchd-on-ios.mdx` covering native iPhone app workflows (Home, Ledger, Chores, Stay, outside contributions, late fees, Apple Sign-In, and reminders).
+  - Added "iPhone app" navigation group to `docs.json`.
+  - Added "On iPhone" accordion walkthroughs to `help/quickstart.mdx`, `help/guests/logging-contributions.mdx`, `help/hosts/ledger-management.mdx`, `help/hosts/house-rules-and-chores.mdx`, and `help/guests/joining-a-stay.mdx`.
+  - Generated and verified 5 high-resolution Retina mobile device mockups in `help/images/` (`ios-home-overview.png`, `ios-ledger-screen.png`, `ios-record-contribution.png`, `ios-chores-screen.png`, `ios-stay-guidelines.png`) matching the Brand Building design system and native SwiftUI source.
+  - Preserved release policy: documentation-only changes do not bump SemVer; public guides note that the native iOS app is in active development and not yet available on the App Store.
+- Validation:
+  - `mintlify validate` passed cleanly (`success build validation passed`).
+  - `mintlify broken-links` passed cleanly (`success no broken links found`).
+  - `git diff --check` passed with zero formatting errors.
+- Release state: Ready for pull request review and merge approval.

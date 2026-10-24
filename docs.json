@@ -59,6 +59,12 @@
         ]
       },
       {
+        "group": "iPhone app",
+        "pages": [
+          "help/ios/using-kouchd-on-ios"
+        ]
+      },
+      {
         "group": "Notifications",
         "pages": [
           "help/notifications/notification-preferences"
