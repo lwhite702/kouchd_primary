@@ -1,7 +1,7 @@
 export const dynamic = "force-static";
 
 export const REPLAY_QA_SECURITY_NONCE =
-  "loopqa-sec-3bAFRdzS2bM3tBVyOSeOy8MvDU8J2Z1BExfQyMLmljc";
+  "loopqa-sec-9TrCmqrdLQkZh1UIU1Qew_Ql6bEQ36iILYviGiS25V0";
 
 export function GET() {
   return new Response(REPLAY_QA_SECURITY_NONCE, {

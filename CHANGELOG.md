@@ -36,6 +36,7 @@
 
 ### Changed
 
+- Updated Replay QA site ownership verification nonce at `/.well-known/replay-qa-security-nonce` to `loopqa-sec-9TrCmqrdLQkZh1UIU1Qew_Ql6bEQ36iILYviGiS25V0`.
 - Capped and consolidated daily reminders per user to eliminate notification fatigue: enforced a global limit of at most 1 reminder notification per user per calendar day across payment, agreement, chore, and check-in workflows (prioritizing critical payment notices first), consolidated host agreement reminders for multiple unsigned guests into a single daily notification, consolidated multiple chores due on the same day into one notification with chore counts, and reduced agreement-pending cron frequency from twice-daily to once-daily (13:30 UTC).
 - Streamlined the web application entry route (`app/page.tsx`) to directly serve the authenticated household workspace and sign-in redirect on `app.kouchd.com`, retiring root host-header sniffing after moving the public marketing website to Astro.
 - Redesigned the `/brand` brand guidelines tab into a user-friendly, responsive, scrollable editorial reference with sticky section quick-jump navigation, interactive 11-step color scale ramps with click-to-copy tokens, live typography playground, clearspace diagrams, approved vs. prohibited messaging matrix, and an optional 16:10 presentation deck viewer mode.
