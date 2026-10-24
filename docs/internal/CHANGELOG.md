@@ -2,6 +2,14 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-10-24 — Prevent anonymous RevenueCat customer profile creation (WRE-207)
+
+- Enforced authenticated Clerk user ID requirement before initializing RevenueCat Web Billing SDK, eliminating anonymous customer registration.
+- Forwarded authenticated `userId` to `presentRevenueCatPaywall` and `openCustomerCenter` in `PaywallModal`.
+- Short-circuited unauthenticated entitlement and customer info checks in `checkKouchdPlusAccess`, `getCustomerInfo`, and `useKouchdPlus` so unauthenticated renders and guest views never trigger RevenueCat SDK initialization.
+- Added comprehensive unit tests in `tests/revenuecat-client.test.ts`.
+- Synchronized release versions to `0.6.10` with patch classification in `release/change.json`.
+
 ## 2026-10-24 — Add iOS help guidance and brand-aligned mobile UI screenshots (WRE-209)
 
 - Created dedicated Help Center guide `help/ios/using-kouchd-on-ios.mdx` covering the native SwiftUI app: Home, Ledger, Chores, and Stay tab navigation; recording and confirming contributions; chore coordination; stay details and guidelines; Apple Sign-In; and optional SMS reminders with full disclosure.
