@@ -114,6 +114,7 @@
   - Added "On iPhone" accordion walkthroughs to `help/quickstart.mdx`, `help/guests/logging-contributions.mdx`, `help/hosts/ledger-management.mdx`, `help/hosts/house-rules-and-chores.mdx`, and `help/guests/joining-a-stay.mdx`.
   - Generated and verified 5 high-resolution Retina mobile device mockups in `help/images/` (`ios-home-overview.png`, `ios-ledger-screen.png`, `ios-record-contribution.png`, `ios-chores-screen.png`, `ios-stay-guidelines.png`) matching the Brand Building design system and native SwiftUI source.
   - Preserved release policy: documentation-only changes do not bump SemVer; public guides note that the native iOS app is in active development and not yet available on the App Store.
+  - Addressed PR #62 review findings: clarified that dispute and void controls are native-only while core workflows are shared; corrected credit application to cover the oldest outstanding charge (including upcoming charges); and aligned the post-sign-in onboarding label to "Join with a code".
 - Validation:
   - `mintlify validate` passed cleanly (`success build validation passed`).
   - `mintlify broken-links` passed cleanly (`success no broken links found`).

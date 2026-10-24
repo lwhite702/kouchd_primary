@@ -9,6 +9,7 @@ Internal engineering record. This file is excluded from Mintlify navigation and 
 - Added cross-platform "On iPhone" accordion sections to core guides (`help/quickstart.mdx`, `help/guests/logging-contributions.mdx`, `help/hosts/ledger-management.mdx`, `help/hosts/house-rules-and-chores.mdx`, `help/guests/joining-a-stay.mdx`).
 - Generated 5 high-resolution Retina mobile device mockups in `help/images/` (`ios-home-overview.png`, `ios-ledger-screen.png`, `ios-record-contribution.png`, `ios-chores-screen.png`, `ios-stay-guidelines.png`) adhering to the Brand Building design system and native SwiftUI source.
 - Preserved strict release integrity: documentation-only changes do not bump the version; notes in all public guides clearly specify that the iPhone app is in active development and not yet distributed on the App Store.
+- Addressed PR #62 code review findings: scoped the web-parity note to core workflows while explicitly noting that Dispute and Void actions are native-only; clarified that confirmed credit applies to the oldest outstanding charge, including upcoming charges once earlier obligations are settled; and corrected the post-sign-in onboarding action label to "Join with a code" across iPhone instructions.
 - Validation: passed `mintlify validate` (build validation passed), `mintlify broken-links` (zero broken links), and `git diff --check`.
 
 
