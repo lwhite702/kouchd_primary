@@ -2,6 +2,7 @@
 
 import { ArrowRight, Check, Home, Megaphone, Plus, Users } from "lucide-react";
 import Image from "next/image";
+import { useEffect, useState } from "react";
 
 import { HouseholdLogisticsCard } from "@/components/household/household-logistics";
 
@@ -26,6 +27,20 @@ export function HomeScreen({
   state: WorkspaceState;
   onBackToHub: () => void;
 }) {
+  const [greeting, setGreeting] = useState("Welcome back,");
+  useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      const hour = new Date().getHours();
+      setGreeting(
+        hour < 12
+          ? "Good morning,"
+          : hour < 18
+            ? "Good afternoon,"
+            : "Good evening,",
+      );
+    }, 0);
+    return () => window.clearTimeout(timeout);
+  }, []);
   const {
     pendingContributionCount,
     dueCount,
@@ -103,7 +118,7 @@ export function HomeScreen({
             <div className="host-workspace-heading-copy">
               <span className="host-workspace-eyebrow">Host workspace</span>
               <h1>
-                {isEnded ? "Stay history for" : "Welcome back,"}{" "}
+                {isEnded ? "Stay history for" : greeting}{" "}
                 {
                   (viewer?.name && viewer.name !== "Kouchd member"
                     ? viewer.name

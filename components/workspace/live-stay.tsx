@@ -149,11 +149,9 @@ export function LiveStay({
             onClick={() => setScreen("home")}
           >
             <span className="v21-sidebar-nav-icon">
-              <img
-                src="/dashboard-v21/nav-overview.svg"
-                alt=""
+              <span
+                className="v21-sidebar-nav-icon-image v21-sidebar-nav-icon-overview"
                 aria-hidden="true"
-                style={{ width: 18, height: 18 }}
               />
             </span>
             <span>Overview</span>
@@ -165,11 +163,9 @@ export function LiveStay({
             onClick={() => setScreen("stay")}
           >
             <span className="v21-sidebar-nav-icon">
-              <img
-                src="/dashboard-v21/nav-guests.svg"
-                alt=""
+              <span
+                className="v21-sidebar-nav-icon-image v21-sidebar-nav-icon-guests"
                 aria-hidden="true"
-                style={{ width: 18, height: 18 }}
               />
             </span>
             <span>Guests</span>
@@ -181,11 +177,9 @@ export function LiveStay({
             onClick={() => setScreen("contributions")}
           >
             <span className="v21-sidebar-nav-icon">
-              <img
-                src="/dashboard-v21/nav-contributions.svg"
-                alt=""
+              <span
+                className="v21-sidebar-nav-icon-image v21-sidebar-nav-icon-contributions"
                 aria-hidden="true"
-                style={{ width: 18, height: 18 }}
               />
             </span>
             <span>Ledger</span>
@@ -197,11 +191,9 @@ export function LiveStay({
             onClick={() => setScreen("chores")}
           >
             <span className="v21-sidebar-nav-icon">
-              <img
-                src="/dashboard-v21/nav-chores.svg"
-                alt=""
+              <span
+                className="v21-sidebar-nav-icon-image v21-sidebar-nav-icon-chores"
                 aria-hidden="true"
-                style={{ width: 18, height: 18 }}
               />
             </span>
             <span>Chores</span>
@@ -239,11 +231,9 @@ export function LiveStay({
             onClick={() => setPanel("houseInfo")}
           >
             <span className="v21-sidebar-nav-icon">
-              <img
-                src="/dashboard-v21/nav-guide.svg"
-                alt=""
+              <span
+                className="v21-sidebar-nav-icon-image v21-sidebar-nav-icon-guide"
                 aria-hidden="true"
-                style={{ width: 18, height: 18 }}
               />
             </span>
             <span>House guide</span>
