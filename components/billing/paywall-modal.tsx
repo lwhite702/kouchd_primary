@@ -34,17 +34,18 @@ export function PaywallModal({
   const isBillingEnabled = useFeatureFlag(FEATURE_FLAGS.BILLING_PORTAL);
   const isPaywallFlagEnabled = useFeatureFlag(FEATURE_FLAGS.REVENUECAT_PAYWALL);
   const isPaywallAvailable = isBillingEnabled || isPaywallFlagEnabled;
+  const activeError = !userId ? "Please sign in to view subscription options." : error;
 
   useEffect(() => {
-    if (!isOpen || !isPaywallAvailable || !containerRef.current) return;
+    if (!isOpen || !isPaywallAvailable || !containerRef.current || !userId) return;
 
     let isMounted = true;
-    setError(null);
-
     startTransition(async () => {
+      setError(null);
       try {
         if (!containerRef.current) return;
         const result = await presentRevenueCatPaywall({
+          appUserId: userId,
           htmlTarget: containerRef.current,
           customerEmail: userEmail,
           onBack: (close) => {
@@ -114,9 +115,9 @@ export function PaywallModal({
                 Got it
               </button>
             </div>
-          ) : error ? (
+          ) : activeError ? (
             <div className="text-center p-6 space-y-3">
-              <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+              <p className="text-sm text-red-600 dark:text-red-400">{activeError}</p>
               <button
                 type="button"
                 onClick={onClose}
@@ -142,11 +143,15 @@ export function useKouchdPlus(userId?: string) {
   const isCustomerCenterEnabled = useFeatureFlag(FEATURE_FLAGS.CUSTOMER_CENTER);
 
   const [entitled, setEntitled] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(isEntitlementEnforced);
+  const [isLoading, setIsLoading] = useState<boolean>(Boolean(isEntitlementEnforced && userId));
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo | null>(null);
 
   const refreshStatus = useCallback(async () => {
-    if (!isEntitlementEnforced) return;
+    if (!isEntitlementEnforced || !userId) {
+      setEntitled(false);
+      setIsLoading(false);
+      return;
+    }
 
     setIsLoading(true);
     try {
@@ -163,7 +168,9 @@ export function useKouchdPlus(userId?: string) {
   }, [userId, isEntitlementEnforced]);
 
   useEffect(() => {
-    if (!isEntitlementEnforced) return;
+    if (!isEntitlementEnforced || !userId) {
+      return;
+    }
 
     let cancelled = false;
 
@@ -191,6 +198,10 @@ export function useKouchdPlus(userId?: string) {
       console.warn("Customer Center is disabled by feature flag.");
       return null;
     }
+    if (!userId) {
+      console.warn("Customer Center requires an authenticated user.");
+      return null;
+    }
     return await openCustomerCenter(userId);
   };
 
@@ -198,7 +209,7 @@ export function useKouchdPlus(userId?: string) {
 
   return {
     hasPlus,
-    isLoading: isEntitlementEnforced ? isLoading : false,
+    isLoading: isEntitlementEnforced && userId ? isLoading : false,
     customerInfo,
     refreshStatus,
     manageSubscription,

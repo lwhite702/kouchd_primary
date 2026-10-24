@@ -1,5 +1,5 @@
 {
-  "version": "0.6.9",
+  "version": "0.6.10",
   "type": "patch",
-  "reason": "Serve Replay QA site ownership nonce at /.well-known/replay-qa-security-nonce without authentication for security verification."
+  "reason": "Prevent anonymous customer record creation in RevenueCat by requiring authenticated Clerk user ID for web paywall and entitlement checks."
 }
