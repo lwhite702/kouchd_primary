@@ -2,6 +2,7 @@ import ClerkKit
 import ClerkKitUI
 import ConvexMobile
 import CryptoKit
+import PostHog
 import RevenueCat
 import SwiftUI
 
@@ -13,6 +14,16 @@ import SwiftUI
     #endif
     if AppConfig.isConfigured {
       Clerk.configure(publishableKey: AppConfig.clerkKey)
+    }
+    if AppConfig.posthogEnabled {
+      let phConfig = PostHogConfig(
+        projectToken: AppConfig.posthogKey,
+        host: AppConfig.posthogHost
+      )
+      phConfig.captureScreenViews = true
+      phConfig.sessionReplay = true
+      phConfig.sessionReplayConfig.maskAllTextInputs = true
+      PostHogSDK.shared.setup(phConfig)
     }
     if AppConfig.purchasesEnabled {
       #if DEBUG
@@ -160,6 +171,29 @@ struct RootView: View {
       if !loading && clerk.user != nil && store.stays.isEmpty && activeSheet == nil {
         destination = pendingRoute
         pendingRoute = nil
+      }
+    }
+    .onChange(of: clerk.user?.id) { _, newUserId in
+      if let newUserId {
+        var props: [String: Any] = [:]
+        if let email = clerk.user?.primaryEmailAddress?.emailAddress {
+          props["email"] = email
+        }
+        if let name = clerk.user?.fullName {
+          props["name"] = name
+        }
+        PostHogSDK.shared.identify(newUserId, userProperties: props)
+      } else {
+        PostHogSDK.shared.reset()
+      }
+    }
+    .onChange(of: store.selectedStayID) { _, newStayId in
+      if !newStayId.isEmpty {
+        PostHogSDK.shared.group(type: "stay", key: newStayId, groupProperties: [
+          "name": store.stayName,
+          "isHost": store.isHost,
+          "isEnded": store.isEnded,
+        ])
       }
     }
     .onChange(of: activeSheet?.id) { _, sheetId in

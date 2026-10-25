@@ -64,41 +64,79 @@ export const triggerWorkflow = internalAction({
     if (duplicate) return { status: "duplicate" as const };
 
     const recipient = await ctx.runQuery(internal.notifications.getRecipient, { userId: args.userId });
-    if (!recipient) return { status: "disabled" as const };
+    if (!recipient) {
+      await ctx.runMutation(internal.notifications.recordNotificationOutcome, {
+        userId: args.userId,
+        stayId: args.stayId,
+        workflow: args.workflow,
+        entityId: args.entityId,
+        cancellationKey: args.cancellationKey,
+        status: "disabled",
+        errorSummary: "Recipient user profile missing or disabled",
+      });
+      return { status: "disabled" as const };
+    }
     const knock = client();
-    if (!knock) return { status: "skipped" as const };
+    if (!knock) {
+      await ctx.runMutation(internal.notifications.recordNotificationOutcome, {
+        userId: args.userId,
+        stayId: args.stayId,
+        workflow: args.workflow,
+        entityId: args.entityId,
+        cancellationKey: args.cancellationKey,
+        status: "skipped",
+        errorSummary: "KNOCK_API_KEY not configured",
+      });
+      return { status: "skipped" as const };
+    }
 
-    await knock.users.update(recipient.id, {
-      name: recipient.name,
-      email: recipient.email ?? null,
-      phone_number: recipient.phone ?? null,
-      role: recipient.role ?? null,
-      stayStatus: recipient.stayStatus ?? null,
-      stayId: recipient.stayId ?? null,
-      preferences: {
-        default: {
-          channel_types: {
-            email: recipient.notifyEmail,
-            sms: recipient.notifySms && Boolean(recipient.phone),
-            in_app_feed: true,
+    try {
+      await knock.users.update(recipient.id, {
+        name: recipient.name,
+        email: recipient.email ?? null,
+        phone_number: recipient.phone ?? null,
+        role: recipient.role ?? null,
+        stayStatus: recipient.stayStatus ?? null,
+        stayId: recipient.stayId ?? null,
+        preferences: {
+          default: {
+            channel_types: {
+              email: recipient.notifyEmail,
+              sms: recipient.notifySms && Boolean(recipient.phone),
+              in_app_feed: true,
+            },
           },
         },
-      },
-    });
-    const response = await knock.workflows.trigger(args.workflow, {
-      recipients: [recipient.id],
-      data: args.data,
-      cancellation_key: args.cancellationKey,
-    });
-    await ctx.runMutation(internal.notifications.recordSent, {
-      userId: args.userId,
-      stayId: args.stayId,
-      workflow: args.workflow,
-      entityId: args.entityId,
-      detail: typeof args.data?.detail === "string" ? args.data.detail : undefined,
-      action: typeof args.data?.action === "string" ? args.data.action : undefined,
-    });
-    return { status: "sent" as const, workflowRunId: response.workflow_run_id };
+      });
+      const response = await knock.workflows.trigger(args.workflow, {
+        recipients: [recipient.id],
+        data: args.data,
+        cancellation_key: args.cancellationKey,
+      });
+      await ctx.runMutation(internal.notifications.recordSent, {
+        userId: args.userId,
+        stayId: args.stayId,
+        workflow: args.workflow,
+        entityId: args.entityId,
+        cancellationKey: args.cancellationKey,
+        workflowRunId: response.workflow_run_id,
+        detail: typeof args.data?.detail === "string" ? args.data.detail : undefined,
+        action: typeof args.data?.action === "string" ? args.data.action : undefined,
+      });
+      return { status: "sent" as const, workflowRunId: response.workflow_run_id };
+    } catch (error) {
+      const errorSummary = error instanceof Error ? error.message : "Knock workflow trigger failed";
+      await ctx.runMutation(internal.notifications.recordNotificationOutcome, {
+        userId: args.userId,
+        stayId: args.stayId,
+        workflow: args.workflow,
+        entityId: args.entityId,
+        cancellationKey: args.cancellationKey,
+        status: "failed",
+        errorSummary,
+      });
+      throw error;
+    }
   },
 });
 
@@ -139,43 +177,82 @@ export const deliverAgreementPending = internalAction({
     }
 
     const recipient = await ctx.runQuery(internal.notifications.getRecipient, { userId: args.userId });
-    if (!recipient) return { status: "disabled" as const };
+    if (!recipient) {
+      await ctx.runMutation(internal.notifications.recordNotificationOutcome, {
+        userId: args.userId,
+        stayId: args.stayId,
+        workflow: args.workflow,
+        entityId: args.entityId,
+        cancellationKey: args.cancellationKey,
+        status: "disabled",
+        errorSummary: "Recipient user profile missing or disabled",
+      });
+      return { status: "disabled" as const };
+    }
     const knock = client();
-    if (!knock) return { status: "skipped" as const };
+    if (!knock) {
+      await ctx.runMutation(internal.notifications.recordNotificationOutcome, {
+        userId: args.userId,
+        stayId: args.stayId,
+        workflow: args.workflow,
+        entityId: args.entityId,
+        cancellationKey: args.cancellationKey,
+        status: "skipped",
+        errorSummary: "KNOCK_API_KEY not configured",
+      });
+      return { status: "skipped" as const };
+    }
 
-    await knock.users.update(recipient.id, {
-      name: recipient.name,
-      email: recipient.email ?? null,
-      phone_number: recipient.phone ?? null,
-      role: recipient.role ?? null,
-      stayStatus: recipient.stayStatus ?? null,
-      stayId: recipient.stayId ?? null,
-      preferences: {
-        default: {
-          channel_types: {
-            email: recipient.notifyEmail,
-            sms: recipient.notifySms && Boolean(recipient.phone),
-            in_app_feed: true,
+    try {
+      await knock.users.update(recipient.id, {
+        name: recipient.name,
+        email: recipient.email ?? null,
+        phone_number: recipient.phone ?? null,
+        role: recipient.role ?? null,
+        stayStatus: recipient.stayStatus ?? null,
+        stayId: recipient.stayId ?? null,
+        preferences: {
+          default: {
+            channel_types: {
+              email: recipient.notifyEmail,
+              sms: recipient.notifySms && Boolean(recipient.phone),
+              in_app_feed: true,
+            },
           },
         },
-      },
-    });
-    const response = await knock.workflows.trigger(args.workflow, {
-      recipients: [recipient.id],
-      data: args.data,
-      cancellation_key: args.cancellationKey,
-    });
-    await ctx.runMutation(internal.notifications.recordSent, {
-      userId: args.userId,
-      stayId: args.stayId,
-      workflow: args.workflow,
-      entityId: args.entityId,
-      detail: typeof args.data?.detail === "string" ? args.data.detail : undefined,
-      action: typeof args.data?.action === "string" ? args.data.action : undefined,
-    });
-    return { status: "sent" as const, workflowRunId: response.workflow_run_id };
+      });
+      const response = await knock.workflows.trigger(args.workflow, {
+        recipients: [recipient.id],
+        data: args.data,
+        cancellation_key: args.cancellationKey,
+      });
+      await ctx.runMutation(internal.notifications.recordSent, {
+        userId: args.userId,
+        stayId: args.stayId,
+        workflow: args.workflow,
+        entityId: args.entityId,
+        cancellationKey: args.cancellationKey,
+        workflowRunId: response.workflow_run_id,
+        detail: typeof args.data?.detail === "string" ? args.data.detail : undefined,
+        action: typeof args.data?.action === "string" ? args.data.action : undefined,
+      });
+      return { status: "sent" as const, workflowRunId: response.workflow_run_id };
+    } catch (error) {
+      const errorSummary = error instanceof Error ? error.message : "Knock agreement-pending trigger failed";
+      await ctx.runMutation(internal.notifications.recordNotificationOutcome, {
+        userId: args.userId,
+        stayId: args.stayId,
+        workflow: args.workflow,
+        entityId: args.entityId,
+        cancellationKey: args.cancellationKey,
+        status: "failed",
+        errorSummary,
+      });
+      throw error;
+    }
   },
 });
+
 
 export const cancelWorkflow = internalAction({
   args: {
@@ -263,5 +340,44 @@ export const triggerInvitation = internalAction({
       },
     });
     return "sent";
+  },
+});
+
+export const retryFailedEvent = internalAction({
+  args: {
+    eventId: v.id("notificationEvents"),
+  },
+  returns: v.object({
+    status: v.union(v.literal("sent"), v.literal("skipped"), v.literal("duplicate"), v.literal("disabled")),
+    reason: v.string(),
+    workflowRunId: v.optional(v.string()),
+  }),
+  handler: async (ctx, { eventId }): Promise<{
+    status: "sent" | "skipped" | "duplicate" | "disabled";
+    reason: string;
+    workflowRunId?: string;
+  }> => {
+    const check = await ctx.runMutation(internal.notifications.retryEventInternal, { eventId });
+    if (!check.eligible || !check.userId || !check.workflow) {
+      return {
+        status: "skipped",
+        reason: check.reason,
+      };
+    }
+
+    const result = await ctx.runAction(internal.knock.triggerWorkflow, {
+      userId: check.userId,
+      stayId: check.stayId,
+      workflow: check.workflow,
+      entityId: check.entityId,
+      cancellationKey: check.cancellationKey,
+      data: check.data ?? {},
+    });
+
+    return {
+      status: result.status,
+      reason: result.status === "sent" ? "Retry delivered to Knock" : `Retry outcome: ${result.status}`,
+      workflowRunId: result.workflowRunId,
+    };
   },
 });

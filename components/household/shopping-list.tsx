@@ -6,6 +6,8 @@ import { Check, Pencil, Plus, Trash2, X } from "lucide-react";
 
 import { api } from "@/convex/_generated/api";
 import type { Doc, Id } from "@/convex/_generated/dataModel";
+import { trackEvent } from "@/lib/analytics/track";
+import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
 
 type ShoppingItem = Doc<"shoppingItems">;
 
@@ -26,7 +28,8 @@ export function ShoppingList({ stayId, viewerId, isHost, isEnded }: { stayId: Id
     setBusy(true);
     setError("");
     try {
-      await createItem({ stayId, title: String(form.get("title") ?? ""), quantity: String(form.get("quantity") ?? "1"), note: String(form.get("note") ?? ""), visibility: form.get("visibility") === "personal" ? "personal" : "shared" });
+      const newItemId = await createItem({ stayId, title: String(form.get("title") ?? ""), quantity: String(form.get("quantity") ?? "1"), note: String(form.get("note") ?? ""), visibility: form.get("visibility") === "personal" ? "personal" : "shared" });
+      trackEvent(ANALYTICS_EVENTS.SHOPPING_ITEM_ADDED, { stayId, itemId: newItemId ?? "" });
       formElement.reset();
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Could not add this item.");
@@ -76,7 +79,12 @@ export function ShoppingList({ stayId, viewerId, isHost, isEnded }: { stayId: Id
             <div className="row-actions full"><button className="mini-button" type="submit" disabled={busy}>Save</button><button className="mini-button" type="button" onClick={() => setEditingId(null)}><X size={14} /> Cancel</button></div>
           </form>;
           return <article className={`list-row shopping-row ${item.checkedAt ? "done" : ""}`} key={item._id}>
-            {!isEnded ? <button className={`chore-check ${item.checkedAt ? "checked" : ""}`} type="button" onClick={() => void toggleItem({ itemId: item._id })} aria-label={`${item.checkedAt ? "Uncheck" : "Check off"} ${item.title}`}>{item.checkedAt && <Check size={17} />}</button> : <span className={`chore-check ${item.checkedAt ? "checked" : ""}`} aria-hidden="true">{item.checkedAt && <Check size={17} />}</span>}
+            {!isEnded ? <button className={`chore-check ${item.checkedAt ? "checked" : ""}`} type="button" onClick={() => {
+              void toggleItem({ itemId: item._id });
+              if (!item.checkedAt) {
+                trackEvent(ANALYTICS_EVENTS.SHOPPING_ITEM_PURCHASED, { stayId, itemId: item._id });
+              }
+            }} aria-label={`${item.checkedAt ? "Uncheck" : "Check off"} ${item.title}`}>{item.checkedAt && <Check size={17} />}</button> : <span className={`chore-check ${item.checkedAt ? "checked" : ""}`} aria-hidden="true">{item.checkedAt && <Check size={17} />}</span>}
             <div className="list-copy"><strong>{item.title}</strong><span>{item.quantity}{item.note ? ` · ${item.note}` : ""}</span><span className="badge">{item.visibility === "personal" ? "Personal" : "Shared"}</span></div>
             {!isEnded && canEdit && <div className="row-actions"><button className="mini-button" type="button" onClick={() => setEditingId(item._id)} aria-label={`Edit ${item.title}`}><Pencil size={14} /></button><button className="mini-button danger" type="button" onClick={() => void removeItem({ itemId: item._id })} aria-label={`Remove ${item.title}`}><Trash2 size={14} /></button></div>}
           </article>;

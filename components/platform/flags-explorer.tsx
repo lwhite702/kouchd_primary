@@ -15,6 +15,7 @@ export function FlagsExplorer() {
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [updatingKey, setUpdatingKey] = useState<string | null>(null);
+  const [auditReason, setAuditReason] = useState("Operational override via Platform Ops Console");
   const [statusMessage, setStatusMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
   const [confirmReset, setConfirmReset] = useState(false);
 
@@ -60,16 +61,25 @@ export function FlagsExplorer() {
   }, [overrideMap]);
 
   async function handleOverrideChange(key: FeatureFlagKey, newOverride: "enabled" | "disabled" | "default") {
+    const trimmedReason = auditReason.trim();
+    if (trimmedReason.length < 5) {
+      setStatusMessage({
+        text: "Please enter an audit reason (minimum 5 characters) before changing a feature flag override.",
+        type: "error",
+      });
+      return;
+    }
     setUpdatingKey(key);
     setStatusMessage(null);
     try {
       await setOverride({
         key,
         override: newOverride,
-        note: `Updated via Platform Console by operator`,
+        note: trimmedReason,
+        reason: trimmedReason,
       });
       setStatusMessage({
-        text: `Flag ${key} override updated to "${newOverride}".`,
+        text: `Flag ${key} override updated to "${newOverride}" (audit log recorded).`,
         type: "success",
       });
     } catch (err) {
@@ -83,9 +93,17 @@ export function FlagsExplorer() {
   }
 
   async function handleResetAll() {
+    const trimmedReason = auditReason.trim();
+    if (trimmedReason.length < 5) {
+      setStatusMessage({
+        text: "Please enter an audit reason (minimum 5 characters) before resetting overrides.",
+        type: "error",
+      });
+      return;
+    }
     try {
-      await resetOverrides();
-      setStatusMessage({ text: "All database overrides have been cleared to code/PostHog defaults.", type: "success" });
+      await resetOverrides({ reason: trimmedReason });
+      setStatusMessage({ text: "All database overrides have been cleared to code/PostHog defaults (audit log recorded).", type: "success" });
       setConfirmReset(false);
     } catch (err) {
       setStatusMessage({ text: err instanceof Error ? err.message : "Failed to reset overrides.", type: "error" });
@@ -220,6 +238,23 @@ export function FlagsExplorer() {
                 border: "1px solid var(--line, #e6ded2)",
                 fontSize: "0.85rem",
               }}
+            />
+          </div>
+
+          <div style={{ flex: 1, minWidth: 240 }}>
+            <input
+              type="text"
+              placeholder="Audit reason for flag changes (required)..."
+              value={auditReason}
+              onChange={(e) => setAuditReason(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "6px 10px",
+                borderRadius: 8,
+                border: "1px solid var(--line, #e6ded2)",
+                fontSize: "0.85rem",
+              }}
+              aria-label="Audit reason for flag changes"
             />
           </div>
 

@@ -83,11 +83,51 @@ export async function requirePlatformAdmin(ctx: AppCtx) {
   const email = (user.email ?? identity.email)?.toLowerCase();
   const hasEmailMatch = email ? adminEmails.includes(email) : false;
   const hasIdMatch = adminUserIds.includes(user.clerkUserId) || adminUserIds.includes(identity.subject);
+  const isExplicitEnvAdmin = hasEmailMatch || hasIdMatch;
   const isDbAdmin = Boolean(user.isAdmin);
 
-  if (!hasEmailMatch && !hasIdMatch && !isDbAdmin) {
+  if (!isExplicitEnvAdmin && !isDbAdmin) {
     throw new Error("Unauthorized: Platform admin grant required");
   }
 
-  return { user, identity };
+  return { user, identity, isExplicitEnvAdmin };
+}
+
+export function requireAuditReason(reason: string | undefined): string {
+  const trimmed = (reason ?? "").trim();
+  if (trimmed.length < 5) {
+    throw new Error("Audit reason is required (minimum 5 characters)");
+  }
+  if (trimmed.length > 500) {
+    throw new Error("Audit reason must be 500 characters or fewer");
+  }
+  return trimmed;
+}
+
+export async function recordPlatformAuditLog(
+  ctx: MutationCtx,
+  entry: {
+    actorUser: Doc<"users">;
+    actorEmail?: string;
+    action: string;
+    provider?: string;
+    targetType: string;
+    targetId?: string;
+    reason: string;
+    metadata?: Record<string, string | number | boolean>;
+  },
+) {
+  const validatedReason = requireAuditReason(entry.reason);
+  return await ctx.db.insert("platformAuditLogs", {
+    actorUserId: entry.actorUser._id,
+    actorClerkUserId: entry.actorUser.clerkUserId,
+    actorEmail: entry.actorEmail ?? entry.actorUser.email,
+    action: entry.action,
+    provider: entry.provider,
+    targetType: entry.targetType,
+    targetId: entry.targetId,
+    reason: validatedReason,
+    metadata: entry.metadata,
+    createdAt: Date.now(),
+  });
 }

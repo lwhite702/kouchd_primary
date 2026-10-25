@@ -141,7 +141,10 @@ describe("shared stay authorization and audit rules", () => {
     await host.mutation(api.stays.updatePaymentOptions, {
       stayId,
       paymentOptions: [
+        { provider: "venmo", detail: "@LeeHouse" },
         { provider: "cashapp", detail: "$LeeHouse" },
+        { provider: "chime", detail: "lee-house-chime" },
+        { provider: "cash", detail: "Leave on kitchen counter" },
         { provider: "applepay", detail: "https://example.com/pay/lee" },
       ],
     });
@@ -162,7 +165,10 @@ describe("shared stay authorization and audit rules", () => {
     expect(secondBundle.terms?.rateCents).toBe(32_000);
     expect(firstBundle.members.some((member) => "terms" in member)).toBe(false);
     expect(firstBundle.stay.paymentOptions).toEqual([
+      { provider: "venmo", detail: "@LeeHouse" },
       { provider: "cashapp", detail: "$LeeHouse" },
+      { provider: "chime", detail: "lee-house-chime" },
+      { provider: "cash", detail: "Leave on kitchen counter" },
       { provider: "applepay", detail: "https://example.com/pay/lee" },
     ]);
     const publicCodePreview = await firstGuest.query(api.referral.preview, { referralCode: hostBundle.stay.referralCode! });

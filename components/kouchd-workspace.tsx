@@ -24,6 +24,8 @@ import { DashboardNotificationFeed, NotificationBellMenu } from "@/components/no
 import type { NotificationItem } from "@/components/notifications/dashboard-notifications";
 import { GuidedTour, guideSteps } from "@/components/onboarding/guided-tour";
 import { MobileHeaderMenu } from "@/components/navigation/header-menu";
+import { P2PPaymentRouter } from "@/components/household/p2p-payment-router";
+import type { LoggedContributionPayload } from "@/components/household/p2p-payment-router";
 
 type Screen = "home" | "contributions" | "chores" | "stay";
 type Role = "host" | "guest";
@@ -166,21 +168,26 @@ export function KouchdWorkspace({ servicesConfigured }: { servicesConfigured: bo
     return [...contributionItems, ...choreItems].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 4);
   }, [chores, contributions]);
 
-  function addContribution(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const form = new FormData(event.currentTarget);
-    const amountCents = Math.round(Number(fieldValue(form, "amount")) * 100);
-    setContributions((items) => [{
-      id: crypto.randomUUID(),
-      type: fieldValue(form, "type"),
-      amountCents,
-      date: fieldValue(form, "date"),
-      note: fieldValue(form, "note") || "Shared contribution",
-      status: "pending",
-      countsTowardBalance: form.get("counts") === "on",
-    }, ...items]);
-    setModal(null);
-    notify("Contribution added for confirmation.");
+  function handleLogPreviewContribution(payload: LoggedContributionPayload) {
+    const labelMap: Record<string, string> = {
+      payment: "Payment",
+      groceries: "Groceries",
+      supplies: "Supplies",
+      house_work: "House work",
+      other: "Other",
+    };
+    setContributions((items) => [
+      {
+        id: crypto.randomUUID(),
+        type: labelMap[payload.type] ?? "Payment",
+        amountCents: payload.grossAmountCents,
+        date: payload.date,
+        note: payload.note || "Shared contribution",
+        status: "pending",
+        countsTowardBalance: payload.countsTowardBalance,
+      },
+      ...items,
+    ]);
   }
 
   function addChore(event: FormEvent<HTMLFormElement>) {
@@ -357,7 +364,35 @@ export function KouchdWorkspace({ servicesConfigured }: { servicesConfigured: bo
       <nav className="bottom-nav" aria-label="Primary navigation">{navItems.map((item) => <button className={`nav-item ${screen === item.id ? "active" : ""}`} type="button" key={item.id} onClick={() => setScreen(item.id)}><item.icon className="nav-icon" size={20} /><span>{item.label}</span></button>)}</nav>
 
       {modal && <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setModal(null); }}><section className="modal-card" role="dialog" aria-modal="true" aria-labelledby="modal-title"><div className="dialog-heading"><div><p className="eyebrow">{modal === "contribution" ? "Add to the record" : modal === "chore" ? "Pitch in" : "Shared stay"}</p><h2 id="modal-title">{modal === "contribution" ? "New contribution" : modal === "chore" ? "Add a chore" : "Agreement settings"}</h2></div><button className="icon-button" type="button" onClick={() => setModal(null)} aria-label="Close"><X size={20} /></button></div>
-        {modal === "contribution" && <form onSubmit={addContribution}><div className="form-grid"><label><span>Type</span><select name="type"><option>Payment</option><option>Groceries</option><option>Supplies</option><option>House work</option><option>Other</option></select></label><label><span>Value</span><div className="money-input"><span>$</span><input name="amount" type="number" min="0.01" step="0.01" required /></div></label><label><span>Date</span><input name="date" type="date" defaultValue={today} required /></label><label className="full"><span>Note</span><input name="note" placeholder="Week 2 contribution, cleaning supplies..." /></label><label className="check full"><input name="counts" type="checkbox" defaultChecked /><span>Count this toward the stay balance</span></label></div><div className="dialog-actions"><button className="button ghost" type="button" onClick={() => setModal(null)}>Cancel</button><button className="button primary" type="submit">Add contribution</button></div></form>}
+        {modal === "contribution" && (
+          <P2PPaymentRouter
+            transaction={{
+              transactionId: "KCH-994827",
+              amount: "200.00",
+              memo: "Maple House · Week two contribution",
+              recipientVenmo: "lee-maplehouse",
+              recipientCashApp: "leemaplehouse",
+              recipientChime: "lee-maple-house",
+              recipientZelle: "lee@maplehouse.example",
+              recipientCashNote: "Leave on the kitchen counter or hand to Lee",
+            }}
+            defaultDate={today}
+            allowEditingDetails={true}
+            rewardWallet={{
+              enabled: true,
+              availablePoints: 50,
+              coinName: "Coins",
+              centsPerPoint: 100,
+              maxRedeemablePoints: 50,
+            }}
+            onLogContribution={handleLogPreviewContribution}
+            onComplete={() => {
+              setModal(null);
+              notify("Contribution added for confirmation.");
+            }}
+            onCancel={() => setModal(null)}
+          />
+        )}
         {modal === "chore" && <form onSubmit={addChore}><div className="form-grid"><label className="full"><span>Chore</span><input name="title" required placeholder="Take trash out" /></label><label><span>Assigned to</span><select name="assignee"><option>Guest</option><option>Host</option><option>Shared</option></select></label><label><span>Due date</span><input name="dueDate" type="date" defaultValue="2026-09-06" required /></label></div><div className="dialog-actions"><button className="button ghost" type="button" onClick={() => setModal(null)}>Cancel</button><button className="button primary" type="submit">Add chore</button></div></form>}
         {modal === "agreement" && <div><div className="settings-summary"><CalendarDays size={24} /><div><strong>Sep 1 to Sep 21</strong><span>$200 weekly · America/New_York</span></div></div><p className="muted modal-note">Cloud-backed editing unlocks after Clerk and Convex are connected. The preview keeps the approved agreement visible without saving personal information locally.</p><div className="dialog-actions"><button className="button primary" type="button" onClick={() => setModal(null)}>Got it</button></div></div>}
       </section></div>}

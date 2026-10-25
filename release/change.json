@@ -1,5 +1,5 @@
 {
-  "version": "0.6.12",
-  "type": "patch",
-  "reason": "Update Replay QA site ownership nonce at /.well-known/replay-qa-security-nonce for security testing."
+  "version": "1.0.0-rc.2",
+  "type": "rc",
+  "reason": "Patch Next.js to 16.4.3 for security advisory and remediate Replay QA web security, canonical link, and profile name defects for 1.0.0-rc.2."
 }
