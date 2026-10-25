@@ -8,10 +8,13 @@ import { Tooltip } from "@/components/ui/tooltip";
 
 type PaymentOption = NonNullable<Doc<"stays">["paymentOptions"]>[number];
 const providers = [
-  { id: "paypal", label: "PayPal" },
-  { id: "cashapp", label: "Cash App" },
-  { id: "zelle", label: "Zelle" },
-  { id: "applepay", label: "Apple Pay" },
+  { id: "venmo", label: "Venmo", placeholder: "@username" },
+  { id: "cashapp", label: "Cash App", placeholder: "$cashtag" },
+  { id: "chime", label: "Chime", placeholder: "$chimesign" },
+  { id: "zelle", label: "Zelle", placeholder: "Email or phone number" },
+  { id: "cash", label: "Cash (in-person)", placeholder: "e.g., Hand to host or leave on kitchen counter" },
+  { id: "paypal", label: "PayPal", placeholder: "https://paypal.me/username or email" },
+  { id: "applepay", label: "Apple Pay", placeholder: "Phone, email, or https:// link" },
 ] as const;
 
 function isWebUrl(value: string) {
@@ -27,11 +30,13 @@ export function PaymentOptionsCard({
   paymentOptions,
   isHost,
   onEdit,
+  onOpenRouter,
   onNotify,
 }: {
   paymentOptions?: Doc<"stays">["paymentOptions"];
   isHost: boolean;
   onEdit: () => void;
+  onOpenRouter?: () => void;
   onNotify: (message: string) => void;
 }) {
   const configured = paymentOptions ?? [];
@@ -51,7 +56,14 @@ export function PaymentOptionsCard({
           <p className="eyebrow">External payments</p>
           <h2>Pay the host directly</h2>
         </div>
-        {isHost && <button className="mini-button" type="button" onClick={onEdit}><Edit3 size={15} /> {configured.length ? "Edit options" : "Add options"}</button>}
+        <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+          {onOpenRouter && (
+            <button className="button primary compact" type="button" onClick={onOpenRouter}>
+              Send &amp; log contribution
+            </button>
+          )}
+          {isHost && <button className="mini-button" type="button" onClick={onEdit}><Edit3 size={15} /> {configured.length ? "Edit options" : "Add options"}</button>}
+        </div>
       </div>
       <p className="muted" style={{ marginTop: "-0.5rem" }}>Kouchd does not process payments. Use an option below, then record the contribution in your ledger.</p>
       {configured.length ? (
@@ -121,7 +133,7 @@ export function PaymentOptionsForm({
         {providers.map((provider) => (
           <label className="full" key={provider.id}>
             <span>{provider.label}</span>
-            <input name={provider.id} defaultValue={byProvider.get(provider.id) ?? ""} maxLength={250} placeholder="Username, contact, or https:// link" />
+            <input name={provider.id} defaultValue={byProvider.get(provider.id) ?? ""} maxLength={250} placeholder={provider.placeholder} />
           </label>
         ))}
       </div>

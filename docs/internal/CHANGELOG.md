@@ -2,6 +2,27 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-10-25 — Establish Version 1.0 Release Candidate feature lock and P2P Contribution Router (WRE-234, WRE-231)
+
+- Implemented the **Version 1.0 Release Candidate (`1.0.0-rc.1`) Feature Lock**:
+  - Added `release/feature-lock.json` codifying the `v1-rc` stabilization lock, enumerating the open pre-lock PRs (#55–#61, #66) and in-flight branches (`WRE-228`, `WRE-230`, `WRE-231`, `WRE-234`) allowed to complete merge before the unconditional lock takes effect.
+  - Created the `v1-feature-lock` agent skill at `.agents/skills/v1-feature-lock/SKILL.md` and helper CLI at `scripts/feature-lock.mjs` (`npm run lock:status`, `npm run lock:defer-feature`, `npm run lock:bump-rc`).
+  - Enforced the feature lock in `AGENTS.md` and `scripts/release-gate.mjs`: only bug fixes, security patches, stability fixes, and documentation updates (`patch`, `rc`, `none`) may land on the 1.0 launch line; net-new features must be added to `help/product/roadmap.mdx` and developed in separate git worktrees under `/Volumes/Projects/CodexWorktrees/`.
+  - Synchronized `VERSION`, `package.json`, `package-lock.json`, and `release/change.json` to `1.0.0-rc.1`, and iOS `MARKETING_VERSION` to `1.0.0`.
+- Implemented the **P2P Contribution Router & 4-Phase Confirmation Engine** (`WRE-231`) across Next.js (`lib/domain/p2pRouting.ts`, `lib/domain/qrCodeLevelH.ts`, `components/household/p2p-payment-router.tsx`) and native iOS SwiftUI (`ios/Kouchd/Models.swift`, `ios/Kouchd/MainScreens.swift`), including Venmo, Cash App, Chime, PayPal (`https://paypal.me/[username]/[amount]`), Zelle, Cash, and Reward Points offsets.
+
+## 2026-10-24 — Remediate Replay QA web security, canonical link, and sign-in defects (WRE-228)
+
+- Remediated 5 Replay QA defects reported on `https://app.kouchd.com` and user-reported profile name saving issue:
+  - Enforced Subresource Integrity (SRI) on dynamically injected cross-origin Clerk UI chunks (`vendors_ui_e564da_1.41.2.js`, `signin_ui_e564da_1.41.2.js`, `ui-common_ui_e564da_1.41.2.js`) via client security runtime interceptor (`lib/security-runtime.ts`), `<head>` preloading, and early inline script execution.
+  - Implemented client-side runtime deduplication for static Clerk `/v1/environment` GET requests during initial load, preventing redundant byte-identical fetches across component mounts.
+  - Added complete Content-Security-Policy (CSP) headers in Next.js configuration and proxy middleware (`clerkMiddleware`), paired with an HTML `<meta>` tag fallback in root layout.
+  - Added self-referencing canonical link metadata (`https://app.kouchd.com/`) in `app/layout.tsx` (`metadataBase: new URL("https://app.kouchd.com")`, `alternates: { canonical: "/" }`) and `app/page.tsx`.
+  - Disabled the sign-in "Continue" submit button visually and functionally when `#identifier-field` (email address) is empty via `SignInFormGuard` observer and `.kouchd-submit-disabled` CSS rules.
+  - Fixed profile display name saving in `components/authenticated-home.tsx` and native iOS `MoreScreens.swift` for single-word names (avoiding empty string `lastName` parameter rejected by Clerk), and updated form default values to correctly display saved names.
+- Added comprehensive unit tests in `tests/replay-qa-remediation.test.ts`.
+- Synchronized package and iOS marketing versions to `0.6.12` with patch classification in `release/change.json`.
+
 ## 2026-10-24 — Update Replay QA site ownership nonce for security verification (WRE-227)
 
 - Updated static route handler at `app/.well-known/replay-qa-security-nonce/route.ts` with new Replay QA security verification token (`loopqa-sec-9TrCmqrdLQkZh1UIU1Qew_Ql6bEQ36iILYviGiS25V0`).

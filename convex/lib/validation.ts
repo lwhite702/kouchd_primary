@@ -10,7 +10,7 @@ const MAX_CHORE_TITLE_LENGTH = 160;
 const MAX_ANNOUNCEMENT_TITLE_LENGTH = 160;
 const E164_PHONE = /^\+[1-9]\d{7,14}$/;
 const MAX_INVITE_LIFETIME_MS = 30 * 24 * 60 * 60 * 1_000;
-const PAYMENT_PROVIDERS = new Set(["paypal", "cashapp", "zelle", "applepay"]);
+const PAYMENT_PROVIDERS = new Set(["venmo", "cashapp", "chime", "zelle", "cash", "paypal", "applepay"]);
 
 export type StayTermsInput = {
   startDate: string;
@@ -222,11 +222,12 @@ export function assertHouseInfoInput(info: HouseInfoInput) {
   if (info.otherNotes && info.otherNotes.length > 2000) throw new Error("House notes must be 2,000 characters or fewer");
 }
 
-export type PaymentOptionInput = { provider: "paypal" | "cashapp" | "zelle" | "applepay"; detail: string };
+export type PaymentProviderId = "venmo" | "cashapp" | "chime" | "zelle" | "cash" | "paypal" | "applepay";
+export type PaymentOptionInput = { provider: PaymentProviderId; detail: string };
 
 export function assertPaymentOptionsInput(options: PaymentOptionInput[]) {
   if (!Array.isArray(options) || options.length > PAYMENT_PROVIDERS.size) {
-    throw new Error("Choose up to four household payment options");
+    throw new Error("Choose up to seven household payment options");
   }
   const seen = new Set<string>();
   for (const option of options) {

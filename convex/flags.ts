@@ -1,7 +1,7 @@
 import { v } from "convex/values";
 
 import { mutation, query, type MutationCtx, type QueryCtx } from "./_generated/server";
-import { requirePlatformAdmin } from "./lib/auth";
+import { recordPlatformAuditLog, requireAuditReason, requirePlatformAdmin } from "./lib/auth";
 import { FEATURE_FLAGS_REGISTRY } from "../lib/flags/config";
 
 type AppCtx = QueryCtx | MutationCtx;
@@ -37,7 +37,26 @@ export async function isFeatureEnabled(
 export const list = query({
   args: {},
   handler: async (ctx) => {
-    return await ctx.db.query("featureFlags").collect();
+    const rows = await ctx.db.query("featureFlags").collect();
+    let isAdmin = false;
+    try {
+      await requirePlatformAdmin(ctx);
+      isAdmin = true;
+    } catch {
+      isAdmin = false;
+    }
+
+    if (isAdmin) {
+      return rows;
+    }
+
+    return rows.map((row) => ({
+      _id: row._id,
+      _creationTime: row._creationTime,
+      key: row.key,
+      override: row.override,
+      updatedAt: row.updatedAt,
+    }));
   },
 });
 
@@ -54,7 +73,6 @@ export const get = query({
       key: args.key,
       override: record?.override ?? "default",
       enabled,
-      note: record?.note,
       updatedAt: record?.updatedAt,
     };
   },
@@ -65,9 +83,12 @@ export const setOverride = mutation({
     key: v.string(),
     override: v.union(v.literal("enabled"), v.literal("disabled"), v.literal("default")),
     note: v.optional(v.string()),
+    reason: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const { user } = await requirePlatformAdmin(ctx);
+    const { user, identity } = await requirePlatformAdmin(ctx);
+    const rawReason = args.reason !== undefined ? args.reason : (args.note ?? `Feature flag ${args.key} set to ${args.override}`);
+    const auditReason = requireAuditReason(rawReason);
 
     const existing = await ctx.db
       .query("featureFlags")
@@ -75,18 +96,47 @@ export const setOverride = mutation({
       .unique();
 
     const now = Date.now();
+    const previousOverride = existing?.override ?? "default";
 
     if (args.override === "default" && existing) {
       await ctx.db.delete(existing._id);
+      await recordPlatformAuditLog(ctx, {
+        actorUser: user,
+        actorEmail: user.email ?? identity.email,
+        action: "feature_flag.override_removed",
+        provider: "convex",
+        targetType: "feature_flag",
+        targetId: args.key,
+        reason: auditReason,
+        metadata: {
+          key: args.key,
+          previousOverride,
+          newOverride: "default",
+        },
+      });
       return { success: true, action: "removed", key: args.key };
     }
 
     if (existing) {
       await ctx.db.patch(existing._id, {
         override: args.override,
-        note: args.note,
+        note: args.note ?? auditReason,
         updatedByUserId: user._id,
         updatedAt: now,
+      });
+      await recordPlatformAuditLog(ctx, {
+        actorUser: user,
+        actorEmail: user.email ?? identity.email,
+        action: "feature_flag.override_updated",
+        provider: "convex",
+        targetType: "feature_flag",
+        targetId: args.key,
+        reason: auditReason,
+        metadata: {
+          key: args.key,
+          previousOverride,
+          newOverride: args.override,
+        },
       });
       return { success: true, action: "updated", key: args.key, override: args.override };
     }
@@ -95,9 +145,23 @@ export const setOverride = mutation({
       await ctx.db.insert("featureFlags", {
         key: args.key,
         override: args.override,
-        note: args.note,
+        note: args.note ?? auditReason,
         updatedByUserId: user._id,
         updatedAt: now,
+      });
+      await recordPlatformAuditLog(ctx, {
+        actorUser: user,
+        actorEmail: user.email ?? identity.email,
+        action: "feature_flag.override_created",
+        provider: "convex",
+        targetType: "feature_flag",
+        targetId: args.key,
+        reason: auditReason,
+        metadata: {
+          key: args.key,
+          previousOverride: "default",
+          newOverride: args.override,
+        },
       });
     }
 
@@ -106,14 +170,31 @@ export const setOverride = mutation({
 });
 
 export const resetOverrides = mutation({
-  args: {},
-  handler: async (ctx) => {
-    await requirePlatformAdmin(ctx);
+  args: {
+    reason: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const { user, identity } = await requirePlatformAdmin(ctx);
+    const rawReason = args.reason !== undefined ? args.reason : "All feature flag overrides reset to code defaults";
+    const auditReason = requireAuditReason(rawReason);
 
     const all = await ctx.db.query("featureFlags").collect();
     for (const record of all) {
       await ctx.db.delete(record._id);
     }
+
+    await recordPlatformAuditLog(ctx, {
+      actorUser: user,
+      actorEmail: user.email ?? identity.email,
+      action: "feature_flag.overrides_reset",
+      provider: "convex",
+      targetType: "feature_flag",
+      targetId: "all",
+      reason: auditReason,
+      metadata: {
+        clearedCount: all.length,
+      },
+    });
 
     return { success: true, cleared: all.length };
   },

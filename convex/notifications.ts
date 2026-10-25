@@ -303,15 +303,17 @@ export const recordSent = internalMutation({
     detail: v.optional(v.string()),
     action: v.optional(v.string()),
     sentAt: v.optional(v.number()),
+    cancellationKey: v.optional(v.string()),
+    workflowRunId: v.optional(v.string()),
   },
   returns: v.null(),
   handler: async (ctx, args) => {
+    const sentTime = args.sentAt ?? Date.now();
     const existing = await ctx.db
       .query("notifications")
       .withIndex("by_user_workflow_and_entity", (query) => query.eq("userId", args.userId).eq("workflow", args.workflow).eq("entityId", args.entityId))
       .take(1);
     if (existing.length === 0) {
-      const sentTime = args.sentAt ?? Date.now();
       await ctx.db.insert("notifications", {
         userId: args.userId,
         stayId: args.stayId,
@@ -332,9 +334,101 @@ export const recordSent = internalMutation({
         });
       }
     }
+
+    const existingEvent = await ctx.db
+      .query("notificationEvents")
+      .withIndex("by_user_workflow_entity", (query) =>
+        query.eq("userId", args.userId).eq("workflow", args.workflow).eq("entityId", args.entityId),
+      )
+      .first();
+    if (existingEvent) {
+      await ctx.db.patch(existingEvent._id, {
+        status: "sent",
+        workflowRunId: args.workflowRunId ?? existingEvent.workflowRunId,
+        cancellationKey: args.cancellationKey ?? existingEvent.cancellationKey,
+        errorSummary: undefined,
+        attemptCount: existingEvent.attemptCount + 1,
+        lastAttemptAt: sentTime,
+      });
+    } else {
+      await ctx.db.insert("notificationEvents", {
+        userId: args.userId,
+        stayId: args.stayId,
+        workflow: args.workflow,
+        entityId: args.entityId,
+        cancellationKey: args.cancellationKey,
+        status: "sent",
+        workflowRunId: args.workflowRunId,
+        attemptCount: 1,
+        occurredAt: sentTime,
+        lastAttemptAt: sentTime,
+      });
+    }
     return null;
   },
 });
+
+export const recordNotificationOutcome = internalMutation({
+  args: {
+    userId: v.id("users"),
+    stayId: v.optional(v.id("stays")),
+    workflow: v.string(),
+    entityId: v.optional(v.string()),
+    cancellationKey: v.optional(v.string()),
+    status: v.union(
+      v.literal("sent"),
+      v.literal("failed"),
+      v.literal("skipped"),
+      v.literal("disabled"),
+      v.literal("cancelled"),
+      v.literal("duplicate"),
+    ),
+    workflowRunId: v.optional(v.string()),
+    errorSummary: v.optional(v.string()),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const now = Date.now();
+    const sanitizedError = args.errorSummary ? args.errorSummary.slice(0, 240) : undefined;
+    const existing = await ctx.db
+      .query("notificationEvents")
+      .withIndex("by_user_workflow_entity", (query) =>
+        query.eq("userId", args.userId).eq("workflow", args.workflow).eq("entityId", args.entityId),
+      )
+      .first();
+
+    if (existing) {
+      // Never roll a "sent" event backward unless recording an explicit cancellation
+      if (existing.status === "sent" && args.status !== "cancelled") {
+        return null;
+      }
+      await ctx.db.patch(existing._id, {
+        status: args.status,
+        workflowRunId: args.workflowRunId ?? existing.workflowRunId,
+        cancellationKey: args.cancellationKey ?? existing.cancellationKey,
+        errorSummary: sanitizedError,
+        attemptCount: existing.attemptCount + 1,
+        lastAttemptAt: now,
+      });
+    } else {
+      await ctx.db.insert("notificationEvents", {
+        userId: args.userId,
+        stayId: args.stayId,
+        workflow: args.workflow,
+        entityId: args.entityId,
+        cancellationKey: args.cancellationKey,
+        status: args.status,
+        workflowRunId: args.workflowRunId,
+        errorSummary: sanitizedError,
+        attemptCount: 1,
+        occurredAt: now,
+        lastAttemptAt: now,
+      });
+    }
+    return null;
+  },
+});
+
 
 export const reminderCandidates = internalQuery({
   args: { now: v.number() },
@@ -1175,5 +1269,120 @@ export const checkAgreementPendingEligibility = internalQuery({
         return true;
       }
     }
+  },
+});
+
+export const retryEventInternal = internalMutation({
+  args: {
+    eventId: v.id("notificationEvents"),
+  },
+  returns: v.object({
+    eligible: v.boolean(),
+    reason: v.string(),
+    workflow: v.optional(v.string()),
+    userId: v.optional(v.id("users")),
+    stayId: v.optional(v.id("stays")),
+    entityId: v.optional(v.string()),
+    cancellationKey: v.optional(v.string()),
+    data: v.optional(v.any()),
+  }),
+  handler: async (ctx, { eventId }) => {
+    const event = await ctx.db.get(eventId);
+    if (!event) {
+      return { eligible: false, reason: "Notification event not found" };
+    }
+    if (event.status !== "failed" && event.status !== "skipped") {
+      return { eligible: false, reason: `Event status is '${event.status}' and cannot be retried` };
+    }
+
+    const alreadySent = await ctx.db
+      .query("notifications")
+      .withIndex("by_user_workflow_and_entity", (query) =>
+        query.eq("userId", event.userId).eq("workflow", event.workflow).eq("entityId", event.entityId),
+      )
+      .first();
+    if (alreadySent) {
+      return { eligible: false, reason: "Notification has already been delivered (idempotent deduplication)" };
+    }
+
+    const stay = event.stayId ? await ctx.db.get(event.stayId) : null;
+    if (event.stayId && (!stay || stay.status === "ended")) {
+      return { eligible: false, reason: "Associated stay has ended or no longer exists" };
+    }
+
+    const now = Date.now();
+    if (REMINDER_WORKFLOWS.has(event.workflow)) {
+      const timezone = stay?.timezone ?? "UTC";
+      const localToday = calendarDateInTimezone(new Date(now), timezone);
+      const capped = await hasUserReceivedReminderOnDate(ctx, event.userId, localToday, timezone, now);
+      if (capped) {
+        return { eligible: false, reason: "Recipient has already reached the 1/day reminder cap today" };
+      }
+    }
+
+    const user = await ctx.db.get(event.userId);
+    if (!user) {
+      return { eligible: false, reason: "Recipient user record not found" };
+    }
+
+    const hostUser = stay?.hostUserId ? await ctx.db.get(stay.hostUserId) : null;
+    const stayName = stay?.houseInfo?.streetAddress
+      ? `Stay at ${stay.houseInfo.streetAddress}`
+      : stay?.name ?? "Shared stay";
+
+    let data: Record<string, unknown> = {
+      stayName,
+      hostName: hostUser?.name ?? "Your host",
+      guestName: user.name,
+    };
+
+    if (event.workflow === "agreement-pending" && stay && stay.currentTermsId) {
+      const terms = await ctx.db.get(stay.currentTermsId);
+      if (!terms) {
+        return { eligible: false, reason: "Stay terms not found for agreement-pending retry" };
+      }
+      const membership = await ctx.db
+        .query("memberships")
+        .withIndex("by_stay_user", (query) => query.eq("stayId", stay._id).eq("userId", user._id))
+        .first();
+      if (!membership || membership.status !== "active") {
+        return { eligible: false, reason: "Recipient is no longer an active member of this stay" };
+      }
+      if (membership.role === "guest" && membership.acceptedTermsId === terms._id) {
+        return { eligible: false, reason: "Guest has already accepted the current stay agreement" };
+      }
+      data = buildAgreementPendingPayload({
+        recipientRole: membership.role,
+        stay,
+        hostUser,
+        guestUser: membership.role === "guest" ? user : null,
+        terms,
+        termsUrl: buildTermsUrl(stay._id),
+      });
+    } else if (event.workflow === "check-in-reminder" && stay) {
+      data = {
+        stayName,
+        hostName: hostUser?.name ?? "Your host",
+        checkInDate: stay.nextCheckInDate ?? calendarDateInTimezone(new Date(now), stay.timezone),
+      };
+    } else if (event.workflow === "chore-reminder") {
+      data = {
+        choreTitle: "Scheduled household chore",
+        dueDate: calendarDateInTimezone(new Date(now), stay?.timezone ?? "UTC"),
+        choreCount: 1,
+        additionalChoresCount: 0,
+      };
+    }
+
+    return {
+      eligible: true,
+      reason: "Eligible for single-recipient retry",
+      workflow: event.workflow,
+      userId: event.userId,
+      stayId: event.stayId,
+      entityId: event.entityId,
+      cancellationKey: event.cancellationKey,
+      data,
+    };
   },
 });

@@ -1,6 +1,7 @@
 import "server-only";
 
 import { auth, currentUser } from "@clerk/nextjs/server";
+import { isAuthBypassEnabled } from "@/lib/adapters/auth/server";
 
 export interface PlatformAdminUser {
   userId: string;
@@ -10,10 +11,15 @@ export interface PlatformAdminUser {
 }
 
 /**
- * Validates that the current authenticated caller holds a valid platform admin grant.
- * Fails closed by throwing an Error if unauthenticated or unauthorized.
+ * Validates that the current authenticated caller holds an explicit platform admin grant.
+ * Fails closed by throwing an Error if unauthenticated, unauthorized, or if auth bypass is enabled.
+ * Never infers access from Clerk publicMetadata or household/business roles.
  */
 export async function requirePlatformAdmin(): Promise<PlatformAdminUser> {
+  if (isAuthBypassEnabled()) {
+    throw new Error("Unauthorized: Platform admin access is disabled when auth bypass is active");
+  }
+
   const { userId } = await auth();
   if (!userId) {
     throw new Error("Unauthenticated: Sign-in required for platform console");
@@ -35,11 +41,9 @@ export async function requirePlatformAdmin(): Promise<PlatformAdminUser> {
 
   const hasEmailMatch = primaryEmail ? adminEmails.includes(primaryEmail.toLowerCase()) : false;
   const hasIdMatch = adminUserIds.includes(userId);
-  const metadataRole = (user?.publicMetadata as Record<string, unknown> | undefined)?.role;
-  const hasMetadataRole = metadataRole === "platform_admin" || metadataRole === "admin";
 
-  if (!hasEmailMatch && !hasIdMatch && !hasMetadataRole) {
-    throw new Error("Unauthorized: Platform admin grant required");
+  if (!hasEmailMatch && !hasIdMatch) {
+    throw new Error("Unauthorized: Explicit platform admin grant required");
   }
 
   const displayName = [user?.firstName, user?.lastName].filter(Boolean).join(" ")

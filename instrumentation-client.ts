@@ -1,4 +1,7 @@
 import * as Sentry from "@sentry/nextjs";
+import { initSecurityRuntime } from "./lib/security-runtime";
+
+initSecurityRuntime();
 
 Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN || "https://f5223ccb49ae6418054cd711f9b1bf6a@o4509756446998528.ingest.us.sentry.io/4512231102808064",

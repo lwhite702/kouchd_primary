@@ -1,6 +1,6 @@
 {
   "name": "kouchd",
-  "version": "0.6.11",
+  "version": "1.0.0-rc.1",
   "private": true,
   "type": "module",
   "scripts": {
@@ -15,6 +15,9 @@
     "verify": "npm run verify:env && npm run lint && npm run typecheck && npm run test",
     "version:check": "node scripts/release-version.mjs check",
     "version:prepare": "node scripts/release-version.mjs prepare",
+    "lock:status": "node scripts/feature-lock.mjs status",
+    "lock:defer-feature": "node scripts/feature-lock.mjs defer-feature",
+    "lock:bump-rc": "node scripts/feature-lock.mjs bump-rc",
     "release:check": "npm run version:check && npm run verify && npm run build && node scripts/release-gate.mjs"
   },
   "dependencies": {
@@ -27,7 +30,7 @@
     "convex": "1.45.0",
     "lucide-react": "1.40.0",
     "next": "16.4.0",
-    "posthog-js": "^1.438.7",
+    "posthog-js": "^1.438.21",
     "react": "19.2.8",
     "react-dom": "19.2.8"
   },

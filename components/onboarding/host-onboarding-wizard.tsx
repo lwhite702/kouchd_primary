@@ -62,7 +62,15 @@ export function HostOnboardingWizard({
   const [lateEnabled, setLateEnabled] = useState(false);
   const [lateFee, setLateFee] = useState("15");
   const [graceDays, setGraceDays] = useState("2");
-  const [paymentDetails, setPaymentDetails] = useState({ paypal: "", cashapp: "", zelle: "", applepay: "" });
+  const [paymentDetails, setPaymentDetails] = useState({
+    venmo: "",
+    cashapp: "",
+    chime: "",
+    zelle: "",
+    cash: "",
+    paypal: "",
+    applepay: "",
+  });
 
   // Step 5: Submission
   const [saving, setSaving] = useState(false);
@@ -659,14 +667,17 @@ export function HostOnboardingWizard({
             <p className="muted">Add any payment username, contact detail, or link you want to share. Guests pay you directly outside Kouchd.</p>
             <div className="form-grid">
               {([
-                ["paypal", "PayPal"],
-                ["cashapp", "Cash App"],
-                ["zelle", "Zelle"],
-                ["applepay", "Apple Pay"],
-              ] as const).map(([provider, label]) => (
+                ["venmo", "Venmo", "@username"],
+                ["cashapp", "Cash App", "$cashtag"],
+                ["chime", "Chime", "$chimesign"],
+                ["zelle", "Zelle", "Email or phone number"],
+                ["cash", "Cash (in-person)", "e.g., Hand to host or leave on counter"],
+                ["paypal", "PayPal", "https://paypal.me/username or email"],
+                ["applepay", "Apple Pay", "Phone, email, or https:// link"],
+              ] as const).map(([provider, label, placeholder]) => (
                 <label className="full" key={provider}>
                   <span>{label}</span>
-                  <input value={paymentDetails[provider]} onChange={(event) => setPaymentDetails({ ...paymentDetails, [provider]: event.target.value })} maxLength={250} placeholder="Username, phone/email, or https:// link" />
+                  <input value={paymentDetails[provider]} onChange={(event) => setPaymentDetails({ ...paymentDetails, [provider]: event.target.value })} maxLength={250} placeholder={placeholder} />
                 </label>
               ))}
             </div>

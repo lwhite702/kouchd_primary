@@ -232,11 +232,17 @@ struct PaymentOptionsScreen: View {
       }
       Section("Add an option") {
         Picker("Provider", selection: $provider) {
-          Text("Zelle").tag("zelle"); Text("PayPal").tag("paypal")
-          Text("Cash App").tag("cashapp"); Text("Apple Pay").tag("applepay")
+          Text("Venmo").tag("venmo")
+          Text("Cash App").tag("cashapp")
+          Text("Chime").tag("chime")
+          Text("Zelle").tag("zelle")
+          Text("Cash (in-person)").tag("cash")
+          Text("PayPal").tag("paypal")
+          Text("Apple Pay").tag("applepay")
         }
-        TextField("How guests find you", text: $detail)
+        TextField("How guests find you (handle, email, or note)", text: $detail)
         Button("Add") {
+          options.removeAll { $0["provider"].text == provider }
           options.append(.object(["provider": .string(provider), "detail": .string(detail)]))
           detail = ""
         }.disabled(detail.isEmpty)

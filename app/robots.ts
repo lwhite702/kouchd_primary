@@ -19,6 +19,7 @@ export default function robots(): MetadataRoute.Robots {
         disallow: [
           "/api",
           "/console",
+          "/platform",
           "/sign-in",
           "/sign-up",
           "/invite",
