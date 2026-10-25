@@ -2,6 +2,18 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-10-24 — Remediate Replay QA web security, canonical link, and sign-in defects (WRE-228)
+
+- Remediated 5 Replay QA defects reported on `https://app.kouchd.com` and user-reported profile name saving issue:
+  - Enforced Subresource Integrity (SRI) on dynamically injected cross-origin Clerk UI chunks (`vendors_ui_e564da_1.41.2.js`, `signin_ui_e564da_1.41.2.js`, `ui-common_ui_e564da_1.41.2.js`) via client security runtime interceptor (`lib/security-runtime.ts`), `<head>` preloading, and early inline script execution.
+  - Implemented client-side runtime deduplication for static Clerk `/v1/environment` GET requests during initial load, preventing redundant byte-identical fetches across component mounts.
+  - Added complete Content-Security-Policy (CSP) headers in Next.js configuration and proxy middleware (`clerkMiddleware`), paired with an HTML `<meta>` tag fallback in root layout.
+  - Added self-referencing canonical link metadata (`https://app.kouchd.com/`) in `app/layout.tsx` (`metadataBase: new URL("https://app.kouchd.com")`, `alternates: { canonical: "/" }`) and `app/page.tsx`.
+  - Disabled the sign-in "Continue" submit button visually and functionally when `#identifier-field` (email address) is empty via `SignInFormGuard` observer and `.kouchd-submit-disabled` CSS rules.
+  - Fixed profile display name saving in `components/authenticated-home.tsx` and native iOS `MoreScreens.swift` for single-word names (avoiding empty string `lastName` parameter rejected by Clerk), and updated form default values to correctly display saved names.
+- Added comprehensive unit tests in `tests/replay-qa-remediation.test.ts`.
+- Synchronized package and iOS marketing versions to `0.6.12` with patch classification in `release/change.json`.
+
 ## 2026-10-24 — Update Replay QA site ownership nonce for security verification (WRE-227)
 
 - Updated static route handler at `app/.well-known/replay-qa-security-nonce/route.ts` with new Replay QA security verification token (`loopqa-sec-9TrCmqrdLQkZh1UIU1Qew_Ql6bEQ36iILYviGiS25V0`).

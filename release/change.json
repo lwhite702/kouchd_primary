@@ -1,5 +1,5 @@
 {
-  "version": "0.6.11",
+  "version": "0.6.12",
   "type": "patch",
   "reason": "Update Replay QA site ownership nonce at /.well-known/replay-qa-security-nonce for security testing."
 }

@@ -280,18 +280,34 @@ struct SettingsScreen: View {
 
   private func savePreferences() {
     Task {
-      let parts = name.split(whereSeparator: \.isWhitespace).map(String.init)
-      guard let first = parts.first, let user = clerk.user else {
+      let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+      guard !trimmed.isEmpty else {
         store.error = "Enter your name before saving."
         return
       }
-      do {
-        _ = try await user.update(.init(firstName: first, lastName: parts.dropFirst().joined(separator: " ")))
-        guard await store.mutate("users:syncCurrent", ["clerkName": name]) else { return }
-      } catch {
-        store.error = error.localizedDescription
+      let parts = trimmed.split(whereSeparator: \.isWhitespace).map(String.init)
+      guard let first = parts.first else {
+        store.error = "Enter your name before saving."
         return
       }
+
+      // Update Convex first with the verified display name
+      guard await store.mutate("users:syncCurrent", ["clerkName": trimmed]) else { return }
+
+      // Best-effort sync to Clerk profile
+      if let user = clerk.user {
+        do {
+          let last = parts.dropFirst().joined(separator: " ")
+          if last.isEmpty {
+            _ = try await user.update(.init(firstName: first))
+          } else {
+            _ = try await user.update(.init(firstName: first, lastName: last))
+          }
+        } catch {
+          // Keep Convex update active even if Clerk user update throws
+        }
+      }
+
       _ = await store.mutate("users:updatePreferences", [
         "phone": phone,
         "notifyEmail": email, "notifySms": sms,

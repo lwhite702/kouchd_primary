@@ -4,6 +4,13 @@
 
 ### Fixed
 
+- Remediated Replay QA security and UX defects on `app.kouchd.com`:
+  - Enforced Subresource Integrity (SRI) on dynamically injected cross-origin Clerk UI vendor chunks via a preloaded runtime guard (`lib/security-runtime.ts`) and root layout script.
+  - Deduplicated initial Clerk `/v1/environment` configuration fetches through an early runtime cache interceptor, reusing the initial 200 response across components.
+  - Added strict `Content-Security-Policy` (CSP) headers in Next.js configuration and proxy middleware (`clerkMiddleware`), with an HTML `<meta>` fallback in root layout.
+  - Added self-referencing canonical link metadata (`https://app.kouchd.com/`) on the root application layout and entry route.
+  - Disabled the sign-in "Continue" submit button visually and functionally whenever the required email address input is empty, preventing premature invalid submissions.
+  - Fixed profile name saving in the web account settings and iOS client for single-word names by preventing empty `lastName` strings from being dispatched to Clerk, and updated display name inputs to properly reflect saved member names instead of blank fields.
 - Prevented anonymous RevenueCat customer profile creation by requiring an authenticated Clerk user ID before initializing Web Billing, forwarding host identity to web paywall presentation, and short-circuiting unauthenticated entitlement checks.
 - Encoded native numeric arguments as Float64 across stay creation, agreement acceptance, ad-hoc charges, contribution amounts, schedule weekdays, reward points, and household guide progress to prevent Convex validation failures; fixed dark-mode contrast on lime account and summary surfaces.
 - Native tour completion uses local revision state with explicit persistence so Clerk authentication preference writes cannot repeatedly invalidate the root sheet host; the host retains a stable ZStack. Adds the Face ID usage description required by biometric sign-in.
