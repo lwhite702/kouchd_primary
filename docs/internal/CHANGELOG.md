@@ -2,19 +2,15 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
-## 2026-10-25 — Patch Next.js security advisory and establish Version 1.0 Release Candidate 2 (WRE-228)
+## 2026-10-25 — Improve iOS navigation and dashboard activity (WRE-210, WRE-211, WRE-212)
 
-- Upgraded Next.js from `16.4.0` to `16.4.3` and `eslint-config-next` to `16.4.3` across root workspace to remediate published security advisories.
-- Enabled `experimental.agentUpgrade: "security"` in `next.config.ts`.
-- Remediated 5 Replay QA defects reported on `https://app.kouchd.com` and user-reported profile name saving issue:
-  - Enforced Subresource Integrity (SRI) on dynamically injected cross-origin Clerk UI chunks (`vendors_ui_e564da_1.41.2.js`, `signin_ui_e564da_1.41.2.js`, `ui-common_ui_e564da_1.41.2.js`) via client security runtime interceptor (`lib/security-runtime.ts`), `<head>` preloading, and early inline script execution.
-  - Implemented client-side runtime deduplication for static Clerk `/v1/environment` GET requests during initial load, preventing redundant byte-identical fetches across component mounts.
-  - Added complete Content-Security-Policy (CSP) headers in Next.js configuration and proxy middleware (`clerkMiddleware`), paired with an HTML `<meta>` tag fallback in root layout.
-  - Added self-referencing canonical link metadata (`https://app.kouchd.com/`) in `app/layout.tsx` (`metadataBase: new URL("https://app.kouchd.com")`, `alternates: { canonical: "/" }`) and `app/page.tsx`.
-  - Disabled the sign-in "Continue" submit button visually and functionally when `#identifier-field` (email address) is empty via `SignInFormGuard` observer and `.kouchd-submit-disabled` CSS rules.
-  - Fixed profile display name saving in `components/authenticated-home.tsx` and native iOS `MoreScreens.swift` for single-word names (avoiding empty string `lastName` parameter rejected by Clerk), and updated form default values to correctly display saved names.
-- Added comprehensive unit tests in `tests/replay-qa-remediation.test.ts`.
-- Synchronized package and iOS marketing versions to `1.0.0-rc.2` with `rc` classification in `release/change.json`.
+- Fixed iOS stay creation idempotency across ambiguous network responses and retries to prevent duplicate stays.
+- Routed iOS contribution and account shortcuts through their owning tabs, made recent activity rows open their related section, and kept Home stay cards from reloading the active stay.
+- Reduced web dashboard agreement clutter by showing pending-review details only when needed; made activity rows navigate to the relevant area and identify actor host or guest role.
+- Added More tab for secondary stay, account, and help actions, moving extra links off primary screens.
+- Synchronized release candidate version to `1.0.0-rc.3`.
+
+## 2026-10-25 — Patch Next.js security advisory and establish Version 1.0 Release Candidate 2 (WRE-228)
 
 ## 2026-10-25 — Establish Version 1.0 Release Candidate feature lock and P2P Contribution Router (WRE-234, WRE-231)
 

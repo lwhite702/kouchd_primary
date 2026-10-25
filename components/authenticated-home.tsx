@@ -450,6 +450,7 @@ function LiveStay({ stayId, onBackToHub }: { stayId: Id<"stays">; onBackToHub: (
   }, []);
   const members = bundle?.members ?? [];
   const guestMembers = members.filter((item) => item.membership.role === "guest" && item.membership.status === "active");
+  const pendingAgreementGuests = guestMembers.filter((member) => !member.membership.acceptedTermsId);
   const isHost = bundle?.membership.role === "host";
   const financialGuestId = isHost ? (selectedGuestId ?? guestMembers[0]?.person.id) : bundle?.membership.userId;
   const asOfDate = bundle ? calendarDateInTimezone(new Date(), bundle.stay.timezone) : null;
@@ -1346,12 +1347,8 @@ function LiveStay({ stayId, onBackToHub }: { stayId: Id<"stays">; onBackToHub: (
           >
             <span className="v21-tile-label">Guests</span>
             <span className="v21-tile-metric">{guestMembers.length}</span>
-            <span
-              className={`v21-tile-note ${
-                guestMembers.some((m) => !m.membership.acceptedTermsId) ? "note-pending" : "note-clear"
-              }`}
-            >
-              {guestMembers.filter((m) => m.membership.acceptedTermsId).length} confirmed · {guestMembers.filter((m) => !m.membership.acceptedTermsId).length} pending
+            <span className="v21-tile-note">
+              {guestMembers.filter((m) => m.membership.acceptedTermsId).length} confirmed
             </span>
           </button>
 
@@ -1407,30 +1404,24 @@ function LiveStay({ stayId, onBackToHub }: { stayId: Id<"stays">; onBackToHub: (
             </button>
           </div>
           <div className="v21-attention-grid">
-            <article
-              className={`v21-attention-card ${
-                guestMembers.some((m) => !m.membership.acceptedTermsId)
-                  ? "attention-needs-action"
-                  : "attention-calm"
-              }`}
-            >
-              <span className="v21-attention-kicker">
-                {guestMembers.some((m) => !m.membership.acceptedTermsId) ? "Action needed" : "Up to date"}
-              </span>
-              <h3 className="v21-attention-title">Pending guest agreement</h3>
-              <p className="v21-attention-desc">
-                {guestMembers.some((m) => !m.membership.acceptedTermsId)
-                  ? `${guestMembers.find((m) => !m.membership.acceptedTermsId)?.person.name || "A guest"} has not reviewed the agreement.`
-                  : "All current members have accepted house terms."}
-              </p>
-              <button
-                type="button"
-                className="v21-attention-btn"
-                onClick={() => setScreen("stay")}
-              >
-                Review
-              </button>
-            </article>
+            {pendingAgreementGuests.length > 0 && (
+              <article className="v21-attention-card attention-needs-action">
+                <span className="v21-attention-kicker kicker-action">Action needed</span>
+                <h3 className="v21-attention-title">Pending guest agreement</h3>
+                <p className="v21-attention-desc">
+                  {pendingAgreementGuests.length === 1
+                    ? `${pendingAgreementGuests[0].person.name || "A guest"} has not reviewed the agreement.`
+                    : `${pendingAgreementGuests.length} guests have not reviewed the agreement.`}
+                </p>
+                <button
+                  type="button"
+                  className="v21-attention-btn"
+                  onClick={() => setScreen("stay")}
+                >
+                  Review
+                </button>
+              </article>
+            )}
 
             <article
               className={`v21-attention-card ${
@@ -1535,13 +1526,6 @@ function LiveStay({ stayId, onBackToHub }: { stayId: Id<"stays">; onBackToHub: (
         <section className="v21-workspace-section">
           <div className="v21-section-heading">
             <h2>Recent activity</h2>
-            <button
-              type="button"
-              className="v21-pill-action"
-              onClick={() => setScreen("contributions")}
-            >
-              Full ledger
-            </button>
           </div>
           <div className="v21-activity-list">
             {recent.map((item) => {
@@ -1549,6 +1533,7 @@ function LiveStay({ stayId, onBackToHub }: { stayId: Id<"stays">; onBackToHub: (
               const actorName = actorMember?.person.name && actorMember.person.name !== "Kouchd member"
                 ? actorMember.person.name
                 : (item.actorUserId === bundle.membership.userId ? "You" : "Member");
+              const actorRole = actorMember?.membership.role;
               const initials = actorName
                 .split(" ")
                 .map((n: string) => n[0])
@@ -1557,9 +1542,24 @@ function LiveStay({ stayId, onBackToHub }: { stayId: Id<"stays">; onBackToHub: (
                 .toUpperCase() || "K";
               const isRecorded = item.action.includes("contribution") || item.action.includes("payment");
               const isConfirmed = item.action.includes("confirm") || item.action.includes("terms");
+              const activityDestination: Screen = item.kind === "contribution" || item.kind === "obligation"
+                ? "contributions"
+                : item.kind === "reward"
+                  ? "contributions"
+                : item.kind === "chore"
+                  ? "chores"
+                  : item.kind === "announcement"
+                    ? "home"
+                    : "stay";
 
               return (
-                <article className="v21-activity-row" key={item._id}>
+                <button
+                  className="v21-activity-row"
+                  key={item._id}
+                  type="button"
+                  onClick={() => setScreen(activityDestination)}
+                  aria-label={`Open ${item.kind.replaceAll("_", " ")} details: ${item.detail}`}
+                >
                   <div className="v21-activity-avatar">
                     {actorMember?.person.imageUrl ? (
                       <img src={actorMember.person.imageUrl} alt={actorName} />
@@ -1569,7 +1569,7 @@ function LiveStay({ stayId, onBackToHub }: { stayId: Id<"stays">; onBackToHub: (
                   </div>
                   <div className="v21-activity-copy">
                     <p className="v21-activity-title">
-                      {actorName} · {item.action.replaceAll("_", " ")}
+                      {actorName}{actorRole ? ` · ${actorRole === "host" ? "Host" : "Guest"}` : ""} · {item.action.replaceAll("_", " ")}
                     </p>
                     <p className="v21-activity-meta">
                       {item.detail} · {new Date(item.createdAt).toLocaleDateString()}
@@ -1582,7 +1582,8 @@ function LiveStay({ stayId, onBackToHub }: { stayId: Id<"stays">; onBackToHub: (
                   >
                     {isConfirmed ? "Confirmed" : isRecorded ? "Recorded" : "Logged"}
                   </span>
-                </article>
+                  <ArrowRight size={16} aria-hidden="true" />
+                </button>
               );
             })}
             {recent.length === 0 && (

@@ -1,5 +1,5 @@
 {
-  "version": "1.0.0-rc.2",
+  "version": "1.0.0-rc.3",
   "type": "rc",
-  "reason": "Patch Next.js to 16.4.3 for security advisory and remediate Replay QA web security, canonical link, and profile name defects for 1.0.0-rc.2."
+  "reason": "Fix iOS profile and stay workflows, organize secondary actions in More tab, and clarify dashboard agreements and activity navigation."
 }

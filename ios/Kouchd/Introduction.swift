@@ -165,9 +165,14 @@ struct AboutKouchdScreen: View {
       Text("Payments happen outside Kouchd. Contribution records can be confirmed or disputed by the people involved.")
         .font(.footnote).foregroundStyle(Palette.muted)
       PrimaryButton(title: "Preview the features") { previewPresented = true }
-      Link("Help", destination: URL(string: "https://help.kouchd.com")!)
-      Link("Privacy", destination: URL(string: "https://kouchd.com/privacy")!)
-      Link("Terms", destination: URL(string: "https://kouchd.com/terms")!)
+      DisclosureGroup("Help, privacy & terms") {
+        Text("Get support or review the details behind your account and stay information.")
+          .font(.footnote).foregroundStyle(Palette.muted)
+        Link("Help center", destination: URL(string: "https://help.kouchd.com")!)
+        Link("Privacy policy", destination: URL(string: "https://kouchd.com/privacy")!)
+        Link("Terms & Conditions", destination: URL(string: "https://kouchd.com/terms")!)
+      }
+      .font(.subheadline.weight(.semibold))
       Text("Version \(Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "—") · A Wrelik Brands app")
         .font(.caption).foregroundStyle(Palette.muted)
     }

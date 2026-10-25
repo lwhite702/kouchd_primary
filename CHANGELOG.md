@@ -18,11 +18,15 @@
   - Disabled the sign-in "Continue" submit button visually and functionally whenever the required email address input is empty, preventing premature invalid submissions.
   - Fixed profile name saving in the web account settings and iOS client for single-word names by preventing empty `lastName` strings from being dispatched to Clerk, and updated display name inputs to properly reflect saved member names instead of blank fields.
 - Prevented anonymous RevenueCat customer profile creation by requiring an authenticated Clerk user ID before initializing Web Billing, forwarding host identity to web paywall presentation, and short-circuiting unauthenticated entitlement checks.
+- Made stay creation idempotent across ambiguous server responses and retries so one create request cannot produce duplicate stays.
+- Routed iOS contribution and account shortcuts through their owning tabs, made recent activity open its related area, and kept Home stay cards from reloading the current stay.
+- Reduced dashboard agreement clutter by showing pending-review details only when needed; made activity rows navigate to the relevant area and identify the actor's host or guest role.
 - Encoded native numeric arguments as Float64 across stay creation, agreement acceptance, ad-hoc charges, contribution amounts, schedule weekdays, reward points, and household guide progress to prevent Convex validation failures; fixed dark-mode contrast on lime account and summary surfaces.
 - Native tour completion uses local revision state with explicit persistence so Clerk authentication preference writes cannot repeatedly invalidate the root sheet host; the host retains a stable ZStack. Adds the Face ID usage description required by biometric sign-in.
 
 ### Added
 
+- Added a More tab for secondary stay, account, and help actions, with short descriptions and clearer grouping. Moved less-used links off the bottoms of Home, Ledger, Chores, and Stay.
 - Peer-to-peer (P2P) contribution routing across Venmo, Cash App, Zelle, PayPal, and manual bank transfers with deep links, clean payment URI formatting, error-correcting Level-H QR code generation, and copy-to-clipboard fallbacks.
 - Comprehensive platform console for operational management: Stays, Users, Feature Flags, Subscriptions (RevenueCat), Marketing, Notifications (Knock), Support, and Documentation explorers.
 - Modernized PostHog analytics and telemetry across web, Convex backend, and native iOS:

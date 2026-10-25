@@ -62,13 +62,14 @@ import SwiftUI
 }
 
 private enum Tab: String, CaseIterable {
-  case home = "Home", ledger = "Ledger", chores = "Chores", stay = "Stay"
+  case home = "Home", ledger = "Ledger", chores = "Chores", stay = "Stay", more = "More"
   var symbol: String {
     switch self {
     case .home: "house.fill"
     case .ledger: "list.bullet.rectangle"
     case .chores: "checkmark.circle"
     case .stay: "bed.double"
+    case .more: "ellipsis.circle"
     }
   }
 }
@@ -98,6 +99,25 @@ struct RootView: View {
   @State private var invitePreview: Value = .null
   @State private var tab: Tab = .home
   @State private var billing = BillingModel(client: RevenueCatBillingClient.shared)
+  @State private var morePath = NavigationPath()
+
+  private func openMore(_ route: KouchdRoute? = nil) {
+    morePath = NavigationPath()
+    if let route { morePath.append(route) }
+    tab = .more
+  }
+
+  private func openActivity(_ kind: String) {
+    switch kind {
+    case "contribution", "obligation": tab = .ledger
+    case "chore", "check_in": tab = .chores
+    case "reward": openMore(.rewards)
+    case "terms": openMore(.agreement)
+    case "stay", "invite": tab = .stay
+    case "announcement": tab = .home
+    default: openMore(.activity)
+    }
+  }
 
   private func markIntroductionComplete() {
     introductionRevision = 1
@@ -131,7 +151,12 @@ struct RootView: View {
         TabView(selection: $tab) {
           NavigationStack {
             LoadedStayContent(loading: store.isStayLoading || store.isFinancialLoading) {
-              HomeScreen(store: store)
+              HomeScreen(
+                store: store,
+                openLedger: { tab = .ledger },
+                openMore: { openMore($0) },
+                openActivity: { openActivity($0) }
+              )
             }
             .kouchdDestinations(store: store)
           }
@@ -157,6 +182,13 @@ struct RootView: View {
             .kouchdDestinations(store: store)
           }
             .tabItem { Label(Tab.stay.rawValue, systemImage: Tab.stay.symbol) }.tag(Tab.stay)
+          NavigationStack(path: $morePath) {
+            LoadedStayContent(loading: store.isStayLoading) {
+              MoreScreen(store: store)
+            }
+            .kouchdDestinations(store: store)
+          }
+            .tabItem { Label(Tab.more.rawValue, systemImage: Tab.more.symbol) }.tag(Tab.more)
         }
         .tint(Palette.forest)
       }

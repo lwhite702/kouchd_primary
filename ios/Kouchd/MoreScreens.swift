@@ -3,6 +3,122 @@ import ClerkKitUI
 import ConvexMobile
 import SwiftUI
 
+struct MoreScreen: View {
+  let store: KouchdStore
+
+  private var usesOccupiedNights: Bool {
+    store.bundle["terms"]["billingBasis"].text == "occupied_nights"
+  }
+
+  var body: some View {
+    Page(title: "More", navigationTitle: "More") {
+      Card {
+        Text("The rest of your stay tools").font(.headline)
+        Text("Home, Ledger, Chores, and Stay keep everyday tasks close. Use these tools for agreements, requests, rewards, and account details.")
+          .font(.subheadline).foregroundStyle(Palette.muted)
+      }
+
+      if store.isHost {
+        Card {
+          Text("Manage this stay").font(.headline)
+          MoreActionRow(title: "Host controls", detail: "Edit the agreement, house details, and contribution options.", symbol: "slider.horizontal.3", route: .hostControls)
+          MoreActionRow(title: "Schedule requests", detail: "Review requests to change the contribution rhythm.", symbol: "calendar", route: .schedule)
+          if usesOccupiedNights {
+            MoreActionRow(title: "Occupied nights", detail: "Record or review nights included in the agreement.", symbol: "moon", route: .occupancy)
+          }
+          MoreActionRow(title: "Contribution rewards", detail: "Review submitted contributions and reward points.", symbol: "sparkles", route: .rewards)
+          MoreActionRow(title: "Household activity", detail: "See recent changes and shared updates.", symbol: "clock.arrow.circlepath", route: .activity)
+        }
+      } else {
+        Card {
+          Text("Your stay").font(.headline)
+          MoreActionRow(title: "Guest agreement", detail: "Read the shared expectations and review any changes.", symbol: "doc.text", route: .agreement)
+          MoreActionRow(title: "Schedule requests", detail: "Ask your host to change the contribution rhythm.", symbol: "calendar", route: .schedule)
+          if usesOccupiedNights {
+            MoreActionRow(title: "Occupied nights", detail: "Review nights recorded for this stay.", symbol: "moon", route: .occupancy)
+          }
+          MoreActionRow(title: "Contribution rewards", detail: "Submit contributions for review or use available points.", symbol: "sparkles", route: .rewards)
+          MoreActionRow(title: "Household activity", detail: "See recent changes and shared updates.", symbol: "clock.arrow.circlepath", route: .activity)
+        }
+      }
+
+      Card {
+        Text("Account & help").font(.headline)
+        MoreActionRow(title: "Profile & reminders", detail: "Update your name, phone number, and notifications.", symbol: "person.crop.circle", route: .settings)
+        MoreActionRow(title: "Household guide", detail: "Learn how shared stay tools work.", symbol: "book.closed", route: .householdGuide)
+        MoreActionRow(title: "About Kouchd", detail: "See what Kouchd helps hosts and guests manage.", symbol: "info.circle", route: .about)
+        Link(destination: URL(string: "https://help.kouchd.com")!) {
+          MoreExternalRow(title: "Help center", detail: "Find answers and contact support.", symbol: "questionmark.circle")
+        }
+      }
+
+      Card {
+        Text("Another stay").font(.headline)
+        MoreActionRow(title: "Create a stay", detail: "Set up a new shared stay and its agreement.", symbol: "plus.circle", route: .createStay)
+        MoreActionRow(title: "Join a stay", detail: "Enter an invitation code from your host.", symbol: "person.badge.plus", route: .joinCode)
+      }
+
+      if store.adminAccess.flag {
+        Card {
+          Text("Administration").font(.headline)
+          MoreActionRow(title: "Platform administration", detail: "Review platform tools and audit records.", symbol: "shield.lefthalf.filled", route: .admin)
+        }
+      }
+    }
+  }
+}
+
+private struct MoreActionRow: View {
+  let title: String
+  let detail: String
+  let symbol: String
+  let route: KouchdRoute
+
+  var body: some View {
+    NavigationLink(value: route) {
+      MoreRowLabel(title: title, detail: detail, symbol: symbol, showsChevron: true)
+    }
+    .buttonStyle(.plain)
+  }
+}
+
+private struct MoreExternalRow: View {
+  let title: String
+  let detail: String
+  let symbol: String
+
+  var body: some View {
+    MoreRowLabel(title: title, detail: detail, symbol: symbol, showsChevron: false)
+  }
+}
+
+private struct MoreRowLabel: View {
+  let title: String
+  let detail: String
+  let symbol: String
+  let showsChevron: Bool
+
+  var body: some View {
+    HStack(spacing: 12) {
+      Image(systemName: symbol)
+        .font(.body.weight(.semibold)).foregroundStyle(Palette.forest)
+        .frame(width: 40, height: 40)
+        .background(Palette.cream, in: RoundedRectangle(cornerRadius: 12))
+      VStack(alignment: .leading, spacing: 3) {
+        Text(title).font(.subheadline.weight(.semibold)).foregroundStyle(Palette.ink)
+        Text(detail).font(.caption).foregroundStyle(Palette.muted).fixedSize(horizontal: false, vertical: true)
+      }
+      .frame(maxWidth: .infinity, alignment: .leading)
+      if showsChevron {
+        Image(systemName: "chevron.right").font(.caption.weight(.bold)).foregroundStyle(Palette.muted)
+      }
+    }
+    .padding(.vertical, 5)
+    .contentShape(Rectangle())
+    .accessibilityElement(children: .combine)
+  }
+}
+
 struct ScheduleScreen: View {
   let store: KouchdStore
   @State private var cadence = "daily"
@@ -231,9 +347,14 @@ struct SettingsScreen: View {
           Text("By enabling SMS reminders, you agree to receive transactional text messages from Wrelik Brands LLC (operating Kouchd). Message and data rates may apply. Message frequency varies. Text STOP to cancel, HELP for help. Consent is not a condition of purchase or any stay agreement. We do not sell or share your SMS opt-in data or personal information with third parties for marketing purposes.")
             .font(.footnote).foregroundStyle(Palette.muted)
         }
-        Link("Terms & Conditions", destination: URL(string: "https://kouchd.com/terms")!)
-        Link("Privacy Policy", destination: URL(string: "https://kouchd.com/privacy")!)
-        Link("SMS Terms Details", destination: URL(string: "https://kouchd.com/sms-opt-in")!)
+        DisclosureGroup("Legal and privacy details") {
+          Text("Review how Kouchd handles account, stay, and reminder information.")
+            .font(.footnote).foregroundStyle(Palette.muted)
+          Link("Terms & Conditions", destination: URL(string: "https://kouchd.com/terms")!)
+          Link("Privacy Policy", destination: URL(string: "https://kouchd.com/privacy")!)
+          Link("SMS Terms Details", destination: URL(string: "https://kouchd.com/sms-opt-in")!)
+        }
+        .font(.subheadline.weight(.semibold))
         PrimaryButton(title: "Save preferences") {
           savePreferences()
         }
@@ -482,11 +603,11 @@ struct HostControlsScreen: View {
       }
       Card {
         Text("Stay management").font(.headline)
-        NavigationLink("Edit agreement", value: KouchdRoute.termsEdit)
-        NavigationLink("House details", value: KouchdRoute.houseInfo)
-        NavigationLink("Outside payment options", value: KouchdRoute.paymentOptions)
-        NavigationLink("Add a one-time charge", value: KouchdRoute.adhocCharge)
-        NavigationLink("Reward rules", value: KouchdRoute.rewardRules)
+        MoreActionRow(title: "Edit agreement", detail: "Update dates, contribution amount, and shared expectations.", symbol: "doc.text", route: .termsEdit)
+        MoreActionRow(title: "House details", detail: "Share practical information about the home.", symbol: "house", route: .houseInfo)
+        MoreActionRow(title: "Outside payment options", detail: "Explain how members can contribute outside Kouchd.", symbol: "creditcard", route: .paymentOptions)
+        MoreActionRow(title: "Add a one-time charge", detail: "Record an agreed charge for this stay.", symbol: "plus.circle", route: .adhocCharge)
+        MoreActionRow(title: "Reward rules", detail: "Set the points available for shared contributions.", symbol: "sparkles", route: .rewardRules)
       }
       Card {
         Text("End this stay").font(.headline)
