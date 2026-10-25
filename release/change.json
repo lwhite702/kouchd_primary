@@ -1,5 +1,5 @@
 {
-  "version": "1.0.0-rc.3",
+  "version": "1.0.0-rc.4",
   "type": "rc",
-  "reason": "Fix iOS profile and stay workflows, organize secondary actions in More tab, and clarify dashboard agreements and activity navigation."
+  "reason": "Add main website newsletter signup with explicit consent and server-side Loops contact synchronization."
 }

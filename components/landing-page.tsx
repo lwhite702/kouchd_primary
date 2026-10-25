@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowDown, ArrowRight, Check, CircleHelp, ClipboardList, HeartHandshake, House, LockKeyhole, MessageCircle, Sparkles, Users } from "lucide-react";
 import { KouchdWordmark } from "@/components/brand/kouchd-logo";
 import { appVersion } from "@/lib/version";
+import { NewsletterSignup } from "@/components/marketing/newsletter-signup";
 import { MarketingHeader, MarketingStartButton as StartButton } from "@/components/marketing/marketing-header";
 import "./landing-v21.css";
 
@@ -142,7 +143,7 @@ export function LandingPage({ hasClerk = true }: LandingPageProps) {
 
       <section className="v21-privacy" id="privacy" aria-labelledby="v21-privacy-title">
         <div className="v21-privacy-copy"><p className="v21-eyebrow">Private by design</p><h2 id="v21-privacy-title">A shared space for the people in the stay.</h2><p>Kouchd is built around private households. Hosts and guests see the information relevant to their stay, with contributions recorded clearly for everyone involved.</p><div className="v21-privacy-points"><span><LockKeyhole size={17} /> Private household access</span><span><MessageCircle size={17} /> Updates and house details</span></div></div>
-        <div className="v21-coming-card"><span className="v21-coming-icon"><Sparkles size={18} /></span><p className="v21-eyebrow">Clear records</p><h3>Your contribution record, between you and your host.</h3><p>Guests can review their own Ledger without seeing another guest’s financial details.</p><small>Contributions are recorded in Kouchd; payment happens separately between people.</small></div>
+        <div className="v21-coming-card"><span className="v21-coming-icon"><Sparkles size={18} /></span><p className="v21-eyebrow">Clear records</p><h3>Your contribution record, between you and your host.</h3><p>Guests can review their own Ledger without seeing another guest’s financial details.</p><small>Contributions are recorded in Kouchd; payment happens separately between people.</small><div className="newsletter-divider" aria-hidden="true" /><h4>Keep in the loop</h4><p className="newsletter-intro">Get occasional notes when there’s something new to share.</p><NewsletterSignup /></div>
       </section>
 
       <section className="v21-faq" id="faq" aria-labelledby="v21-faq-title">

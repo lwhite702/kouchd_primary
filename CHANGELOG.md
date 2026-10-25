@@ -26,6 +26,7 @@
 
 ### Added
 
+- Main website newsletter signup with explicit consent, server-side Loops contact sync, and matching privacy disclosures.
 - Added a More tab for secondary stay, account, and help actions, with short descriptions and clearer grouping. Moved less-used links off the bottoms of Home, Ledger, Chores, and Stay.
 - Peer-to-peer (P2P) contribution routing across Venmo, Cash App, Zelle, PayPal, and manual bank transfers with deep links, clean payment URI formatting, error-correcting Level-H QR code generation, and copy-to-clipboard fallbacks.
 - Comprehensive platform console for operational management: Stays, Users, Feature Flags, Subscriptions (RevenueCat), Marketing, Notifications (Knock), Support, and Documentation explorers.
