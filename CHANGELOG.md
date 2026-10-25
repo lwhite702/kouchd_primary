@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### Changed
+
+- **Version 1.0 Release Candidate Feature Lock (`1.0.0-rc.1`, WRE-234)**: Established the Version 1.0 launch feature lock (`release/feature-lock.json`), created the `v1-feature-lock` agent skill (`.agents/skills/v1-feature-lock/SKILL.md`) and CLI (`scripts/feature-lock.mjs`), and updated `scripts/release-version.mjs` and `scripts/release-gate.mjs` to support `X.Y.Z-rc.N` versions. Once currently open pre-lock merges complete, only patches and bug fixes are permitted on the launch branch while new features are routed to `help/product/roadmap.mdx` and isolated git worktrees.
+- **P2P Contribution Router & 4-Phase Confirmation Engine (WRE-231)**: Added responsive P2P routing (Venmo, Cash App, Chime, PayPal `paypal.me`, Zelle clipboard helper, in-person Cash, and Reward Points offsets) with ISO/IEC 18004 Level-H QR generation and a 4-phase confirmation flow across the Next.js web app and native iOS SwiftUI app.
+
 ### Fixed
 
 - Remediated Replay QA security and UX defects on `app.kouchd.com`:
@@ -16,6 +21,14 @@
 - Native tour completion uses local revision state with explicit persistence so Clerk authentication preference writes cannot repeatedly invalidate the root sheet host; the host retains a stable ZStack. Adds the Face ID usage description required by biometric sign-in.
 
 ### Added
+
+- Peer-to-peer (P2P) contribution routing across Venmo, Cash App, Zelle, PayPal, and manual bank transfers with deep links, clean payment URI formatting, error-correcting Level-H QR code generation, and copy-to-clipboard fallbacks.
+- Comprehensive platform console for operational management: Stays, Users, Feature Flags, Subscriptions (RevenueCat), Marketing, Notifications (Knock), Support, and Documentation explorers.
+- Modernized PostHog analytics and telemetry across web, Convex backend, and native iOS:
+  - Web: Session Replay with strict privacy and input masking, Core Web Vitals and performance capture, exception autocapture, Sentry session cross-linking, Clerk user identity sync, and Stay group analytics.
+  - Backend: Asynchronous, non-blocking Convex internal action (`captureServerEventAction`) reporting server-side mutations to PostHog HTTP capture API with Stay group attribution.
+  - Native iOS: `posthog-ios` SPM integration with native session replay, screen tracking, input masking, Clerk user identity sync, and group properties.
+- Modernized SwiftUI navigation toolbars with `.principal` titles, primary and secondary trailing action placement, and iOS 16+ semantic toolbar standards.
 
 - Replay QA site ownership verification nonce at `/.well-known/replay-qa-security-nonce` served with raw `text/plain; charset=utf-8` and excluded from authentication proxy middleware.
 - Enforced reward redemption balance checks and cumulative period credit caps on the backend, preserved remainder cents across weekly schedule totals, replaced punitive overdue reminder payloads with supportive household copy, and added host-reviewed overdue catch-up recovery plans.

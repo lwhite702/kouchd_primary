@@ -18,6 +18,15 @@ enum AppConfig {
     let value = Bundle.main.object(forInfoDictionaryKey: "REVENUECAT_PURCHASES_ENABLED") as? String
     return value == "YES" && revenueCatPublicKey.hasPrefix("appl_")
   }
+  static var posthogKey: String {
+    Bundle.main.object(forInfoDictionaryKey: "POSTHOG_API_KEY") as? String ?? ""
+  }
+  static var posthogHost: String {
+    Bundle.main.object(forInfoDictionaryKey: "POSTHOG_HOST") as? String ?? "https://us.i.posthog.com"
+  }
+  static var posthogEnabled: Bool {
+    posthogKey.hasPrefix("phc_")
+  }
   static var isConfigured: Bool {
     clerkKey.hasPrefix("pk_") && convexURL.hasPrefix("https://")
       && !convexURL.contains("missing")

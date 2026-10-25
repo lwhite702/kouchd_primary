@@ -196,18 +196,18 @@ export function StaysExplorer() {
               </button>
             </div>
 
-            {/* Living Logistics Summary */}
+            {/* Living Logistics Summary (Redacted for Privacy) */}
             <div style={{ background: "#faf8f5", padding: "0.85rem", borderRadius: 10, border: "1px solid var(--kouchd-line)", marginBottom: "1.25rem" }}>
               <span style={{ fontSize: "0.75rem", color: "var(--kouchd-muted)", textTransform: "uppercase", fontWeight: 700 }}>
-                House Logistics & Access
+                House Logistics & Privacy Summary (Sensitive Credentials Redacted)
               </span>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem", marginTop: 6, fontSize: "0.82rem" }}>
-                <div><strong>Address:</strong> {stayDetail.stay.houseInfo?.streetAddress ?? "Not specified"} {stayDetail.stay.houseInfo?.unit ? `Unit ${stayDetail.stay.houseInfo.unit}` : ""}</div>
-                <div><strong>City/State/Zip:</strong> {stayDetail.stay.houseInfo?.cityStateZip ?? "Not specified"}</div>
-                <div><strong>WiFi Network:</strong> {stayDetail.stay.houseInfo?.wifiNetwork ?? "None"}</div>
-                <div><strong>WiFi Password:</strong> {stayDetail.stay.houseInfo?.wifiPassword ?? "None"}</div>
-                <div><strong>Door / Lock Code:</strong> {stayDetail.stay.houseInfo?.doorCode ?? "None"}</div>
-                <div><strong>Trash Day:</strong> {stayDetail.stay.houseInfo?.trashDay ?? "None"}</div>
+                <div><strong>City/State/Zip:</strong> {stayDetail.stay.houseInfoSummary?.cityStateZip ?? "Not specified"}</div>
+                <div><strong>Street Address:</strong> {stayDetail.stay.houseInfoSummary?.hasStreetAddress ? "Configured (Redacted)" : "Not specified"}</div>
+                <div><strong>WiFi Credentials:</strong> {stayDetail.stay.houseInfoSummary?.hasWifiConfigured ? "Configured (Redacted)" : "None"}</div>
+                <div><strong>Door / Lock Code:</strong> {stayDetail.stay.houseInfoSummary?.hasDoorCodeConfigured ? "Configured (Redacted)" : "None"}</div>
+                <div><strong>Emergency Contact:</strong> {stayDetail.stay.houseInfoSummary?.hasEmergencyContact ? "Configured (Redacted)" : "None"}</div>
+                <div><strong>Household Notes:</strong> {stayDetail.stay.houseInfoSummary?.hasOtherNotes ? "Configured (Redacted)" : "None"}</div>
               </div>
             </div>
 

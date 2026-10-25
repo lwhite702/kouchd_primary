@@ -5,13 +5,14 @@ import { Mail, Phone, Search, Shield, X } from "lucide-react";
 import { useState } from "react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
-import { DestructiveConfirmationDialog } from "@/components/confirmation/destructive-confirmation-dialog";
 
 export function UsersExplorer() {
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const [selectedUserId, setSelectedUserId] = useState<Id<"users"> | null>(null);
   const [pendingAdminChange, setPendingAdminChange] = useState<{ userId: Id<"users">; userName: string; isAdmin: boolean } | null>(null);
+  const [adminChangeReason, setAdminChangeReason] = useState("");
+  const [adminChangeError, setAdminChangeError] = useState<string | null>(null);
 
   const users = useQuery(api.admin.listUsers, { searchTerm: searchTerm || undefined });
   const userDetail = useQuery(
@@ -22,9 +23,25 @@ export function UsersExplorer() {
 
   async function confirmAdminChange() {
     if (!pendingAdminChange) return;
-    await toggleAdmin({ userId: pendingAdminChange.userId, isAdmin: pendingAdminChange.isAdmin });
-    setPendingAdminChange(null);
+    const trimmed = adminChangeReason.trim();
+    if (trimmed.length < 5) {
+      setAdminChangeError("Please provide an audit reason (at least 5 characters).");
+      return;
+    }
+    try {
+      setAdminChangeError(null);
+      await toggleAdmin({
+        userId: pendingAdminChange.userId,
+        isAdmin: pendingAdminChange.isAdmin,
+        reason: trimmed,
+      });
+      setPendingAdminChange(null);
+      setAdminChangeReason("");
+    } catch (err) {
+      setAdminChangeError(err instanceof Error ? err.message : "Failed to update admin status.");
+    }
   }
+
 
   const filteredUsers = (users ?? []).filter((u) => {
     if (roleFilter === "all") return true;
@@ -324,13 +341,56 @@ export function UsersExplorer() {
           </div>
         </div>
       )}
-      {pendingAdminChange && <DestructiveConfirmationDialog
-        title={pendingAdminChange.isAdmin ? "Grant platform admin access?" : "Revoke platform admin access?"}
-        description={pendingAdminChange.isAdmin ? `${pendingAdminChange.userName} will be able to access staff-only platform tools and account data.` : `${pendingAdminChange.userName} will lose access to staff-only platform tools.`}
-        confirmLabel={pendingAdminChange.isAdmin ? "Grant access" : "Revoke access"}
-        onConfirm={confirmAdminChange}
-        onCancel={() => setPendingAdminChange(null)}
-      />}
+      {pendingAdminChange && (
+        <div className="console-modal-backdrop" role="dialog" aria-modal="true">
+          <div className="console-modal">
+            <h3 style={{ margin: "0 0 0.5rem" }}>
+              {pendingAdminChange.isAdmin ? "Grant platform admin access?" : "Revoke platform admin access?"}
+            </h3>
+            <p style={{ margin: "0 0 1rem", fontSize: "0.86rem", color: "var(--kouchd-muted)" }}>
+              {pendingAdminChange.isAdmin
+                ? `${pendingAdminChange.userName} will be able to access staff-only platform read views. Only environment-allowlisted operators can modify grants.`
+                : `${pendingAdminChange.userName} will lose database-granted platform admin access.`}
+            </p>
+            <label style={{ display: "block", fontSize: "0.8rem", fontWeight: 700, marginBottom: 6 }}>
+              Audit Reason (required, logged to platformAuditLogs)
+            </label>
+            <textarea
+              rows={3}
+              className="console-search-input"
+              style={{ width: "100%", marginBottom: "0.75rem" }}
+              placeholder="Explain why this platform-admin grant is being changed..."
+              value={adminChangeReason}
+              onChange={(e) => setAdminChangeReason(e.target.value)}
+            />
+            {adminChangeError && (
+              <div style={{ color: "#a82d1c", fontSize: "0.8rem", marginBottom: "0.75rem" }}>
+                {adminChangeError}
+              </div>
+            )}
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.5rem" }}>
+              <button
+                type="button"
+                className="button ghost compact"
+                onClick={() => {
+                  setPendingAdminChange(null);
+                  setAdminChangeReason("");
+                  setAdminChangeError(null);
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="button primary compact"
+                onClick={confirmAdminChange}
+              >
+                {pendingAdminChange.isAdmin ? "Confirm Grant" : "Confirm Revoke"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

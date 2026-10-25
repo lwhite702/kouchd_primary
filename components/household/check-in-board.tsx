@@ -6,6 +6,8 @@ import { MessageCircle, Plus } from "lucide-react";
 
 import { api } from "@/convex/_generated/api";
 import type { Doc, Id } from "@/convex/_generated/dataModel";
+import { trackEvent } from "@/lib/analytics/track";
+import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
 
 type CheckIn = Doc<"checkIns"> & { guestName: string };
 type GuestOption = { id: Id<"users">; name: string };
@@ -25,7 +27,9 @@ export function CheckInBoard({ stayId, viewerId, isHost, isEnded, today, guests 
     setBusy(true);
     setError("");
     try {
-      await createCheckIn({ stayId, ...(isHost ? { guestUserId: String(form.get("guestUserId")) as Id<"users"> } : {}), checkInDate: String(form.get("checkInDate") ?? ""), topic: String(form.get("topic") ?? ""), note: String(form.get("note") ?? "") });
+      const checkInDate = String(form.get("checkInDate") ?? "");
+      await createCheckIn({ stayId, ...(isHost ? { guestUserId: String(form.get("guestUserId")) as Id<"users"> } : {}), checkInDate, topic: String(form.get("topic") ?? ""), note: String(form.get("note") ?? "") });
+      trackEvent(ANALYTICS_EVENTS.CHECK_IN_SUBMITTED, { stayId, date: checkInDate });
       setShowForm(false);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Could not start this check-in.");

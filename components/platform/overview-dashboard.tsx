@@ -1,35 +1,293 @@
 "use client";
 
 import { useQuery } from "convex/react";
-import { CheckCircle2, Home, Receipt, Users } from "lucide-react";
+import {
+  Bell,
+  BookOpen,
+  CheckCircle2,
+  CreditCard,
+  ExternalLink,
+  Home,
+  LifeBuoy,
+  Mail,
+  Receipt,
+  ShieldCheck,
+  Users,
+} from "lucide-react";
 import Link from "next/link";
 import { api } from "@/convex/_generated/api";
+import type { HelpScoutOpsStatus, MintlifyOpsStatus } from "@/lib/platform/providers";
 
 const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
 function formatMoney(cents: number) {
   return money.format(cents / 100);
 }
 
-export function OverviewDashboard({ consoleKey }: { consoleKey: string }) {
-  const stats = useQuery(api.admin.getOverviewStats, {});
+function formatTimestamp(ms: number | null | undefined) {
+  if (!ms) return "No events recorded";
+  return new Date(ms).toLocaleString();
+}
 
-  if (stats === undefined) {
+export function OverviewDashboard({
+  consoleKey,
+  basePath: explicitBasePath,
+  helpScoutStatus,
+  mintlifyStatus,
+}: {
+  consoleKey?: string;
+  basePath?: string;
+  helpScoutStatus?: HelpScoutOpsStatus;
+  mintlifyStatus?: MintlifyOpsStatus;
+}) {
+  const stats = useQuery(api.admin.getOverviewStats, {});
+  const opsOverview = useQuery(api.admin.getPlatformOpsOverview, {});
+
+  if (stats === undefined || opsOverview === undefined) {
     return (
       <div style={{ padding: "3rem 1rem", textAlign: "center", color: "var(--kouchd-muted)" }}>
-        Loading platform metrics...
+        Loading Platform Ops status and provider telemetry...
       </div>
     );
   }
 
-  const basePath = `/console/${consoleKey}`;
+  const basePath = explicitBasePath ?? (consoleKey ? `/console/${consoleKey}` : "/platform");
+  const { providers, recentAuditLogs } = opsOverview;
 
   return (
     <div>
+      <div className="console-guardrail-banner">
+        <strong>Source-of-Truth & Responsibility Boundary:</strong> Clerk is authoritative for identity; Convex is authoritative for household entitlements and access. Guests stay free, and household contributions are shared records—Kouchd never collects, holds, or transfers money. This console provides read-only operational visibility and narrowly scoped, audited reconciliation/retry tools without replacing provider dashboards.
+      </div>
+
+      {/* 5-Provider Operational Status Matrix */}
+      <div className="console-card">
+        <div className="console-card-header">
+          <div>
+            <h2>Provider Operational Visibility</h2>
+            <p style={{ margin: "4px 0 0", color: "var(--kouchd-muted)", fontSize: "0.85rem" }}>
+              Live environment configuration, latest ingested event timestamps, recent failure counts, and direct links to each provider’s canonical dashboard.
+            </p>
+          </div>
+        </div>
+
+        <div className="console-provider-grid">
+          {/* 1. RevenueCat */}
+          <div className="console-provider-card">
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                <strong style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: "0.98rem" }}>
+                  <CreditCard size={16} color="var(--kouchd-forest)" />
+                  RevenueCat
+                </strong>
+                {providers.revenueCat.expectedEnvironment ? (
+                  <span className={`console-env-badge ${providers.revenueCat.expectedEnvironment}`}>
+                    {providers.revenueCat.expectedEnvironment}
+                  </span>
+                ) : (
+                  <span className="console-env-badge blocked">Env Unset</span>
+                )}
+              </div>
+              <p style={{ margin: "0 0 8px", fontSize: "0.8rem", color: "var(--kouchd-muted)" }}>
+                Host subscription purchase lifecycle & webhook ingestion. Convex remains authoritative for household entitlements.
+              </p>
+              <div style={{ fontSize: "0.8rem", display: "flex", flexDirection: "column", gap: 4 }}>
+                <div><strong>Snapshots:</strong> {providers.revenueCat.snapshotsCount} ({providers.revenueCat.householdAccountsCount} accounts)</div>
+                <div><strong>Last Event:</strong> {formatTimestamp(providers.revenueCat.lastEventAt)}</div>
+                <div>
+                  <strong>Webhook Errors:</strong>{" "}
+                  <span style={{ color: providers.revenueCat.recentFailuresCount > 0 ? "#a82d1c" : "inherit", fontWeight: 700 }}>
+                    {providers.revenueCat.recentFailuresCount}
+                  </span>
+                </div>
+                {providers.revenueCat.missingHouseholdLinksCount > 0 && (
+                  <div style={{ color: "#8f6412", fontWeight: 700 }}>
+                    {providers.revenueCat.missingHouseholdLinksCount} stay(s) need ownership reconciliation
+                  </div>
+                )}
+              </div>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 8, borderTop: "1px solid #f0ebe1" }}>
+              <Link href={`${basePath}/subscriptions`} className="button soft compact" style={{ fontSize: "0.78rem", padding: "4px 10px" }}>
+                Inspect Subscriptions
+              </Link>
+              <a
+                href={providers.revenueCat.dashboardUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ fontSize: "0.78rem", color: "var(--kouchd-forest)", display: "inline-flex", alignItems: "center", gap: 4, fontWeight: 700 }}
+              >
+                Dashboard <ExternalLink size={12} />
+              </a>
+            </div>
+          </div>
+
+          {/* 2. Knock */}
+          <div className="console-provider-card">
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                <strong style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: "0.98rem" }}>
+                  <Bell size={16} color="var(--kouchd-forest)" />
+                  Knock
+                </strong>
+                <span className={`console-status-pill ${providers.knock.configured ? "configured" : "pending"}`}>
+                  {providers.knock.configured ? "Configured" : "Key Unset"}
+                </span>
+              </div>
+              <p style={{ margin: "0 0 8px", fontSize: "0.8rem", color: "var(--kouchd-muted)" }}>
+                Transactional notifications & 1/day capped household reminders.
+              </p>
+              <div style={{ fontSize: "0.8rem", display: "flex", flexDirection: "column", gap: 4 }}>
+                <div><strong>Recent Deliveries:</strong> {providers.knock.recentSentCount}</div>
+                <div><strong>Last Delivery:</strong> {formatTimestamp(providers.knock.lastEventAt)}</div>
+                <div>
+                  <strong>Recent Failures:</strong>{" "}
+                  <span style={{ color: providers.knock.recentFailuresCount > 0 ? "#a82d1c" : "inherit", fontWeight: 700 }}>
+                    {providers.knock.recentFailuresCount}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 8, borderTop: "1px solid #f0ebe1" }}>
+              <Link href={`${basePath}/notifications`} className="button soft compact" style={{ fontSize: "0.78rem", padding: "4px 10px" }}>
+                Inspect Workflows
+              </Link>
+              <a
+                href={providers.knock.dashboardUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ fontSize: "0.78rem", color: "var(--kouchd-forest)", display: "inline-flex", alignItems: "center", gap: 4, fontWeight: 700 }}
+              >
+                Dashboard <ExternalLink size={12} />
+              </a>
+            </div>
+          </div>
+
+          {/* 3. Loops */}
+          <div className="console-provider-card">
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                <strong style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: "0.98rem" }}>
+                  <Mail size={16} color="var(--kouchd-forest)" />
+                  Loops
+                </strong>
+                <span className={`console-status-pill ${providers.loops.configured ? "configured" : "pending"}`}>
+                  {providers.loops.configured ? "Configured" : "Marketing Env"}
+                </span>
+              </div>
+              <p style={{ margin: "0 0 8px", fontSize: "0.8rem", color: "var(--kouchd-muted)" }}>
+                Opted-in marketing newsletter only (`mail.kouchd.com`). Never auto-adds hosts or guests.
+              </p>
+              <div style={{ fontSize: "0.8rem", display: "flex", flexDirection: "column", gap: 4 }}>
+                <div><strong>Subscribed:</strong> {providers.loops.subscribedCount}</div>
+                <div><strong>Unsubscribed / Suppressed:</strong> {providers.loops.suppressedOrUnsubscribedCount}</div>
+                <div><strong>Last Consent Update:</strong> {formatTimestamp(providers.loops.lastEventAt)}</div>
+              </div>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 8, borderTop: "1px solid #f0ebe1" }}>
+              <Link href={`${basePath}/marketing`} className="button soft compact" style={{ fontSize: "0.78rem", padding: "4px 10px" }}>
+                Inspect Consent
+              </Link>
+              <a
+                href={providers.loops.dashboardUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ fontSize: "0.78rem", color: "var(--kouchd-forest)", display: "inline-flex", alignItems: "center", gap: 4, fontWeight: 700 }}
+              >
+                Dashboard <ExternalLink size={12} />
+              </a>
+            </div>
+          </div>
+
+          {/* 4. Help Scout */}
+          <div className="console-provider-card">
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                <strong style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: "0.98rem" }}>
+                  <LifeBuoy size={16} color="var(--kouchd-forest)" />
+                  Help Scout
+                </strong>
+                <span className={`console-env-badge ${helpScoutStatus?.status === "configured" ? "production" : "blocked"}`}>
+                  {helpScoutStatus?.status === "configured" ? "Configured" : "Setup Blocked"}
+                </span>
+              </div>
+              <p style={{ margin: "0 0 8px", fontSize: "0.8rem", color: "var(--kouchd-muted)" }}>
+                Customer support conversations (`help@kouchd.com`). Isolated from household members.
+              </p>
+              <div style={{ fontSize: "0.8rem", display: "flex", flexDirection: "column", gap: 4 }}>
+                <div>
+                  <strong>Missing Keys:</strong>{" "}
+                  {helpScoutStatus?.missingEnvKeys?.length
+                    ? helpScoutStatus.missingEnvKeys.join(", ")
+                    : "None"}
+                </div>
+                <div><strong>Support Address:</strong> {helpScoutStatus?.supportEmail ?? "help@kouchd.com"}</div>
+              </div>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 8, borderTop: "1px solid #f0ebe1" }}>
+              <Link href={`${basePath}/support`} className="button soft compact" style={{ fontSize: "0.78rem", padding: "4px 10px" }}>
+                View Setup Blocker
+              </Link>
+              <a
+                href={helpScoutStatus?.dashboardUrl ?? "https://secure.helpscout.net"}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ fontSize: "0.78rem", color: "var(--kouchd-forest)", display: "inline-flex", alignItems: "center", gap: 4, fontWeight: 700 }}
+              >
+                Help Scout <ExternalLink size={12} />
+              </a>
+            </div>
+          </div>
+
+          {/* 5. Mintlify */}
+          <div className="console-provider-card">
+            <div>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                <strong style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: "0.98rem" }}>
+                  <BookOpen size={16} color="var(--kouchd-forest)" />
+                  Mintlify
+                </strong>
+                <span className={`console-status-pill ${mintlifyStatus?.docsJsonValid && (mintlifyStatus?.missingPageFiles.length ?? 0) === 0 ? "configured" : "pending"}`}>
+                  {mintlifyStatus?.docsJsonValid ? "Repo Config Valid" : "Check Config"}
+                </span>
+              </div>
+              <p style={{ margin: "0 0 8px", fontSize: "0.8rem", color: "var(--kouchd-muted)" }}>
+                Public help center, roadmap, and customer changelog (`help/*.mdx` + `docs.json`).
+              </p>
+              <div style={{ fontSize: "0.8rem", display: "flex", flexDirection: "column", gap: 4 }}>
+                <div>
+                  <strong>Configured Pages:</strong> {mintlifyStatus?.totalConfiguredPages ?? 16} across {mintlifyStatus?.navigationGroupsCount ?? 7} groups
+                </div>
+                <div>
+                  <strong>Missing MDX Files:</strong> {mintlifyStatus?.missingPageFiles.length ?? 0}
+                </div>
+                <div>
+                  <strong>Live Deploy Status:</strong> Unverified in console (verify via GitHub/Mintlify)
+                </div>
+              </div>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 8, borderTop: "1px solid #f0ebe1" }}>
+              <Link href={`${basePath}/docs`} className="button soft compact" style={{ fontSize: "0.78rem", padding: "4px 10px" }}>
+                Inspect Docs Tree
+              </Link>
+              <a
+                href={mintlifyStatus?.canonicalDocsUrl ?? "https://help.kouchd.com"}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ fontSize: "0.78rem", color: "var(--kouchd-forest)", display: "inline-flex", alignItems: "center", gap: 4, fontWeight: 700 }}
+              >
+                help.kouchd.com <ExternalLink size={12} />
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Core Household & Record Metrics */}
       <div className="console-grid-stats">
         <div className="console-stat-card">
           <span className="console-stat-label">Total Users</span>
           <span className="console-stat-value">{stats.totalUsers}</span>
-          <span className="console-stat-subtext">Registered across platform</span>
+          <span className="console-stat-subtext">Clerk-authenticated profiles</span>
         </div>
 
         <div className="console-stat-card">
@@ -41,24 +299,24 @@ export function OverviewDashboard({ consoleKey }: { consoleKey: string }) {
         </div>
 
         <div className="console-stat-card">
-          <span className="console-stat-label">Tracked Charges</span>
+          <span className="console-stat-label">Recorded Schedule Volume</span>
           <span className="console-stat-value">{formatMoney(stats.totalObligationsCents)}</span>
-          <span className="console-stat-subtext">Base obligation volume</span>
+          <span className="console-stat-subtext">Shared contribution records (non-custodial)</span>
         </div>
 
         <div className="console-stat-card">
           <span className="console-stat-label">Confirmed Contributions</span>
           <span className="console-stat-value">{formatMoney(stats.totalConfirmedCents)}</span>
-          <span className="console-stat-subtext">Verified between hosts & guests</span>
+          <span className="console-stat-subtext">Confirmed between hosts & guests</span>
         </div>
 
         <div className="console-stat-card" style={stats.disputedContributionsCount > 0 ? { borderColor: "#fae4df", background: "#fdf8f7" } : {}}>
-          <span className="console-stat-label">Open Disputes</span>
+          <span className="console-stat-label">Open Ledger Disputes</span>
           <span className="console-stat-value" style={stats.disputedContributionsCount > 0 ? { color: "#a82d1c" } : {}}>
             {stats.disputedContributionsCount}
           </span>
           <span className="console-stat-subtext">
-            {stats.pendingContributionsCount} pending confirmation
+            {stats.pendingContributionsCount} pending host confirmation
           </span>
         </div>
 
@@ -69,11 +327,47 @@ export function OverviewDashboard({ consoleKey }: { consoleKey: string }) {
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: "1.5rem" }}>
-        {/* Quick Navigation Cards */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(360px, 1fr))", gap: "1.5rem" }}>
+        {/* Privileged Staff Audit Log */}
         <div className="console-card">
           <div className="console-card-header">
-            <h2>Platform Management</h2>
+            <h2 style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+              <ShieldCheck size={18} color="var(--kouchd-forest)" />
+              Recent Privileged Staff Actions
+            </h2>
+          </div>
+          <div>
+            {recentAuditLogs.map((log) => (
+              <div key={log._id} className="console-activity-item">
+                <span className="console-activity-dot" />
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 700, fontSize: "0.86rem" }}>
+                    <code>{log.action}</code> &middot; <span style={{ color: "var(--kouchd-forest)" }}>{log.actorEmail ?? log.actorClerkUserId}</span>
+                  </div>
+                  <div style={{ fontSize: "0.8rem", color: "var(--kouchd-ink)", marginTop: 2 }}>
+                    Reason: “{log.reason}”
+                  </div>
+                  <div style={{ fontSize: "0.75rem", color: "var(--kouchd-muted)", marginTop: 2 }}>
+                    Target: {log.targetType} ({log.targetId ?? "—"})
+                  </div>
+                </div>
+                <span style={{ fontSize: "0.74rem", color: "var(--kouchd-muted)", whiteSpace: "nowrap" }}>
+                  {new Date(log.createdAt).toLocaleString()}
+                </span>
+              </div>
+            ))}
+            {recentAuditLogs.length === 0 && (
+              <p style={{ color: "var(--kouchd-muted)", fontSize: "0.85rem" }}>
+                No privileged staff mutations recorded yet.
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Internal Directory & Compliance Shortcuts */}
+        <div className="console-card">
+          <div className="console-card-header">
+            <h2>Internal Records & Compliance</h2>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
             <Link
@@ -83,9 +377,9 @@ export function OverviewDashboard({ consoleKey }: { consoleKey: string }) {
             >
               <Users size={18} />
               <div style={{ textAlign: "left" }}>
-                <strong>User Directory</strong>
+                <strong>User Directory & Admin Grants</strong>
                 <div style={{ fontSize: "0.8rem", color: "var(--kouchd-muted)" }}>
-                  Search users, contact details, and SMS opt-in status
+                  Inspect Clerk-synced profiles, household memberships, and audited admin grants
                 </div>
               </div>
             </Link>
@@ -97,9 +391,9 @@ export function OverviewDashboard({ consoleKey }: { consoleKey: string }) {
             >
               <Home size={18} />
               <div style={{ textAlign: "left" }}>
-                <strong>Household & Stay Explorer</strong>
+                <strong>Household & Stay Explorer (Redacted)</strong>
                 <div style={{ fontSize: "0.8rem", color: "var(--kouchd-muted)" }}>
-                  Inspect stays, referral codes, agreements, and member rosters
+                  Inspect stay status and terms without exposing Wi-Fi passwords or door codes
                 </div>
               </div>
             </Link>
@@ -111,9 +405,9 @@ export function OverviewDashboard({ consoleKey }: { consoleKey: string }) {
             >
               <Receipt size={18} />
               <div style={{ textAlign: "left" }}>
-                <strong>Ledgers & Disputes Queue</strong>
+                <strong>Contribution Records & Disputes</strong>
                 <div style={{ fontSize: "0.8rem", color: "var(--kouchd-muted)" }}>
-                  Audit disputed contributions and fee waiver overrides
+                  Review shared contribution records and disputed ledger entries
                 </div>
               </div>
             </Link>
@@ -125,42 +419,12 @@ export function OverviewDashboard({ consoleKey }: { consoleKey: string }) {
             >
               <CheckCircle2 size={18} />
               <div style={{ textAlign: "left" }}>
-                <strong>10DLC Carrier Compliance Log</strong>
+                <strong>10DLC SMS Consent Audit Trail</strong>
                 <div style={{ fontSize: "0.8rem", color: "var(--kouchd-muted)" }}>
-                  Verify transactional SMS consent audit events
+                  Inspect explicit transactional SMS opt-in and opt-out records
                 </div>
               </div>
             </Link>
-          </div>
-        </div>
-
-        {/* Recent System Activity */}
-        <div className="console-card">
-          <div className="console-card-header">
-            <h2>Recent Activity</h2>
-          </div>
-          <div>
-            {stats.recentActivity.map((act) => (
-              <div key={act._id} className="console-activity-item">
-                <span className="console-activity-dot" />
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 700, fontSize: "0.88rem" }}>
-                    {act.actorName} &middot; <span style={{ textTransform: "capitalize", color: "var(--kouchd-forest)" }}>{act.action.replaceAll("_", " ")}</span>
-                  </div>
-                  <div style={{ fontSize: "0.8rem", color: "var(--kouchd-muted)", marginTop: "2px" }}>
-                    {act.detail}
-                  </div>
-                </div>
-                <span style={{ fontSize: "0.75rem", color: "var(--kouchd-muted)", whiteSpace: "nowrap" }}>
-                  {new Date(act.createdAt).toLocaleDateString()}
-                </span>
-              </div>
-            ))}
-            {stats.recentActivity.length === 0 && (
-              <p style={{ color: "var(--kouchd-muted)", fontSize: "0.85rem" }}>
-                No recent activity recorded.
-              </p>
-            )}
           </div>
         </div>
       </div>

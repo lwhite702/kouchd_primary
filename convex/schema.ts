@@ -95,7 +95,15 @@ export default defineSchema({
     referralCode: v.optional(v.string()),
     currentTermsId: v.optional(v.id("terms")),
     paymentOptions: v.optional(v.array(v.object({
-      provider: v.union(v.literal("paypal"), v.literal("cashapp"), v.literal("zelle"), v.literal("applepay")),
+      provider: v.union(
+        v.literal("venmo"),
+        v.literal("cashapp"),
+        v.literal("chime"),
+        v.literal("zelle"),
+        v.literal("cash"),
+        v.literal("paypal"),
+        v.literal("applepay"),
+      ),
       detail: v.string(),
     }))),
     nextCheckInDate: v.optional(v.string()),
@@ -437,4 +445,74 @@ export default defineSchema({
     updatedByUserId: v.optional(v.id("users")),
     updatedAt: v.number(),
   }).index("by_key", ["key"]),
+
+  notificationEvents: defineTable({
+    userId: v.id("users"),
+    stayId: v.optional(v.id("stays")),
+    workflow: v.string(),
+    entityId: v.optional(v.string()),
+    cancellationKey: v.optional(v.string()),
+    status: v.union(
+      v.literal("sent"),
+      v.literal("failed"),
+      v.literal("skipped"),
+      v.literal("disabled"),
+      v.literal("cancelled"),
+      v.literal("duplicate"),
+    ),
+    workflowRunId: v.optional(v.string()),
+    errorSummary: v.optional(v.string()),
+    attemptCount: v.number(),
+    occurredAt: v.number(),
+    lastAttemptAt: v.number(),
+    retriedByUserId: v.optional(v.id("users")),
+    retryReason: v.optional(v.string()),
+  })
+    .index("by_occurred_at", ["occurredAt"])
+    .index("by_status_occurred_at", ["status", "occurredAt"])
+    .index("by_user_workflow_entity", ["userId", "workflow", "entityId"])
+    .index("by_workflow_occurred_at", ["workflow", "occurredAt"]),
+
+  marketingConsentEvents: defineTable({
+    email: v.string(),
+    status: v.union(
+      v.literal("pending_confirmation"),
+      v.literal("subscribed"),
+      v.literal("unsubscribed"),
+      v.literal("suppressed"),
+    ),
+    source: v.string(),
+    consentConfirmed: v.boolean(),
+    doubleOptInStatus: v.union(
+      v.literal("pending"),
+      v.literal("confirmed"),
+      v.literal("not_applicable"),
+    ),
+    requestedAt: v.number(),
+    confirmedAt: v.optional(v.number()),
+    unsubscribedAt: v.optional(v.number()),
+    suppressedAt: v.optional(v.number()),
+    updatedAt: v.number(),
+  })
+    .index("by_email", ["email"])
+    .index("by_status_updated_at", ["status", "updatedAt"])
+    .index("by_updated_at", ["updatedAt"]),
+
+  platformAuditLogs: defineTable({
+    actorUserId: v.id("users"),
+    actorClerkUserId: v.string(),
+    actorEmail: v.optional(v.string()),
+    action: v.string(),
+    provider: v.optional(v.string()),
+    targetType: v.string(),
+    targetId: v.optional(v.string()),
+    reason: v.string(),
+    metadata: v.optional(
+      v.record(v.string(), v.union(v.string(), v.number(), v.boolean())),
+    ),
+    createdAt: v.number(),
+  })
+    .index("by_created_at", ["createdAt"])
+    .index("by_actor_created_at", ["actorUserId", "createdAt"])
+    .index("by_provider_created_at", ["provider", "createdAt"]),
 });

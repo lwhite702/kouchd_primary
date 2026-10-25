@@ -2,6 +2,15 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-10-25 — Establish Version 1.0 Release Candidate feature lock and P2P Contribution Router (WRE-234, WRE-231)
+
+- Implemented the **Version 1.0 Release Candidate (`1.0.0-rc.1`) Feature Lock**:
+  - Added `release/feature-lock.json` codifying the `v1-rc` stabilization lock, enumerating the open pre-lock PRs (#55–#61, #66) and in-flight branches (`WRE-228`, `WRE-230`, `WRE-231`, `WRE-234`) allowed to complete merge before the unconditional lock takes effect.
+  - Created the `v1-feature-lock` agent skill at `.agents/skills/v1-feature-lock/SKILL.md` and helper CLI at `scripts/feature-lock.mjs` (`npm run lock:status`, `npm run lock:defer-feature`, `npm run lock:bump-rc`).
+  - Enforced the feature lock in `AGENTS.md` and `scripts/release-gate.mjs`: only bug fixes, security patches, stability fixes, and documentation updates (`patch`, `rc`, `none`) may land on the 1.0 launch line; net-new features must be added to `help/product/roadmap.mdx` and developed in separate git worktrees under `/Volumes/Projects/CodexWorktrees/`.
+  - Synchronized `VERSION`, `package.json`, `package-lock.json`, and `release/change.json` to `1.0.0-rc.1`, and iOS `MARKETING_VERSION` to `1.0.0`.
+- Implemented the **P2P Contribution Router & 4-Phase Confirmation Engine** (`WRE-231`) across Next.js (`lib/domain/p2pRouting.ts`, `lib/domain/qrCodeLevelH.ts`, `components/household/p2p-payment-router.tsx`) and native iOS SwiftUI (`ios/Kouchd/Models.swift`, `ios/Kouchd/MainScreens.swift`), including Venmo, Cash App, Chime, PayPal (`https://paypal.me/[username]/[amount]`), Zelle, Cash, and Reward Points offsets.
+
 ## 2026-10-24 — Remediate Replay QA web security, canonical link, and sign-in defects (WRE-228)
 
 - Remediated 5 Replay QA defects reported on `https://app.kouchd.com` and user-reported profile name saving issue:
