@@ -21,6 +21,9 @@ const contentSecurityPolicy = cspDirectives.join("; ");
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  experimental: {
+    agentUpgrade: "security",
+  },
   async headers() {
     return [
       {
