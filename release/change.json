@@ -1,5 +1,5 @@
 {
-  "version": "1.0.0-rc.1",
+  "version": "1.0.0-rc.2",
   "type": "rc",
-  "reason": "Establish Version 1.0 Release Candidate 1 (1.0.0-rc.1) feature lock after open pre-lock merges, restricting launch branch changes to patches and bug fixes while routing new features to the roadmap and isolated worktrees."
+  "reason": "Patch Next.js to 16.4.3 for security advisory and remediate Replay QA web security, canonical link, and profile name defects for 1.0.0-rc.2."
 }
