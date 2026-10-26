@@ -10,6 +10,7 @@
 
 ### Fixed
 
+- Patch Next.js to 16.4.3 and DOMPurify to 3.4.17, align the framework lint configuration, and refresh compatible dependencies. Local full and runtime audits report zero advisories; release requires its own promotion approval.
 - Upgraded Next.js from `16.4.0` to `16.4.3` and `eslint-config-next` to `16.4.3` across the application to remediate published framework security advisories, and configured `experimental.agentUpgrade: "security"` in Next.js configuration.
 - Remediated Replay QA security and UX defects on `app.kouchd.com`:
   - Enforced Subresource Integrity (SRI) on dynamically injected cross-origin Clerk UI vendor chunks via a preloaded runtime guard (`lib/security-runtime.ts`) and root layout script.

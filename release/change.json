@@ -1,5 +1,5 @@
 {
   "type": "rc",
-  "version": "1.0.0-rc.6",
-  "reason": "Polish web and iOS motion transitions and adopt Liquid Glass surface styling."
+  "version": "1.0.0-rc.7",
+  "reason": "Patch vulnerable framework and sanitizer dependencies (Next.js 16.4.3, DOMPurify 3.4.17, Vitest ^5.0.5)."
 }
