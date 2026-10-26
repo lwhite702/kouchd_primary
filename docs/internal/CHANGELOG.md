@@ -13,7 +13,7 @@ Internal engineering record. This file is excluded from Mintlify navigation and 
 - Updated plain-language guidance across `help/index.mdx`, `index.mdx`, `help/legal-trust/stay-agreements.mdx`, `help/legal-trust/terms-of-service.mdx`, `help/hosts/getting-started.mdx`, `help/guests/joining-a-stay.mdx`, `help/hosts/ledger-management.mdx`, and `help/guests/logging-contributions.mdx`.
 - Refined all in-app tooltips and help tips across `components/authenticated-home.tsx`, `components/marketing/marketing-header.tsx`, and `components/household/payment-options.tsx` to use friendly, plainspoken, non-technical terminology.
 - Added `appSupport` URL to `lib/help-links.ts`.
-- Preserved release integrity: documentation and copy polish do not bump SemVer; version `1.0.0-rc.9` remains synchronized.
+- Synchronized release candidate version to `1.0.0-rc.10` for runtime tooltip and helper updates under the 1.0 feature lock.
 
 
 ## 2026-10-26 — Fix iOS RootView compiler timeout (WRE-239)
