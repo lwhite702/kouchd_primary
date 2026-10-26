@@ -81,7 +81,6 @@ export function ShoppingList({
     }
   }
 
-<<<<<<< HEAD
   return (
     <div className="screen-transition">
       <div className="page-heading">

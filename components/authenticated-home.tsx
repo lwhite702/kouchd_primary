@@ -93,6 +93,27 @@ function SyncedWorkspace() {
     }
   }, [stays, selectedStayId]);
 
+  const selectedStay = selectedStayId
+    ? stays?.find((item) => item.stay._id === selectedStayId)
+    : undefined;
+
+  useEffect(() => {
+    if (selectedStay) {
+      setStayGroup(selectedStay.stay._id, {
+        name: selectedStay.stay.name,
+        status: selectedStay.stay.status,
+        role: selectedStay.membership.role,
+      });
+      trackEvent(ANALYTICS_EVENTS.STAY_SWITCHED, {
+        stayId: selectedStay.stay._id,
+        stayName: selectedStay.stay.name ?? "",
+        role: selectedStay.membership.role,
+      });
+    } else {
+      resetStayGroup();
+    }
+  }, [selectedStay]);
+
   if (syncError) {
     return (
       <main className="route-state">
@@ -130,27 +151,6 @@ function SyncedWorkspace() {
       </main>
     );
   }
-
-  const selectedStay = selectedStayId
-    ? stays?.find((item) => item.stay._id === selectedStayId)
-    : undefined;
-
-  useEffect(() => {
-    if (selectedStay) {
-      setStayGroup(selectedStay.stay._id, {
-        name: selectedStay.stay.name,
-        status: selectedStay.stay.status,
-        role: selectedStay.membership.role,
-      });
-      trackEvent(ANALYTICS_EVENTS.STAY_SWITCHED, {
-        stayId: selectedStay.stay._id,
-        stayName: selectedStay.stay.name ?? "",
-        role: selectedStay.membership.role,
-      });
-    } else {
-      resetStayGroup();
-    }
-  }, [selectedStay]);
 
   if (authLoading || !isAuthenticated || !synced || stays === undefined) {
     return <DashboardSkeleton message="Setting out the clean sheets..." />;

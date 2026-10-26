@@ -2,6 +2,13 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-10-26 — Prepare launch candidate: scoped workspace screens, account capacity limits, telemetry privacy scrubbing, and native coordination screens (WRE-224)
+
+- Prepared account-wide Starter and Plus capacity limits while preserving existing access, and added telemetry privacy scrubbing.
+- Scoped workspace screens, separated financial summaries, and harmonized RevenueCat billing client authentication.
+- Added native shopping and check-in destinations, typed ledger contracts, and keyboard dismissal.
+- Synchronized release candidate metadata to `1.0.0-rc.10`.
+
 ## 2026-10-26 — Fix iOS RootView compiler timeout (WRE-239)
 
 - Split the root screen branches and authenticated tab composition into focused view properties, and extracted lifecycle callbacks to reduce SwiftUI type-checking complexity.
