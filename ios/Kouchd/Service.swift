@@ -31,7 +31,6 @@ enum AppConfig {
   static var posthogKey: String { postHogApiKey }
   static var posthogHost: String { postHogHost }
   static var posthogEnabled: Bool { analyticsEnabled }
-  }
   static var isConfigured: Bool {
     clerkKey.hasPrefix("pk_") && convexURL.hasPrefix("https://")
       && !convexURL.contains("missing")
