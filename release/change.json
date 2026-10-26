@@ -1,5 +1,5 @@
 {
   "type": "rc",
-  "version": "1.0.0-rc.5",
-  "reason": "Add host-configurable delayed guest agreement auto-acceptance, system approval audit tags, and host guest profile controls."
+  "version": "1.0.0-rc.6",
+  "reason": "Polish web and iOS motion transitions and adopt Liquid Glass surface styling."
 }

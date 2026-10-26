@@ -86,7 +86,7 @@ struct PrimaryButton: View {
         .padding(.vertical, 15)
         .contentShape(Rectangle())
     }
-    .buttonStyle(KouchdButtonStyle())
+    .kouchdPrimaryButtonStyle()
     .fixedSize(horizontal: false, vertical: true)
     .opacity(isEnabled ? 1 : 0.5)
   }
@@ -158,7 +158,7 @@ private struct KouchdEntrance: ViewModifier {
   var delay: Double
   func body(content: Content) -> some View {
     content.opacity(visible ? 1 : 0)
-      .offset(y: visible || reduceMotion ? 0 : 10)
+      .offset(y: visible || reduceMotion ? 0 : 6)
       .onAppear {
         withAnimation(KouchdMotion.animation(reduceMotion).delay(reduceMotion ? 0 : delay)) { visible = true }
       }
@@ -173,18 +173,24 @@ private struct KouchdNavigationBarModifier: ViewModifier {
       content
         .navigationTitle(title.replacingOccurrences(of: "\n", with: " "))
         .navigationBarTitleDisplayMode(.inline)
-        .toolbarBackground(Palette.cream, for: .navigationBar)
-        .toolbarBackground(.visible, for: .navigationBar)
     } else {
       content
         .navigationBarTitleDisplayMode(.inline)
-        .toolbarBackground(Palette.cream, for: .navigationBar)
-        .toolbarBackground(.visible, for: .navigationBar)
     }
   }
 }
 
 extension View {
+  @ViewBuilder
+  func kouchdPrimaryButtonStyle() -> some View {
+    if #available(iOS 26.0, *) {
+      self.buttonStyle(.glassProminent)
+        .tint(Palette.brandForest)
+    } else {
+      self.buttonStyle(KouchdButtonStyle())
+    }
+  }
+
   func kouchdNavigationBar(title: String? = nil) -> some View {
     modifier(KouchdNavigationBarModifier(title: title))
   }
@@ -251,10 +257,16 @@ private struct KouchdButtonStyle: ButtonStyle {
   func makeBody(configuration: Configuration) -> some View {
     configuration.label.foregroundStyle(.white)
       .background(Palette.brandForest, in: RoundedRectangle(cornerRadius: 16))
+      .shadow(
+        color: Palette.brandForest.opacity(configuration.isPressed ? 0.08 : 0.2),
+        radius: configuration.isPressed ? 3 : 10,
+        x: 0,
+        y: configuration.isPressed ? 1 : 5
+      )
       .contentShape(RoundedRectangle(cornerRadius: 16))
-      .scaleEffect(configuration.isPressed && !reduceMotion ? 0.98 : 1)
-      .opacity(configuration.isPressed ? 0.85 : 1)
-      .animation(KouchdMotion.animation(reduceMotion), value: configuration.isPressed)
+      .scaleEffect(configuration.isPressed && !reduceMotion ? 0.985 : 1)
+      .offset(y: configuration.isPressed && !reduceMotion ? 1 : 0)
+      .animation(reduceMotion ? .easeOut(duration: 0.1) : .spring(duration: 0.28, bounce: 0.12), value: configuration.isPressed)
   }
 }
 
