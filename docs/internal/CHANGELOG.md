@@ -2,6 +2,19 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-10-26 — Update Mintlify Help Center branding, colors, typography, and tokens (WRE-240)
+
+- Updated Mintlify `docs.json` and `help/docs.json` configuration to align with Kouchd's Brand Building Design System:
+  - Colors: Set `primary` to `#184F3A` (Core Forest), `light` to `#DFF25E` (Electric Lime accent), and `dark` to `#123D2E` (Forest Dark contrast).
+  - Background: Configured `light` background canvas to `#F5F0E8` (Warm Paper) with gradient decoration, matching the brand surface hierarchy.
+  - Typography: Configured `fonts` with `Manrope` for headings and body text.
+- Aligned navigation, navbar, global anchors, and footer links:
+  - Pointed Web App links to `https://app.kouchd.com` and marketing site to `https://kouchd.com`.
+  - Added direct links to the official Brand Style Guide (`https://kouchd.com/brand`) in the global anchors, navbar, and footer.
+- Updated root `index.mdx` and `help/index.mdx` with direct navigation cards linking to the Brand Style Guide.
+- Excluded `ios/project.yml` in `.mintignore` and resolved duplicate mapping key in `ios/project.yml` so Mintlify CLI validation runs cleanly.
+- Verified with `mintlify validate` (passed with 0 warnings/errors) and `mintlify broken-links` (0 broken links).
+
 ## 2026-10-26 — Prepare launch candidate: scoped workspace screens, account capacity limits, telemetry privacy scrubbing, and native coordination screens (WRE-224)
 
 - Prepared account-wide Starter and Plus capacity limits while preserving existing access, and added telemetry privacy scrubbing.
