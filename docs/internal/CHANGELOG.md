@@ -2,7 +2,7 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
-## 2026-10-26 — Update Mintlify Help Center branding, colors, typography, and tokens (WRE-240)
+## 2026-10-26 — Update Mintlify Help Center branding, colors, typography, tokens, and post-1.0 Apple roadmap (WRE-240)
 
 - Updated Mintlify `docs.json` and `help/docs.json` configuration to align with Kouchd's Brand Building Design System:
   - Colors: Set `primary` to `#184F3A` (Core Forest), `light` to `#DFF25E` (Electric Lime accent), and `dark` to `#123D2E` (Forest Dark contrast).
@@ -12,6 +12,10 @@ Internal engineering record. This file is excluded from Mintlify navigation and 
   - Pointed Web App links to `https://app.kouchd.com` and marketing site to `https://kouchd.com`.
   - Added direct links to the official Brand Style Guide (`https://kouchd.com/brand`) in the global anchors, navbar, and footer.
 - Updated root `index.mdx` and `help/index.mdx` with direct navigation cards linking to the Brand Style Guide.
+- Added post-1.0 hardware roadmap capabilities to `help/product/roadmap.mdx` under "Being explored" (without promised dates):
+  - iPadOS native adaptation (multi-column split view, sidebar, keyboard shortcuts, Stage Manager).
+  - iPhone Duo dual-screen experience (foldable postures, hinge-aware safe regions, outer-to-inner display continuity).
+- Drafted comprehensive internal technical architecture plan in `docs/internal/POST_V1_APPLE_EXPANSION_PLAN.md`.
 - Excluded `ios/project.yml` in `.mintignore` and resolved duplicate mapping key in `ios/project.yml` so Mintlify CLI validation runs cleanly.
 - Verified with `mintlify validate` (passed with 0 warnings/errors) and `mintlify broken-links` (0 broken links).
 
