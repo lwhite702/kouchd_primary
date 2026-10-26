@@ -1,5 +1,5 @@
 {
   "type": "rc",
-  "version": "1.0.0-rc.9",
+  "version": "1.0.0-rc.10",
   "reason": "Fix the iOS RootView compiler type-check failure and preserve analytics/session callback behavior."
 }

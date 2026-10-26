@@ -80,7 +80,7 @@ export function PaymentOptionsCard({
                   {isWebUrl(option.detail)
                     ? <a href={option.detail} target="_blank" rel="noopener noreferrer">Open {label} <ExternalLink size={14} /></a>
                     : <strong>{option.detail}</strong>}
-                  <Tooltip content={`Copy ${label} handle to clipboard`}>
+                  <Tooltip content={`Copy ${label} details to share`}>
                     <button className="button soft compact copy-btn" type="button" onClick={() => void copy(option.detail, label)} aria-label={`Copy ${label} details`}>
                       {copied === label ? <Check size={14} /> : <Copy size={14} />}<span>{copied === label ? "Copied" : "Copy"}</span>
                     </button>
