@@ -4,12 +4,14 @@
 
 ### Changed
 
+- Added warm Kouchd illustrations to host and guest welcome steps, the host/join start screen, and the no-active-stays state.
 - **Motion Polish & Liquid Glass Surfaces (WRE-219)**: Refined spring transitions, reduced-motion fallbacks, and translucent Liquid Glass surface treatments across web CSS (`app/production.css`, `styles.css`) and native iOS design tokens (`ios/Kouchd/Design.swift`).
 - **Version 1.0 Release Candidate Feature Lock (`1.0.0-rc.1`, WRE-234)**: Established the Version 1.0 launch feature lock (`release/feature-lock.json`), created the `v1-feature-lock` agent skill (`.agents/skills/v1-feature-lock/SKILL.md`) and CLI (`scripts/feature-lock.mjs`), and updated `scripts/release-version.mjs` and `scripts/release-gate.mjs` to support `X.Y.Z-rc.N` versions. Once currently open pre-lock merges complete, only patches and bug fixes are permitted on the launch branch while new features are routed to `help/product/roadmap.mdx` and isolated git worktrees.
 - **P2P Contribution Router & 4-Phase Confirmation Engine (WRE-231)**: Added responsive P2P routing (Venmo, Cash App, Chime, PayPal `paypal.me`, Zelle clipboard helper, in-person Cash, and Reward Points offsets) with ISO/IEC 18004 Level-H QR generation and a 4-phase confirmation flow across the Next.js web app and native iOS SwiftUI app.
 
 ### Fixed
 
+- Fixed an iOS SwiftUI compiler timeout in `RootView` by splitting screen composition and lifecycle callbacks into focused helpers.
 - Patch Next.js to 16.4.3 and DOMPurify to 3.4.17, align the framework lint configuration, and refresh compatible dependencies. Local full and runtime audits report zero advisories; release requires its own promotion approval.
 - Upgraded Next.js from `16.4.0` to `16.4.3` and `eslint-config-next` to `16.4.3` across the application to remediate published framework security advisories, and configured `experimental.agentUpgrade: "security"` in Next.js configuration.
 - Remediated Replay QA security and UX defects on `app.kouchd.com`:

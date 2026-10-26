@@ -5,7 +5,6 @@ import CryptoKit
 import PostHog
 import RevenueCat
 import SwiftUI
-import UIKit
 
 @main struct KouchdApp: App {
   init() {
@@ -13,7 +12,6 @@ import UIKit
     if IntroductionTestHost.isEnabled { return }
     initConvexLogging()
     #endif
-    KouchdAnalytics.configure()
     if AppConfig.isConfigured {
       Clerk.configure(publishableKey: AppConfig.clerkKey)
     }
@@ -129,129 +127,17 @@ struct RootView: View {
   }
 
   var body: some View {
-    Group {
-      if splashVisible {
-        BrandSplash().transition(.opacity)
-      } else if introductionRevision < 1 && clerk.user == nil {
-        IntroductionScreen { route in
-          pendingRoute = route
-          markIntroductionComplete()
-          Task { @MainActor in
-            try? await Task.sleep(for: .milliseconds(250))
-            activeSheet = .auth
-          }
-        }
-      } else if clerk.user == nil {
-        NavigationStack { welcome }
-      } else if !store.connectionError.isEmpty {
-        connectionIssue
-      } else if store.isLoading {
-        ProgressView("Loading your stays")
-          .frame(maxWidth: .infinity, maxHeight: .infinity)
-          .background(Palette.cream)
-      } else if store.stays.isEmpty {
-        onboarding
-      } else {
-        TabView(selection: $tab) {
-          NavigationStack {
-            LoadedStayContent(loading: store.isStayLoading || store.isFinancialLoading, error: store.financialError, retry: store.retryFinancialData) {
-              HomeScreen(
-                store: store,
-                openLedger: { tab = .ledger },
-                openMore: { openMore($0) },
-                openActivity: { openActivity($0, action: $1) }
-              )
-            }
-            .kouchdDestinations(store: store)
-          }
-            .tabItem { Label(Tab.home.rawValue, systemImage: Tab.home.symbol) }.tag(Tab.home)
-          NavigationStack {
-            LoadedStayContent(loading: store.isStayLoading || store.isFinancialLoading, error: store.financialError, retry: store.retryFinancialData) {
-              LedgerScreen(store: store)
-            }
-            .kouchdDestinations(store: store)
-          }
-            .tabItem { Label(Tab.ledger.rawValue, systemImage: Tab.ledger.symbol) }.tag(Tab.ledger)
-          NavigationStack {
-            LoadedStayContent(loading: store.isStayLoading) {
-              ChoresScreen(store: store)
-            }
-            .kouchdDestinations(store: store)
-          }
-            .tabItem { Label(Tab.chores.rawValue, systemImage: Tab.chores.symbol) }.tag(Tab.chores)
-          NavigationStack {
-            LoadedStayContent(loading: store.isStayLoading) {
-              StayScreen(store: store)
-            }
-            .kouchdDestinations(store: store)
-          }
-            .tabItem { Label(Tab.stay.rawValue, systemImage: Tab.stay.symbol) }.tag(Tab.stay)
-          NavigationStack(path: $morePath) {
-            LoadedStayContent(loading: store.isStayLoading) {
-              MoreScreen(store: store)
-            }
-            .kouchdDestinations(store: store)
-          }
-            .tabItem { Label(Tab.more.rawValue, systemImage: Tab.more.symbol) }.tag(Tab.more)
-        }
-        .tint(Palette.forest)
-      }
-    }
+    rootScreen
     .animation(KouchdMotion.animation(reduceMotion), value: phase)
-    .task {
-      // Keep the brand entrance short; cancellation must not strand the splash.
-      try? await Task.sleep(for: .milliseconds(450))
-      splashVisible = false
-    }
-    .onChange(of: store.isLoading) { _, loading in
-      if !loading && clerk.user != nil && store.stays.isEmpty && activeSheet == nil {
-        destination = pendingRoute
-        pendingRoute = nil
-      }
-    }
-    .onChange(of: clerk.user?.id) { _, newUserId in
-      if let newUserId {
-        var props: [String: Any] = [:]
-        if let email = clerk.user?.primaryEmailAddress?.emailAddress {
-          props["email"] = email
-        }
-        if let name = clerk.user?.fullName {
-          props["name"] = name
-        }
-        PostHogSDK.shared.identify(newUserId, userProperties: props)
-      } else {
-        PostHogSDK.shared.reset()
-      }
-    }
-    .onChange(of: store.selectedStayID) { _, newStayId in
-      if !newStayId.isEmpty {
-        PostHogSDK.shared.group(type: "stay", key: newStayId, groupProperties: [
-          "name": store.stayName,
-          "isHost": store.isHost,
-          "isEnded": store.isEnded,
-        ])
-      }
-    }
-    .onChange(of: activeSheet?.id) { _, sheetId in
-      if sheetId == nil && clerk.user != nil && !store.isLoading && store.stays.isEmpty {
-        destination = pendingRoute
-        pendingRoute = nil
-      }
-    }
+    .task { await hideSplashScreen() }
+    .onChange(of: store.isLoading) { _, loading in handleLoadingChange(loading) }
+    .onChange(of: clerk.user?.id) { _, userID in handleAnalyticsUserChange(userID) }
+    .onChange(of: store.selectedStayID) { _, stayID in handleSelectedStayChange(stayID) }
+    .onChange(of: activeSheet?.id) { _, sheetID in handleActiveSheetChange(sheetID) }
     .sheet(item: $activeSheet) { sheet in
       switch sheet {
       case .auth:
         AuthView()
-          .scrollDismissesKeyboard(.interactively)
-          .toolbar {
-            ToolbarItemGroup(placement: .keyboard) {
-              Spacer()
-              Button("Done") {
-                UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-              }
-              .accessibilityIdentifier("auth.dismissKeyboard")
-            }
-          }
       case .invitation(let token, let preview):
         InvitationScreen(store: store, token: token, preview: preview) {
           inviteToken = ""
@@ -265,49 +151,174 @@ struct RootView: View {
     )) {
       Button("OK") { store.error = "" }
     } message: { Text(store.error) }
-    .onOpenURL { url in
-      if url.pathComponents.count >= 3 && url.pathComponents[1] == "invite" {
-        markIntroductionComplete()
-        pendingRoute = nil
-        destination = nil
-        invitePreview = .null
-        inviteToken = url.lastPathComponent
-        if clerk.user == nil { activeSheet = .auth }
-        Task { await loadInvitation() }
-      } else {
-        Task { try? await clerk.handle(url) }
-      }
+    .onOpenURL(perform: handleOpenURL)
+    .onChange(of: clerk.user?.id, initial: true) { _, userID in handleSessionUserChange(userID) }
+    .onChange(of: store.stays.count) { _, count in handleStayCountChange(count) }
+  }
+
+  @ViewBuilder
+  private var rootScreen: some View {
+    if splashVisible {
+      BrandSplash().transition(.opacity)
+    } else if introductionRevision < 1 && clerk.user == nil {
+      IntroductionScreen(finish: handleIntroductionCompletion)
+    } else if clerk.user == nil {
+      NavigationStack { welcome }
+    } else if !store.connectionError.isEmpty {
+      connectionIssue
+    } else if store.isLoading {
+      ProgressView("Loading your stays")
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Palette.cream)
+    } else if store.stays.isEmpty {
+      onboarding
+    } else {
+      authenticatedTabs
     }
-    .onChange(of: clerk.user?.id, initial: true) { _, id in
-      KouchdAnalytics.identify(id)
-      if id == nil {
-        destination = nil
-        Task { await store.disconnectAuthenticatedSession() }
-        Task { await billing.updateIdentity(nil) }
-      } else {
-        markIntroductionComplete()
-        if activeSheet?.id == "auth" {
-          activeSheet = nil
+  }
+
+  private var authenticatedTabs: some View {
+    TabView(selection: $tab) {
+      NavigationStack {
+        LoadedStayContent(loading: store.isStayLoading || store.isFinancialLoading) {
+          HomeScreen(
+            store: store,
+            openLedger: { tab = .ledger },
+            openMore: { openMore($0) },
+            openActivity: { openActivity($0, action: $1) }
+          )
         }
-        Task { await store.connectAuthenticatedSession() }
-        Task { await billing.updateIdentity(id) }
-        if !inviteToken.isEmpty {
-          if invitePreview["valid"].flag {
-            activeSheet = .invitation(token: inviteToken, preview: invitePreview)
-          } else {
-            Task { await loadInvitation() }
-          }
+        .kouchdDestinations(store: store)
+      }
+      .tabItem { Label(Tab.home.rawValue, systemImage: Tab.home.symbol) }.tag(Tab.home)
+      NavigationStack {
+        LoadedStayContent(loading: store.isStayLoading || store.isFinancialLoading) {
+          LedgerScreen(store: store)
         }
+        .kouchdDestinations(store: store)
       }
-    }
-    .onChange(of: phase, initial: true) { _, currentPhase in
-      KouchdAnalytics.screenViewed(currentPhase)
-    }
-    .onChange(of: store.stays.count) { _, count in
-      if store.selectedStayID.isEmpty, let first = store.stays.first, count > 0 {
-        store.selectStay(first["stay"]["_id"].text)
+      .tabItem { Label(Tab.ledger.rawValue, systemImage: Tab.ledger.symbol) }.tag(Tab.ledger)
+      NavigationStack {
+        LoadedStayContent(loading: store.isStayLoading) {
+          ChoresScreen(store: store)
+        }
+        .kouchdDestinations(store: store)
       }
+      .tabItem { Label(Tab.chores.rawValue, systemImage: Tab.chores.symbol) }.tag(Tab.chores)
+      NavigationStack {
+        LoadedStayContent(loading: store.isStayLoading) {
+          StayScreen(store: store)
+        }
+        .kouchdDestinations(store: store)
+      }
+      .tabItem { Label(Tab.stay.rawValue, systemImage: Tab.stay.symbol) }.tag(Tab.stay)
+      NavigationStack(path: $morePath) {
+        LoadedStayContent(loading: store.isStayLoading) {
+          MoreScreen(store: store)
+        }
+        .kouchdDestinations(store: store)
+      }
+      .tabItem { Label(Tab.more.rawValue, systemImage: Tab.more.symbol) }.tag(Tab.more)
     }
+    .tint(Palette.forest)
+  }
+
+  private func hideSplashScreen() async {
+    // Keep the brand entrance short; cancellation must not strand the splash.
+    try? await Task.sleep(for: .milliseconds(450))
+    splashVisible = false
+  }
+
+  private func handleIntroductionCompletion(_ route: EntryRoute?) {
+    pendingRoute = route
+    markIntroductionComplete()
+    Task { @MainActor in
+      try? await Task.sleep(for: .milliseconds(250))
+      activeSheet = .auth
+    }
+  }
+
+  private func handleLoadingChange(_ loading: Bool) {
+    guard !loading, clerk.user != nil, store.stays.isEmpty, activeSheet == nil else { return }
+    destination = pendingRoute
+    pendingRoute = nil
+  }
+
+  private func handleAnalyticsUserChange(_ userID: String?) {
+    guard let userID else {
+      PostHogSDK.shared.reset()
+      return
+    }
+
+    var properties: [String: Any] = [:]
+    if let email = clerk.user?.primaryEmailAddress?.emailAddress {
+      properties["email"] = email
+    }
+    let firstName = clerk.user?.firstName ?? ""
+    let lastName = clerk.user?.lastName ?? ""
+    let name = "\(firstName) \(lastName)".trimmingCharacters(in: .whitespaces)
+    if !name.isEmpty {
+      properties["name"] = name
+    }
+    PostHogSDK.shared.identify(userID, userProperties: properties)
+  }
+
+  private func handleSessionUserChange(_ userID: String?) {
+    guard let userID else {
+      destination = nil
+      Task { await store.disconnectAuthenticatedSession() }
+      Task { await billing.updateIdentity(nil) }
+      return
+    }
+
+    markIntroductionComplete()
+
+    if activeSheet?.id == "auth" {
+      activeSheet = nil
+    }
+    Task { await store.connectAuthenticatedSession() }
+    Task { await billing.updateIdentity(userID) }
+
+    guard !inviteToken.isEmpty else { return }
+    if invitePreview["valid"].flag {
+      activeSheet = .invitation(token: inviteToken, preview: invitePreview)
+    } else {
+      Task { await loadInvitation() }
+    }
+  }
+
+  private func handleSelectedStayChange(_ stayID: String) {
+    guard !stayID.isEmpty else { return }
+    PostHogSDK.shared.group(type: "stay", key: stayID, groupProperties: [
+      "name": store.stayName,
+      "isHost": store.isHost,
+      "isEnded": store.isEnded,
+    ])
+  }
+
+  private func handleActiveSheetChange(_ sheetID: String?) {
+    guard sheetID == nil, clerk.user != nil, !store.isLoading, store.stays.isEmpty else { return }
+    destination = pendingRoute
+    pendingRoute = nil
+  }
+
+  private func handleOpenURL(_ url: URL) {
+    if url.pathComponents.count >= 3 && url.pathComponents[1] == "invite" {
+      markIntroductionComplete()
+      pendingRoute = nil
+      destination = nil
+      invitePreview = .null
+      inviteToken = url.lastPathComponent
+      if clerk.user == nil { activeSheet = .auth }
+      Task { await loadInvitation() }
+    } else {
+      Task { try? await clerk.handle(url) }
+    }
+  }
+
+  private func handleStayCountChange(_ count: Int) {
+    guard store.selectedStayID.isEmpty, let first = store.stays.first, count > 0 else { return }
+    store.selectStay(first["stay"]["_id"].text)
   }
 
   @ViewBuilder
