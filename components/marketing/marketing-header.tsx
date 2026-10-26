@@ -26,7 +26,7 @@ export function MarketingHeader({ hasClerk, about = false }: { hasClerk: boolean
       <Link href="/" aria-label="Kouchd home" className="v21-brand"><KouchdWordmark size="md" /></Link>
       <nav className="v21-nav" aria-label="Main navigation">
         {links.map(({ href, label }) => <Link key={href} href={href} aria-current={about && href === "/about" ? "page" : undefined}>{label}</Link>)}
-        <Tooltip content="Explore stay guides, Ledger setup, and house rules" position="bottom">
+        <Tooltip content="Explore stay guides, ledger help, and app support" position="bottom">
           <a href={HELP_LINKS.home} target="_blank" rel="noopener noreferrer" className="v21-nav-help"><BookOpen size={15} aria-hidden="true" /> Guides <ArrowUpRight size={13} aria-hidden="true" /></a>
         </Tooltip>
       </nav>

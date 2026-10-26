@@ -12,6 +12,7 @@ export const HELP_LINKS = {
   stayAgreements: "https://help.kouchd.com/help/legal-trust/stay-agreements",
   privacyAndSecurity: "https://help.kouchd.com/help/legal-trust/privacy-and-security",
   termsOfService: "https://help.kouchd.com/help/legal-trust/terms-of-service",
+  appSupport: "https://help.kouchd.com/help/support/app-support",
   roadmap: "https://help.kouchd.com/help/product/roadmap",
   changelog: "https://help.kouchd.com/help/product/changelog",
 } as const;

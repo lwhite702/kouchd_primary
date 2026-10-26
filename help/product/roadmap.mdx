@@ -1,38 +1,45 @@
 ---
-title: Kouchd product roadmap
-description: A clear view of what is available, in progress, and still being explored.
+title: "Kouchd product roadmap"
+description: "A clear view of what is available, in progress, and being explored as we approach Version 1.0."
 ---
 
 <Tip>
-  We shape Kouchd around the everyday details that help shared stays work well. Kouchd is currently in **Version 1.0 Release Candidate** stabilization — our launch line is focused on reliability, polish, and bug fixes while new feature ideas are tracked below for post-1.0 releases without promised dates.
+  We shape Kouchd around the everyday details that make shared living easier to coordinate. Kouchd is currently in **Version 1.0 Release Candidate** stabilization. Our launch line is focused on reliability, accessibility, and stability, while new capabilities are tracked below for post-1.0 releases without promised dates.
 </Tip>
 
 ## Available in the current web app
 
-- Shared stay details, household notes, and chores.
-- Contribution records for payments arranged outside Kouchd, groceries, supplies, and other agreed help.
-- Individual guest agreements: hosts can tailor stay dates and contribution terms per guest while keeping household guidelines shared. Guests review and accept the agreement that applies to them.
-- Host-shared external payment options: hosts can share payment details or links for PayPal, Cash App, Zelle, or Apple Pay. Guests pay the host outside Kouchd.
-- Payment reminders that reflect due dates, accepted grace periods, late-fee terms, and the current ledger. Email and optional SMS follow saved preferences and notification service availability.
-- Host and guest views, with guest financial details shown to the guest and the host managing that stay.
-- Optional email reminders and opt-in transactional SMS preferences.
+- **Individual guest agreements:** Hosts can customize dates, daily or weekly contribution rates, grace periods, and late-fee rules per guest while keeping house guidelines shared. Guests review and accept the agreement that applies to them.
+- **Delayed agreement review window:** Hosts can choose an automatic acceptance window (such as 24 hours) for pending agreements, or turn off automatic acceptance so each guest reviews and confirms terms before joining. Guests can accept immediately at any time.
+- **Display names across the household:** Household members see clear member names synced from account profiles across the dashboard, ledger, and chore boards.
+- **Shared guidelines & chores:** Household expectations for quiet hours, kitchen cleanup, visitors, and shared spaces, plus a household chore board with due dates and assignments.
+- **Transparent contribution records:** Track outside payments, groceries, supplies, and shared housework with notes, confirmation statuses, and bilateral privacy between each guest and host.
+- **Host-shared payment options:** Hosts can share direct payment handles or links for PayPal, Cash App, Zelle, or Apple Pay. Guests pay outside Kouchd using their preferred method.
+- **Email & text reminders:** Reminders reflect due dates, grace periods, and current balances. Email and text reminders are controlled by separate opt-in preferences with standard STOP and HELP controls.
+- **Calm, accessible design:** A gentle Liquid Glass interface with fluid transitions, warm surfaces, and high contrast designed to keep household coordination stress-free.
+- **Community updates:** An optional stay-tips newsletter for hosts and guests.
 
-## Not available in Kouchd
+## What Kouchd does not handle
 
 <Warning>
-  **In-app payment processing:** Kouchd does not collect, hold, transfer, or process payments. Hosts and guests arrange payments directly using shared external payment details or other methods they choose.
+  **In-app payment processing:** Kouchd does not collect, hold, transfer, or process payments. Hosts and guests arrange payments directly using external payment methods they choose.
 </Warning>
 
-## In progress
+<Warning>
+  **Stay disputes & conflict resolution:** Kouchd is a shared coordination and record-keeping tool. Kouchd does not mediate, arbitrate, or handle personal disagreements, house rule conflicts, or living situation disputes between hosts and guests. Household members are responsible for communicating with each other and resolving disagreements directly.
+</Warning>
 
-- **Launch plans:** Starter and Plus are being prepared with host account limits across stays. Guests remain free. Existing shared records remain accessible when a plan changes. Purchase availability will be announced after billing and store checks are complete.
-- **Guest agreement controls:** Hosts can configure a delay before pending guest agreements are auto-accepted, or disable automatic acceptance. Guests can accept sooner. Hosts can edit a guest's preferred name and view their contact information; agreement actions are recorded for audit.
-- **Flexible payment schedules and recorded overnights:** Guests can choose daily or weekly contributions, select an initial weekday for weekly payments, and request later schedule changes for host approval. The work includes partial contribution tracking, a zero-due-balance requirement, a 14-day change limit, and prorated charges when a schedule changes. Hosts can also choose to bill an individual guest only for completed overnights they record; nonconsecutive nights are logged separately, and weekly rates are prorated across recorded nights. When late fees are enabled, the $5 daily or $25 weekly fee follows the accepted agreement’s grace period.
-- **Shared household coordination:** Web shopping lists are available. Native shopping and structured check-in screens are being prepared, with further testing of recurring chores and reminders across platforms.
+## In progress (Pre-1.0 stabilization)
 
-## Being explored
+- **Release candidate hardening:** Final pre-lock merges for dependency security updates, package maintenance, and launch candidate checks.
+- **Accessibility & keyboard flow:** Refinements to keyboard focus, screen-reader labels, and mobile tap targets across all modals and cards.
 
-- **Native iOS experience:** A production-connected iOS app is in development, using the earlier iOS design direction. TestFlight and App Store availability will be announced only after verified distribution. Android remains in design exploration.
+## Being explored (Post-1.0 roadmap)
+
+- **Receipt scanning for shared groceries:** Attach a photo of a store receipt to pre-fill a shared grocery or supply contribution entry.
+- **Native iPhone App Store release:** Expanding the current native SwiftUI development preview to full App Store distribution and push notifications.
+- **Recurring chore rotation:** Automatic assignment rotations and repeating schedules for shared household chores.
+- **Shared shopping lists & check-ins:** Collaborative grocery lists and daily household check-in boards.
 
 ## Keep in touch
 
@@ -40,7 +47,7 @@ description: A clear view of what is available, in progress, and still being exp
   <Card title="Product changelog" icon="list-checks" href="/help/product/changelog">
     See recent releases, fixes, and improvements.
   </Card>
-  <Card title="Help Center home" icon="house" href="/help">
-    Explore all host and guest documentation.
+  <Card title="App support" icon="life-buoy" href="/help/support/app-support">
+    Reach our support team at help@kouchd.com for app assistance.
   </Card>
 </CardGroup>

@@ -4,6 +4,7 @@
 
 ### Changed
 
+- **1.0 RC Help Docs, Support Boundaries & Plain-Language Tooltips (WRE-238)**: Created a dedicated app support guide at `help/support/app-support.mdx` detailing that `help@kouchd.com` provides technical assistance while Kouchd explicitly does not mediate roommate conflicts, stay disputes, or outside financial disagreements. Refined all web app tooltips and help tips to use friendly, plainspoken language, and aligned the roadmap and public changelog with 1.0 Release Candidate status.
 - Added warm Kouchd illustrations to host and guest welcome steps, the host/join start screen, and the no-active-stays state.
 - **Motion Polish & Liquid Glass Surfaces (WRE-219)**: Refined spring transitions, reduced-motion fallbacks, and translucent Liquid Glass surface treatments across web CSS (`app/production.css`, `styles.css`) and native iOS design tokens (`ios/Kouchd/Design.swift`).
 - **Version 1.0 Release Candidate Feature Lock (`1.0.0-rc.1`, WRE-234)**: Established the Version 1.0 launch feature lock (`release/feature-lock.json`), created the `v1-feature-lock` agent skill (`.agents/skills/v1-feature-lock/SKILL.md`) and CLI (`scripts/feature-lock.mjs`), and updated `scripts/release-version.mjs` and `scripts/release-gate.mjs` to support `X.Y.Z-rc.N` versions. Once currently open pre-lock merges complete, only patches and bug fixes are permitted on the launch branch while new features are routed to `help/product/roadmap.mdx` and isolated git worktrees.

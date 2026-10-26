@@ -55,7 +55,7 @@ export function AccountHeader({
           {onTakeTour && (
             <FeatureGate flag={FEATURE_FLAGS.GUIDED_TOUR}>
               <Tooltip
-                content="Interactive walkthrough of features"
+                content="Take a short tour of your household spaces"
                 position="bottom"
               >
                 <button
@@ -73,7 +73,7 @@ export function AccountHeader({
           )}
           {onStays && (
             <Tooltip
-              content="Switch or view other household stays"
+              content="Switch between your household stays"
               position="bottom"
             >
               <button
@@ -88,7 +88,7 @@ export function AccountHeader({
             </Tooltip>
           )}
           <Tooltip
-            content="Browse setup guides, ledger instructions & rules"
+            content="Guides, ledger help, and app support"
             position="bottom"
           >
             <a
@@ -109,7 +109,7 @@ export function AccountHeader({
           </Tooltip>
           {onJoinCode && (
             <Tooltip
-              content="Enter a host referral code to join"
+              content="Join a stay with an invitation code"
               position="bottom"
             >
               <button
@@ -127,7 +127,7 @@ export function AccountHeader({
           )}
           {onSettings && (
             <Tooltip
-              content="Notification delivery preferences"
+              content="Email and text reminder settings"
               position="bottom"
             >
               <button
@@ -135,7 +135,7 @@ export function AccountHeader({
                 type="button"
                 onClick={onSettings}
                 aria-label="Notification settings"
-                title="Notification delivery preferences"
+                title="Email and text reminder settings"
               >
                 <Settings size={19} />
               </button>

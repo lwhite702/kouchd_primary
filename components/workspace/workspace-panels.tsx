@@ -74,8 +74,8 @@ export function WorkspacePanels({ state }: { state: WorkspaceState }) {
                   : HELP_LINKS.loggingContributions
               }
             >
-              This records money or a shared expense for the ledger. Kouchd does
-              not process payments.
+              Record something paid or shared outside Kouchd. Kouchd does
+              not collect or process payments.
             </HelpTip>
           )}
           {panel === "invite" && (
