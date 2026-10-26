@@ -700,10 +700,10 @@ export function HostOnboardingWizard({
       {/* Step 5: Final Review & Agreement Launch */}
       {step === 5 && (
         <div key="step-5" className="screen-transition">
-          <p className="eyebrow onboarding-eyebrow">Step 5 of 5 · Final Agreement <HelpTip title="Review before creating" href={HELP_LINKS.hostsGettingStarted}>Check the dates, amount, house rules, and optional financial rules. You can then invite guests to review and accept the agreement.</HelpTip></p>
+          <p className="eyebrow onboarding-eyebrow">Step 5 of 5 · Final Agreement <HelpTip title="Review before creating" href={HELP_LINKS.hostsGettingStarted}>Check the dates, amount, house rules, and optional financial rules. New guests are added to the agreement when they join.</HelpTip></p>
           <h1>Review the House Agreement.</h1>
           <p className="subhead">
-            Creating the stay records your acceptance as host. Each guest reviews and accepts these terms when joining; they only need to accept again if the agreement changes.
+            Creating the stay records your acceptance as host. Guests can accept right away. Pending agreements are auto-accepted after 24 hours by default, and you can change or disable that in Stay details.
           </p>
 
           <div

@@ -2,6 +2,13 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-10-25 — Delayed agreement acceptance and host guest profiles (WRE-216)
+
+- Added host-configurable agreement auto-acceptance after a 1–720 hour delay, defaulting to 24 hours; hosts can disable it, and guests can accept manually at any time.
+- Added auditable agreement offer state, manual/system acceptance methods, system approval timestamps, and activity events for offers, replacements, approvals, and setting changes.
+- Added host-only guest preferred-name editing and host-only guest contact details in the stay bundle.
+- Synchronized release candidate version to `1.0.0-rc.5`.
+
 ## 2026-10-25 — Main website newsletter signup with Loops integration (WRE-213)
 
 - Added accessible newsletter signup to main landing page with explicit, unchecked consent.
@@ -84,7 +91,6 @@ Internal engineering record. This file is excluded from Mintlify navigation and 
 - Excluded `\.well-known` from Clerk authentication proxy matcher in `proxy.ts`.
 - Added unit and route tests in `tests/replay-qa-nonce.test.ts`.
 - Synchronized package and iOS marketing versions to `0.6.9` with patch release classification.
-
 
 ## 2026-10-19 — Enforce reward caps, preserve schedule totals, and overdue recovery (WRE-184)
 

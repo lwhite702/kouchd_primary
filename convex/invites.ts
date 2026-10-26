@@ -5,7 +5,7 @@ import { mutation, query } from "./_generated/server";
 import { requireCurrentUser, requireHost } from "./lib/auth";
 import { recordActivity } from "./lib/activity";
 import { assertInvite, assertInviteHash } from "./lib/validation";
-import { ensureGuestTerms } from "./lib/stayTerms";
+import { ensureGuestTerms, offerGuestAgreement } from "./lib/stayTerms";
 import { scheduleSubscriptionLimitShadow } from "./subscriptionShadow";
 
 export const preview = query({
@@ -104,7 +104,8 @@ export const accept = mutation({
     await ctx.db.insert("memberships", { stayId: invite.stayId, userId: user._id, role: "guest", status: "active", joinedAt: now });
     const stay = await ctx.db.get(invite.stayId);
     if (!stay) throw new Error("Stay not found");
-    await ensureGuestTerms(ctx, invite.stayId, user._id, stay.hostUserId);
+    const guestTerms = await ensureGuestTerms(ctx, invite.stayId, user._id, stay.hostUserId);
+    await offerGuestAgreement(ctx, { stayId: invite.stayId, termsId: guestTerms._id, guestUserId: user._id, offeredBy: stay.hostUserId });
     await ctx.db.patch(invite._id, { usedAt: now, usedBy: user._id });
     if (stay.status === "active") {
       await scheduleSubscriptionLimitShadow(ctx, stay._id, "guest_joined", "active_guest_memberships");

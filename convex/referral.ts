@@ -5,7 +5,7 @@ import { requireCurrentUser, requireHost } from "./lib/auth";
 import { recordActivity } from "./lib/activity";
 import { assertReferralCode } from "./lib/validation";
 import { generateReferralCode, normalizeReferralCode } from "../lib/referral";
-import { ensureGuestTerms } from "./lib/stayTerms";
+import { ensureGuestTerms, offerGuestAgreement } from "./lib/stayTerms";
 import { scheduleSubscriptionLimitShadow } from "./subscriptionShadow";
 
 export const preview = query({
@@ -80,7 +80,8 @@ export const joinWithCode = mutation({
       }
       // Re-activate if left
       await ctx.db.patch(existingMembership._id, { status: "active", joinedAt: Date.now() });
-      await ensureGuestTerms(ctx, stay._id, user._id, stay.hostUserId);
+      const guestTerms = await ensureGuestTerms(ctx, stay._id, user._id, stay.hostUserId);
+      await offerGuestAgreement(ctx, { stayId: stay._id, termsId: guestTerms._id, guestUserId: user._id, offeredBy: stay.hostUserId });
       if (stay.status === "active") {
         await scheduleSubscriptionLimitShadow(ctx, stay._id, "guest_rejoined", "active_guest_memberships");
       }
@@ -113,7 +114,8 @@ export const joinWithCode = mutation({
       status: "active",
       joinedAt: now,
     });
-    await ensureGuestTerms(ctx, stay._id, user._id, stay.hostUserId);
+    const guestTerms = await ensureGuestTerms(ctx, stay._id, user._id, stay.hostUserId);
+    await offerGuestAgreement(ctx, { stayId: stay._id, termsId: guestTerms._id, guestUserId: user._id, offeredBy: stay.hostUserId });
     if (stay.status === "active") {
       await scheduleSubscriptionLimitShadow(ctx, stay._id, "guest_joined", "active_guest_memberships");
     }

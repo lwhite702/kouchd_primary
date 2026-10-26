@@ -1,5 +1,5 @@
 {
-  "version": "1.0.0-rc.4",
   "type": "rc",
-  "reason": "Add main website newsletter signup with explicit consent and server-side Loops contact synchronization."
+  "version": "1.0.0-rc.5",
+  "reason": "Add host-configurable delayed guest agreement auto-acceptance, system approval audit tags, and host guest profile controls."
 }
