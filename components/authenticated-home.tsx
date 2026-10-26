@@ -338,6 +338,15 @@ function GetStartedHub({ onHostStayCreated }: { onHostStayCreated: (stayId: Id<"
     <div className="app-shell production-shell">
       <AccountHeader />
       <main style={{ padding: "1.5rem 1rem 4rem" }}>
+        <div className="get-started-artwork" aria-hidden="true">
+          <Image
+            src={tab === "host" ? "/artwork/host-welcome.png" : "/artwork/invitation.png"}
+            alt=""
+            width={640}
+            height={480}
+            sizes="(max-width: 480px) 58vw, 220px"
+          />
+        </div>
         <div style={{ maxWidth: 440, margin: "0 auto 1.5rem", display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.5rem" }}>
           <button
             className={`button ${tab === "host" ? "primary" : "soft"}`}
@@ -400,7 +409,7 @@ function StayHub({ stays, onSelectStay, onHostStayCreated }: { stays: StayMember
     <main className="stay-hub">
       {creating ? <div className="stay-hub-setup"><div className="page-heading"><div><p className="eyebrow">A fresh start</p><h1>Host a new stay</h1><p className="subhead">Set the dates and agreement, then invite your guests.</p></div><button className="button ghost" type="button" onClick={() => setCreating(false)}>Back to stays</button></div><HostOnboardingWizard onCancel={() => setCreating(false)} onComplete={goToCreatedStay} /></div> : <>
         <div className="page-heading"><div><p className="eyebrow">Your Kouchd stays</p><h1>Choose a stay to open.</h1><p className="subhead">Keep each household’s agreements and history together. You can host more than one stay at a time.</p></div><button className="button primary" type="button" onClick={() => setCreating(true)}><Plus size={18} /> Host a new stay</button></div>
-        <section className="stay-hub-section"><div className="section-heading"><div><p className="eyebrow">Current and upcoming</p><h2>Active stays</h2></div></div>{currentStays.length ? <div className="stay-hub-grid">{currentStays.map(({ stay, membership }) => <button className="stay-hub-card" type="button" key={stay._id} onClick={() => onSelectStay(stay._id)}><span className={`status-pill ${stay.status}`}>{stay.status === "pending" ? "Setup in progress" : "Active"}</span><strong>{stay.name || stay.houseInfo?.cityStateZip || `Household ${stay.referralCode ?? ""}`}</strong><span>{membership.role === "host" ? "You’re the host" : "You’re a guest"}</span><span className="stay-hub-open">Open stay <ArrowRight size={16} /></span></button>)}</div> : <p className="muted">No active stays right now. Start a new stay whenever you’re ready.</p>}</section>
+        <section className="stay-hub-section"><div className="section-heading"><div><p className="eyebrow">Current and upcoming</p><h2>Active stays</h2></div></div>{currentStays.length ? <div className="stay-hub-grid">{currentStays.map(({ stay, membership }) => <button className="stay-hub-card" type="button" key={stay._id} onClick={() => onSelectStay(stay._id)}><span className={`status-pill ${stay.status}`}>{stay.status === "pending" ? "Setup in progress" : "Active"}</span><strong>{stay.name || stay.houseInfo?.cityStateZip || `Household ${stay.referralCode ?? ""}`}</strong><span>{membership.role === "host" ? "You’re the host" : "You’re a guest"}</span><span className="stay-hub-open">Open stay <ArrowRight size={16} /></span></button>)}</div> : <div className="stay-hub-empty"><Image src="/artwork/stay.png" alt="" aria-hidden="true" width={640} height={480} sizes="(max-width: 600px) 50vw, 180px" /><p className="muted">No active stays right now. Start a new stay whenever you’re ready.</p></div>}</section>
         <section className="stay-hub-section"><div className="section-heading"><div><p className="eyebrow">Saved for reference</p><h2>Past stays</h2></div></div>{pastStays.length ? <div className="stay-hub-grid">{pastStays.map(({ stay, membership }) => <button className="stay-hub-card past" type="button" key={stay._id} onClick={() => onSelectStay(stay._id)}><span className="status-pill ended">Ended</span><strong>{stay.name || stay.houseInfo?.cityStateZip || `Household ${stay.referralCode ?? ""}`}</strong><span>{membership.role === "host" ? "You hosted this stay" : "You were a guest"} · History is read-only</span><span className="stay-hub-open">View history <ArrowRight size={16} /></span></button>)}</div> : <p className="muted">Ended stays will stay here so you can refer back to their history.</p>}</section>
       </>}
     </main>

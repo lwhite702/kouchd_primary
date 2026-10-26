@@ -131,6 +131,58 @@
   gap: 8px;
 }
 
+.get-started-artwork,
+.onboarding-step-artwork {
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: linear-gradient(145deg, #f5eee2 0%, #f1f4e9 100%);
+}
+
+.get-started-artwork {
+  width: min(440px, 100%);
+  min-height: 148px;
+  margin: 0 auto 1rem;
+  border-radius: 24px;
+}
+
+.onboarding-step-artwork {
+  width: min(420px, 100%);
+  min-height: 138px;
+  margin: 0 auto 1rem;
+  border-radius: 20px;
+}
+
+.get-started-artwork img,
+.onboarding-step-artwork img {
+  display: block;
+  width: min(220px, 58vw);
+  height: auto;
+  object-fit: contain;
+}
+
+.stay-hub-empty {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  min-height: 128px;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--line, #e2ded7);
+  border-radius: 20px;
+  background: linear-gradient(120deg, #faf7f0 0%, #f3f5ed 100%);
+}
+
+.stay-hub-empty img {
+  display: block;
+  width: min(180px, 38vw);
+  height: auto;
+  object-fit: contain;
+}
+
+.stay-hub-empty .muted {
+  margin: 0;
+}
+
 .help-tip-wrap {
   position: relative;
   display: inline-flex;
