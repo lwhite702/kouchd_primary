@@ -1,5 +1,5 @@
 {
   "type": "rc",
-  "version": "1.0.0-rc.11",
-  "reason": "Prepare launch candidate: scoped workspace screens, account capacity limits, telemetry privacy scrubbing, and native coordination screens."
+  "version": "1.0.0-rc.12",
+  "reason": "Repair the iOS AppConfig declaration exposed by the launch merge and restore the release build."
 }

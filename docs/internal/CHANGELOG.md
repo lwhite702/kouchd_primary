@@ -9,6 +9,11 @@ Internal engineering record. This file is excluded from Mintlify navigation and 
 - Added native shopping and check-in destinations, typed ledger contracts, and keyboard dismissal.
 - Synchronized release candidate metadata to `1.0.0-rc.11`.
 
+## 2026-10-26 — Repair iOS AppConfig declaration after launch merge (WRE-224)
+
+- Removed the extra closing brace that left `AppConfig.isConfigured` at file scope and caused the release simulator build to fail.
+- Synchronized release candidate metadata to `1.0.0-rc.12`.
+
 ## 2026-10-26 — Update Help Center & tooltips for 1.0 RC status and app support boundaries (WRE-238)
 
 - Created dedicated app support guide `help/support/app-support.mdx` clarifying that `help@kouchd.com` provides technical app assistance (account access, bug reports, and reminder settings), while Kouchd explicitly does not mediate interpersonal roommate conflicts, stay disputes, house rule issues, or external payment problems.
