@@ -82,7 +82,7 @@ struct PrimaryButton: View {
   let action: () -> Void
   var body: some View {
     Button(action: action) {
-      Text(title).font(.headline).frame(maxWidth: .infinity)
+      Text(title).font(.headline).foregroundStyle(.white).frame(maxWidth: .infinity)
         .padding(.vertical, 15)
         .contentShape(Rectangle())
     }
@@ -213,6 +213,8 @@ extension View {
       case .schedule: ScheduleScreen(store: store)
       case .settings: SettingsScreen(store: store)
       case .activity: ActivityScreen(store: store)
+      case .shopping: ShoppingScreen(store: store)
+      case .checkins: CheckInsScreen(store: store)
       case .householdGuide: HouseholdGuideScreen(store: store)
       case .createStay: CreateStayScreen(store: store)
       case .joinCode: JoinCodeScreen(store: store)
@@ -226,11 +228,16 @@ extension View {
       case .about: AboutKouchdScreen()
       case .admin: AdminScreen(store: store)
       case .adminFinancial: AdminFinancialScreen(store: store)
-      case .adminSmsHistory: AdminSMSHistory(events: store.adminSms)
+      case .adminSmsHistory:
+        AdminSMSHistory(events: store.adminSms)
+          .task { store.loadAdminSMS() }
+          .onDisappear { store.stopAdmin("sms") }
       case .adminUserSmsHistory(let userID):
         AdminSMSHistory(events: store.adminUserDetail["user"].id == userID
           ? store.adminUserDetail["smsEvents"].items
           : [])
+          .task { store.loadAdminUser(userID) }
+          .onDisappear { store.stopAdmin("user") }
       case .adminUser(let id): AdminUserScreen(store: store, userID: id)
       case .adminStay(let id): AdminStayScreen(store: store, stayID: id)
       }
@@ -274,15 +281,23 @@ private struct KouchdButtonStyle: ButtonStyle {
 // Keep each navigation stack mounted while a selected stay or guest loads.
 struct LoadedStayContent<Content: View>: View {
   let loading: Bool
+  var error: String = ""
+  var retry: (() -> Void)? = nil
   @ViewBuilder let content: Content
   @Environment(\.accessibilityReduceMotion) private var reduceMotion
   var body: some View {
-    content.opacity(loading ? 0 : 1).disabled(loading).accessibilityHidden(loading)
+    content.opacity(loading || !error.isEmpty ? 0 : 1).disabled(loading || !error.isEmpty).accessibilityHidden(loading || !error.isEmpty)
       .overlay {
         if loading {
           ProgressView("Opening your stay")
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Palette.cream.ignoresSafeArea()).transition(.opacity)
+        } else if !error.isEmpty {
+          VStack(spacing: 16) {
+            Text(error).multilineTextAlignment(.center)
+            if let retry { Button("Try again", action: retry) }
+          }.padding().frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Palette.cream.ignoresSafeArea())
         }
       }
       .animation(KouchdMotion.animation(reduceMotion), value: loading)

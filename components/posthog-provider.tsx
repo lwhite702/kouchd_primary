@@ -1,5 +1,6 @@
 "use client";
 
+import { scrubTelemetryProperties } from "@/lib/telemetry-privacy";
 import posthog from "posthog-js";
 import { PostHogProvider as PHProvider } from "posthog-js/react";
 import { useAuth, useUser } from "@clerk/nextjs";
@@ -78,6 +79,13 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
         maskAllInputs: true,
         maskTextSelector: ".ph-no-capture, [data-sensitive='true']",
         recordCrossOriginIframes: false,
+      },
+      before_send: (event) => {
+        if (!event) return event;
+        scrubTelemetryProperties(event.properties);
+        scrubTelemetryProperties(event.$set);
+        scrubTelemetryProperties(event.$set_once);
+        return event;
       },
       rageclick: true,
       persistence: "localStorage+cookie",

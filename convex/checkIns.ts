@@ -1,4 +1,5 @@
 import { v } from "convex/values";
+import schema from "./schema";
 
 import type { MutationCtx } from "./_generated/server";
 import type { Id } from "./_generated/dataModel";
@@ -16,6 +17,8 @@ function validateText(topic: string, note: string) {
 
 async function requireCheckInAccess(ctx: MutationCtx, stayId: Id<"stays">, guestUserId: Id<"users">) {
   const { user, membership } = await requireMembership(ctx, stayId);
+  const stay = await ctx.db.get(stayId);
+  if (!stay || stay.status === "ended") throw new Error("Ended stays cannot change check-ins");
   if (membership.role === "guest" && membership.userId !== guestUserId) throw new Error("Guests can only access their own check-ins");
   const guestMembership = await ctx.db.query("memberships")
     .withIndex("by_stay_user", (q) => q.eq("stayId", stayId).eq("userId", guestUserId))
@@ -26,7 +29,7 @@ async function requireCheckInAccess(ctx: MutationCtx, stayId: Id<"stays">, guest
 
 export const list = query({
   args: { stayId: v.id("stays") },
-  returns: v.array(v.any()),
+  returns: v.array(v.object({ ...schema.tables.checkIns.validator.fields, _id: v.id("checkIns"), _creationTime: v.number(), guestName: v.string() })),
   handler: async (ctx, { stayId }) => {
     const { user, membership } = await requireMembership(ctx, stayId);
     const items = membership.role === "host"

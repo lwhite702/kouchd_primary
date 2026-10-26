@@ -1,14 +1,20 @@
+import { buildFinancialRecord } from "./lib/ledger";
+import { confirmedCreditCents } from "../lib/domain/pricing";
+import schema from "./schema";
 import { v } from "convex/values";
 
-import { calculateObligationLedger } from "../lib/domain/obligations";
 import { internal } from "./_generated/api";
 import { mutation, query } from "./_generated/server";
-import type { Doc } from "./_generated/dataModel";
-import { requireHost, requireMembership, resolveFinancialGuest } from "./lib/auth";
+
+import {
+  requireHost,
+  requireMembership,
+  resolveFinancialGuest,
+} from "./lib/auth";
 import { recordActivity } from "./lib/activity";
-import { listActiveGuestObligations } from "./lib/obligations";
+
 import { assertAdhocChargeInput, assertCalendarDate } from "./lib/validation";
-import { getAcceptedGuestTerms, getCurrentGuestTerms } from "./lib/stayTerms";
+import { getAcceptedGuestTerms } from "./lib/stayTerms";
 
 const ledgerItem = v.object({
   _id: v.id("obligations"),
@@ -16,7 +22,11 @@ const ledgerItem = v.object({
   periodEnd: v.string(),
   dueDate: v.string(),
   baseAmountCents: v.number(),
-  type: v.union(v.literal("cadence"), v.literal("adhoc"), v.literal("occupancy")),
+  type: v.union(
+    v.literal("cadence"),
+    v.literal("adhoc"),
+    v.literal("occupancy"),
+  ),
   title: v.optional(v.string()),
   earlyDiscountCents: v.number(),
   lateFeeCents: v.number(),
@@ -24,86 +34,90 @@ const ledgerItem = v.object({
   effectiveChargeCents: v.number(),
   creditedCents: v.number(),
   balanceCents: v.number(),
-  status: v.union(v.literal("upcoming"), v.literal("due"), v.literal("late"), v.literal("paid")),
+  status: v.union(
+    v.literal("upcoming"),
+    v.literal("due"),
+    v.literal("late"),
+    v.literal("paid"),
+  ),
   lateFeeWaived: v.boolean(),
 });
 
 export const list = query({
-  args: { stayId: v.id("stays"), asOfDate: v.string(), guestUserId: v.optional(v.id("users")) },
+  args: {
+    stayId: v.id("stays"),
+    asOfDate: v.string(),
+    guestUserId: v.optional(v.id("users")),
+  },
   returns: v.array(ledgerItem),
-  handler: async (ctx, { stayId, asOfDate, guestUserId: requestedGuestUserId }) => {
-    const access = await resolveFinancialGuest(ctx, stayId, requestedGuestUserId);
-    assertCalendarDate(asOfDate, "Ledger date");
-    if (!access.guestUserId) return [];
-    const stay = await ctx.db.get(stayId);
-    if (!stay || !stay.currentTermsId) return [];
-    const terms = await getCurrentGuestTerms(ctx, stayId, access.guestUserId);
-    if (!terms) return [];
+  handler: async (
+    ctx,
+    { stayId, asOfDate, guestUserId: requestedGuestUserId },
+  ) => {
+    return (
+      await buildFinancialRecord(ctx, {
+        stayId,
+        asOfDate,
+        guestUserId: requestedGuestUserId,
+      })
+    ).ledger;
+  },
+});
 
-    const [scopedObligations, scopedContributions] = await Promise.all([
-      listActiveGuestObligations(ctx, stayId, access.guestUserId),
-      ctx.db.query("contributions").withIndex("by_stay_guest_and_date", (query) => query.eq("stayId", stayId).eq("guestUserId", access.guestUserId)).order("asc").take(5_000),
-    ]);
-    const [legacyObligations, legacyContributions] = access.includeLegacyUnscoped
-      ? await Promise.all([
-        listActiveGuestObligations(ctx, stayId, undefined),
-        ctx.db.query("contributions").withIndex("by_stay_guest_and_date", (query) => query.eq("stayId", stayId).eq("guestUserId", undefined)).order("asc").take(5_000),
-      ])
-      : [[], []];
-    const obligations = [...scopedObligations, ...legacyObligations];
-    const contributions = [...scopedContributions, ...legacyContributions];
-    const credits = contributions
-      .filter((entry) => entry.status === "confirmed" && entry.countsTowardBalance)
-      .map((entry) => ({ amountCents: entry.amountCents, date: entry.date }));
-    const termsById = new Map<string, Promise<Doc<"terms"> | null>>();
-    const ledgerObligations = await Promise.all(obligations.map(async (item) => {
-      let obligationTerms = terms;
-      if (item.termsId) {
-        const termsKey = item.termsId.toString();
-        let termsPromise = termsById.get(termsKey);
-        if (!termsPromise) {
-          termsPromise = ctx.db.get(item.termsId);
-          termsById.set(termsKey, termsPromise);
-        }
-        obligationTerms = (await termsPromise) ?? terms;
-      }
-      return {
-        _id: item._id,
-        periodStart: item.periodStart,
-        periodEnd: item.periodEnd,
-        dueDate: item.dueDate,
-        baseAmountCents: item.baseAmountCents,
-        type: item.type ?? "cadence",
-        title: item.title,
-        lateFeeWaived: Boolean(item.lateFeeWaivedAt),
-        voided: Boolean(item.voidedAt),
-        terms: obligationTerms,
-      };
-    }));
-    const ledger = calculateObligationLedger({
-      obligations: ledgerObligations,
-      contributions: credits,
-      asOfDate,
-      terms,
-    });
-
-    return ledger.map((item) => ({
-      _id: item._id as typeof obligations[number]["_id"],
-      periodStart: item.periodStart,
-      periodEnd: item.periodEnd,
-      dueDate: item.dueDate,
-      baseAmountCents: item.baseAmountCents,
-      type: item.type ?? "cadence",
-      title: item.title,
-      earlyDiscountCents: item.earlyDiscountCents,
-      lateFeeCents: item.lateFeeCents,
-      lateFeeOccurrences: item.lateFeeOccurrences,
-      effectiveChargeCents: item.effectiveChargeCents,
-      creditedCents: item.creditedCents,
-      balanceCents: item.balanceCents,
-      status: item.status,
-      lateFeeWaived: Boolean(item.lateFeeWaived),
-    }));
+/** Compact, guest-scoped totals; detailed ledger rows remain screen-owned. */
+export const summary = query({
+  args: {
+    stayId: v.id("stays"),
+    asOfDate: v.string(),
+    guestUserId: v.optional(v.id("users")),
+  },
+  returns: v.object({
+    chargesCents: v.number(),
+    creditCents: v.number(),
+    balanceCents: v.number(),
+    pendingCount: v.number(),
+    dueCount: v.number(),
+    highlights: v.array(ledgerItem),
+    recentContributions: v.array(
+      v.object({
+        ...schema.tables.contributions.validator.fields,
+        _id: v.id("contributions"),
+        _creationTime: v.number(),
+      }),
+    ),
+  }),
+  handler: async (ctx, args) => {
+    const { ledger, contributions } = await buildFinancialRecord(ctx, args);
+    const active = contributions.filter((entry) => entry.status !== "voided");
+    const creditCents = confirmedCreditCents(active);
+    // Full scheduled total, including upcoming periods; this is not the amount due today.
+    const chargesCents = ledger.reduce(
+      (sum, item) => sum + item.effectiveChargeCents,
+      0,
+    );
+    const recent = [...active]
+      .sort((a, b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt)
+      .slice(0, 5);
+    const pending = active.filter((entry) => entry.status === "pending");
+    const recentContributions = [
+      ...new Map(
+        [...recent, ...pending.slice(0, 3)].map((entry) => [entry._id, entry]),
+      ).values(),
+    ];
+    const due = ledger.filter(
+      (item) =>
+        item.balanceCents > 0 &&
+        (item.status === "late" || item.status === "due"),
+    );
+    return {
+      chargesCents,
+      creditCents,
+      balanceCents: chargesCents - creditCents,
+      pendingCount: pending.length,
+      dueCount: due.length,
+      highlights: due.slice(0, 3),
+      recentContributions,
+    };
   },
 });
 
@@ -120,10 +134,20 @@ export const createAdhocCharge = mutation({
   handler: async (ctx, args) => {
     const { user } = await requireHost(ctx, args.stayId);
     await resolveFinancialGuest(ctx, args.stayId, args.guestUserId);
-    assertAdhocChargeInput(args.title, args.amountCents, args.effectiveDate, args.dueDate);
+    assertAdhocChargeInput(
+      args.title,
+      args.amountCents,
+      args.effectiveDate,
+      args.dueDate,
+    );
     const stay = await ctx.db.get(args.stayId);
-    if (!stay || stay.status === "ended") throw new Error("Ended stays cannot add charges");
-    const terms = await getAcceptedGuestTerms(ctx, args.stayId, args.guestUserId);
+    if (!stay || stay.status === "ended")
+      throw new Error("Ended stays cannot add charges");
+    const terms = await getAcceptedGuestTerms(
+      ctx,
+      args.stayId,
+      args.guestUserId,
+    );
     const obligationId = await ctx.db.insert("obligations", {
       stayId: args.stayId,
       termsId: terms?._id ?? stay.currentTermsId,
@@ -168,9 +192,13 @@ export const voidAdhocCharge = mutation({
     const obligation = await ctx.db.get(obligationId);
     if (!obligation) throw new Error("Obligation not found");
     const { user } = await requireHost(ctx, obligation.stayId);
-    if ((obligation.type ?? "cadence") !== "adhoc") throw new Error("Only ad-hoc charges can be voided");
+    if ((obligation.type ?? "cadence") !== "adhoc")
+      throw new Error("Only ad-hoc charges can be voided");
     if (obligation.voidedAt) return null;
-    await ctx.db.patch(obligationId, { voidedAt: Date.now(), voidedBy: user._id });
+    await ctx.db.patch(obligationId, {
+      voidedAt: Date.now(),
+      voidedBy: user._id,
+    });
     await recordActivity(ctx, {
       stayId: obligation.stayId,
       actorUserId: user._id,
@@ -190,7 +218,8 @@ export const waiveLateFee = mutation({
   handler: async (ctx, { obligationId }) => {
     const obligation = await ctx.db.get(obligationId);
     if (!obligation) throw new Error("Obligation not found");
-    if (obligation.voidedAt) throw new Error("Voided obligations cannot be changed");
+    if (obligation.voidedAt)
+      throw new Error("Voided obligations cannot be changed");
     const { user } = await requireHost(ctx, obligation.stayId);
     if (obligation.lateFeeWaivedAt) return null;
 
@@ -222,16 +251,28 @@ export const requestOverduePlan = mutation({
   returns: v.id("overdueRecoveryRequests"),
   handler: async (ctx, args) => {
     const { user, membership } = await requireMembership(ctx, args.stayId);
-    if (membership.role !== "guest") throw new Error("Only guests can submit an overdue recovery plan request");
+    if (membership.role !== "guest")
+      throw new Error(
+        "Only guests can submit an overdue recovery plan request",
+      );
     assertCalendarDate(args.proposedDate, "Proposed recovery date");
-    if (!args.note.trim()) throw new Error("Please include a brief note explaining your proposed recovery plan");
+    if (!args.note.trim())
+      throw new Error(
+        "Please include a brief note explaining your proposed recovery plan",
+      );
     if (args.proposedAmountCents !== undefined) {
-      if (!Number.isSafeInteger(args.proposedAmountCents) || args.proposedAmountCents <= 0) {
-        throw new Error("Proposed contribution amount must be a positive number of cents");
+      if (
+        !Number.isSafeInteger(args.proposedAmountCents) ||
+        args.proposedAmountCents <= 0
+      ) {
+        throw new Error(
+          "Proposed contribution amount must be a positive number of cents",
+        );
       }
     }
     const stay = await ctx.db.get(args.stayId);
-    if (!stay || stay.status === "ended") throw new Error("This stay has ended");
+    if (!stay || stay.status === "ended")
+      throw new Error("This stay has ended");
 
     if (args.obligationId) {
       const obligation = await ctx.db.get(args.obligationId);
@@ -275,7 +316,8 @@ export const reviewOverduePlan = mutation({
   returns: v.null(),
   handler: async (ctx, { requestId, decision, reviewNote }) => {
     const request = await ctx.db.get(requestId);
-    if (!request || request.status !== "pending") throw new Error("This recovery plan request is no longer pending");
+    if (!request || request.status !== "pending")
+      throw new Error("This recovery plan request is no longer pending");
     const { user } = await requireHost(ctx, request.stayId);
     const now = Date.now();
 
@@ -291,10 +333,14 @@ export const reviewOverduePlan = mutation({
       actorUserId: user._id,
       guestUserId: request.guestUserId,
       kind: "obligation",
-      action: decision === "approve" ? "overdue_plan_approved" : "overdue_plan_rejected",
-      detail: decision === "approve"
-        ? `Overdue recovery plan accepted for settlement by ${request.proposedDate}`
-        : "Overdue recovery plan declined",
+      action:
+        decision === "approve"
+          ? "overdue_plan_approved"
+          : "overdue_plan_rejected",
+      detail:
+        decision === "approve"
+          ? `Overdue recovery plan accepted for settlement by ${request.proposedDate}`
+          : "Overdue recovery plan declined",
       entityId: requestId,
     });
 
@@ -304,41 +350,58 @@ export const reviewOverduePlan = mutation({
 
 export const listOverduePlans = query({
   args: { stayId: v.id("stays") },
-  returns: v.array(v.object({
-    _id: v.id("overdueRecoveryRequests"),
-    guestUserId: v.id("users"),
-    guestName: v.string(),
-    obligationId: v.optional(v.id("obligations")),
-    proposedDate: v.string(),
-    proposedAmountCents: v.optional(v.number()),
-    note: v.string(),
-    status: v.union(v.literal("pending"), v.literal("approved"), v.literal("rejected")),
-    requestedAt: v.number(),
-    reviewedAt: v.optional(v.number()),
-    reviewNote: v.optional(v.string()),
-  })),
+  returns: v.array(
+    v.object({
+      _id: v.id("overdueRecoveryRequests"),
+      guestUserId: v.id("users"),
+      guestName: v.string(),
+      obligationId: v.optional(v.id("obligations")),
+      proposedDate: v.string(),
+      proposedAmountCents: v.optional(v.number()),
+      note: v.string(),
+      status: v.union(
+        v.literal("pending"),
+        v.literal("approved"),
+        v.literal("rejected"),
+      ),
+      requestedAt: v.number(),
+      reviewedAt: v.optional(v.number()),
+      reviewNote: v.optional(v.string()),
+    }),
+  ),
   handler: async (ctx, { stayId }) => {
     const { user, membership } = await requireMembership(ctx, stayId);
-    const requests = membership.role === "host"
-      ? await ctx.db.query("overdueRecoveryRequests").withIndex("by_stay_status", (q) => q.eq("stayId", stayId)).order("desc").take(50)
-      : await ctx.db.query("overdueRecoveryRequests").withIndex("by_guest_status", (q) => q.eq("guestUserId", user._id)).order("desc").take(50);
+    const requests =
+      membership.role === "host"
+        ? await ctx.db
+            .query("overdueRecoveryRequests")
+            .withIndex("by_stay_status", (q) => q.eq("stayId", stayId))
+            .order("desc")
+            .take(50)
+        : await ctx.db
+            .query("overdueRecoveryRequests")
+            .withIndex("by_guest_status", (q) => q.eq("guestUserId", user._id))
+            .order("desc")
+            .take(50);
 
     const stayRequests = requests.filter((r) => r.stayId === stayId);
-    return Promise.all(stayRequests.map(async (req) => {
-      const guest = await ctx.db.get(req.guestUserId);
-      return {
-        _id: req._id,
-        guestUserId: req.guestUserId,
-        guestName: guest?.name ?? "Guest",
-        obligationId: req.obligationId,
-        proposedDate: req.proposedDate,
-        proposedAmountCents: req.proposedAmountCents,
-        note: req.note,
-        status: req.status,
-        requestedAt: req.requestedAt,
-        reviewedAt: req.reviewedAt,
-        reviewNote: req.reviewNote,
-      };
-    }));
+    return Promise.all(
+      stayRequests.map(async (req) => {
+        const guest = await ctx.db.get(req.guestUserId);
+        return {
+          _id: req._id,
+          guestUserId: req.guestUserId,
+          guestName: guest?.name ?? "Guest",
+          obligationId: req.obligationId,
+          proposedDate: req.proposedDate,
+          proposedAmountCents: req.proposedAmountCents,
+          note: req.note,
+          status: req.status,
+          requestedAt: req.requestedAt,
+          reviewedAt: req.reviewedAt,
+          reviewNote: req.reviewNote,
+        };
+      }),
+    );
   },
 });

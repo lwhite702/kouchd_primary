@@ -2,6 +2,13 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-10-26 — Prepare launch candidate: scoped workspace screens, account capacity limits, telemetry privacy scrubbing, and native coordination screens (WRE-224)
+
+- Prepared account-wide Starter and Plus capacity limits while preserving existing access, and added telemetry privacy scrubbing.
+- Scoped workspace screens, separated financial summaries, and harmonized RevenueCat billing client authentication.
+- Added native shopping and check-in destinations, typed ledger contracts, and keyboard dismissal.
+- Synchronized release candidate metadata to `1.0.0-rc.11`.
+
 ## 2026-10-26 — Update Help Center & tooltips for 1.0 RC status and app support boundaries (WRE-238)
 
 - Created dedicated app support guide `help/support/app-support.mdx` clarifying that `help@kouchd.com` provides technical app assistance (account access, bug reports, and reminder settings), while Kouchd explicitly does not mediate interpersonal roommate conflicts, stay disputes, house rule issues, or external payment problems.
@@ -14,7 +21,6 @@ Internal engineering record. This file is excluded from Mintlify navigation and 
 - Refined all in-app tooltips and help tips across `components/authenticated-home.tsx`, `components/marketing/marketing-header.tsx`, and `components/household/payment-options.tsx` to use friendly, plainspoken, non-technical terminology.
 - Added `appSupport` URL to `lib/help-links.ts`.
 - Synchronized release candidate version to `1.0.0-rc.10` for runtime tooltip and helper updates under the 1.0 feature lock.
-
 
 ## 2026-10-26 — Fix iOS RootView compiler timeout (WRE-239)
 
@@ -328,3 +334,22 @@ Internal engineering record. This file is excluded from Mintlify navigation and 
 - Defined 14 canonical flags in `lib/flags/config.ts` covering household coordination, core roadmap features, onboarding, messaging, and RevenueCat monetization. Provisioned all 14 flags in PostHog project `Kouchd` (`595950`).
 - Integrated RevenueCat Web SDK and created responsive `PaywallModal` and `useKouchdPlus` gated behind `feature_revenuecat_paywall`, `feature_billing_portal`, `feature_kouchd_plus_entitlement`, and `feature_customer_center`.
 - Added automated unit and integration tests in `tests/feature-flags.test.ts`. Verified `npx convex codegen`, `npm run typecheck` (0 errors), `npm run test` (all 17 test suites, 77 tests pass), and `npm run lint`.
+
+## 2026-10-22 — WRE-224 launch candidate (unreleased)
+
+Prepared the isolated launch candidate with PR remediation, shared agreement
+acceptance, account capacity safeguards, lazy workspace screens, compact financial
+summaries, scoped native subscriptions and coordination screens, telemetry and
+personal-shopping privacy corrections. See LAUNCH_READINESS.md for decisions,
+evidence, provider gates and rollback. No production or store release is claimed.
+
+## 2026-10-23 — Launch validation follow-up (WRE-224)
+
+- Patched Next.js 16.4.3 and DOMPurify 3.4.17; full dependency audit is clear.
+- Fixed mixed billing offerings, modal submit guards, legacy agreement rows,
+  account-wide ownership capacity reads and privacy regression cases.
+- Typed native agreement data and guarded mutation completions across account,
+  stay and guest changes. App 143 tests and native 10 unit tests pass.
+- Production synthetic host journey passed and its stay is ended with history
+  retained. Signed device verification is blocked by a profile missing Apple
+  sign-in capability; provider settings and production code remain unchanged.

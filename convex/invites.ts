@@ -1,3 +1,4 @@
+import { assertPlanCapacity } from "./lib/planCapacity";
 import { v } from "convex/values";
 
 import { internal } from "./_generated/api";
@@ -100,6 +101,9 @@ export const accept = mutation({
     if (existing) throw new Error("Already a member of this stay");
     const memberCount = await ctx.db.query("memberships").withIndex("by_stay", (query) => query.eq("stayId", invite.stayId)).take(21);
     if (memberCount.filter((member) => member.status === "active").length >= 20) throw new Error("This stay has reached its member limit");
+    const joiningStay = await ctx.db.get(invite.stayId);
+    if (!joiningStay || joiningStay.status === "ended") throw new Error("Invite is invalid or expired");
+    await assertPlanCapacity(ctx, joiningStay.hostUserId, "guest", joiningStay.householdAccountId);
     const now = Date.now();
     await ctx.db.insert("memberships", { stayId: invite.stayId, userId: user._id, role: "guest", status: "active", joinedAt: now });
     const stay = await ctx.db.get(invite.stayId);

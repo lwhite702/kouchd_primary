@@ -92,7 +92,7 @@ export default function PrivacyPolicyPage() {
               <strong>Household Ledger &amp; Contribution Records:</strong> Contribution amounts, dates, categories, notes, receipt images, and chore point redemptions. <em>Note: Kouchd is an agreement and bookkeeping ledger; we do not store credit card numbers, process payments, or custody funds.</em>
             </li>
             <li style={{ marginBottom: "0.5rem" }}>
-              <strong>Technical &amp; Usage Telemetry:</strong> Browser type, operating system, IP address, and interaction timestamps necessary to prevent fraud and ensure platform reliability.
+              <strong>Technical &amp; Usage Telemetry:</strong> Browser or app version, operating system, IP address, and limited product-usage events. For signed-in sessions, analytics may use a pseudonymous account identifier and a generic screen or page category. We do not send names, email addresses, household text, invite tokens, or contribution amounts to product analytics.
             </li>
           </ul>
         </section>

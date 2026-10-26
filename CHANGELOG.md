@@ -31,6 +31,10 @@
 
 ### Added
 
+- Prepared account-wide Starter and Plus capacity checks with preserved existing access and a separate enforcement rollout switch.
+- Consolidated manual and scheduled agreement acceptance, corrected guest-specific updates, and retained clear system audit events.
+- Added native shopping and check-in destinations, scoped secondary feature subscriptions, typed ledger/subscription contracts, and keyboard dismissal.
+- Split the web workspace into lazy-loaded screens and forms, added compact server-authoritative financial totals, and corrected activity navigation and private shopping activity.
 - Host-configurable delayed guest agreement auto-acceptance with guest manual acceptance, system-approval tags and timestamps, and audited offer, acceptance, replacement, and setting changes. Hosts can also edit guest preferred names and view guest contact details.
 - Main website newsletter signup with explicit consent, server-side Loops contact sync, and matching privacy disclosures.
 - Added a More tab for secondary stay, account, and help actions, with short descriptions and clearer grouping. Moved less-used links off the bottoms of Home, Ledger, Chores, and Stay.
@@ -41,7 +45,6 @@
   - Backend: Asynchronous, non-blocking Convex internal action (`captureServerEventAction`) reporting server-side mutations to PostHog HTTP capture API with Stay group attribution.
   - Native iOS: `posthog-ios` SPM integration with native session replay, screen tracking, input masking, Clerk user identity sync, and group properties.
 - Modernized SwiftUI navigation toolbars with `.principal` titles, primary and secondary trailing action placement, and iOS 16+ semantic toolbar standards.
-
 - Replay QA site ownership verification nonce at `/.well-known/replay-qa-security-nonce` served with raw `text/plain; charset=utf-8` and excluded from authentication proxy middleware.
 - Enforced reward redemption balance checks and cumulative period credit caps on the backend, preserved remainder cents across weekly schedule totals, replaced punitive overdue reminder payloads with supportive household copy, and added host-reviewed overdue catch-up recovery plans.
 - Targeted crawl policy in robots.ts and dynamic sitemap.xml for public marketing and legal routes (including /about, /brand, /privacy, /terms, and /sms-opt-in), paired with explicit noindex and nofollow robots metadata on dynamic single-use invitation tokens and sign-in/sign-up authentication routes.

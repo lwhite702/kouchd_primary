@@ -121,8 +121,8 @@ export async function offerGuestAgreement(
   if (membership.acceptedTermsId === termsId) return null;
 
   const existingOffers = await ctx.db.query("agreementOffers")
-    .withIndex("by_stay_guest", (query) => query.eq("stayId", stayId).eq("guestUserId", guestUserId))
-    .take(100);
+    .withIndex("by_stay_guest_status", q => q.eq("stayId", stayId).eq("guestUserId", guestUserId).eq("status", "pending"))
+    .take(500);
   for (const offer of existingOffers) {
     if (offer.status === "pending") {
       await ctx.db.patch(offer._id, { status: "replaced" });
@@ -154,80 +154,92 @@ export async function offerGuestAgreement(
   return offerId;
 }
 
-export async function acceptGuestTermsAutomatically(
+/** Shared transaction for manual and scheduled guest acceptance. */
+export async function acceptGuestAgreement(
   ctx: MutationCtx,
-  args: { stayId: Id<"stays">; guestUserId: Id<"users">; actorUserId: Id<"users">; membership: Doc<"memberships">; terms: Doc<"terms"> },
+  args: { membership: Doc<"memberships">; terms: Doc<"terms">; method: "guest" | "system_auto" },
 ) {
-  const { stayId, guestUserId, actorUserId, membership, terms } = args;
+  const { membership, terms, method } = args;
+  const stayId = membership.stayId;
+  const guestUserId = membership.userId;
+  const actorUserId = method === "guest" ? guestUserId : undefined;
+  const actorType = method === "system_auto" ? "system" as const : "user" as const;
   const stay = await ctx.db.get(stayId);
-  if (!stay || stay.status === "ended") throw new Error("No active terms to accept");
-  if (membership.role !== "guest" || membership.status !== "active" || membership.userId !== guestUserId || membership.stayId !== stayId) {
-    throw new Error("Choose an active guest in this household");
+  if (!stay || stay.status === "ended" || membership.role !== "guest" || membership.status !== "active" || terms.stayId !== stayId) {
+    throw new Error("No active guest agreement to accept");
   }
-  if (membership.acceptedTermsId === terms._id) return;
   const now = Date.now();
-  const existing = await ctx.db.query("termsAcceptances")
-    .withIndex("by_terms_user", (query) => query.eq("termsId", terms._id).eq("userId", guestUserId))
-    .unique();
-  if (!existing) {
-    await ctx.db.insert("termsAcceptances", { stayId, termsId: terms._id, userId: guestUserId, acceptedAt: now, method: "system_auto", systemAutoApprovedAt: now });
-  } else if (existing.method !== "system_auto" || existing.systemAutoApprovedAt === undefined) {
-    await ctx.db.patch(existing._id, { method: "system_auto", systemAutoApprovedAt: now });
-  }
-  if (membership.acceptedTermsId && terms.effectiveFrom) {
-    const effectiveBoundary = calendarDateInTimezone(new Date(now), stay.timezone);
-    if (terms.effectiveFrom !== effectiveBoundary) await ctx.db.patch(terms._id, { effectiveFrom: effectiveBoundary });
-    let cursor: string | null = null;
-    let isDone = false;
-    while (!isDone) {
-      const page = await ctx.db.query("obligations")
-        .withIndex("by_stay_guest_and_voided", (query) => query.eq("stayId", stayId).eq("guestUserId", guestUserId).eq("voidedAt", undefined))
-        .paginate({ cursor, numItems: 500 });
-      for (const obligation of page.page) {
-        if (obligation.termsId === terms._id || obligation.voidedAt || obligation.type === "adhoc" || obligation.type === "occupancy" || obligation.periodEnd < effectiveBoundary) continue;
+  const alreadyAccepted = membership.acceptedTermsId === terms._id;
+  if (!alreadyAccepted) {
+    const existing = await ctx.db.query("termsAcceptances")
+      .withIndex("by_terms_user", q => q.eq("termsId", terms._id).eq("userId", guestUserId)).unique();
+    // A retry must never rewrite the original acceptance method or timestamp.
+    if (!existing) await ctx.db.insert("termsAcceptances", {
+      stayId, termsId: terms._id, userId: guestUserId, acceptedAt: now, method,
+      ...(method === "system_auto" ? { systemAutoApprovedAt: now } : {}),
+    });
+    if (membership.acceptedTermsId && terms.effectiveFrom) {
+      const effectiveBoundary = calendarDateInTimezone(new Date(now), stay.timezone);
+      await ctx.db.patch(terms._id, { effectiveFrom: effectiveBoundary });
+      // Snapshot the index before changing indexed fields; replacements cannot
+      // enter this scan or shift a subsequent page.
+      const guests = await ctx.db.query("memberships")
+        .withIndex("by_stay_role_status", q => q.eq("stayId", stayId).eq("role", "guest").eq("status", "active")).take(2);
+      const scoped = await ctx.db.query("obligations")
+        .withIndex("by_stay_guest_and_voided", q => q.eq("stayId", stayId).eq("guestUserId", guestUserId).eq("voidedAt", undefined))
+        .take(4097);
+      const legacy = guests.length === 1 ? await ctx.db.query("obligations")
+        .withIndex("by_stay_guest_and_voided", q => q.eq("stayId", stayId).eq("guestUserId", undefined).eq("voidedAt", undefined)).take(4097) : [];
+      const previous = [...scoped, ...legacy];
+      if (previous.length > 4096) throw new Error("This schedule history needs review before replacing the agreement. Existing records have been retained.");
+      for (const obligation of previous) {
+        if (obligation.termsId === terms._id || obligation.type === "adhoc" || obligation.type === "occupancy" || obligation.periodEnd < effectiveBoundary) continue;
         if (obligation.periodStart < effectiveBoundary) {
-          const preservedPeriodEnd = addCalendarDays(effectiveBoundary, -1);
-          const sourceTerms = obligation.termsId ? await ctx.db.get(obligation.termsId) : stay.currentTermsId ? await ctx.db.get(stay.currentTermsId) : null;
-          const preservedDays = stayDays(obligation.periodStart, preservedPeriodEnd);
-          const fullPeriodDays = stayDays(obligation.periodStart, obligation.periodEnd);
-          const preservedAmount = sourceTerms
-            ? buildObligationPeriods({ ...sourceTerms, startDate: obligation.periodStart, endDate: preservedPeriodEnd })[0]?.baseAmountCents ?? 0
-            : Math.round((obligation.baseAmountCents * preservedDays) / fullPeriodDays);
-          if (preservedDays > 0 && preservedAmount > 0) {
-            await ctx.db.insert("obligations", {
-              stayId,
-              termsId: obligation.termsId ?? sourceTerms?._id,
-              guestUserId,
-              type: "cadence",
-              periodStart: obligation.periodStart,
-              periodEnd: preservedPeriodEnd,
-              dueDate: obligation.dueDate,
-              baseAmountCents: preservedAmount,
-              lateFeeWaivedAt: obligation.lateFeeWaivedAt,
-              lateFeeWaivedBy: obligation.lateFeeWaivedBy,
-              createdAt: now,
-            });
-          }
+          const periodEnd = addCalendarDays(effectiveBoundary, -1);
+          const source = obligation.termsId ? await ctx.db.get(obligation.termsId) : null;
+          const amount = source
+            ? buildObligationPeriods({ ...source, startDate: obligation.periodStart, endDate: periodEnd })[0]?.baseAmountCents ?? 0
+            : Math.round(obligation.baseAmountCents * stayDays(obligation.periodStart, periodEnd) / stayDays(obligation.periodStart, obligation.periodEnd));
+          if (amount > 0) await ctx.db.insert("obligations", {
+            stayId, termsId: obligation.termsId, guestUserId, type: "cadence",
+            periodStart: obligation.periodStart, periodEnd, dueDate: obligation.dueDate,
+            baseAmountCents: amount, lateFeeWaivedAt: obligation.lateFeeWaivedAt,
+            lateFeeWaivedBy: obligation.lateFeeWaivedBy, createdAt: now,
+          });
         }
-        await ctx.db.patch(obligation._id, { voidedAt: now, voidedBy: actorUserId });
+        await ctx.db.patch(obligation._id, { voidedAt: now, voidedBy: actorUserId, voidedSource: actorType });
       }
-      cursor = page.continueCursor;
-      isDone = page.isDone;
     }
+    await ctx.db.patch(membership._id, { acceptedTermsId: terms._id });
+    await ensureObligationsForTerms(ctx, stayId, terms._id, guestUserId, actorUserId);
+    await recordActivity(ctx, { stayId, actorUserId, actorType, guestUserId, kind: "terms",
+      action: method === "system_auto" ? "auto_accepted" : "accepted",
+      detail: method === "system_auto" ? "System auto-approved the guest agreement after the configured delay" : "Guest accepted agreement",
+      entityId: terms._id,
+    });
   }
-  await ctx.db.patch(membership._id, { acceptedTermsId: terms._id });
-  await ensureObligationsForTerms(ctx, stayId, terms._id, guestUserId, actorUserId);
+  const offers = await ctx.db.query("agreementOffers")
+    .withIndex("by_terms_guest", q => q.eq("termsId", terms._id).eq("guestUserId", guestUserId)).take(100);
+  for (const offer of offers) if (offer.status === "pending") await ctx.db.patch(offer._id, {
+    status: method === "system_auto" && !alreadyAccepted ? "auto_accepted" : "accepted",
+    acceptedAt: now,
+    ...(method === "system_auto" && !alreadyAccepted ? { systemAutoApprovedAt: now } : { acceptedBy: guestUserId }),
+  });
+  await ctx.scheduler.runAfter(0, internal.knock.cancelAgreementPending, { stayId, userId: guestUserId, role: "guest" });
+  return activateAcceptedStay(ctx, stayId);
+}
 
-  const memberships = await ctx.db.query("memberships").withIndex("by_stay", (query) => query.eq("stayId", stayId)).take(50);
-  let allAccepted = Boolean(stay && memberships.filter((item) => item.status === "active").length >= 2);
-  for (const item of memberships) {
-    if (item.status !== "active") continue;
-    const itemTerms = item.role === "guest"
-      ? await getCurrentGuestTerms(ctx, stayId, item.userId)
-      : stay?.currentTermsId ? await ctx.db.get(stay.currentTermsId) : null;
-    const acceptedTermsId = item._id === membership._id ? terms._id : item.acceptedTermsId;
-    if (!itemTerms || acceptedTermsId !== itemTerms._id) allAccepted = false;
-  }
-  if (stay && allAccepted && stay.status !== "active") await ctx.db.patch(stayId, { status: "active", updatedAt: now });
-  await recordActivity(ctx, { stayId, actorUserId, guestUserId, kind: "terms", action: "auto_accepted", detail: "System auto-approved the guest agreement after the configured delay", entityId: terms._id });
+export async function activateAcceptedStay(ctx: MutationCtx, stayId: Id<"stays">) {
+  const stay = await ctx.db.get(stayId);
+  if (!stay || stay.status === "ended") return false;
+  const members = (await ctx.db.query("memberships").withIndex("by_stay", q => q.eq("stayId", stayId)).take(50))
+    .filter(m => m.status === "active");
+  const accepted = await Promise.all(members.map(async member => {
+    const terms = member.role === "guest" ? await getCurrentGuestTerms(ctx, stayId, member.userId)
+      : stay.currentTermsId ? await ctx.db.get(stay.currentTermsId) : null;
+    return Boolean(terms && member.acceptedTermsId === terms._id);
+  }));
+  const allAccepted = members.length >= 2 && accepted.every(Boolean);
+  if (allAccepted && stay.status !== "active") await ctx.db.patch(stayId, { status: "active", updatedAt: Date.now() });
+  return allAccepted;
 }

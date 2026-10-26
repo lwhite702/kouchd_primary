@@ -381,6 +381,7 @@ export function HostOnboardingWizard({
               <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
                 <input
                   type="text"
+                  aria-label="Custom house rule title"
                   placeholder="Rule title (e.g. Lock deadbolt whenever leaving)"
                   value={customRuleTitle}
                   onChange={(e) => setCustomRuleTitle(e.target.value)}
@@ -388,6 +389,7 @@ export function HostOnboardingWizard({
                 />
                 <input
                   type="text"
+                  aria-label="Custom house rule details"
                   placeholder="Optional details or context"
                   value={customRuleDesc}
                   onChange={(e) => setCustomRuleDesc(e.target.value)}
@@ -504,8 +506,10 @@ export function HostOnboardingWizard({
                     {SUGGESTED_CONTRIBUTION_TASKS.map((task) => {
                       const isSelected = selectedTasks.some((t) => t.id === task.id);
                       return (
-                        <div
+                        <button
                           key={task.id}
+                          type="button"
+                          aria-pressed={isSelected}
                           onClick={() => toggleTask(task)}
                           style={{
                             display: "flex",
@@ -517,6 +521,8 @@ export function HostOnboardingWizard({
                             background: isSelected ? "#f1f6f1" : "#fff",
                             cursor: "pointer",
                             transition: "all 0.15s ease",
+                            textAlign: "left",
+                            font: "inherit",
                           }}
                         >
                           <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
@@ -557,7 +563,7 @@ export function HostOnboardingWizard({
                           >
                             +{task.defaultPoints} {coinName}
                           </span>
-                        </div>
+                        </button>
                       );
                     })}
                   </div>
@@ -789,11 +795,13 @@ export function HostOnboardingWizard({
               </p>
 
               <div style={{ marginBottom: "0.75rem" }}>
-                <label style={{ display: "block", fontSize: "0.8rem", fontWeight: 700, color: "#184f3a", marginBottom: "0.3rem" }}>
+                <label htmlFor="host-onboarding-phone" style={{ display: "block", fontSize: "0.8rem", fontWeight: 700, color: "#184f3a", marginBottom: "0.3rem" }}>
                   Mobile Phone Number
                 </label>
                 <input
+                  id="host-onboarding-phone"
                   type="tel"
+                  autoComplete="tel"
                   defaultValue={viewer?.phone ?? ""}
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="+1 (555) 019-2834"

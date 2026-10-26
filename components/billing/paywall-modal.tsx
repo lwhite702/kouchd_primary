@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useCallback, useEffect, useRef, useState, useTransition } from "react";
-import "@revenuecat/purchases-js/styles";
 import {
   presentRevenueCatPaywall,
   checkKouchdPlusAccess,

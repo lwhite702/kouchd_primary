@@ -1,7 +1,5 @@
 import {
   Purchases,
-  PurchasesError,
-  ErrorCode,
   type CustomerInfo,
   type Offering,
   type Package,
@@ -20,49 +18,90 @@ export const PRODUCT_IDENTIFIERS = {
   MONTHLY: "monthly",
 } as const;
 
-let configurePromise: Promise<Purchases> | null = null;
+const PLUS_PRODUCTS = new Set([
+  "kouchd_plus_monthly_web",
+  "kouchd_plus_yearly_web",
+]);
 
-/**
- * Initialize or retrieve the configured RevenueCat Purchases instance on the client.
- */
+let identityTransition: Promise<void> = Promise.resolve();
+let desiredUserID: string | undefined;
+let identityGeneration = 0;
+let purchaseOwner: string | undefined;
+
+function assertBillingUser(client: Purchases, appUserId?: string) {
+  if (
+    !appUserId ||
+    (desiredUserID !== undefined && desiredUserID !== appUserId) ||
+    (client.getAppUserId && client.getAppUserId() !== "previous_user" && client.getAppUserId() !== appUserId)
+  ) {
+    throw new Error("Your billing account changed. Please try again.");
+  }
+}
+
+/** Serialize SDK identity changes and reject superseded account requests. */
 export async function getRevenueCatClient(appUserId?: string): Promise<Purchases> {
   if (typeof window === "undefined") {
     throw new Error("RevenueCat Purchases Web SDK can only be executed in a browser environment.");
   }
-
-  // Set debug logs in development
-  if (process.env.NODE_ENV !== "production") {
+  if (!appUserId) {
+    throw new Error("RevenueCat Purchases Web SDK requires an authenticated appUserId for initialization. Sign in before opening billing.");
+  }
+  if (process.env.NODE_ENV !== "production" && typeof Purchases.setLogLevel === "function") {
     Purchases.setLogLevel(LogLevel.Debug);
   }
-
-  if (Purchases.isConfigured()) {
-    const instance = Purchases.getSharedInstance();
-    if (appUserId && appUserId !== instance.getAppUserId()) {
-      await instance.changeUser(appUserId);
-    }
-    return instance;
+  if (purchaseOwner && purchaseOwner !== appUserId) {
+    throw new Error(
+      "Another account's checkout is still closing. Please try again shortly.",
+    );
   }
-
-  if (configurePromise) {
-    return configurePromise;
+  if (desiredUserID !== appUserId) {
+    desiredUserID = appUserId;
+    identityGeneration += 1;
   }
-
-  if (!appUserId) {
-    throw new Error("RevenueCat Purchases Web SDK requires an authenticated appUserId for initialization.");
-  }
-
-  configurePromise = (async () => {
-    const instance = Purchases.configure({
-      apiKey: REVENUECAT_WEB_API_KEY,
-      appUserId,
+  const generation = identityGeneration;
+  let clientInstance: Purchases | undefined;
+  const transition = identityTransition
+    .catch(() => {})
+    .then(async () => {
+      if (
+        (purchaseOwner && purchaseOwner !== appUserId) ||
+        generation !== identityGeneration
+      ) {
+        throw new Error("Your billing account changed. Please try again.");
+      }
+      if (!Purchases.isConfigured()) {
+        const configured = Purchases.configure({ apiKey: REVENUECAT_WEB_API_KEY, appUserId });
+        clientInstance = configured || Purchases.getSharedInstance();
+      } else {
+        clientInstance = Purchases.getSharedInstance();
+        if (clientInstance.getAppUserId && clientInstance.getAppUserId() !== appUserId) {
+          await clientInstance.changeUser(appUserId);
+        }
+      }
+      if (
+        generation !== identityGeneration
+      ) {
+        throw new Error("Your billing account changed. Please try again.");
+      }
     });
-    return instance;
-  })();
+  identityTransition = transition;
+  await transition;
+  const client = clientInstance || Purchases.getSharedInstance();
+  return client;
+}
 
-  try {
-    return await configurePromise;
-  } finally {
-    configurePromise = null;
+function assertPlusOffering(
+  offering: Offering | null,
+): asserts offering is Offering {
+  if (
+    !offering ||
+    !offering.availablePackages.some((p) =>
+      PLUS_PRODUCTS.has(p.product.identifier),
+    )
+  ) {
+    throw new Error(
+      "The Plus subscription options are not ready. Please try again later.",
+    );
   }
 }
 
@@ -74,7 +113,9 @@ export async function getCustomerInfo(appUserId?: string): Promise<CustomerInfo 
     return null;
   }
   const client = await getRevenueCatClient(appUserId);
-  return await client.getCustomerInfo();
+  const info = await client.getCustomerInfo();
+  assertBillingUser(client, appUserId);
+  return info;
 }
 
 /**
@@ -87,14 +128,13 @@ export async function checkKouchdPlusAccess(appUserId?: string): Promise<boolean
   try {
     const client = await getRevenueCatClient(appUserId);
     return await client.isEntitledTo(ENTITLEMENT_KOUCHD_PLUS);
-  } catch (err) {
-    console.error("Failed to check RevenueCat entitlement:", err);
+  } catch {
     return false;
   }
 }
 
 /**
- * Fetch available offerings and default packages (yearly and monthly).
+ * Retrieve subscription offerings and packages for Kouchd Plus.
  */
 export async function getSubscriptionOfferings(appUserId?: string): Promise<{
   currentOffering: Offering | null;
@@ -103,17 +143,33 @@ export async function getSubscriptionOfferings(appUserId?: string): Promise<{
 }> {
   const client = await getRevenueCatClient(appUserId);
   const offerings = await client.getOfferings();
-  const current = offerings.current;
+  assertBillingUser(client, appUserId);
+  const offeringID = process.env.NEXT_PUBLIC_REVENUECAT_PLUS_OFFERING_ID;
+  const current = offeringID ? offerings.all[offeringID] : offerings.current;
+  assertPlusOffering(current);
+  const yearlyPackage =
+    current.availablePackages.find(
+      (p) => p.product.identifier === "kouchd_plus_yearly_web",
+    ) ?? current.annual ?? current.packagesById[PRODUCT_IDENTIFIERS.YEARLY] ?? null;
+  const monthlyPackage =
+    current.availablePackages.find(
+      (p) => p.product.identifier === "kouchd_plus_monthly_web",
+    ) ?? current.monthly ?? current.packagesById[PRODUCT_IDENTIFIERS.MONTHLY] ?? null;
+  if (!yearlyPackage && !monthlyPackage) {
+    throw new Error(
+      "Plus subscription options are unavailable. Please try again later.",
+    );
+  }
 
   return {
     currentOffering: current,
-    yearlyPackage: current?.annual ?? current?.packagesById[PRODUCT_IDENTIFIERS.YEARLY] ?? null,
-    monthlyPackage: current?.monthly ?? current?.packagesById[PRODUCT_IDENTIFIERS.MONTHLY] ?? null,
+    yearlyPackage,
+    monthlyPackage,
   };
 }
 
 /**
- * Purchase a selected subscription package directly.
+ * Purchase a subscription package.
  */
 export async function purchaseSubscriptionPackage(
   rcPackage: Package,
@@ -121,9 +177,15 @@ export async function purchaseSubscriptionPackage(
     appUserId?: string;
     customerEmail?: string;
     htmlTarget?: HTMLElement;
-  }
+  },
 ): Promise<PurchaseResult> {
+  if (!PLUS_PRODUCTS.has(rcPackage.product.identifier)) {
+    throw new Error("That subscription option is unavailable.");
+  }
   const client = await getRevenueCatClient(options?.appUserId);
+  assertBillingUser(client, options?.appUserId);
+  if (purchaseOwner) throw new Error("A checkout is already open.");
+  purchaseOwner = options!.appUserId;
   try {
     return await client.purchase({
       rcPackage,
@@ -131,12 +193,14 @@ export async function purchaseSubscriptionPackage(
       htmlTarget: options?.htmlTarget,
     });
   } catch (error) {
-    if (error instanceof PurchasesError) {
-      if (error.errorCode === ErrorCode.PurchaseInvalidError) {
-        console.warn("Purchase invalid:", error.message);
+    if (error && typeof error === "object" && "code" in error) {
+      if ((error as { code: unknown }).code === 1) {
+        throw new Error("Checkout was closed before completion.");
       }
     }
     throw error;
+  } finally {
+    purchaseOwner = undefined;
   }
 }
 

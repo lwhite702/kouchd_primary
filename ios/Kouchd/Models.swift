@@ -67,8 +67,13 @@ enum Display {
   static func money(_ cents: Int) -> String {
     (Double(cents) / 100).formatted(.currency(code: "USD"))
   }
-  static func date(_ date: Date = .now) -> String {
-    date.formatted(.iso8601.year().month().day().dateSeparator(.dash))
+  static func date(_ date: Date = .now, timezone: String = TimeZone.current.identifier) -> String {
+    let formatter = DateFormatter()
+    formatter.locale = Locale(identifier: "en_US_POSIX")
+    formatter.calendar = Calendar(identifier: .gregorian)
+    formatter.timeZone = TimeZone(identifier: timezone) ?? .current
+    formatter.dateFormat = "yyyy-MM-dd"
+    return formatter.string(from: date)
   }
 }
 
@@ -230,6 +235,8 @@ enum KouchdRoute: Hashable {
   case schedule
   case settings
   case activity
+  case shopping
+  case checkins
   case householdGuide
   case createStay
   case joinCode
@@ -247,4 +254,40 @@ enum KouchdRoute: Hashable {
   case adminUserSmsHistory(userID: String)
   case adminUser(id: String)
   case adminStay(id: String)
+}
+
+
+struct LedgerRecord: Decodable, Identifiable {
+  let id: String
+  let baseAmountCents: Int
+  let effectiveChargeCents: Int
+  let balanceCents: Int
+  let dueDate: String
+  let status: String
+  enum CodingKeys: String, CodingKey { case id = "_id", baseAmountCents, effectiveChargeCents, balanceCents, dueDate, status }
+}
+
+struct AccountSubscriptionSummary: Decodable {
+  let canManageSubscription: Bool
+  let plan: String
+  let status: String
+  let currentPeriodEndsAt: Double?
+}
+
+struct AgreementRecord: Decodable, Identifiable {
+  let id: String
+  let version: Int
+  let startDate: String
+  let endDate: String
+  let cadence: String
+  let rateCents: Int
+  let billingBasis: String?
+  enum CodingKeys: String, CodingKey { case id = "_id", version, startDate, endDate, cadence, rateCents, billingBasis }
+}
+
+extension Value {
+  func decoded<T: Decodable>(_ type: T.Type) -> T? {
+    guard let data = try? JSONEncoder().encode(self) else { return nil }
+    return try? JSONDecoder().decode(type, from: data)
+  }
 }

@@ -97,10 +97,14 @@ struct AgreementScreen: View {
   var body: some View {
     Page(title: "Your agreement") {
       Card {
-        Pill(text: "Version \(store.bundle["terms"]["version"].int)")
-        DataRow(title: "Dates", detail: store.bundle["terms"]["startDate"].text + " – " + store.bundle["terms"]["endDate"].text)
-        DataRow(title: "Amount", detail: Display.money(store.bundle["terms"]["rateCents"].int))
-        DataRow(title: "Cadence", detail: store.bundle["terms"]["cadence"].text.capitalized)
+        if let terms = store.typedAgreement {
+          Pill(text: "Version \(terms.version)")
+          DataRow(title: "Dates", detail: terms.startDate + " – " + terms.endDate)
+          DataRow(title: "Amount", detail: Display.money(terms.rateCents))
+          DataRow(title: "Cadence", detail: terms.cadence.capitalized)
+        } else {
+          Text("Agreement details couldn't be read. Reopen this stay to try again.").foregroundStyle(Palette.muted)
+        }
         DataRow(title: "Billing", detail: store.bundle["terms"]["billingBasis"].text.replacingOccurrences(of: "_", with: " ").capitalized)
         Text(store.bundle["terms"]["houseNotes"].text).font(.subheadline)
         ForEach(store.bundle["terms"]["houseRules"].items.indices, id: \.self) { index in
@@ -133,7 +137,7 @@ struct AgreementScreen: View {
               if cadence == "weekly" { args["initialPaymentDayOfWeek"] = Double(weekday) }
               _ = await store.mutate("terms:acceptCurrent", args)
             }
-          }
+          }.disabled(store.typedAgreement == nil)
         }
       }
     }

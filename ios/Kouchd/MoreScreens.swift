@@ -21,7 +21,9 @@ struct MoreScreen: View {
       if store.isHost {
         Card {
           Text("Manage this stay").font(.headline)
-          MoreActionRow(title: "Host controls", detail: "Edit the agreement, house details, and contribution options.", symbol: "slider.horizontal.3", route: .hostControls)
+          if !store.isEnded {
+            MoreActionRow(title: "Host controls", detail: "Edit the agreement, house details, and contribution options.", symbol: "slider.horizontal.3", route: .hostControls)
+          }
           MoreActionRow(title: "Schedule requests", detail: "Review requests to change the contribution rhythm.", symbol: "calendar", route: .schedule)
           if usesOccupiedNights {
             MoreActionRow(title: "Occupied nights", detail: "Record or review nights included in the agreement.", symbol: "moon", route: .occupancy)
@@ -42,6 +44,11 @@ struct MoreScreen: View {
         }
       }
 
+      Card {
+        Text("Household coordination").font(.headline)
+        MoreActionRow(title: "Shopping list", detail: "Keep shared items and your own list together.", symbol: "basket", route: .shopping)
+        MoreActionRow(title: "Check-ins", detail: "Share updates and follow up with your host or guest.", symbol: "bubble.left.and.bubble.right", route: .checkins)
+      }
       Card {
         Text("Account & help").font(.headline)
         MoreActionRow(title: "Profile & reminders", detail: "Update your name, phone number, and notifications.", symbol: "person.crop.circle", route: .settings)
@@ -180,6 +187,7 @@ struct ScheduleScreen: View {
         }
       }
     }
+    .stayFeature(.schedule, store: store)
   }
 }
 
@@ -223,6 +231,7 @@ struct OccupancyScreen: View {
         }
       }
     }
+    .stayFeature(.occupancy, store: store)
   }
 }
 
@@ -308,6 +317,7 @@ struct RewardsScreen: View {
         }
       }
     }
+    .stayFeature(.rewards, store: store)
   }
 }
 
@@ -335,6 +345,8 @@ struct SettingsScreen: View {
   @State private var phone = ""
   @State private var email = true
   @State private var sms = false
+  @State private var showAccount = false
+  @State private var saving = false
   var body: some View {
     Page(title: "Settings") {
       Card {
@@ -357,7 +369,7 @@ struct SettingsScreen: View {
         .font(.subheadline.weight(.semibold))
         PrimaryButton(title: "Save preferences") {
           savePreferences()
-        }
+        }.disabled(saving)
       }
       Card {
         Text("Account").font(.headline)
@@ -372,7 +384,7 @@ struct SettingsScreen: View {
           NavigationLink("Subscription", value: KouchdRoute.subscription)
         }
         NavigationLink("About Kouchd", value: KouchdRoute.about)
-        UserButton()
+        Button("Manage account & security") { showAccount = true }
         DataRow(title: "Kouchd version",
                 detail: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "—")
         Button("Sign out") {
@@ -388,7 +400,7 @@ struct SettingsScreen: View {
     }
     .toolbar {
       ToolbarItem(placement: .confirmationAction) {
-        Button("Save") { savePreferences() }
+        Button("Save") { savePreferences() }.disabled(saving)
       }
     }
     .onAppear {
@@ -397,10 +409,14 @@ struct SettingsScreen: View {
       email = store.viewer["notifyEmail"].flag
       sms = store.viewer["notifySms"].flag
     }
+    .sheet(isPresented: $showAccount) { UserProfileView() }
   }
 
   private func savePreferences() {
+    guard !saving else { return }
+    saving = true
     Task {
+      defer { saving = false }
       let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
       guard !trimmed.isEmpty else {
         store.error = "Enter your name before saving."
@@ -489,6 +505,7 @@ struct AdminScreen: View {
       }
     }
     .task { store.loadAdmin() }
+    .onDisappear { store.stopAdmin("overview") }
   }
 }
 
@@ -526,6 +543,7 @@ struct AdminUserScreen: View {
       NavigationLink("SMS consent history", value: KouchdRoute.adminUserSmsHistory(userID: userID))
     }
     .task { store.loadAdminUser(userID) }
+    .onDisappear { store.stopAdmin("user") }
     .confirmationDialog("Change this person's platform access?", isPresented: $confirmRoleChange) {
       Button(store.adminUserDetail["user"]["isAdmin"].flag ? "Remove administrator access" : "Grant administrator access", role: .destructive) {
         Task { _ = await store.mutate("admin:toggleAdmin", [
@@ -570,6 +588,7 @@ struct AdminStayScreen: View {
         Card { Text(store.adminStayDetail["activity"].items[index]["detail"].text) }
       }
     }.task { store.loadAdminStay(stayID) }
+      .onDisappear { store.stopAdmin("stay") }
   }
 }
 
@@ -640,6 +659,8 @@ struct AdminFinancialScreen: View {
       Text("Audited charges").font(.headline)
       AdminObligationList(records: store.adminFinancials["auditedObligations"].items)
     }
+    .task { store.loadAdminFinancial() }
+    .onDisappear { store.stopAdmin("financial") }
   }
 }
 

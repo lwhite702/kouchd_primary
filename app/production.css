@@ -2297,3 +2297,6 @@ body {
 }
 
 
+
+.workspace-dialog, .billing-dialog { margin: auto; border: 0; max-height: 90dvh; overflow-y: auto; }
+.workspace-dialog::backdrop, .billing-dialog::backdrop { background: rgba(17, 32, 25, .45); }

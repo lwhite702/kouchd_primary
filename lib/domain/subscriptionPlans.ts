@@ -55,10 +55,7 @@ export interface PlanLimits {
 
 export const PLAN_LIMITS: Readonly<Record<SubscriptionPlan, PlanLimits>> = {
   starter: { maxActiveStays: 1, maxActiveGuests: 1 },
-  // The proposal describes Plus as supporting up to three active guests/rooms.
-  // Treat each concurrent room/stay as one slot for shadow measurement; keep
-  // this advisory until product confirms whether the limit is per guest, room,
-  // or both.
+  // Capacity is shared across the host billing account.
   hostPlus: { maxActiveStays: 3, maxActiveGuests: 3 },
   // TODO(product/engineering): define finite abuse and system guardrails before
   // launch. These null values mean no commercial product cap, not infinity.

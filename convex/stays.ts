@@ -1,4 +1,6 @@
 import { v } from "convex/values";
+import schema from "./schema";
+import { assertPlanCapacity } from "./lib/planCapacity";
 
 import { mutation, query } from "./_generated/server";
 import { requireCurrentUser, requireHost, requireMembership } from "./lib/auth";
@@ -108,6 +110,7 @@ export const create = mutation({
     assertPaymentOptionsInput(paymentOptions);
     const now = Date.now();
     const referralCode = generateReferralCode();
+    await assertPlanCapacity(ctx, user._id, "stay");
     const householdAccountId = await getOrCreateHouseholdAccount(ctx, user._id);
     const stayId = await ctx.db.insert("stays", {
       hostUserId: user._id,
@@ -215,25 +218,32 @@ export const updatePaymentOptions = mutation({
   },
 });
 
+const stayDocument = v.object({ ...schema.tables.stays.validator.fields, _id: v.id("stays"), _creationTime: v.number() });
+const memberDocument = v.object({ ...schema.tables.memberships.validator.fields, _id: v.id("memberships"), _creationTime: v.number() });
+const termsDocument = v.object({ ...schema.tables.terms.validator.fields, _id: v.id("terms"), _creationTime: v.number() });
+const offerDocument = v.object({ ...schema.tables.agreementOffers.validator.fields, _id: v.id("agreementOffers"), _creationTime: v.number() });
+
 export const listMine = query({
   args: {},
-  returns: v.array(v.any()),
+  returns: v.array(v.object({ stay: stayDocument, membership: memberDocument })),
   handler: async (ctx) => {
     const user = await requireCurrentUser(ctx);
     const memberships = await ctx.db.query("memberships").withIndex("by_user", (query) => query.eq("userId", user._id)).take(50);
-    const results = [];
-    for (const membership of memberships) {
-      if (membership.status !== "active") continue;
+    const results = await Promise.all(memberships.filter(m => m.status === "active").map(async membership => {
       const stay = await ctx.db.get(membership.stayId);
-      if (stay) results.push({ stay, membership });
-    }
-    return results;
+      return stay ? { stay, membership } : null;
+    }));
+    return results.filter((result): result is NonNullable<typeof result> => result !== null);
   },
 });
 
 export const getBundle = query({
   args: { stayId: v.id("stays") },
-  returns: v.any(),
+  returns: v.object({ stay: stayDocument, terms: v.union(termsDocument, v.null()), membership: memberDocument,
+    members: v.array(v.object({ membership: memberDocument, person: v.object({
+      id: v.id("users"), name: v.string(), imageUrl: v.optional(v.string()), email: v.optional(v.string()), phone: v.optional(v.string()),
+    }), terms: v.optional(v.union(termsDocument, v.null())), agreementOffer: v.optional(v.union(offerDocument, v.null())) })),
+  }),
   handler: async (ctx, { stayId }) => {
     const { membership } = await requireMembership(ctx, stayId);
     const stay = await ctx.db.get(stayId);
@@ -242,8 +252,7 @@ export const getBundle = query({
       ? await getCurrentGuestTerms(ctx, stayId, membership.userId)
       : stay.currentTermsId ? await ctx.db.get(stay.currentTermsId) : null;
     const memberships = await ctx.db.query("memberships").withIndex("by_stay", (query) => query.eq("stayId", stayId)).take(50);
-    const members = [];
-    for (const item of memberships) {
+    const membersWithMissing = await Promise.all(memberships.map(async item => {
       const person = await ctx.db.get(item.userId);
       if (person) {
         const guestTerms = membership.role === "host"
@@ -252,14 +261,14 @@ export const getBundle = query({
         const agreementOffer = membership.role === "host" && item.role === "guest"
           ? (await ctx.db.query("agreementOffers")
             .withIndex("by_stay_guest", (query) => query.eq("stayId", stayId).eq("guestUserId", item.userId))
-            .take(100)).sort((left, right) => right.offeredAt - left.offeredAt)[0] ?? null
+            .order("desc").first())
           : null;
         const displayName = resolveMemberName({
           existingName: person.name,
           email: person.email,
           role: item.role,
         });
-        members.push({
+        return {
           membership: item,
           person: {
             id: person._id,
@@ -269,9 +278,12 @@ export const getBundle = query({
           },
           ...(membership.role === "host" ? { terms: guestTerms } : {}),
           ...(membership.role === "host" && item.role === "guest" ? { agreementOffer } : {}),
-        });
+        };
       }
-    }
+      return null;
+    }));
+    const members = membersWithMissing.filter((member): member is NonNullable<typeof member> => member !== null);
+
     return { stay, terms, membership, members };
   },
 });
@@ -281,6 +293,8 @@ export const updateGuestPreferredName = mutation({
   returns: v.null(),
   handler: async (ctx, { stayId, guestUserId, preferredName }) => {
     const { user } = await requireHost(ctx, stayId);
+    const stay = await ctx.db.get(stayId);
+    if (!stay || stay.status === "ended") throw new Error("Ended stays cannot be edited");
     const name = preferredName.trim();
     if (!name || name.length > 80) throw new Error("Preferred name must be between 1 and 80 characters");
     const membership = await ctx.db.query("memberships")
@@ -327,7 +341,7 @@ export const updateHouseInfo = mutation({
   handler: async (ctx, { stayId, houseInfo }) => {
     const { user } = await requireHost(ctx, stayId);
     const stay = await ctx.db.get(stayId);
-    if (!stay) throw new Error("Stay not found");
+    if (!stay || stay.status === "ended") throw new Error("Ended stays cannot be edited");
     assertHouseInfoInput(houseInfo);
     const now = Date.now();
     await ctx.db.patch(stayId, {

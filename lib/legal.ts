@@ -20,8 +20,8 @@ export type LegalDocumentData = {
 
 export const legalMeta = {
   provider: "Wrelik Brands LLC",
-  effectiveDate: "September 17, 2026",
-  lastUpdated: "October 20, 2026",
+  effectiveDate: "October 23, 2026",
+  lastUpdated: "October 23, 2026",
   email: "legal@wrelik.com",
   privacyEmail: "privacy@wrelik.com",
   supportEmail: "support@kouchd.com",
@@ -174,7 +174,7 @@ export const privacyPolicy: LegalDocumentData = {
       title: "6. Cookies, local storage, analytics, and preferences",
       paragraphs: [
         "Our websites and web applications use essential cookies, secure local storage, and similar technologies to maintain authenticated sessions, secure CSRF tokens, remember user interface preferences, and monitor system performance.",
-        "Required technologies are strictly necessary to deliver the Services. Optional performance or product telemetry is collected in an aggregated or de-identified manner without advertising beacons or cross-site behavioral tracking. You can manage or disable cookies via your browser settings, though disabling essential session cookies may prevent you from logging into Kouchd.",
+        "Required technologies are strictly necessary to deliver the Services. Optional product telemetry is limited to manually captured screen and page categories and a pseudonymous account identifier for signed-in sessions. Autocapture and session replay are disabled. We do not send household text, invite tokens, names, email addresses, or contribution amounts to product analytics. We do not use advertising beacons or cross-site behavioral tracking. You can manage or disable cookies via your browser settings, though disabling essential session cookies may prevent you from logging into Kouchd.",
         "We honor legally recognized opt-out preference signals (such as Global Privacy Control) where required by applicable law. Because Wrelik does not sell personal data or engage in targeted behavioral advertising, no sale-related opt-out is applicable.",
       ],
     },
@@ -552,14 +552,14 @@ export const cookiePolicy: LegalDocumentData = {
         },
         {
           label: "Performance and diagnostics",
-          text: "We use privacy-friendly diagnostic tools (such as Sentry for crash tracking and PostHog for privacy-preserving product telemetry) to identify bugs, monitor load times, and improve usability. These tools do not track you across third-party websites.",
+          text: "We use Sentry for crash diagnostics and PostHog for limited product telemetry. PostHog receives manually captured page and screen categories and a pseudonymous account identifier for signed-in sessions; autocapture and session replay are disabled. These tools do not track you across third-party websites.",
         },
       ],
     },
     {
       title: "3. Third-party technologies",
       paragraphs: [
-        "We do not allow third-party advertising networks to place tracking cookies on Kouchd for targeted advertising or cross-context behavioral profiling. Third-party technologies deployed on Kouchd are strictly service providers acting on our behalf, including Clerk (authentication), Convex (real-time data sync), and Sentry (error diagnostics).",
+        "We do not allow third-party advertising networks to place tracking cookies on Kouchd for targeted advertising or cross-context behavioral profiling. Third-party technologies deployed on Kouchd are strictly service providers acting on our behalf, including Clerk (authentication), Convex (real-time data sync), Sentry (error diagnostics), and PostHog (product telemetry).",
       ],
     },
     {

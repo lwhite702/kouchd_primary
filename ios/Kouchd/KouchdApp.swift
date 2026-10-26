@@ -107,12 +107,14 @@ struct RootView: View {
     tab = .more
   }
 
-  private func openActivity(_ kind: String) {
+  private func openActivity(_ kind: String, action: String = "") {
     switch kind {
     case "contribution", "obligation": tab = .ledger
-    case "chore", "check_in": tab = .chores
+    case "chore": tab = .chores
+    case "check_in": openMore(.checkins)
+    case "shopping": openMore(.shopping)
     case "reward": openMore(.rewards)
-    case "terms": openMore(.agreement)
+    case "terms": openMore(action.hasPrefix("payment_schedule_") ? .schedule : .agreement)
     case "stay", "invite": tab = .stay
     case "announcement": tab = .home
     default: openMore(.activity)
@@ -183,7 +185,7 @@ struct RootView: View {
             store: store,
             openLedger: { tab = .ledger },
             openMore: { openMore($0) },
-            openActivity: { openActivity($0) }
+            openActivity: { openActivity($0, action: $1) }
           )
         }
         .kouchdDestinations(store: store)

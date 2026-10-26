@@ -2,7 +2,8 @@
 
 The SwiftUI project targets iOS 17 or later. Generate its Xcode project with
 `xcodegen generate --spec ios/project.yml`, then open `ios/Kouchd.xcodeproj`.
-The project includes ClerkKit, ClerkKitUI, ClerkConvex, and ConvexMobile.
+The project includes ClerkKit, ClerkKitUI, ClerkConvex, ConvexMobile,
+PostHog, and RevenueCat.
 Brand headings use Manrope from Google Fonts under the bundled SIL Open Font
 License in `Kouchd/Fonts/OFL.txt`; controls retain native iOS type.
 
@@ -31,12 +32,40 @@ development Clerk host. Configure the production and development Convex
 deployments to trust the matching Clerk issuer. Check Apple sign-in availability
 in each Clerk environment and configure its Apple credentials if it is enabled.
 The project declares associated domains. Production Clerk currently exposes
-Google as its social provider; no unused Sign in with Apple entitlement is
-requested. Apple sign-in can be configured separately if that provider is added.
+Google as its social provider. Apple sign-in is wired through Clerk's prebuilt
+auth surfaces and the native entitlement, but it will not appear until Apple is
+enabled in both Clerk instances and production credentials are configured.
 
 The web app serves the invitation universal-link association at
 `/.well-known/apple-app-site-association`. Deploy and verify it on
 `https://kouchd.com` before testing an invitation return from a device.
+
+### Sign in with Apple
+
+The web sign-in and sign-up pages use Clerk's prebuilt components; the native
+app uses Clerk's `AuthView`. Both surfaces show Apple when the Apple social
+connection is enabled for sign-in and sign-up in the matching Clerk instance.
+The iOS target includes the Sign in with Apple entitlement. For development,
+enable Apple's shared Clerk connection. For production, configure the Apple
+App ID (`com.wrelikbrands.kouchd`), Services ID, Team ID, Key ID, private key,
+and private email relay in Apple Developer and Clerk. Add
+`com.wrelikbrands.kouchd://callback` to Clerk's native SSO redirect allowlist.
+Update the App ID capability and provisioning profile before building a signed
+release. Do not commit the Apple private key.
+
+### Product analytics
+
+The web client uses `NEXT_PUBLIC_POSTHOG_KEY` and `NEXT_PUBLIC_POSTHOG_HOST`;
+both are configured in the Kouchd Vercel development and production
+environments. Native analytics use the same PostHog project through
+`POSTHOG_API_KEY` and `POSTHOG_HOST` in ignored `Local.xcconfig` and
+`Production.local.xcconfig` files, or optional `PROD_POSTHOG_API_KEY` and
+`PROD_POSTHOG_HOST` Xcode Cloud variables. The project token is a public client
+key; do not put a PostHog personal API key in the app. Both clients disable
+autocapture, session replay, and automatic screen/lifecycle capture. They send
+only manually curated screen and page events with a pseudonymous Clerk ID for
+signed-in users. Household text, names, URLs with query strings, and contribution
+amounts are not event properties.
 
 ## Verification
 
@@ -109,8 +138,8 @@ across versions, including processing builds, and set Xcode Cloud > Settings >
 Build Number > Next Build Number above the highest reserved number. Avoid
 concurrent local uploads. Do not assume the next build is `1`.
 
-The marketing version remains the root `VERSION` value, currently `0.4.4` on
-this unreleased branch. Passing the script is configuration evidence only.
+The marketing version remains the root `VERSION` value. Passing the script is
+configuration evidence only.
 Complete release checks, archive and processing checks, internal group access,
 and installation on a real device before recording TestFlight availability.
 

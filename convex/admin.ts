@@ -76,10 +76,10 @@ export const getOverviewStats = query({
     // Join activity with actor user name
     const enrichedActivities = await Promise.all(
       activities.map(async (act) => {
-        const actor = await ctx.db.get(act.actorUserId);
+        const actor = act.actorUserId ? await ctx.db.get(act.actorUserId) : null;
         return {
           ...act,
-          actorName: actor?.name ?? "Unknown actor",
+          actorName: act.actorType === "system" ? "System" : actor?.name ?? "Unknown actor",
         };
       })
     );

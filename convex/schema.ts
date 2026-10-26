@@ -69,7 +69,8 @@ export default defineSchema({
     updatedAt: v.number(),
   })
     .index("by_household_account", ["householdAccountId"])
-    .index("by_household_account_provider_environment", ["householdAccountId", "provider", "environment"]),
+    .index("by_household_account_provider_environment", ["householdAccountId", "provider", "environment"])
+    .index("by_household_environment_updated", ["householdAccountId", "environment", "updatedAt"]),
 
   providerEvents: defineTable({
     provider: v.string(),
@@ -131,6 +132,7 @@ export default defineSchema({
     .index("by_host_user_id", ["hostUserId"])
     .index("by_household_account", ["householdAccountId"])
     .index("by_host_user_status", ["hostUserId", "status"])
+    .index("by_host_account_status", ["hostUserId", "householdAccountId", "status"])
     .index("by_household_account_status", ["householdAccountId", "status"])
     .index("by_host_and_creation_request", ["hostUserId", "creationRequestId"])
     .index("by_status", ["status"])
@@ -233,6 +235,7 @@ export default defineSchema({
   })
     .index("by_stay_status", ["stayId", "status"])
     .index("by_stay_guest", ["stayId", "guestUserId"])
+    .index("by_stay_guest_status", ["stayId", "guestUserId", "status"])
     .index("by_terms_guest", ["termsId", "guestUserId"]),
 
   paymentScheduleRequests: defineTable({
@@ -278,6 +281,7 @@ export default defineSchema({
     recordedAt: v.number(),
     voidedAt: v.optional(v.number()),
     voidedBy: v.optional(v.id("users")),
+    voidedSource: v.optional(v.union(v.literal("user"), v.literal("system"))),
   })
     .index("by_stay_guest_night", ["stayId", "guestUserId", "nightDate"])
     .index("by_obligation", ["obligationId"]),
@@ -296,6 +300,7 @@ export default defineSchema({
     lateFeeWaivedBy: v.optional(v.id("users")),
     voidedAt: v.optional(v.number()),
     voidedBy: v.optional(v.id("users")),
+    voidedSource: v.optional(v.union(v.literal("user"), v.literal("system"))),
     createdAt: v.number(),
   })
     .index("by_stay", ["stayId"])
@@ -319,6 +324,7 @@ export default defineSchema({
     confirmedAt: v.optional(v.number()),
     disputedBy: v.optional(v.id("users")),
     voidedBy: v.optional(v.id("users")),
+    voidedSource: v.optional(v.union(v.literal("user"), v.literal("system"))),
     voidedAt: v.optional(v.number()),
     createdAt: v.number(),
   })
@@ -419,6 +425,7 @@ export default defineSchema({
     confirmedAt: v.optional(v.number()),
     disputedBy: v.optional(v.id("users")),
     voidedBy: v.optional(v.id("users")),
+    voidedSource: v.optional(v.union(v.literal("user"), v.literal("system"))),
     voidedAt: v.optional(v.number()),
     createdAt: v.number(),
   })
@@ -440,7 +447,8 @@ export default defineSchema({
 
   activity: defineTable({
     stayId: v.id("stays"),
-    actorUserId: v.id("users"),
+    actorUserId: v.optional(v.id("users")),
+    actorType: v.optional(v.union(v.literal("user"), v.literal("system"))),
     guestUserId: v.optional(v.id("users")),
     kind: v.union(v.literal("stay"), v.literal("terms"), v.literal("invite"), v.literal("contribution"), v.literal("chore"), v.literal("check_in"), v.literal("shopping"), v.literal("obligation"), v.literal("announcement"), v.literal("notification"), v.literal("reward")),
     action: v.string(),

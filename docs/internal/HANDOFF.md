@@ -172,3 +172,20 @@
 - Pull request: [#57](https://github.com/lwhite702/kouchd_primary/pull/57), open against `main`; release-integrity, Vercel, and AI review checks are pending.
 - Verification on current `main`: TypeScript syntax parsing, `git diff --check`, and `node scripts/release-version.mjs check` passed. Full typecheck ran for more than three minutes without output and was interrupted; tests were not run.
 - Release state: branch-only; not merged, deployed, or publicly available.
+
+## WRE-224 — launch candidate, October 22, 2026
+
+Continue on `codex/WRE-224-launch-readiness` in the isolated WRE-224 checkout,
+with the matching marketing branch. Preserve existing dirty worktrees. Candidate
+version 0.7.0; production/store availability remains unverified. Read
+`docs/internal/LAUNCH_READINESS.md` for the original PR dispositions, approved
+account-wide limits, validation and promotion gates. Never promote the local
+anonymous Convex configuration to production.
+
+### WRE-224 launch candidate — October 23, 2026
+
+See [the launch checklist](LAUNCH_READINESS.md) for the current candidate, PR
+dispositions, source checks, production host test, rollout/rollback and remaining
+provider/device/account gates. Candidate 0.7.0 is local and unreleased; a separate
+0.6.9 branch contains the urgent dependency patch. Shared dirty worktrees remain
+untouched. No push, merge, production deployment or publication is authorized.

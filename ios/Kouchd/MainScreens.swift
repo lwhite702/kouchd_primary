@@ -10,7 +10,8 @@ struct HomeScreen: View {
   let store: KouchdStore
   let openLedger: () -> Void
   let openMore: (KouchdRoute?) -> Void
-  let openActivity: (String) -> Void
+  let openActivity: (String, String) -> Void
+  private var nextContribution: LedgerRecord? { store.typedLedger.filter { $0.balanceCents > 0 }.min { $0.dueDate < $1.dueDate } }
   var body: some View {
     ScrollView {
       VStack(alignment: .leading, spacing: 24) {
@@ -54,9 +55,9 @@ struct HomeScreen: View {
         } else {
           VStack(alignment: .leading, spacing: 18) {
             Text("NEXT CONTRIBUTION").font(.caption.bold()).foregroundStyle(Palette.lime)
-            Text(Display.money(store.ledger.first?["balanceCents"].int ?? 0))
+            Text(nextContribution.map { Display.money($0.balanceCents) } ?? "All caught up")
               .font(.largeTitle.bold()).foregroundStyle(.white)
-            Text("Due \(store.ledger.first?["dueDate"].text ?? "later")")
+            Text(nextContribution.map { "Due \($0.dueDate)" } ?? "No contribution is currently due.")
               .font(.subheadline).foregroundStyle(.white.opacity(0.85))
             Button(action: openLedger) {
               Text("View contributions")
@@ -67,7 +68,7 @@ struct HomeScreen: View {
           }
           .padding(24).frame(maxWidth: .infinity, alignment: .leading)
           .background(Palette.brandForest, in: RoundedRectangle(cornerRadius: 24))
-          if let next = store.chores.first(where: { !$0["completed"].flag && $0["voidedAt"].text.isEmpty && $0["assignee"].text != "host" && ($0["assigneeUserId"].text.isEmpty || $0["assigneeUserId"].text == store.viewer["id"].text) }) {
+          if let next = store.chores.first(where: {  $0["completedAt"].text.isEmpty && $0["voidedAt"].text.isEmpty && $0["assignee"].text != "host" && ($0["assigneeUserId"].text.isEmpty || $0["assigneeUserId"].text == store.viewer["id"].text) }) {
             Card {
               Text(next.title).font(.headline)
               Text("Your turn · \(next["dueDate"].text)")
@@ -104,15 +105,15 @@ struct HomeScreen: View {
         }
       }
       Card {
-        Text("Contribution balance").font(.subheadline).foregroundStyle(Palette.muted)
-        Text(Display.money(store.ledger.reduce(0) { $0 + $1["balanceCents"].int }))
+        Text("Remaining scheduled contributions").font(.subheadline).foregroundStyle(Palette.muted)
+        Text(Display.money(store.typedLedger.reduce(0) { $0 + $1.balanceCents }))
           .font(.system(size: 38, weight: .bold, design: .rounded))
           .foregroundStyle(Palette.forest)
         Button("Open ledger", action: openLedger)
       }
       HStack(spacing: 12) {
         NavigationLink(value: KouchdRoute.chores) {
-          StatCard(number: "\(store.chores.filter { !$0["completed"].flag && $0["voidedAt"].text.isEmpty }.count)", label: "Open chores")
+          StatCard(number: "\(store.chores.filter {  $0["completedAt"].text.isEmpty && $0["voidedAt"].text.isEmpty }.count)", label: "Open chores")
         }
         Button { openMore(.rewards) } label: {
           StatCard(number: "\(store.wallet["availablePoints"].int)", label: "Reward points")
@@ -138,7 +139,7 @@ struct HomeScreen: View {
         Card {
           Text("Recent activity").font(.headline)
           ForEach(Array(store.activity.prefix(3)), id: \.id) { item in
-            Button { openActivity(item["kind"].text) } label: {
+            Button { openActivity(item["kind"].text, item["action"].text) } label: {
               HStack(alignment: .top, spacing: 10) {
                 Text(item["detail"].text).font(.subheadline).foregroundStyle(Palette.ink)
                   .frame(maxWidth: .infinity, alignment: .leading)
