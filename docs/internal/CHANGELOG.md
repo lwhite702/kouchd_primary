@@ -2,6 +2,12 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-10-25 — Add Kouchd artwork to onboarding and empty stays (WRE-237)
+
+- Added decorative brand artwork to the host and guest welcome steps, host/join start screen, and no-active-stays state.
+- Added responsive image framing and documented the customer-visible polish in the root unreleased changelog.
+- Synchronized release candidate metadata to `1.0.0-rc.8` after the WRE-237 push check required a unique version.
+
 ## 2026-10-25 — Patch vulnerable framework and sanitizer dependencies (WRE-224)
 
 - Patched DOMPurify to `3.4.17`, refreshed compatible lockfile dependencies, and bumped Vitest to `^5.0.5`.

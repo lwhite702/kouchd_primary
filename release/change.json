@@ -1,5 +1,5 @@
 {
   "type": "rc",
-  "version": "1.0.0-rc.7",
-  "reason": "Patch vulnerable framework and sanitizer dependencies (Next.js 16.4.3, DOMPurify 3.4.17, Vitest ^5.0.5)."
+  "version": "1.0.0-rc.8",
+  "reason": "Add branded artwork to host and guest onboarding and the no-active-stays state."
 }
