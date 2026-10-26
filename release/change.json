@@ -1,5 +1,5 @@
 {
   "type": "rc",
-  "version": "1.0.0-rc.6",
-  "reason": "Polish web and iOS motion transitions and adopt Liquid Glass surface styling."
+  "version": "1.0.0-rc.9",
+  "reason": "Fix the iOS RootView compiler type-check failure and preserve analytics/session callback behavior."
 }

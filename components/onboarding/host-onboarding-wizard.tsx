@@ -3,6 +3,7 @@
 import { useMutation, useQuery } from "convex/react";
 import { ArrowLeft, ArrowRight, Check, MessageSquare, Plus, Sparkles } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { FormEvent, useMemo, useState } from "react";
 
 import { api } from "@/convex/_generated/api";
@@ -212,6 +213,9 @@ export function HostOnboardingWizard({
       {/* Step 1: Stay Basics & Cadence */}
       {step === 1 && (
         <div key="step-1" className="screen-transition">
+          <div className="onboarding-step-artwork" aria-hidden="true">
+            <Image src="/artwork/host-welcome.png" alt="" width={640} height={480} sizes="(max-width: 520px) 58vw, 240px" />
+          </div>
           <p className="eyebrow onboarding-eyebrow">Step 1 of 5 · Stay Schedule <HelpTip title="Set the stay dates" href={HELP_LINKS.hostsGettingStarted}>Choose the planned dates, contribution rhythm, and first check-in. The estimated total is a planning guide and excludes optional discounts, rewards, and one-off charges.</HelpTip></p>
           <h1>Set the dates and contribution cadence.</h1>
           <p className="subhead">

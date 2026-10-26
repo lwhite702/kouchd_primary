@@ -13,8 +13,29 @@ Internal engineering record. This file is excluded from Mintlify navigation and 
 - Updated plain-language guidance across `help/index.mdx`, `index.mdx`, `help/legal-trust/stay-agreements.mdx`, `help/legal-trust/terms-of-service.mdx`, `help/hosts/getting-started.mdx`, `help/guests/joining-a-stay.mdx`, `help/hosts/ledger-management.mdx`, and `help/guests/logging-contributions.mdx`.
 - Refined all in-app tooltips and help tips across `components/authenticated-home.tsx`, `components/marketing/marketing-header.tsx`, and `components/household/payment-options.tsx` to use friendly, plainspoken, non-technical terminology.
 - Added `appSupport` URL to `lib/help-links.ts`.
-- Preserved release integrity: documentation and copy polish do not bump SemVer; version `1.0.0-rc.6` remains synchronized.
+- Preserved release integrity: documentation and copy polish do not bump SemVer; version `1.0.0-rc.9` remains synchronized.
 
+
+## 2026-10-26 — Fix iOS RootView compiler timeout (WRE-239)
+
+- Split the root screen branches and authenticated tab composition into focused view properties, and extracted lifecycle callbacks to reduce SwiftUI type-checking complexity.
+- Kept analytics identity updates separate from session connection updates and used public Clerk first/last-name fields.
+- Verified a generic iOS Simulator Debug build with Xcode.
+- Synchronized release candidate metadata to `1.0.0-rc.9`.
+
+
+## 2026-10-25 — Add Kouchd artwork to onboarding and empty stays (WRE-237)
+
+- Added decorative brand artwork to the host and guest welcome steps, host/join start screen, and no-active-stays state.
+- Added responsive image framing and documented the customer-visible polish in the root unreleased changelog.
+- Synchronized release candidate metadata to `1.0.0-rc.8` after the WRE-237 push check required a unique version.
+
+
+## 2026-10-25 — Patch vulnerable framework and sanitizer dependencies (WRE-224)
+
+- Patched DOMPurify to `3.4.17`, refreshed compatible lockfile dependencies, and bumped Vitest to `^5.0.5`.
+- Recorded security patch verification notes in `docs/internal/SECURITY_PATCH.md`.
+- Synchronized release candidate version to `1.0.0-rc.7`.
 
 ## 2026-10-25 — Polish motion and adopt Liquid Glass surfaces (WRE-219)
 

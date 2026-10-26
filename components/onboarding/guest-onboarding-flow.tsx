@@ -3,6 +3,7 @@
 import { useMutation, useQuery } from "convex/react";
 import { ArrowLeft, ArrowRight, CheckCircle2, Coins, MessageSquare, ShieldCheck } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 
 import { api } from "@/convex/_generated/api";
@@ -126,6 +127,9 @@ export function GuestOnboardingFlow({
       {/* Step 1: Welcome & Household Summary */}
       {step === 1 && (
         <div key="guest-step-1" className="screen-transition">
+          <div className="onboarding-step-artwork" aria-hidden="true">
+            <Image src="/artwork/welcome.png" alt="" width={640} height={480} sizes="(max-width: 520px) 58vw, 240px" />
+          </div>
           <p className="eyebrow onboarding-eyebrow">Step 1 of 4 · Welcome <HelpTip title="Your shared stay" href={HELP_LINKS.joiningAStay}>Review who is hosting, the planned dates, and who is part of this household.</HelpTip></p>
           <h1>Welcome to the household.</h1>
           <p className="subhead">
