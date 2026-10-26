@@ -57,6 +57,56 @@ import XCTest
     XCTAssertEqual(client.restoreCount, 1)
     XCTAssertTrue(model.message.contains("restored"))
   }
+
+  func testP2PRoutingBuildsExpectedDeepLinksAndRewardsOffset() {
+    let venmoURI = P2PRouting.buildURI(
+      channel: .venmo,
+      handle: "@johndoe",
+      amountDollars: "45.00",
+      memo: "Marketplace Order #991"
+    )
+    XCTAssertEqual(
+      venmoURI,
+      "venmo://paycharge?txn=pay&recipients=johndoe&amount=45.00&note=Marketplace%20Order%20%23991"
+    )
+
+    let cashAppURI = P2PRouting.buildURI(
+      channel: .cashapp,
+      handle: "$johndoe33",
+      amountDollars: "45.00",
+      memo: "House stay"
+    )
+    XCTAssertEqual(cashAppURI, "https://cash.app/$johndoe33/45.00")
+
+    let chimeURI = P2PRouting.buildURI(
+      channel: .chime,
+      handle: "john-doe-chime",
+      amountDollars: "45.00",
+      memo: "House stay"
+    )
+    XCTAssertEqual(chimeURI, "https://app.chime.com/link/qr?u=john-doe-chime")
+
+    let paypalURI = P2PRouting.buildURI(
+      channel: .paypal,
+      handle: "https://paypal.me/johndoe",
+      amountDollars: "45.00",
+      memo: "House stay"
+    )
+    XCTAssertEqual(paypalURI, "https://paypal.me/johndoe/45.00")
+    XCTAssertEqual(P2PRouting.formattedHandle(channel: .paypal, rawHandle: "https://paypal.me/johndoe"), "paypal.me/johndoe")
+
+    let offset = P2PRouting.calculateRewardsOffset(
+      amountDollars: "45.00",
+      pointsToApply: 15,
+      availablePoints: 40,
+      centsPerPoint: 100
+    )
+    XCTAssertEqual(offset.grossAmountCents, 4500)
+    XCTAssertEqual(offset.pointsApplied, 15)
+    XCTAssertEqual(offset.rewardCreditCents, 1500)
+    XCTAssertEqual(offset.netPayableCents, 3000)
+    XCTAssertEqual(offset.netPayableFormatted, "30.00")
+  }
 }
 
 @MainActor private final class BillingClientMock: BillingClient {

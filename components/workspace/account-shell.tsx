@@ -14,6 +14,7 @@ import {
   Users,
 } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
 import type { Id } from "@/convex/_generated/dataModel";
 import { KouchdWordmark } from "@/components/brand/kouchd-logo";
@@ -174,6 +175,15 @@ export function GetStartedHub({
     <div className="app-shell production-shell">
       <AccountHeader />
       <main style={{ padding: "1.5rem 1rem 4rem" }}>
+        <div className="get-started-artwork" aria-hidden="true">
+          <Image
+            src={tab === "host" ? "/artwork/host-welcome.png" : "/artwork/invitation.png"}
+            alt=""
+            width={640}
+            height={480}
+            sizes="(max-width: 480px) 58vw, 220px"
+          />
+        </div>
         <div
           style={{
             maxWidth: 440,

@@ -274,3 +274,182 @@
   margin-top: 6px;
   flex-shrink: 0;
 }
+
+.console-readonly-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--kouchd-sage, #e5edde);
+  color: var(--kouchd-forest, #184f3a);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.console-nav-container {
+  margin-bottom: 1.75rem;
+}
+
+.console-nav-container .console-nav-strip {
+  margin-bottom: 0.5rem;
+}
+
+.console-subnav-strip {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  overflow-x: auto;
+  padding: 0.35rem 0;
+}
+
+.console-subnav-label {
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--kouchd-muted, #59675f);
+  margin-right: 0.35rem;
+  white-space: nowrap;
+}
+
+.console-subnav-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--kouchd-muted, #59675f);
+  text-decoration: none;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+
+.console-subnav-link:hover {
+  background: rgba(24, 79, 58, 0.05);
+  color: var(--kouchd-forest, #184f3a);
+}
+
+.console-subnav-link.active {
+  background: #fffdf8;
+  border-color: var(--kouchd-forest, #184f3a);
+  color: var(--kouchd-forest, #184f3a);
+  font-weight: 700;
+}
+
+.console-env-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.console-env-badge.production {
+  background: #184f3a;
+  color: #dff25e;
+}
+
+.console-env-badge.sandbox {
+  background: #fbf3d5;
+  color: #8f6412;
+  border: 1px solid #e6d08b;
+}
+
+.console-env-badge.blocked,
+.console-status-pill.failed,
+.console-status-pill.suppressed {
+  background: #fae4df;
+  color: #a82d1c;
+}
+
+.console-status-pill.sent,
+.console-status-pill.subscribed,
+.console-status-pill.configured {
+  background: #e8efdf;
+  color: #184f3a;
+}
+
+.console-status-pill.skipped,
+.console-status-pill.pending_confirmation,
+.console-status-pill.grace_period,
+.console-status-pill.billing_retry {
+  background: #fbf3d5;
+  color: #8f6412;
+}
+
+.console-status-pill.cancelled,
+.console-status-pill.canceled,
+.console-status-pill.expired,
+.console-status-pill.unsubscribed,
+.console-status-pill.disabled,
+.console-status-pill.duplicate {
+  background: #f0ede6;
+  color: #59675f;
+}
+
+.console-provider-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.75rem;
+}
+
+.console-provider-card {
+  background: var(--kouchd-surface, #fffdf8);
+  border: 1px solid var(--kouchd-line, #ded8ce);
+  border-radius: 16px;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.85rem;
+}
+
+.console-guardrail-banner {
+  background: #f4f7ef;
+  border: 1px solid #d5e2c8;
+  border-radius: 14px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.86rem;
+  color: #1d352b;
+  line-height: 1.5;
+}
+
+.console-blocker-banner {
+  background: #fdf6e9;
+  border: 1px solid #ebd5ab;
+  border-radius: 14px;
+  padding: 1.15rem 1.35rem;
+  margin-bottom: 1.5rem;
+  color: #5e410b;
+  font-size: 0.88rem;
+  line-height: 1.5;
+}
+
+.console-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(23, 37, 31, 0.48);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  z-index: 100;
+}
+
+.console-modal {
+  background: #fffdf8;
+  border: 1px solid var(--kouchd-line, #ded8ce);
+  border-radius: 20px;
+  max-width: 520px;
+  width: 100%;
+  padding: 1.5rem;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.16);
+}

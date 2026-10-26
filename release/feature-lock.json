@@ -1,0 +1,76 @@
+{
+  "enabled": true,
+  "phase": "v1-rc",
+  "targetMajorVersion": "1.0.0",
+  "currentCandidate": "1.0.0-rc.7",
+  "lockEffectiveAfterOpenMerges": true,
+  "allowedChangeTypes": [
+    "patch",
+    "none"
+  ],
+  "allowedTaskCategories": [
+    "bugfix",
+    "security-patch",
+    "regression-fix",
+    "performance-stability",
+    "accessibility-fix",
+    "release-polish",
+    "documentation"
+  ],
+  "exemptOpenPullRequests": [
+    {
+      "pr": 55,
+      "branch": "codex/WRE-210-212-ios-dashboard-fixes",
+      "title": "fix(WRE-210/211/212): improve iOS navigation and dashboard activity"
+    },
+    {
+      "pr": 56,
+      "branch": "codex/WRE-213-main-newsletter",
+      "title": "feat(WRE-213): add Loops newsletter signup"
+    },
+    {
+      "pr": 57,
+      "branch": "codex/WRE-216-guest-agreement-profile-pr",
+      "title": "feat(WRE-216): add delayed guest agreement auto-accept"
+    },
+    {
+      "pr": 58,
+      "branch": "codex/WRE-219-motion",
+      "title": "feat(WRE-219): Polish app motion and adopt Liquid Glass"
+    },
+    {
+      "pr": 59,
+      "branch": "dependabot/npm_and_yarn/npm_and_yarn-b23b33960f",
+      "title": "build(deps): bump the npm_and_yarn group across 1 directory with 4 updates"
+    },
+    {
+      "pr": 60,
+      "branch": "codex/WRE-224-launch-readiness",
+      "title": "feat(WRE-224): prepare the 0.7.0 launch candidate"
+    },
+    {
+      "pr": 61,
+      "branch": "codex/WRE-224-security-dependencies",
+      "title": "fix(WRE-224): patch vulnerable dependencies for 0.6.9"
+    },
+    {
+      "pr": 66,
+      "branch": "codex/nextjs-security-upgrade",
+      "title": "fix(deps): upgrade Next.js to 16.4.3 (security advisory)"
+    }
+  ],
+  "exemptInFlightBranches": [
+    "codex/WRE-228-replay-qa-remediation",
+    "codex/WRE-230-platform-ops-console",
+    "codex/WRE-231-p2p-contribution-router",
+    "codex/WRE-234-v1-feature-lock"
+  ],
+  "newFeaturePolicy": {
+    "allowInLaunchBranch": false,
+    "requireRoadmapEntry": true,
+    "roadmapPath": "help/product/roadmap.mdx",
+    "requireIsolatedWorktree": true,
+    "worktreeBaseDir": "/Volumes/Projects/CodexWorktrees",
+    "branchPrefix": "codex/post-v1-"
+  }
+}

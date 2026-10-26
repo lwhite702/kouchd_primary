@@ -1,6 +1,7 @@
-import { REPLAY_QA_SECURITY_NONCE } from "@/lib/replay-qa-nonce";
-
 export const dynamic = "force-static";
+
+export const REPLAY_QA_SECURITY_NONCE =
+  "loopqa-sec-9TrCmqrdLQkZh1UIU1Qew_Ql6bEQ36iILYviGiS25V0";
 
 export function GET() {
   return new Response(REPLAY_QA_SECURITY_NONCE, {

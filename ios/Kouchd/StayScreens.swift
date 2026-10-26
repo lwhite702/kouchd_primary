@@ -8,6 +8,7 @@ struct StayScreen: View {
   let store: KouchdStore
   @State private var showingInvite = false
   @State private var showingEdit = false
+  @State private var showingContributionRouter = false
   var body: some View {
     Page(title: "Your stay") {
       Card {
@@ -55,6 +56,11 @@ struct StayScreen: View {
           let option = store.bundle["stay"]["paymentOptions"].items[index]
           DataRow(title: option["provider"].text.capitalized, detail: option["detail"].text)
         }
+        if !store.isEnded {
+          PrimaryButton(title: "Send & log contribution") {
+            showingContributionRouter = true
+          }
+        }
       }
     }
     .toolbar {
@@ -80,6 +86,7 @@ struct StayScreen: View {
     }
     .sheet(isPresented: $showingInvite) { InviteForm(store: store) }
     .sheet(isPresented: $showingEdit) { RenameStayForm(store: store) }
+    .sheet(isPresented: $showingContributionRouter) { ContributionForm(store: store) }
   }
 }
 

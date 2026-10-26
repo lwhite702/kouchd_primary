@@ -28,7 +28,15 @@ const houseInfoInput = {
 };
 
 const paymentOptionsInput = v.array(v.object({
-  provider: v.union(v.literal("paypal"), v.literal("cashapp"), v.literal("zelle"), v.literal("applepay")),
+  provider: v.union(
+    v.literal("venmo"),
+    v.literal("cashapp"),
+    v.literal("chime"),
+    v.literal("zelle"),
+    v.literal("cash"),
+    v.literal("paypal"),
+    v.literal("applepay"),
+  ),
   detail: v.string(),
 }));
 

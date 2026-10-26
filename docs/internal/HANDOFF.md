@@ -1,6 +1,27 @@
 # Kouchd help center and repository-policy handoff
 
-**Issue:** [WRE-145](https://linear.app/wrelik/issue/WRE-145/kouchd-apply-repository-agent-policy-and-sync-mintlify-help-roadmap)
+**Issue:** [WRE-226](https://linear.app/wrelik/issue/WRE-226/kouchd-modularize-ios-help-documentation-into-dedicated-topic-guides)
+**Task branch:** `codex/wre-226-modular-ios-help`
+**Pull request:** [PR #63](https://github.com/lwhite702/kouchd_primary/pull/63)
+**Canonical repository:** `https://github.com/lwhite702/kouchd_primary`
+**Task worktree:** `/Volumes/Projects/CodexWorktrees/kouchd-wre-226-modular-ios-help`
+**State:** Open PR #63 under review; CI passing; merge, deployment, and live publication remain unverified action gates.
+
+## Summary of changes
+
+- Partitioned single 120-line iOS guide into 3 modular topic pages matching Kouchd's help pacing:
+  - `help/ios/using-kouchd-on-ios.mdx`: Overview, 4 tabs, joining a stay, reminders.
+  - `help/ios/ledger-and-contributions.mdx`: Outside payments, recording, confirming/disputing, voiding.
+  - `help/ios/chores-and-stay.mdx`: Household chores, occupied nights, stay guidelines, house notes.
+- Corrected payment handle examples to strictly supported providers (`PayPal`, `Cash App`, `Apple Pay`, `Zelle`).
+- Preserved financial disclosure: contribution records are shared records and do not prove money moved.
+- Updated root `docs.json` navigation under "iPhone app".
+- Updated cross-links across web guides to point directly to specific iOS topic pages.
+- Validation: `mintlify validate` and `mintlify broken-links` passed with zero errors.
+
+---
+
+# Previous handoff (WRE-145)
 **Task branch:** `codex/wre-145-kouchd-help-center-refresh`
 **Canonical repository:** `/Volumes/Projects/Projects/kouchd_primary`
 **Task worktree:** `/Volumes/Projects/CodexWorktrees/kouchd-help-center-refresh`
@@ -102,7 +123,34 @@
   - `mintlify broken-links` passed with zero broken links found.
   - `git diff --check` passed cleanly.
   - All GitHub Actions and Vercel preview CI checks on PR #47 passed successfully.
-- Release state: PR #47 is open and ready. Merge to `main` and verification of live Mintlify deployment at `https://help.kouchd.com` require explicit user action-time approval per AGENTS.md policy.
+- Release state: PR #47 was squash-merged to `main` as commit `20667da` on 2026-10-19. Live Mintlify Help Center returned HTTP 200 at `https://help.kouchd.com/help`.
+
+### iOS Help Guidance and UI Screenshots (2026-10-24)
+
+- Linear issue: [WRE-209](https://linear.app/wrelik/issue/WRE-209/kouchd-add-ios-help-guidance-and-brand-aligned-mobile-images-to-help)
+- Branch: `codex/wre-209-ios-help-guidance` in isolated worktree `/Volumes/Projects/CodexWorktrees/kouchd-wre-209-ios-help`.
+- Changes:
+  - Added dedicated guide `help/ios/using-kouchd-on-ios.mdx` covering native iPhone app workflows (Home, Ledger, Chores, Stay, outside contributions, late fees, Apple Sign-In, and reminders).
+  - Added "iPhone app" navigation group to `docs.json`.
+  - Added "On iPhone" accordion walkthroughs to `help/quickstart.mdx`, `help/guests/logging-contributions.mdx`, `help/hosts/ledger-management.mdx`, `help/hosts/house-rules-and-chores.mdx`, and `help/guests/joining-a-stay.mdx`.
+  - Generated and verified 5 high-resolution Retina mobile device mockups in `help/images/` (`ios-home-overview.png`, `ios-ledger-screen.png`, `ios-record-contribution.png`, `ios-chores-screen.png`, `ios-stay-guidelines.png`) matching the Brand Building design system and native SwiftUI source.
+  - Preserved release policy: documentation-only changes do not bump SemVer; public guides note that the native iOS app is in active development and not yet available on the App Store.
+  - Addressed PR #62 review findings: clarified that dispute and void controls are native-only while core workflows are shared; corrected credit application to cover the oldest outstanding charge (including upcoming charges); and aligned the post-sign-in onboarding label to "Join with a code".
+- Validation:
+  - `mintlify validate` passed cleanly (`success build validation passed`).
+  - `mintlify broken-links` passed cleanly (`success no broken links found`).
+  - `git diff --check` passed with zero formatting errors.
+- Release state: Ready for pull request review and merge approval.
+
+### Delayed agreement acceptance and guest profile controls (2026-10-20)
+
+- Linear issue: WRE-216.
+- Scope: host-configurable 1–720 hour delay (24-hour default) or off; guest manual acceptance; system approval labels/timestamps; agreement activity audit; host-only preferred-name editing and guest contact details.
+- Current task branch: `codex/WRE-216-guest-agreement-profile-pr`.
+- Source commit: `908c040` (`feat(WRE-216): add delayed guest agreement auto-accept`).
+- Pull request: [#57](https://github.com/lwhite702/kouchd_primary/pull/57), open against `main`; release-integrity, Vercel, and AI review checks are pending.
+- Verification on current `main`: TypeScript syntax parsing, `git diff --check`, and `node scripts/release-version.mjs check` passed. Full typecheck ran for more than three minutes without output and was interrupted; tests were not run.
+- Release state: branch-only; not merged, deployed, or publicly available.
 
 ## WRE-224 — launch candidate, October 22, 2026
 

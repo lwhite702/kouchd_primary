@@ -8,6 +8,8 @@ import { useHouseholdAction } from "./use-household-action";
 
 import { api } from "@/convex/_generated/api";
 import type { Doc, Id } from "@/convex/_generated/dataModel";
+import { trackEvent } from "@/lib/analytics/track";
+import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
 
 type ShoppingItem = Doc<"shoppingItems">;
 
@@ -35,20 +37,25 @@ export function ShoppingList({
     event.preventDefault();
     const formElement = event.currentTarget;
     const form = new FormData(formElement);
+    let newItemId: Id<"shoppingItems"> | null = null;
     if (
       await run(
-        () =>
-          createItem({
+        async () => {
+          newItemId = (await createItem({
             stayId,
             title: String(form.get("title") ?? ""),
             quantity: String(form.get("quantity") ?? "1"),
             note: String(form.get("note") ?? ""),
             visibility:
               form.get("visibility") === "personal" ? "personal" : "shared",
-          }),
+          })) as Id<"shoppingItems">;
+        },
         "Could not add this item.",
       )
     ) {
+      if (newItemId) {
+        trackEvent(ANALYTICS_EVENTS.SHOPPING_ITEM_ADDED, { stayId, itemId: newItemId });
+      }
       formElement.reset();
     }
   }
@@ -74,6 +81,7 @@ export function ShoppingList({
     }
   }
 
+<<<<<<< HEAD
   return (
     <div className="screen-transition">
       <div className="page-heading">
@@ -232,12 +240,15 @@ export function ShoppingList({
                       className={`chore-check ${item.checkedAt ? "checked" : ""}`}
                       type="button"
                       disabled={busy}
-                      onClick={() =>
+                      onClick={() => {
                         void run(
                           () => toggleItem({ itemId: item._id }),
                           "Could not update this item.",
-                        )
-                      }
+                        );
+                        if (!item.checkedAt) {
+                          trackEvent(ANALYTICS_EVENTS.SHOPPING_ITEM_PURCHASED, { stayId, itemId: item._id });
+                        }
+                      }}
                       aria-label={`${item.checkedAt ? "Uncheck" : "Check off"} ${item.title}`}
                     >
                       {item.checkedAt && <Check size={17} />}

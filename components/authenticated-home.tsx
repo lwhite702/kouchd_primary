@@ -10,6 +10,8 @@ import { KnockGuidesProvider } from "@/components/knock/knock-guides-provider";
 import { DashboardSkeleton } from "@/components/skeleton-loader";
 import "@/components/dashboard-v21.css";
 import { GetStartedHub, StayHub } from "@/components/workspace/account-shell";
+import { trackEvent, setStayGroup, resetStayGroup } from "@/lib/analytics/track";
+import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
 import dynamic from "next/dynamic";
 const LiveStay = dynamic(
   () => import("@/components/workspace/live-stay").then((m) => m.LiveStay),
@@ -128,6 +130,27 @@ function SyncedWorkspace() {
       </main>
     );
   }
+
+  const selectedStay = selectedStayId
+    ? stays?.find((item) => item.stay._id === selectedStayId)
+    : undefined;
+
+  useEffect(() => {
+    if (selectedStay) {
+      setStayGroup(selectedStay.stay._id, {
+        name: selectedStay.stay.name,
+        status: selectedStay.stay.status,
+        role: selectedStay.membership.role,
+      });
+      trackEvent(ANALYTICS_EVENTS.STAY_SWITCHED, {
+        stayId: selectedStay.stay._id,
+        stayName: selectedStay.stay.name ?? "",
+        role: selectedStay.membership.role,
+      });
+    } else {
+      resetStayGroup();
+    }
+  }, [selectedStay]);
 
   if (authLoading || !isAuthenticated || !synced || stays === undefined) {
     return <DashboardSkeleton message="Setting out the clean sheets..." />;

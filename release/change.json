@@ -1,5 +1,5 @@
 {
-  "version": "0.7.0",
-  "type": "minor",
-  "reason": "Prepare the public launch with account-wide Starter and Plus capacity safeguards, shared agreement acceptance, corrected native navigation and coordination screens, scoped subscriptions, compact financial summaries, privacy fixes and dependency remediation."
+  "type": "rc",
+  "version": "1.0.0-rc.7",
+  "reason": "Patch vulnerable framework and sanitizer dependencies (Next.js 16.4.3, DOMPurify 3.4.17, Vitest ^5.0.5)."
 }

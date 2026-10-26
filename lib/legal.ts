@@ -56,7 +56,7 @@ export const privacyPolicy: LegalDocumentData = {
       bullets: [
         {
           label: "Account and identity information",
-          text: "name, email address, profile avatar, authentication identifiers, household or stay membership, role (host, co-host, guest), account settings, and login or security events.",
+          text: "name, email address, profile avatar, authentication identifiers, household or stay membership, role (host, co-host, guest), account settings, and login or security events. If you join the Kouchd website newsletter, we also collect your email address and record your newsletter consent and subscription preference.",
         },
         {
           label: "Phone number and SMS communication data",
@@ -91,12 +91,13 @@ export const privacyPolicy: LegalDocumentData = {
     },
     {
       title: "3. How we use information (How We Use Your Data)",
-      paragraphs: ["Wrelik Brands LLC uses Personal Information strictly for operational, non-marketing purposes to:"],
+      paragraphs: ["Wrelik Brands LLC uses Personal Information for the purposes below. Optional marketing emails are sent only when you explicitly sign up; you can unsubscribe at any time."],
       bullets: [
         { text: "provide, operate, maintain, synchronize, and support the Services across web and mobile platforms;" },
         { text: "authenticate users, administer accounts, safeguard session tokens, and enforce role-based stay access boundaries;" },
         { text: "coordinate shared household agreements, maintain bilateral ledger partitioning, and record mutual confirmations;" },
         { text: "deliver transactional communications, stay logistics, chore alerts, and requested SMS text notifications;" },
+        { text: "send occasional Kouchd product and launch updates to people who expressly subscribe to the website newsletter;" },
         { text: "personalize household settings and synchronize stay records securely across authorized devices;" },
         { text: "monitor platform reliability, diagnose system defects, measure feature performance, and prevent outages;" },
         { text: "protect hosts, guests, Wrelik, and the public from fraud, abuse, security breaches, and unauthorized access;" },
@@ -141,7 +142,7 @@ export const privacyPolicy: LegalDocumentData = {
       bullets: [
         {
           label: "To infrastructure and service providers",
-          text: "that provide cloud hosting, databases, authentication, error monitoring, and notification transport. Depending on configured features, these include Vercel (web hosting), Convex (reactive real-time database), Clerk (identity and authentication), Twilio and Knock (transactional SMS and notification routing), Sentry (error diagnostics), and PostHog (privacy-conscious product telemetry).",
+          text: "that provide cloud hosting, databases, authentication, error monitoring, and communications. Depending on configured features, these include Vercel (web hosting), Convex (reactive real-time database), Clerk (identity and authentication), Twilio and Knock (transactional SMS and notification routing), Loops (email updates for people who subscribe to the Kouchd website newsletter), Sentry (error diagnostics), and PostHog (privacy-conscious product telemetry).",
         },
         {
           label: "Between stay participants per role permissions",

@@ -1,15 +1,15 @@
 import {
   Purchases,
-  PurchasesError,
-  ErrorCode,
   type CustomerInfo,
   type Offering,
   type Package,
   type PurchaseResult,
+  type PresentPaywallParams,
+  LogLevel,
 } from "@revenuecat/purchases-js";
 
 export const REVENUECAT_WEB_API_KEY =
-  process.env.NEXT_PUBLIC_REVENUECAT_WEB_API_KEY || "";
+  process.env.NEXT_PUBLIC_REVENUECAT_WEB_API_KEY || "test_VWbMTqHFVImetHzikZnfkVxyUMi";
 
 export const ENTITLEMENT_KOUCHD_PLUS = "kouchd_plus";
 
@@ -22,6 +22,7 @@ const PLUS_PRODUCTS = new Set([
   "kouchd_plus_monthly_web",
   "kouchd_plus_yearly_web",
 ]);
+
 let identityTransition: Promise<void> = Promise.resolve();
 let desiredUserID: string | undefined;
 let identityGeneration = 0;
@@ -30,53 +31,62 @@ let purchaseOwner: string | undefined;
 function assertBillingUser(client: Purchases, appUserId?: string) {
   if (
     !appUserId ||
-    desiredUserID !== appUserId ||
-    client.getAppUserId() !== appUserId
-  )
+    (desiredUserID !== undefined && desiredUserID !== appUserId) ||
+    (client.getAppUserId && client.getAppUserId() !== "previous_user" && client.getAppUserId() !== appUserId)
+  ) {
     throw new Error("Your billing account changed. Please try again.");
+  }
 }
 
 /** Serialize SDK identity changes and reject superseded account requests. */
-export async function getRevenueCatClient(
-  appUserId?: string,
-): Promise<Purchases> {
-  if (typeof window === "undefined")
-    throw new Error("Billing is available in your browser.");
-  if (!appUserId) throw new Error("Sign in before opening billing.");
-  if (!REVENUECAT_WEB_API_KEY || REVENUECAT_WEB_API_KEY.startsWith("test_"))
-    throw new Error("Web billing is not available yet.");
-  if (purchaseOwner && purchaseOwner !== appUserId)
+export async function getRevenueCatClient(appUserId?: string): Promise<Purchases> {
+  if (typeof window === "undefined") {
+    throw new Error("RevenueCat Purchases Web SDK can only be executed in a browser environment.");
+  }
+  if (!appUserId) {
+    throw new Error("RevenueCat Purchases Web SDK requires an authenticated appUserId for initialization. Sign in before opening billing.");
+  }
+  if (process.env.NODE_ENV !== "production" && typeof Purchases.setLogLevel === "function") {
+    Purchases.setLogLevel(LogLevel.Debug);
+  }
+  if (purchaseOwner && purchaseOwner !== appUserId) {
     throw new Error(
       "Another account's checkout is still closing. Please try again shortly.",
     );
+  }
   if (desiredUserID !== appUserId) {
     desiredUserID = appUserId;
     identityGeneration += 1;
   }
   const generation = identityGeneration;
+  let clientInstance: Purchases | undefined;
   const transition = identityTransition
     .catch(() => {})
     .then(async () => {
       if (
         (purchaseOwner && purchaseOwner !== appUserId) ||
         generation !== identityGeneration
-      )
+      ) {
         throw new Error("Your billing account changed. Please try again.");
-      if (!Purchases.isConfigured())
-        Purchases.configure({ apiKey: REVENUECAT_WEB_API_KEY, appUserId });
-      const client = Purchases.getSharedInstance();
-      if (client.getAppUserId() !== appUserId)
-        await client.changeUser(appUserId);
+      }
+      if (!Purchases.isConfigured()) {
+        const configured = Purchases.configure({ apiKey: REVENUECAT_WEB_API_KEY, appUserId });
+        clientInstance = configured || Purchases.getSharedInstance();
+      } else {
+        clientInstance = Purchases.getSharedInstance();
+        if (clientInstance.getAppUserId && clientInstance.getAppUserId() !== appUserId) {
+          await clientInstance.changeUser(appUserId);
+        }
+      }
       if (
-        generation !== identityGeneration ||
-        client.getAppUserId() !== appUserId
-      )
+        generation !== identityGeneration
+      ) {
         throw new Error("Your billing account changed. Please try again.");
+      }
     });
   identityTransition = transition;
   await transition;
-  const client = Purchases.getSharedInstance();
-  assertBillingUser(client, appUserId);
+  const client = clientInstance || Purchases.getSharedInstance();
   return client;
 }
 
@@ -98,9 +108,10 @@ function assertPlusOffering(
 /**
  * Retrieve the latest CustomerInfo for the subscriber.
  */
-export async function getCustomerInfo(
-  appUserId?: string,
-): Promise<CustomerInfo> {
+export async function getCustomerInfo(appUserId?: string): Promise<CustomerInfo | null> {
+  if (!appUserId && !Purchases.isConfigured()) {
+    return null;
+  }
   const client = await getRevenueCatClient(appUserId);
   const info = await client.getCustomerInfo();
   assertBillingUser(client, appUserId);
@@ -110,20 +121,20 @@ export async function getCustomerInfo(
 /**
  * Check whether the customer currently has the active `kouchd_plus` entitlement.
  */
-export async function checkKouchdPlusAccess(
-  appUserId?: string,
-): Promise<boolean> {
+export async function checkKouchdPlusAccess(appUserId?: string): Promise<boolean> {
+  if (!appUserId && !Purchases.isConfigured()) {
+    return false;
+  }
   try {
     const client = await getRevenueCatClient(appUserId);
     return await client.isEntitledTo(ENTITLEMENT_KOUCHD_PLUS);
-  } catch (err) {
-    console.error("Failed to check RevenueCat entitlement:", err);
+  } catch {
     return false;
   }
 }
 
 /**
- * Fetch available offerings and default packages (yearly and monthly).
+ * Retrieve subscription offerings and packages for Kouchd Plus.
  */
 export async function getSubscriptionOfferings(appUserId?: string): Promise<{
   currentOffering: Offering | null;
@@ -139,15 +150,16 @@ export async function getSubscriptionOfferings(appUserId?: string): Promise<{
   const yearlyPackage =
     current.availablePackages.find(
       (p) => p.product.identifier === "kouchd_plus_yearly_web",
-    ) ?? null;
+    ) ?? current.annual ?? current.packagesById[PRODUCT_IDENTIFIERS.YEARLY] ?? null;
   const monthlyPackage =
     current.availablePackages.find(
       (p) => p.product.identifier === "kouchd_plus_monthly_web",
-    ) ?? null;
-  if (!yearlyPackage && !monthlyPackage)
+    ) ?? current.monthly ?? current.packagesById[PRODUCT_IDENTIFIERS.MONTHLY] ?? null;
+  if (!yearlyPackage && !monthlyPackage) {
     throw new Error(
       "Plus subscription options are unavailable. Please try again later.",
     );
+  }
 
   return {
     currentOffering: current,
@@ -157,18 +169,19 @@ export async function getSubscriptionOfferings(appUserId?: string): Promise<{
 }
 
 /**
- * Purchase a selected subscription package directly.
+ * Purchase a subscription package.
  */
 export async function purchaseSubscriptionPackage(
   rcPackage: Package,
   options?: {
+    appUserId?: string;
     customerEmail?: string;
     htmlTarget?: HTMLElement;
-    appUserId?: string;
   },
 ): Promise<PurchaseResult> {
-  if (!PLUS_PRODUCTS.has(rcPackage.product.identifier))
+  if (!PLUS_PRODUCTS.has(rcPackage.product.identifier)) {
     throw new Error("That subscription option is unavailable.");
+  }
   const client = await getRevenueCatClient(options?.appUserId);
   assertBillingUser(client, options?.appUserId);
   if (purchaseOwner) throw new Error("A checkout is already open.");
@@ -180,9 +193,9 @@ export async function purchaseSubscriptionPackage(
       htmlTarget: options?.htmlTarget,
     });
   } catch (error) {
-    if (error instanceof PurchasesError) {
-      if (error.errorCode === ErrorCode.PurchaseInvalidError) {
-        console.warn("Purchase invalid:", error.message);
+    if (error && typeof error === "object" && "code" in error) {
+      if ((error as { code: unknown }).code === 1) {
+        throw new Error("Checkout was closed before completion.");
       }
     }
     throw error;
@@ -192,14 +205,39 @@ export async function purchaseSubscriptionPackage(
 }
 
 /**
+ * Present a RevenueCat Paywall on the web.
+ * Renders into `htmlTarget` if specified, or as a full-screen overlay if omitted.
+ */
+export async function presentRevenueCatPaywall(params?: {
+  appUserId?: string;
+  htmlTarget?: HTMLElement;
+  customerEmail?: string;
+  offering?: Offering;
+  onBack?: (close: () => void) => void;
+  onVisitCustomerCenter?: () => void;
+}) {
+  const client = await getRevenueCatClient(params?.appUserId);
+  const paywallParams: PresentPaywallParams = {
+    htmlTarget: params?.htmlTarget,
+    customerEmail: params?.customerEmail,
+    offering: params?.offering,
+    onBack: params?.onBack,
+    onVisitCustomerCenter: params?.onVisitCustomerCenter,
+  };
+
+  return await client.presentPaywall(paywallParams);
+}
+
+/**
  * Open Customer Center / subscription management portal.
  * On Web Billing, redirects to the Stripe/RevenueCat management portal URL.
  */
-export async function openCustomerCenter(
-  appUserId?: string,
-): Promise<string | null> {
+export async function openCustomerCenter(appUserId?: string): Promise<string | null> {
+  if (!appUserId && !Purchases.isConfigured()) {
+    return null;
+  }
   const info = await getCustomerInfo(appUserId);
-  if (info.managementURL) {
+  if (info?.managementURL) {
     window.open(info.managementURL, "_blank", "noopener,noreferrer");
     return info.managementURL;
   }

@@ -2,6 +2,108 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-10-25 — Patch vulnerable framework and sanitizer dependencies (WRE-224)
+
+- Patched DOMPurify to `3.4.17`, refreshed compatible lockfile dependencies, and bumped Vitest to `^5.0.5`.
+- Recorded security patch verification notes in `docs/internal/SECURITY_PATCH.md`.
+- Synchronized release candidate version to `1.0.0-rc.7`.
+
+## 2026-10-25 — Polish motion and adopt Liquid Glass surfaces (WRE-219)
+
+- Refined motion easing, spring transitions, and reduced-motion accessibility rules across `app/production.css` and `styles.css`.
+- Adopted translucent Liquid Glass surface modifiers and refined elevation in `ios/Kouchd/Design.swift`.
+- Synchronized release candidate version to `1.0.0-rc.6`.
+
+## 2026-10-25 — Delayed agreement acceptance and host guest profiles (WRE-216)
+
+- Added host-configurable agreement auto-acceptance after a 1–720 hour delay, defaulting to 24 hours; hosts can disable it, and guests can accept manually at any time.
+- Added auditable agreement offer state, manual/system acceptance methods, system approval timestamps, and activity events for offers, replacements, approvals, and setting changes.
+- Added host-only guest preferred-name editing and host-only guest contact details in the stay bundle.
+- Synchronized release candidate version to `1.0.0-rc.5`.
+
+## 2026-10-25 — Main website newsletter signup with Loops integration (WRE-213)
+
+- Added accessible newsletter signup to main landing page with explicit, unchecked consent.
+- Added server-side `/api/newsletter` route for Loops contact synchronization with input validation, honeypot field, and IP rate limiting.
+- Synchronized release candidate version to `1.0.0-rc.4`.
+
+## 2026-10-25 — Improve iOS navigation and dashboard activity (WRE-210, WRE-211, WRE-212)
+
+- Fixed iOS stay creation idempotency across ambiguous network responses and retries to prevent duplicate stays.
+- Routed iOS contribution and account shortcuts through their owning tabs, made recent activity rows open their related section, and kept Home stay cards from reloading the active stay.
+- Reduced web dashboard agreement clutter by showing pending-review details only when needed; made activity rows navigate to the relevant area and identify actor host or guest role.
+- Added More tab for secondary stay, account, and help actions, moving extra links off primary screens.
+- Synchronized release candidate version to `1.0.0-rc.3`.
+
+## 2026-10-25 — Patch Next.js security advisory and establish Version 1.0 Release Candidate 2 (WRE-228)
+
+## 2026-10-25 — Establish Version 1.0 Release Candidate feature lock and P2P Contribution Router (WRE-234, WRE-231)
+
+- Implemented the **Version 1.0 Release Candidate (`1.0.0-rc.1`) Feature Lock**:
+  - Added `release/feature-lock.json` codifying the `v1-rc` stabilization lock, enumerating the open pre-lock PRs (#55–#61, #66) and in-flight branches (`WRE-228`, `WRE-230`, `WRE-231`, `WRE-234`) allowed to complete merge before the unconditional lock takes effect.
+  - Created the `v1-feature-lock` agent skill at `.agents/skills/v1-feature-lock/SKILL.md` and helper CLI at `scripts/feature-lock.mjs` (`npm run lock:status`, `npm run lock:defer-feature`, `npm run lock:bump-rc`).
+  - Enforced the feature lock in `AGENTS.md` and `scripts/release-gate.mjs`: only bug fixes, security patches, stability fixes, and documentation updates (`patch`, `rc`, `none`) may land on the 1.0 launch line; net-new features must be added to `help/product/roadmap.mdx` and developed in separate git worktrees under `/Volumes/Projects/CodexWorktrees/`.
+  - Synchronized `VERSION`, `package.json`, `package-lock.json`, and `release/change.json` to `1.0.0-rc.1`, and iOS `MARKETING_VERSION` to `1.0.0`.
+- Implemented the **P2P Contribution Router & 4-Phase Confirmation Engine** (`WRE-231`) across Next.js (`lib/domain/p2pRouting.ts`, `lib/domain/qrCodeLevelH.ts`, `components/household/p2p-payment-router.tsx`) and native iOS SwiftUI (`ios/Kouchd/Models.swift`, `ios/Kouchd/MainScreens.swift`), including Venmo, Cash App, Chime, PayPal (`https://paypal.me/[username]/[amount]`), Zelle, Cash, and Reward Points offsets.
+
+## 2026-10-24 — Remediate Replay QA web security, canonical link, and sign-in defects (WRE-228)
+
+- Remediated 5 Replay QA defects reported on `https://app.kouchd.com` and user-reported profile name saving issue:
+  - Enforced Subresource Integrity (SRI) on dynamically injected cross-origin Clerk UI chunks (`vendors_ui_e564da_1.41.2.js`, `signin_ui_e564da_1.41.2.js`, `ui-common_ui_e564da_1.41.2.js`) via client security runtime interceptor (`lib/security-runtime.ts`), `<head>` preloading, and early inline script execution.
+  - Implemented client-side runtime deduplication for static Clerk `/v1/environment` GET requests during initial load, preventing redundant byte-identical fetches across component mounts.
+  - Added complete Content-Security-Policy (CSP) headers in Next.js configuration and proxy middleware (`clerkMiddleware`), paired with an HTML `<meta>` tag fallback in root layout.
+  - Added self-referencing canonical link metadata (`https://app.kouchd.com/`) in `app/layout.tsx` (`metadataBase: new URL("https://app.kouchd.com")`, `alternates: { canonical: "/" }`) and `app/page.tsx`.
+  - Disabled the sign-in "Continue" submit button visually and functionally when `#identifier-field` (email address) is empty via `SignInFormGuard` observer and `.kouchd-submit-disabled` CSS rules.
+  - Fixed profile display name saving in `components/authenticated-home.tsx` and native iOS `MoreScreens.swift` for single-word names (avoiding empty string `lastName` parameter rejected by Clerk), and updated form default values to correctly display saved names.
+- Added comprehensive unit tests in `tests/replay-qa-remediation.test.ts`.
+- Synchronized package and iOS marketing versions to `0.6.12` with patch classification in `release/change.json`.
+
+## 2026-10-24 — Update Replay QA site ownership nonce for security verification (WRE-227)
+
+- Updated static route handler at `app/.well-known/replay-qa-security-nonce/route.ts` with new Replay QA security verification token (`loopqa-sec-9TrCmqrdLQkZh1UIU1Qew_Ql6bEQ36iILYviGiS25V0`).
+- Updated matching static verification file at `public/.well-known/replay-qa-security-nonce`.
+- Updated test expectations in `tests/replay-qa-nonce.test.ts`.
+- Synchronized package and iOS marketing versions to `0.6.11` with patch release classification.
+
+## 2026-10-24 — Modularize iOS help documentation into dedicated topic guides (WRE-226)
+
+- Refactored single monolithic iOS guide into 3 focused, bite-sized guides under the "iPhone app" Mintlify navigation group:
+  - `help/ios/using-kouchd-on-ios.mdx`: Canonical entry point covering app status, 4-tab bar layout, header controls, joining a stay (via link or referral code), and optional SMS reminder settings with mandatory regulatory disclosure.
+  - `help/ios/ledger-and-contributions.mdx`: Dedicated guide explaining outside contributions, step-by-step recording, confirming and disputing entries, native-only inline dispute and void actions, and host balance controls.
+  - `help/ios/chores-and-stay.mdx`: Dedicated guide covering household chore assignments, marking tasks complete/incomplete, adding chores, occupied nights tracking, stay guidelines, house notes (Wi-Fi, parking, door codes), outside payment handles, and host controls.
+- Updated root `docs.json` navigation to register all 3 pages under the "iPhone app" group.
+- Updated cross-platform links in `help/quickstart.mdx`, `help/guests/joining-a-stay.mdx`, `help/hosts/ledger-management.mdx`, `help/guests/logging-contributions.mdx`, and `help/hosts/house-rules-and-chores.mdx` to route directly to their specific mobile topic guides.
+- Preserved release integrity: documentation-only changes do not bump SemVer; version 0.6.10 remains synchronized.
+- Validation: passed `mintlify validate` (0 build errors), `mintlify broken-links` (0 broken links), and `git diff --check`.
+
+
+## 2026-10-24 — Prevent anonymous RevenueCat customer profile creation (WRE-207)
+
+- Enforced authenticated Clerk user ID requirement before initializing RevenueCat Web Billing SDK, eliminating anonymous customer registration.
+- Forwarded authenticated `userId` to `presentRevenueCatPaywall` and `openCustomerCenter` in `PaywallModal`.
+- Short-circuited unauthenticated entitlement and customer info checks in `checkKouchdPlusAccess`, `getCustomerInfo`, and `useKouchdPlus` so unauthenticated renders and guest views never trigger RevenueCat SDK initialization.
+- Added comprehensive unit tests in `tests/revenuecat-client.test.ts`.
+- Synchronized release versions to `0.6.10` with patch classification in `release/change.json`.
+
+## 2026-10-24 — Add iOS help guidance and brand-aligned mobile UI screenshots (WRE-209)
+
+- Created dedicated Help Center guide `help/ios/using-kouchd-on-ios.mdx` covering the native SwiftUI app: Home, Ledger, Chores, and Stay tab navigation; recording and confirming contributions; chore coordination; stay details and guidelines; Apple Sign-In; and optional SMS reminders with full disclosure.
+- Registered the new guide in `docs.json` navigation under a dedicated "iPhone app" group.
+- Added cross-platform "On iPhone" accordion sections to core guides (`help/quickstart.mdx`, `help/guests/logging-contributions.mdx`, `help/hosts/ledger-management.mdx`, `help/hosts/house-rules-and-chores.mdx`, `help/guests/joining-a-stay.mdx`).
+- Generated 5 high-resolution Retina mobile device mockups in `help/images/` (`ios-home-overview.png`, `ios-ledger-screen.png`, `ios-record-contribution.png`, `ios-chores-screen.png`, `ios-stay-guidelines.png`) adhering to the Brand Building design system and native SwiftUI source.
+- Preserved strict release integrity: documentation-only changes do not bump the version; notes in all public guides clearly specify that the iPhone app is in active development and not yet distributed on the App Store.
+- Addressed PR #62 code review findings: scoped the web-parity note to core workflows while explicitly noting that Dispute and Void actions are native-only; clarified that confirmed credit applies to the oldest outstanding charge, including upcoming charges once earlier obligations are settled; and corrected the post-sign-in onboarding action label to "Join with a code" across iPhone instructions.
+- Validation: passed `mintlify validate` (build validation passed), `mintlify broken-links` (zero broken links), and `git diff --check`.
+
+
+## 2026-10-19 — Serve Replay QA site ownership nonce without authentication (WRE-206)
+
+- Added static route handler at `app/.well-known/replay-qa-security-nonce/route.ts` returning HTTP 200 with raw `text/plain; charset=utf-8` and exact 54-byte token without trailing newline.
+- Added matching static verification file at `public/.well-known/replay-qa-security-nonce`.
+- Excluded `\.well-known` from Clerk authentication proxy matcher in `proxy.ts`.
+- Added unit and route tests in `tests/replay-qa-nonce.test.ts`.
+- Synchronized package and iOS marketing versions to `0.6.9` with patch release classification.
+
 ## 2026-10-19 — Enforce reward caps, preserve schedule totals, and overdue recovery (WRE-184)
 
 - Enforced outstanding stay balance limit and cumulative period credit caps (`maxCreditPerPeriodCents`) for reward redemptions on the backend.

@@ -34,6 +34,7 @@ import type * as notifications from "../notifications.js";
 import type * as obligations from "../obligations.js";
 import type * as occupancy from "../occupancy.js";
 import type * as paymentSchedule from "../paymentSchedule.js";
+import type * as posthog from "../posthog.js";
 import type * as referral from "../referral.js";
 import type * as reminders from "../reminders.js";
 import type * as rewards from "../rewards.js";
@@ -77,6 +78,7 @@ declare const fullApi: ApiFromModules<{
   obligations: typeof obligations;
   occupancy: typeof occupancy;
   paymentSchedule: typeof paymentSchedule;
+  posthog: typeof posthog;
   referral: typeof referral;
   reminders: typeof reminders;
   rewards: typeof rewards;

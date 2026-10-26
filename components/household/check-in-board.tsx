@@ -8,6 +8,8 @@ import { useHouseholdAction } from "./use-household-action";
 
 import { api } from "@/convex/_generated/api";
 import type { Doc, Id } from "@/convex/_generated/dataModel";
+import { trackEvent } from "@/lib/analytics/track";
+import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
 
 type CheckIn = Doc<"checkIns"> & { guestName: string };
 type GuestOption = { id: Id<"users">; name: string };
@@ -38,6 +40,7 @@ export function CheckInBoard({
   async function create(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
+    const checkInDate = String(form.get("checkInDate") ?? "");
     if (
       await run(
         () =>
@@ -46,13 +49,14 @@ export function CheckInBoard({
             ...(isHost
               ? { guestUserId: String(form.get("guestUserId")) as Id<"users"> }
               : {}),
-            checkInDate: String(form.get("checkInDate") ?? ""),
+            checkInDate,
             topic: String(form.get("topic") ?? ""),
             note: String(form.get("note") ?? ""),
           }),
         "Could not start this check-in.",
       )
     ) {
+      trackEvent(ANALYTICS_EVENTS.CHECK_IN_SUBMITTED, { stayId, date: checkInDate });
       setShowForm(false);
     }
   }

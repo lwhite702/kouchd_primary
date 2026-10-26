@@ -1,39 +1,30 @@
-import {
-  scrubErrorEvent,
-  scrubTelemetryProperties,
-} from "@/lib/telemetry-privacy";
+import { initSecurityRuntime } from "./lib/security-runtime";
+import { scrubErrorEvent } from "@/lib/telemetry-privacy";
 import * as Sentry from "@sentry/nextjs";
-import posthog from "posthog-js";
 
-const postHogKey = process.env.NEXT_PUBLIC_POSTHOG_KEY;
-
-if (postHogKey) {
-  posthog.init(postHogKey, {
-    api_host:
-      process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://us.i.posthog.com",
-    person_profiles: "identified_only",
-    capture_pageview: false,
-    capture_pageleave: false,
-    autocapture: false,
-    disable_session_recording: true,
-    before_send: (event) => {
-      if (!event) return event;
-      scrubTelemetryProperties(event.properties);
-      scrubTelemetryProperties(event.$set);
-      scrubTelemetryProperties(event.$set_once);
-      return event;
-    },
-  });
-}
+initSecurityRuntime();
 
 Sentry.init({
-  dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
+  dsn: process.env.NEXT_PUBLIC_SENTRY_DSN || "https://f5223ccb49ae6418054cd711f9b1bf6a@o4509756446998528.ingest.us.sentry.io/4512231102808064",
   enabled: Boolean(process.env.NEXT_PUBLIC_SENTRY_DSN),
-  tracesSampleRate: 0.1,
-  replaysSessionSampleRate: 0,
-  replaysOnErrorSampleRate: 0,
+
+  // Capture 100% in dev, 10% in production
+  tracesSampleRate: process.env.NODE_ENV === "development" ? 1.0 : 0.1,
+
+  // Replay configuration
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1.0,
+
   beforeSend: scrubErrorEvent,
   beforeSendTransaction: scrubErrorEvent,
+
+  integrations: [
+    Sentry.replayIntegration({
+      maskAllText: true,
+      maskAllInputs: true,
+      blockAllMedia: true,
+    }),
+  ],
 });
 
 export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;

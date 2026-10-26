@@ -131,6 +131,58 @@
   gap: 8px;
 }
 
+.get-started-artwork,
+.onboarding-step-artwork {
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  background: linear-gradient(145deg, #f5eee2 0%, #f1f4e9 100%);
+}
+
+.get-started-artwork {
+  width: min(440px, 100%);
+  min-height: 148px;
+  margin: 0 auto 1rem;
+  border-radius: 24px;
+}
+
+.onboarding-step-artwork {
+  width: min(420px, 100%);
+  min-height: 138px;
+  margin: 0 auto 1rem;
+  border-radius: 20px;
+}
+
+.get-started-artwork img,
+.onboarding-step-artwork img {
+  display: block;
+  width: min(220px, 58vw);
+  height: auto;
+  object-fit: contain;
+}
+
+.stay-hub-empty {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  min-height: 128px;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--line, #e2ded7);
+  border-radius: 20px;
+  background: linear-gradient(120deg, #faf7f0 0%, #f3f5ed 100%);
+}
+
+.stay-hub-empty img {
+  display: block;
+  width: min(180px, 38vw);
+  height: auto;
+  object-fit: contain;
+}
+
+.stay-hub-empty .muted {
+  margin: 0;
+}
+
 .help-tip-wrap {
   position: relative;
   display: inline-flex;
@@ -320,6 +372,16 @@
 .auth-art { display: grid; place-items: center; width: 86px; height: 86px; margin-bottom: 24px; border-radius: 28px 28px 28px 8px; background: var(--green); color: var(--lime); transform: rotate(-3deg); }
 .auth-success { margin-bottom: 20px; color: var(--green); }
 .clerk-page { display: grid; place-items: center; min-height: 100vh; padding: 24px; }
+.clerk-page form:has(#identifier-field:placeholder-shown) button[type="submit"],
+.clerk-page form:has(#identifier-field[value=""]) button[type="submit"],
+.clerk-page button[type="submit"].kouchd-submit-disabled,
+.clerk-page button[type="submit"][aria-disabled="true"],
+.clerk-page button[type="submit"]:disabled {
+  opacity: 0.45 !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+  box-shadow: none !important;
+}
 .setup-card { max-width: 760px; margin: 0 auto; border: 1px solid var(--line); border-radius: 28px; background: var(--card); padding: clamp(22px, 5vw, 42px); box-shadow: var(--shadow); }
 .setup-card h1 { font-size: clamp(2.2rem, 5vw, 3.5rem); }
 .invite-card { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 24px; margin-top: 18px; border: 1px solid var(--line); border-radius: 24px; background: var(--card); padding: 24px; }
