@@ -1,5 +1,5 @@
 {
   "type": "rc",
-  "version": "1.0.0-rc.8",
-  "reason": "Add branded artwork to host and guest onboarding and the no-active-stays state."
+  "version": "1.0.0-rc.9",
+  "reason": "Fix the iOS RootView compiler type-check failure and preserve analytics/session callback behavior."
 }

@@ -2,6 +2,13 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-10-26 — Fix iOS RootView compiler timeout (WRE-239)
+
+- Split the root screen branches and authenticated tab composition into focused view properties, and extracted lifecycle callbacks to reduce SwiftUI type-checking complexity.
+- Kept analytics identity updates separate from session connection updates and used public Clerk first/last-name fields.
+- Verified a generic iOS Simulator Debug build with Xcode.
+- Synchronized release candidate metadata to `1.0.0-rc.9`.
+
 ## 2026-10-25 — Add Kouchd artwork to onboarding and empty stays (WRE-237)
 
 - Added decorative brand artwork to the host and guest welcome steps, host/join start screen, and no-active-stays state.

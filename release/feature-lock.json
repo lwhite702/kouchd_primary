@@ -2,7 +2,7 @@
   "enabled": true,
   "phase": "v1-rc",
   "targetMajorVersion": "1.0.0",
-  "currentCandidate": "1.0.0-rc.8",
+  "currentCandidate": "1.0.0-rc.9",
   "lockEffectiveAfterOpenMerges": true,
   "allowedChangeTypes": [
     "patch",
