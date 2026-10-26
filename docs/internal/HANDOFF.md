@@ -1,6 +1,27 @@
 # Kouchd help center and repository-policy handoff
 
-**Issue:** [WRE-226](https://linear.app/wrelik/issue/WRE-226/kouchd-modularize-ios-help-documentation-into-dedicated-topic-guides)
+**Issue:** [WRE-238](https://linear.app/wrelik/issue/WRE-238/kouchd-update-help-docs-and-tooltips-for-10-rc-status-app-support)
+**Task branch:** `codex/wre-238-1-0-rc-help-and-tooltips`
+**Canonical repository:** `https://github.com/lwhite702/kouchd_primary`
+**Task worktree:** `/Volumes/Projects/CodexWorktrees/kouchd-wre-238-help-tooltips`
+**State:** Local task branch ready for review.
+
+## Summary of changes
+
+- Created dedicated app support guide `help/support/app-support.mdx` detailing support boundaries: `help@kouchd.com` provides technical app assistance, while Kouchd explicitly does not mediate roommate conflicts, stay disputes, or outside financial disagreements.
+- Registered `"help/support/app-support"` in `docs.json` navigation under `"Support"` and added `"App support"` to footer navigation.
+- Updated `help/product/roadmap.mdx` and `help/product/changelog.mdx` to reflect Version 1.0 Release Candidate (`1.0.0-rc.*`) state:
+  - Documented merged capabilities: delayed guest agreement auto-acceptance, synced profile names, Loops newsletter, Liquid Glass motion polish, and streamlined entry.
+  - Documented remaining pre-lock launch merges (dependency hardening, package maintenance, release readiness).
+  - Outlined post-1.0 exploration (shared grocery receipt scanning, App Store distribution, recurring chore rotation) without promised ETAs.
+- Updated plain-language guidance across `help/index.mdx`, `index.mdx`, `help/legal-trust/stay-agreements.mdx`, `help/legal-trust/terms-of-service.mdx`, `help/hosts/getting-started.mdx`, `help/guests/joining-a-stay.mdx`, `help/hosts/ledger-management.mdx`, and `help/guests/logging-contributions.mdx`.
+- Refined all in-app tooltips and help tips across `components/authenticated-home.tsx`, `components/marketing/marketing-header.tsx`, and `components/household/payment-options.tsx` to use friendly, plainspoken, non-technical terminology.
+- Added `appSupport` URL to `lib/help-links.ts`.
+- Validation: `mintlify validate` and `mintlify broken-links` passed with zero errors.
+
+---
+
+# Previous handoff (WRE-226)
 **Task branch:** `codex/wre-226-modular-ios-help`
 **Pull request:** [PR #63](https://github.com/lwhite702/kouchd_primary/pull/63)
 **Canonical repository:** `https://github.com/lwhite702/kouchd_primary`

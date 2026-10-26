@@ -2,6 +2,20 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-10-26 — Update Help Center & tooltips for 1.0 RC status and app support boundaries (WRE-238)
+
+- Created dedicated app support guide `help/support/app-support.mdx` clarifying that `help@kouchd.com` provides technical app assistance (account access, bug reports, and reminder settings), while Kouchd explicitly does not mediate interpersonal roommate conflicts, stay disputes, house rule issues, or external payment problems.
+- Registered the new support guide in `docs.json` navigation under `"Support"` and added `"App support"` to footer navigation links.
+- Updated `help/product/roadmap.mdx` and `help/product/changelog.mdx` to reflect Version 1.0 Release Candidate (`1.0.0-rc.*`) stabilization under the feature lock:
+  - Documented merged capabilities: delayed guest agreement acceptance, synced profile names, Loops newsletter signup, Liquid Glass motion polish, and direct workspace routing.
+  - Documented remaining pre-lock launch merges (dependency hardening, package maintenance, release readiness).
+  - Outlined post-1.0 exploration (shared grocery receipt scanning, App Store distribution, recurring chore rotation) without promised ETAs.
+- Updated plain-language guidance across `help/index.mdx`, `index.mdx`, `help/legal-trust/stay-agreements.mdx`, `help/legal-trust/terms-of-service.mdx`, `help/hosts/getting-started.mdx`, `help/guests/joining-a-stay.mdx`, `help/hosts/ledger-management.mdx`, and `help/guests/logging-contributions.mdx`.
+- Refined all in-app tooltips and help tips across `components/authenticated-home.tsx`, `components/marketing/marketing-header.tsx`, and `components/household/payment-options.tsx` to use friendly, plainspoken, non-technical terminology.
+- Added `appSupport` URL to `lib/help-links.ts`.
+- Preserved release integrity: documentation and copy polish do not bump SemVer; version `1.0.0-rc.6` remains synchronized.
+
+
 ## 2026-10-25 — Polish motion and adopt Liquid Glass surfaces (WRE-219)
 
 - Refined motion easing, spring transitions, and reduced-motion accessibility rules across `app/production.css` and `styles.css`.
