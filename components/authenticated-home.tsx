@@ -162,9 +162,6 @@ function SyncedWorkspace() {
       </KnockGuidesProvider>
     );
   }
-  const selectedStay = selectedStayId
-    ? stays.find((item) => item.stay._id === selectedStayId)
-    : undefined;
   if (!selectedStay)
     return (
       <StayHub
