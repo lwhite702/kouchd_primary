@@ -1,6 +1,4 @@
-const RATE_WINDOW_MS = 60_000;
-const RATE_LIMIT = 5;
-const requestsByIp = new Map<string, { count: number; resetAt: number }>();
+import { getClientIp, isRateLimited } from "@/lib/newsletter-limiter";
 
 function json(message: string, status: number) {
   return Response.json({ message }, { status, headers: { "Cache-Control": "no-store" } });
@@ -8,23 +6,6 @@ function json(message: string, status: number) {
 
 function isValidEmail(email: string) {
   return email.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-}
-
-function isRateLimited(ip: string, now = Date.now()) {
-  if (requestsByIp.size > 1_000) {
-    for (const [key, entry] of requestsByIp) {
-      if (entry.resetAt <= now) requestsByIp.delete(key);
-    }
-  }
-
-  const current = requestsByIp.get(ip);
-  if (!current || current.resetAt <= now) {
-    requestsByIp.set(ip, { count: 1, resetAt: now + RATE_WINDOW_MS });
-    return false;
-  }
-
-  current.count += 1;
-  return current.count > RATE_LIMIT;
 }
 
 export async function POST(request: Request) {
@@ -55,9 +36,7 @@ export async function POST(request: Request) {
   const email = signup.email.trim().toLowerCase();
   if (!isValidEmail(email)) return json("Enter a valid email address.", 400);
 
-  const ip = request.headers.get("x-real-ip")
-    ?? request.headers.get("x-forwarded-for")?.split(",").at(-1)?.trim()
-    ?? "unknown";
+  const ip = getClientIp(request);
   if (isRateLimited(ip)) return json("Please wait a minute before trying again.", 429);
 
   const apiKey = process.env.LOOPS_API_KEY;
@@ -86,7 +65,26 @@ export async function POST(request: Request) {
     }
 
     return json("Thanks for signing up.", 200);
-  } catch {
-    return json("We couldn’t reach the signup service. Please try again shortly.", 502);
+  } catch (error: unknown) {
+    const isTimeout =
+      error instanceof Error &&
+      (error.name === "TimeoutError" || error.name === "AbortError");
+    const isNetworkError =
+      error instanceof TypeError &&
+      (error.message.includes("fetch") || error.message.includes("network"));
+
+    if (isTimeout || isNetworkError) {
+      console.error("Loops newsletter upstream network/timeout failure", {
+        errorName: error instanceof Error ? error.name : "UnknownError",
+        message: error instanceof Error ? error.message : String(error),
+      });
+      return json("We couldn’t reach the signup service. Please try again shortly.", 502);
+    }
+
+    console.error("Newsletter route internal unexpected error", {
+      errorName: error instanceof Error ? error.name : "UnknownError",
+      message: error instanceof Error ? error.message : String(error),
+    });
+    return json("An unexpected error occurred. Please try again.", 500);
   }
 }

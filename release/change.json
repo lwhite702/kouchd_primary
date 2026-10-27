@@ -1,5 +1,5 @@
 {
   "type": "rc",
-  "version": "1.0.0-rc.12",
-  "reason": "Repair the iOS AppConfig declaration exposed by the launch merge and restore the release build."
+  "version": "1.0.0-rc.13",
+  "reason": "Harden web CI workflow, newsletter rate limiter, and error handling (WRE-241)"
 }

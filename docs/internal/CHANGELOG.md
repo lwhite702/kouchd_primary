@@ -2,6 +2,17 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-10-26 — Harden web CI workflow, newsletter rate limiter, and error handling (WRE-241)
+
+- Added a dedicated `web` job on `ubuntu-latest` in `.github/workflows/release-integrity.yml` to gate pull requests with environment check, TypeScript typecheck (`tsc --noEmit`), ESLint, the Vitest test suite, and Next.js production build (`next build --webpack`).
+- Maintained the existing `verify` job on `macos-latest` for iOS release integrity, fastlane validation, and simulator xcodebuild.
+- Hardened the newsletter rate limiter in `app/api/newsletter/route.ts` and `lib/newsletter-limiter.ts`:
+  - Enforced a 5,000-entry hard cap and proactive expired-entry pruning to strictly bound memory growth.
+  - Aligned client IP extraction to prioritize `x-real-ip` and first client entry in `x-forwarded-for`.
+  - Structured error classification to distinguish network timeouts / provider outages (502) from internal runtime errors (500), logging server-side context without leaking error objects or stack traces to clients.
+- Added comprehensive unit and integration test coverage in `tests/newsletter.test.ts` (12 tests covering rate limiting, IP extraction, Loops submission, honeypot decoy, network timeouts, and internal error handling).
+- Synchronized release candidate metadata to `1.0.0-rc.13`.
+
 ## 2026-10-26 — Prepare launch candidate: scoped workspace screens, account capacity limits, telemetry privacy scrubbing, and native coordination screens (WRE-224)
 
 - Prepared account-wide Starter and Plus capacity limits while preserving existing access, and added telemetry privacy scrubbing.

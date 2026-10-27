@@ -4,6 +4,7 @@
 
 ### Changed
 
+- **Web CI Workflow Gate (WRE-241)**: Added a dedicated `web` verification and build job on `ubuntu-latest` in `.github/workflows/release-integrity.yml` that runs environment verification, TypeScript type-checking, ESLint, the Vitest suite, and production `next build` on every PR to `main`.
 - **1.0 RC Help Docs, Support Boundaries & Plain-Language Tooltips (WRE-238)**: Created a dedicated app support guide at `help/support/app-support.mdx` detailing that `help@kouchd.com` provides technical assistance while Kouchd explicitly does not mediate roommate conflicts, stay disputes, or outside financial disagreements. Refined all web app tooltips and help tips to use friendly, plainspoken language, and aligned the roadmap and public changelog with 1.0 Release Candidate status.
 - Added warm Kouchd illustrations to host and guest welcome steps, the host/join start screen, and the no-active-stays state.
 - **Motion Polish & Liquid Glass Surfaces (WRE-219)**: Refined spring transitions, reduced-motion fallbacks, and translucent Liquid Glass surface treatments across web CSS (`app/production.css`, `styles.css`) and native iOS design tokens (`ios/Kouchd/Design.swift`).
@@ -12,6 +13,11 @@
 
 ### Fixed
 
+- **Newsletter Rate Limiting & Error Handling Hardening (WRE-241)**: Hardened `app/api/newsletter/route.ts` and extracted `lib/newsletter-limiter.ts`:
+  - Enforced a 5,000-entry hard cap and proactive expired-entry pruning on in-memory rate limiting to strictly bound memory growth.
+  - Aligned client IP extraction to prioritize `x-real-ip` and first client entry in `x-forwarded-for`.
+  - Structured error classification to distinguish network timeouts / provider outages (502) from internal runtime errors (500), logging server-side context without leaking error objects or stack traces to clients.
+  - Added full test coverage in `tests/newsletter.test.ts` (12 unit and integration tests).
 - Fixed the iOS `AppConfig` declaration so the merged launch candidate compiles cleanly in the release workflow.
 - Fixed an iOS SwiftUI compiler timeout in `RootView` by splitting screen composition and lifecycle callbacks into focused helpers.
 - Patch Next.js to 16.4.3 and DOMPurify to 3.4.17, align the framework lint configuration, and refresh compatible dependencies. Local full and runtime audits report zero advisories; release requires its own promotion approval.
