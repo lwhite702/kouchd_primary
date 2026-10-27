@@ -4,6 +4,8 @@
 
 ### Changed
 
+- **Landing and Marketing Pages Polish & Accessibility (WRE-240)**: Polished public marketing and landing pages across accessibility, motion, visual hierarchy, and conversion. Added comprehensive `prefers-reduced-motion` CSS controls and focus-visible indicators, built interactive multi-view preview tabs (Overview, House Guide, Ledger, Chores) on the landing page, implemented a structured footer keeping `/brand` exclusively in the footer for media/staff, and injected Schema.org JSON-LD structured data (`Organization`) on `/about`.
+
 - **1.0 RC Help Docs, Support Boundaries & Plain-Language Tooltips (WRE-238)**: Created a dedicated app support guide at `help/support/app-support.mdx` detailing that `help@kouchd.com` provides technical assistance while Kouchd explicitly does not mediate roommate conflicts, stay disputes, or outside financial disagreements. Refined all web app tooltips and help tips to use friendly, plainspoken language, and aligned the roadmap and public changelog with 1.0 Release Candidate status.
 - Added warm Kouchd illustrations to host and guest welcome steps, the host/join start screen, and the no-active-stays state.
 - **Motion Polish & Liquid Glass Surfaces (WRE-219)**: Refined spring transitions, reduced-motion fallbacks, and translucent Liquid Glass surface treatments across web CSS (`app/production.css`, `styles.css`) and native iOS design tokens (`ios/Kouchd/Design.swift`).
@@ -12,6 +14,7 @@
 
 ### Fixed
 
+- Fixed the iOS `AppConfig` declaration so the merged launch candidate compiles cleanly in the release workflow.
 - Fixed an iOS SwiftUI compiler timeout in `RootView` by splitting screen composition and lifecycle callbacks into focused helpers.
 - Patch Next.js to 16.4.3 and DOMPurify to 3.4.17, align the framework lint configuration, and refresh compatible dependencies. Local full and runtime audits report zero advisories; release requires its own promotion approval.
 - Upgraded Next.js from `16.4.0` to `16.4.3` and `eslint-config-next` to `16.4.3` across the application to remediate published framework security advisories, and configured `experimental.agentUpgrade: "security"` in Next.js configuration.
