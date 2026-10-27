@@ -4,6 +4,8 @@
 
 ### Changed
 
+- **Landing and Marketing Pages Polish & Accessibility (WRE-240)**: Polished public marketing and landing pages across accessibility, motion, visual hierarchy, and conversion. Added comprehensive `prefers-reduced-motion` CSS controls and focus-visible indicators, built interactive multi-view preview tabs (Overview, House Guide, Ledger, Chores) on the landing page, implemented a structured footer keeping `/brand` exclusively in the footer for media/staff, and injected Schema.org JSON-LD structured data (`Organization`) on `/about`.
+
 - **1.0 RC Help Docs, Support Boundaries & Plain-Language Tooltips (WRE-238)**: Created a dedicated app support guide at `help/support/app-support.mdx` detailing that `help@kouchd.com` provides technical assistance while Kouchd explicitly does not mediate roommate conflicts, stay disputes, or outside financial disagreements. Refined all web app tooltips and help tips to use friendly, plainspoken language, and aligned the roadmap and public changelog with 1.0 Release Candidate status.
 - Added warm Kouchd illustrations to host and guest welcome steps, the host/join start screen, and the no-active-stays state.
 - **Motion Polish & Liquid Glass Surfaces (WRE-219)**: Refined spring transitions, reduced-motion fallbacks, and translucent Liquid Glass surface treatments across web CSS (`app/production.css`, `styles.css`) and native iOS design tokens (`ios/Kouchd/Design.swift`).

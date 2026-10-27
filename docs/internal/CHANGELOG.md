@@ -2,18 +2,31 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
-## 2026-10-26 — Prepare launch candidate: scoped workspace screens, account capacity limits, telemetry privacy scrubbing, and native coordination screens (WRE-224)
+## 2026-10-26 — Polish landing and marketing pages, update Mintlify tokens and roadmap (WRE-240)
 
-- Prepared account-wide Starter and Plus capacity limits while preserving existing access, and added telemetry privacy scrubbing.
-- Scoped workspace screens, separated financial summaries, and harmonized RevenueCat billing client authentication.
-- Added native shopping and check-in destinations, typed ledger contracts, and keyboard dismissal.
-- Synchronized release candidate metadata to `1.0.0-rc.11`.
+- Polished public marketing and landing pages across accessibility, motion, visual hierarchy, and conversion:
+  - Added comprehensive `prefers-reduced-motion` CSS controls and focus-visible indicators.
+  - Built interactive multi-view preview tabs (Overview, House Guide, Ledger, Chores) on the landing page.
+  - Implemented structured footer separating Product, Company & Media, and Trust & Legal, keeping `/brand` exclusively in the footer.
+  - Injected Schema.org JSON-LD structured data (`Organization`) on `/about` and enhanced OpenGraph tags.
+- Updated Mintlify `docs.json` and `help/docs.json` configuration to align with Kouchd's Brand Building Design System:
+  - Colors: Set `primary` to `#184F3A` (Core Forest), `light` to `#DFF25E` (Electric Lime accent), and `dark` to `#123D2E` (Forest Dark contrast).
+  - Background: Configured `light` background canvas to `#F5F0E8` (Warm Paper) with gradient decoration, matching the brand surface hierarchy.
+  - Typography: Configured `fonts` with `Manrope` for headings and body text.
+  - Navigation: Pointed Web App links to `https://app.kouchd.com` and marketing site to `https://kouchd.com`.
+  - Added direct links to the official Brand Style Guide (`https://kouchd.com/brand`) in the global anchors, navbar, and footer.
+- Updated root `index.mdx` and `help/index.mdx` with direct navigation cards linking to the Brand Style Guide.
+- Added post-1.0 hardware roadmap capabilities to `help/product/roadmap.mdx` under "Being explored" (without promised dates):
+  - iPadOS native adaptation (multi-column split view, sidebar, keyboard shortcuts, Stage Manager).
+  - iPhone Duo dual-screen experience (foldable postures, hinge-aware safe regions, outer-to-inner display continuity).
+- Drafted comprehensive internal technical architecture plan in `docs/internal/POST_V1_APPLE_EXPANSION_PLAN.md`.
+- Excluded `ios/project.yml` in `.mintignore` and resolved duplicate mapping key in `ios/project.yml` so Mintlify CLI validation runs cleanly.
+- Verified with `mintlify validate` (passed with 0 warnings/errors) and `mintlify broken-links` (0 broken links).
 
 ## 2026-10-26 — Repair iOS AppConfig declaration after launch merge (WRE-224)
 
 - Removed the extra closing brace that left `AppConfig.isConfigured` at file scope and caused the release simulator build to fail.
 - Synchronized release candidate metadata to `1.0.0-rc.12`.
-
 ## 2026-10-26 — Update Help Center & tooltips for 1.0 RC status and app support boundaries (WRE-238)
 
 - Created dedicated app support guide `help/support/app-support.mdx` clarifying that `help@kouchd.com` provides technical app assistance (account access, bug reports, and reminder settings), while Kouchd explicitly does not mediate interpersonal roommate conflicts, stay disputes, house rule issues, or external payment problems.

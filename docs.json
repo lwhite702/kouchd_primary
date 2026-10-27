@@ -9,14 +9,22 @@
   },
   "colors": {
     "primary": "#184F3A",
-    "light": "#22C55E",
-    "dark": "#103627"
+    "light": "#DFF25E",
+    "dark": "#123D2E"
   },
   "background": {
     "decoration": "gradient",
     "color": {
-      "light": "#FFFDF8",
+      "light": "#F5F0E8",
       "dark": "#FFFDF8"
+    }
+  },
+  "fonts": {
+    "heading": {
+      "family": "Manrope"
+    },
+    "body": {
+      "family": "Manrope"
     }
   },
   "icons": {
@@ -98,8 +106,13 @@
       "anchors": [
         {
           "anchor": "Open App",
-          "href": "https://kouchd.com",
+          "href": "https://app.kouchd.com",
           "icon": "house"
+        },
+        {
+          "anchor": "Brand Guide",
+          "href": "https://kouchd.com/brand",
+          "icon": "palette"
         }
       ]
     }
@@ -113,14 +126,18 @@
   "navbar": {
     "links": [
       {
-        "label": "Web App",
+        "label": "Website",
         "href": "https://kouchd.com"
+      },
+      {
+        "label": "Brand Guide",
+        "href": "https://kouchd.com/brand"
       }
     ],
     "primary": {
       "type": "button",
       "label": "Open Kouchd",
-      "href": "https://kouchd.com"
+      "href": "https://app.kouchd.com"
     }
   },
   "footer": {
@@ -131,7 +148,8 @@
       {
         "header": "Product",
         "items": [
-          { "label": "Open Kouchd", "href": "https://kouchd.com" },
+          { "label": "Open Kouchd", "href": "https://app.kouchd.com" },
+          { "label": "Brand Guide", "href": "https://kouchd.com/brand" },
           { "label": "Roadmap", "href": "/help/product/roadmap" },
           { "label": "Changelog", "href": "/help/product/changelog" }
         ]

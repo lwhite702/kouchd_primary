@@ -1,8 +1,8 @@
 import Image from "next/image";
-import Link from "next/link";
 import { HeartHandshake, House, Users } from "lucide-react";
 import { KouchdWordmark } from "@/components/brand/kouchd-logo";
 import { MarketingHeader, MarketingStartButton } from "@/components/marketing/marketing-header";
+import { MarketingFooter } from "@/components/marketing/marketing-footer";
 import "./landing-v21.css";
 import "./about-kouchd-page.css";
 
@@ -81,8 +81,13 @@ export function AboutKouchdPage({ hasClerk }: { hasClerk: boolean }) {
         </div></div>
       </section>
 
-      <section className="v21-cta"><KouchdWordmark size="md" theme="cream" /><h2>Make sharing a home a little easier.</h2><p>Bring stay details, expectations, contributions, and chores together.</p><MarketingStartButton hasClerk={hasClerk} /></section>
-      <footer className="v21-footer"><Link href="/" className="v21-footer-brand" aria-label="Kouchd home"><KouchdWordmark size="sm" /></Link><p>Your space. Your people. Everyone on the same page.</p><div><Link href="/">Home</Link><a href="https://help.kouchd.com" target="_blank" rel="noreferrer">Help center</a><a href="mailto:support@kouchd.com">Email support</a><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link></div><small>© {new Date().getFullYear()} Wrelik Brands LLC · Kouchd records shared expectations; it does not replace applicable housing rights.</small></footer>
+      <section className="v21-cta">
+        <KouchdWordmark size="md" theme="cream" />
+        <h2>Make sharing a home a little easier.</h2>
+        <p>Bring stay details, expectations, contributions, and chores together.</p>
+        <MarketingStartButton hasClerk={hasClerk} />
+      </section>
+      <MarketingFooter hasClerk={hasClerk} />
     </main>
   );
 }
