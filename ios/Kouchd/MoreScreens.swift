@@ -636,12 +636,15 @@ private struct GuestNamesCard: View {
   @State private var names: [String: String] = [:]
   @State private var savingID = ""
 
+  /// `stays:updateGuestPreferredName` only accepts active guests.
+  private var activeGuests: [Value] { store.guests.filter { $0["membership"]["status"].text == "active" } }
+
   var body: some View {
     Card {
       Text("Guest display names").font(.headline)
       Text("Choose the name everyone in the stay sees for each guest.")
         .font(.subheadline).foregroundStyle(Palette.muted)
-      ForEach(store.guests, id: \.guestPersonID) { guest in
+      ForEach(activeGuests, id: \.guestPersonID) { guest in
         let id = guest.guestPersonID
         HStack {
           TextField("Display name", text: Binding(
@@ -697,7 +700,7 @@ struct HostControlsScreen: View {
       if !store.isEnded {
         AgreementAutoAcceptCard(store: store)
           .id("\(store.bundle["stay"]["agreementAutoAcceptEnabled"].flag)-\(store.bundle["stay"]["agreementAutoAcceptHours"].int)")
-        if !store.guests.isEmpty { GuestNamesCard(store: store) }
+        if store.guests.contains(where: { $0["membership"]["status"].text == "active" }) { GuestNamesCard(store: store) }
       }
       Card {
         Text("Stay management").font(.headline)

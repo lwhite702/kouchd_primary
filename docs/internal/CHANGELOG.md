@@ -8,11 +8,13 @@ Internal engineering record. This file is excluded from Mintlify navigation and 
   - **Automatic acceptance** calls `stays:updateAgreementAutoAccept` (1–720 hours, or off).
   - **Guest display names** calls `stays:updateGuestPreferredName`.
   - Both are hidden on ended stays.
-- `ios/Kouchd/Service.swift`: the store watches `obligations:summary` with the same stay, guest, and date arguments as the ledger, and resets it with the other financial data.
+- `convex/obligations.ts`: new `ledgerWithTotals` query returns `{ rows, totals }` from a single `buildFinancialRecord` call. `summary` now shares the `summarize` helper, and `list` and `summary` are unchanged for web and older iOS builds. Covered in `tests/backend.test.ts` (matches `list` and `summary`; rejects outsiders).
+- `ios/Kouchd/Service.swift`: the store subscribes once to `obligations:ledgerWithTotals` instead of `obligations:list`, and fills `ledger`, `typedLedger`, and `ledgerSummary` from it. Review feedback: the earlier version subscribed to `list` and `summary` together, so the full ledger was computed twice on every update.
+- The display-name card lists only active guests, because `stays:updateGuestPreferredName` rejects inactive ones.
 - `ios/Kouchd/MainScreens.swift`: `LedgerSummaryCard` uses web's labels.
 - `ios/Kouchd/Models.swift`: the `HouseholdSettings` rules (default on, 24 hours, hour range, name length) mirror the server.
 - Numbers are sent as `Double`, matching the WRE-242 encoding fix.
-- Evidence: the simulator build succeeded, `KouchdTests` passed (15 tests, including 4 new `HouseholdSettingsTests`), and `npm run release:check` passed for `1.0.0-rc.17`. Not exercised while signed in.
+- Evidence: the simulator build succeeded, `KouchdTests` passed (15 tests, including 4 new `HouseholdSettingsTests`), and `npm run release:check` passed for `1.0.0-rc.17`, and Vitest passed (174 tests). Not exercised while signed in.
 - Not done: no in-app notification feed (needs the Knock iOS SDK) and no push notifications (post-1.0).
 
 ## 2026-10-26 — Polish landing and marketing pages, update Mintlify tokens and roadmap (WRE-240)
