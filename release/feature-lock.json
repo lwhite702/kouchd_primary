@@ -1,8 +1,14 @@
 {
-  "enabled": true,
-  "phase": "v1-rc",
+  "enabled": false,
+  "phase": "prerelease",
+  "activation": {
+    "status": "inactive",
+    "activatesWhen": "The team approves the official Apple App Store submission.",
+    "onActivation": "Set enabled to true, prepare 1.0.0-rc.1, and keep only fixes, patches, and release polish on the launch line.",
+    "decidedAt": "2026-10-28",
+    "decision": "WRE-248"
+  },
   "targetMajorVersion": "1.0.0",
-  "currentCandidate": "1.0.0-rc.15",
   "lockEffectiveAfterOpenMerges": true,
   "allowedChangeTypes": [
     "patch",

@@ -11,7 +11,7 @@
 
 ## 1. Executive Summary
 
-As Kouchd approaches its Version 1.0 Release Candidate (`1.0.0-rc.*`), the primary launch line is restricted to bug fixes, accessibility polish, and stabilization. To support the next generation of Apple hardware and form factors without compromising 1.0 RC stability, this document outlines the architecture, UX patterns, and implementation strategy for two post-1.0 initiatives:
+As Kouchd approaches its the then-current Version 1.0 Release Candidate labels (since renamed `0.7.x`), the primary launch line is restricted to bug fixes, accessibility polish, and stabilization. To support the next generation of Apple hardware and form factors without compromising 1.0 RC stability, this document outlines the architecture, UX patterns, and implementation strategy for two post-1.0 initiatives:
 
 1. **iPadOS Native Adaptation:** Transforming Kouchd's iOS client from an iPhone-first layout into a first-class tablet experience with `NavigationSplitView`, sidebar navigation, Stage Manager multitasking, and trackpad/keyboard shortcuts.
 2. **iPhone Duo Dual-Screen & Foldable Experience:** Adapting navigation and layout systems for foldable displays, handling posture transitions (folded, flat open, tabletop mode), hinge avoidance via `reservedRegions`, and outer-to-inner display continuity.
