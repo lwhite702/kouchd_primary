@@ -2,6 +2,16 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-10-28 — Resume prerelease numbering and pause the 1.0 feature lock (WRE-248)
+
+- Team decision: Kouchd stays in prerelease until the team approves the official App Store submission.
+- Renamed the 13 releases recorded as `1.0.0-rc.1`–`1.0.0-rc.13` to `0.7.0`–`0.7.12`. None were tagged or released, so only the records change. Earlier entries in this log now show the current number with the old one in parentheses.
+- `release/version-history.json` holds the mapping. `scripts/release-gate.mjs` compares the base version by its current number, allows the one-time rename (`none` from `1.0.0-rc.13` to `0.7.12`), and treats the next prerelease as `0.7.13`. Covered by three new cases in `tests/release-gate.test.ts`.
+- `release/feature-lock.json`: `enabled: false`, phase `prerelease`, with an `activation` block naming the trigger (App Store submission approved) and the next step (`1.0.0-rc.1`).
+- `scripts/release-version.mjs` and `scripts/feature-lock.mjs bump-rc` refuse `-rc.N` versions while the lock is off; `lock:status` reports the lock as open.
+- `VERSION`, `package.json`, the lockfile, and the iOS `MARKETING_VERSION` set to `0.7.12`. No 1.0.0 build was uploaded to App Store Connect, per the team.
+- Open PRs renumbered in merge order: #79 → `0.7.13`, #83 → `0.7.14`, #84 → `0.7.15`. Each is stacked on the PR before it. #74 (WRE-242) still needs a 0.7.x number when it merges.
+
 ## 2026-10-26 — Polish landing and marketing pages, update Mintlify tokens and roadmap (WRE-240)
 
 - Polished public marketing and landing pages across accessibility, motion, visual hierarchy, and conversion:
@@ -26,59 +36,59 @@ Internal engineering record. This file is excluded from Mintlify navigation and 
 ## 2026-10-26 — Repair iOS AppConfig declaration after launch merge (WRE-224)
 
 - Removed the extra closing brace that left `AppConfig.isConfigured` at file scope and caused the release simulator build to fail.
-- Synchronized release candidate metadata to `1.0.0-rc.12`.
+- Synchronized release candidate metadata to `0.7.11` (recorded as `1.0.0-rc.12`).
 ## 2026-10-26 — Update Help Center & tooltips for 1.0 RC status and app support boundaries (WRE-238)
 
 - Created dedicated app support guide `help/support/app-support.mdx` clarifying that `help@kouchd.com` provides technical app assistance (account access, bug reports, and reminder settings), while Kouchd explicitly does not mediate interpersonal roommate conflicts, stay disputes, house rule issues, or external payment problems.
 - Registered the new support guide in `docs.json` navigation under `"Support"` and added `"App support"` to footer navigation links.
-- Updated `help/product/roadmap.mdx` and `help/product/changelog.mdx` to reflect Version 1.0 Release Candidate (`1.0.0-rc.*`) stabilization under the feature lock:
+- Updated `help/product/roadmap.mdx` and `help/product/changelog.mdx` to reflect the then-current Version 1.0 Release Candidate labels (since renamed `0.7.x`) stabilization under the feature lock:
   - Documented merged capabilities: delayed guest agreement acceptance, synced profile names, Loops newsletter signup, Liquid Glass motion polish, and direct workspace routing.
   - Documented remaining pre-lock launch merges (dependency hardening, package maintenance, release readiness).
   - Outlined post-1.0 exploration (shared grocery receipt scanning, App Store distribution, recurring chore rotation) without promised ETAs.
 - Updated plain-language guidance across `help/index.mdx`, `index.mdx`, `help/legal-trust/stay-agreements.mdx`, `help/legal-trust/terms-of-service.mdx`, `help/hosts/getting-started.mdx`, `help/guests/joining-a-stay.mdx`, `help/hosts/ledger-management.mdx`, and `help/guests/logging-contributions.mdx`.
 - Refined all in-app tooltips and help tips across `components/authenticated-home.tsx`, `components/marketing/marketing-header.tsx`, and `components/household/payment-options.tsx` to use friendly, plainspoken, non-technical terminology.
 - Added `appSupport` URL to `lib/help-links.ts`.
-- Synchronized release candidate version to `1.0.0-rc.10` for runtime tooltip and helper updates under the 1.0 feature lock.
+- Synchronized release candidate version to `0.7.9` (recorded as `1.0.0-rc.10`) for runtime tooltip and helper updates under the 1.0 feature lock.
 
 ## 2026-10-26 — Fix iOS RootView compiler timeout (WRE-239)
 
 - Split the root screen branches and authenticated tab composition into focused view properties, and extracted lifecycle callbacks to reduce SwiftUI type-checking complexity.
 - Kept analytics identity updates separate from session connection updates and used public Clerk first/last-name fields.
 - Verified a generic iOS Simulator Debug build with Xcode.
-- Synchronized release candidate metadata to `1.0.0-rc.9`.
+- Synchronized release candidate metadata to `0.7.8` (recorded as `1.0.0-rc.9`).
 
 
 ## 2026-10-25 — Add Kouchd artwork to onboarding and empty stays (WRE-237)
 
 - Added decorative brand artwork to the host and guest welcome steps, host/join start screen, and no-active-stays state.
 - Added responsive image framing and documented the customer-visible polish in the root unreleased changelog.
-- Synchronized release candidate metadata to `1.0.0-rc.8` after the WRE-237 push check required a unique version.
+- Synchronized release candidate metadata to `0.7.7` (recorded as `1.0.0-rc.8`) after the WRE-237 push check required a unique version.
 
 
 ## 2026-10-25 — Patch vulnerable framework and sanitizer dependencies (WRE-224)
 
 - Patched DOMPurify to `3.4.17`, refreshed compatible lockfile dependencies, and bumped Vitest to `^5.0.5`.
 - Recorded security patch verification notes in `docs/internal/SECURITY_PATCH.md`.
-- Synchronized release candidate version to `1.0.0-rc.7`.
+- Synchronized release candidate version to `0.7.6` (recorded as `1.0.0-rc.7`).
 
 ## 2026-10-25 — Polish motion and adopt Liquid Glass surfaces (WRE-219)
 
 - Refined motion easing, spring transitions, and reduced-motion accessibility rules across `app/production.css` and `styles.css`.
 - Adopted translucent Liquid Glass surface modifiers and refined elevation in `ios/Kouchd/Design.swift`.
-- Synchronized release candidate version to `1.0.0-rc.6`.
+- Synchronized release candidate version to `0.7.5` (recorded as `1.0.0-rc.6`).
 
 ## 2026-10-25 — Delayed agreement acceptance and host guest profiles (WRE-216)
 
 - Added host-configurable agreement auto-acceptance after a 1–720 hour delay, defaulting to 24 hours; hosts can disable it, and guests can accept manually at any time.
 - Added auditable agreement offer state, manual/system acceptance methods, system approval timestamps, and activity events for offers, replacements, approvals, and setting changes.
 - Added host-only guest preferred-name editing and host-only guest contact details in the stay bundle.
-- Synchronized release candidate version to `1.0.0-rc.5`.
+- Synchronized release candidate version to `0.7.4` (recorded as `1.0.0-rc.5`).
 
 ## 2026-10-25 — Main website newsletter signup with Loops integration (WRE-213)
 
 - Added accessible newsletter signup to main landing page with explicit, unchecked consent.
 - Added server-side `/api/newsletter` route for Loops contact synchronization with input validation, honeypot field, and IP rate limiting.
-- Synchronized release candidate version to `1.0.0-rc.4`.
+- Synchronized release candidate version to `0.7.3` (recorded as `1.0.0-rc.4`).
 
 ## 2026-10-25 — Improve iOS navigation and dashboard activity (WRE-210, WRE-211, WRE-212)
 
@@ -86,17 +96,17 @@ Internal engineering record. This file is excluded from Mintlify navigation and 
 - Routed iOS contribution and account shortcuts through their owning tabs, made recent activity rows open their related section, and kept Home stay cards from reloading the active stay.
 - Reduced web dashboard agreement clutter by showing pending-review details only when needed; made activity rows navigate to the relevant area and identify actor host or guest role.
 - Added More tab for secondary stay, account, and help actions, moving extra links off primary screens.
-- Synchronized release candidate version to `1.0.0-rc.3`.
+- Synchronized release candidate version to `0.7.2` (recorded as `1.0.0-rc.3`).
 
 ## 2026-10-25 — Patch Next.js security advisory and establish Version 1.0 Release Candidate 2 (WRE-228)
 
 ## 2026-10-25 — Establish Version 1.0 Release Candidate feature lock and P2P Contribution Router (WRE-234, WRE-231)
 
-- Implemented the **Version 1.0 Release Candidate (`1.0.0-rc.1`) Feature Lock**:
+- Implemented the **Version 1.0 Release Candidate (`0.7.0` (recorded as `1.0.0-rc.1`)) Feature Lock**:
   - Added `release/feature-lock.json` codifying the `v1-rc` stabilization lock, enumerating the open pre-lock PRs (#55–#61, #66) and in-flight branches (`WRE-228`, `WRE-230`, `WRE-231`, `WRE-234`) allowed to complete merge before the unconditional lock takes effect.
   - Created the `v1-feature-lock` agent skill at `.agents/skills/v1-feature-lock/SKILL.md` and helper CLI at `scripts/feature-lock.mjs` (`npm run lock:status`, `npm run lock:defer-feature`, `npm run lock:bump-rc`).
   - Enforced the feature lock in `AGENTS.md` and `scripts/release-gate.mjs`: only bug fixes, security patches, stability fixes, and documentation updates (`patch`, `rc`, `none`) may land on the 1.0 launch line; net-new features must be added to `help/product/roadmap.mdx` and developed in separate git worktrees under `/Volumes/Projects/CodexWorktrees/`.
-  - Synchronized `VERSION`, `package.json`, `package-lock.json`, and `release/change.json` to `1.0.0-rc.1`, and iOS `MARKETING_VERSION` to `1.0.0`.
+  - Synchronized `VERSION`, `package.json`, `package-lock.json`, and `release/change.json` to `0.7.0` (recorded as `1.0.0-rc.1`), and iOS `MARKETING_VERSION` to `1.0.0`.
 - Implemented the **P2P Contribution Router & 4-Phase Confirmation Engine** (`WRE-231`) across Next.js (`lib/domain/p2pRouting.ts`, `lib/domain/qrCodeLevelH.ts`, `components/household/p2p-payment-router.tsx`) and native iOS SwiftUI (`ios/Kouchd/Models.swift`, `ios/Kouchd/MainScreens.swift`), including Venmo, Cash App, Chime, PayPal (`https://paypal.me/[username]/[amount]`), Zelle, Cash, and Reward Points offsets.
 
 ## 2026-10-24 — Remediate Replay QA web security, canonical link, and sign-in defects (WRE-228)
