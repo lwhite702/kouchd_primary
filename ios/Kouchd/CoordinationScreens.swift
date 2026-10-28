@@ -63,9 +63,8 @@ struct ShoppingScreen: View {
     .sheet(item: $editing) { editing in ShoppingItemForm(store: store, item: editing.item) }
   }
 
-  // Mirrors the server rule: shared items are editable by any member; personal items by their creator or the host.
   private func canEdit(_ item: Value) -> Bool {
-    item["visibility"].text == "shared" || store.isHost || item["createdBy"].text == store.viewer["id"].text
+    HouseholdRules.canEditShoppingItem(item, viewerID: store.viewer["id"].text, isHost: store.isHost)
   }
 }
 
@@ -93,7 +92,9 @@ private struct ShoppingItemForm: View {
     _personal = State(initialValue: item["visibility"].text == "personal")
   }
 
-  private var canSetPersonal: Bool { store.isHost || item["createdBy"].text == store.viewer["id"].text }
+  private var canSetPersonal: Bool {
+    HouseholdRules.canSetShoppingItemPersonal(item, viewerID: store.viewer["id"].text, isHost: store.isHost)
+  }
   private var isValid: Bool {
     !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !quantity.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
   }

@@ -6,8 +6,10 @@ Internal engineering record. This file is excluded from Mintlify navigation and 
 
 - `ios/Kouchd/CoordinationScreens.swift`: added an **Edit item** sheet that calls `shopping:update`. Its permission check matches `requireItemEditor` (shared items can be edited by any member; personal items by their creator or the host). Only the creator or host sees the personal toggle.
 - `ios/Kouchd/MainScreens.swift`: added a **Repeat** picker to `ChoreForm` that sends `repeatCadence` when it is daily or weekly, and shows "Repeats <cadence>" on chore cards.
-- Evidence: Debug simulator build succeeded (iPhone 18 Pro Max, iOS 27.0), and `KouchdTests` passed (11 tests, 0 failures). Not exercised against a signed-in account; no UI test covers the new sheet or picker.
-- Not done: public iOS help (`help/ios/chores-and-stay.mdx`) and the public changelog are waiting for release verification. No version bump. Tracked in WRE-244.
+- `ios/Kouchd/HouseholdRules.swift`: the client-side permission and cadence rules, kept in one place and covered by `ios/KouchdTests/HouseholdRulesTests.swift` (6 tests).
+- Version prepared as `1.0.0-rc.15` (rc.14 is taken by WRE-242).
+- Evidence: Debug simulator build succeeded (iPhone 18 Pro Max, iOS 27.0), `KouchdTests` passed (17 tests, 0 failures), and `npm run release:check` passed. Not exercised against a signed-in account; no UI test covers the new sheet or picker.
+- Not done: public iOS help (`help/ios/chores-and-stay.mdx`) and the public changelog are waiting for release verification. Tracked in WRE-244.
 
 ## 2026-10-26 — Polish landing and marketing pages, update Mintlify tokens and roadmap (WRE-240)
 

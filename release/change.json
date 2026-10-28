@@ -1,5 +1,5 @@
 {
   "type": "rc",
-  "version": "1.0.0-rc.13",
-  "reason": "Polish landing and marketing pages across accessibility, motion, and navigation."
+  "version": "1.0.0-rc.15",
+  "reason": "Bring iOS shopping item editing and chore repeat scheduling in line with web (WRE-244)."
 }

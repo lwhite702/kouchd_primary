@@ -957,8 +957,7 @@ struct ChoresScreen: View {
             }.disabled(store.isEnded || !chore["voidedAt"].text.isEmpty).accessibilityLabel(chore["completed"].flag ? "Mark incomplete" : "Mark complete")
             VStack(alignment: .leading, spacing: 4) {
               Text(chore.title).font(.headline)
-              Text(chore["assignee"].text.capitalized + " · " + chore["dueDate"].text
-                   + (chore["repeatCadence"].text.isEmpty ? "" : " · Repeats " + chore["repeatCadence"].text))
+              Text(HouseholdRules.choreScheduleLabel(chore))
                 .font(.caption).foregroundStyle(Palette.muted)
             }
             Spacer()
@@ -1033,7 +1032,7 @@ struct ChoreForm: View {
                 "assignee": assignee, "dueDate": Display.date(due)
               ]
               if assignee == "guest" && !assigneeID.isEmpty { args["assigneeUserId"] = assigneeID }
-              if repeatCadence != "none" { args["repeatCadence"] = repeatCadence }
+              if let cadence = HouseholdRules.choreRepeatCadence(repeatCadence) { args["repeatCadence"] = cadence }
               if await store.mutate("chores:create", args) { dismiss() }
             }
           }.disabled(title.trimmingCharacters(in: .whitespaces).isEmpty)
