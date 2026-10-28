@@ -44,6 +44,7 @@ import { FEATURE_FLAGS } from "@/lib/flags/config";
 
 import dynamic from "next/dynamic";
 import { useLiveStay } from "./use-live-stay";
+import { destructiveActionCopy } from "./types";
 const WorkspacePanels = dynamic(
   () => import("./workspace-panels").then((m) => m.WorkspacePanels),
   { loading: () => <DashboardSkeleton message="Opening this section…" /> },
@@ -586,19 +587,7 @@ export function LiveStay({
       )}
       {destructiveAction && (
         <DestructiveConfirmationDialog
-          title={
-            destructiveAction.type === "end"
-              ? "End this stay?"
-              : `Cancel “${destructiveAction.title}”?`
-          }
-          description={
-            destructiveAction.type === "end"
-              ? "Guests will no longer be able to add to this stay. Its agreements and history will remain available under Past stays, and you can start another stay."
-              : `This removes “${destructiveAction.title}” from the guest’s balance. The charge history will be retained.`
-          }
-          confirmLabel={
-            destructiveAction.type === "end" ? "End stay" : "Cancel charge"
-          }
+          {...destructiveActionCopy(destructiveAction)}
           onConfirm={confirmDestructiveAction}
           onCancel={() => setDestructiveAction(null)}
         />

@@ -26,6 +26,7 @@ import {
   StayBundle,
   Screen,
   Panel,
+  DestructiveAction,
   GuideProgressState,
   Viewer,
   formatMoney,
@@ -80,11 +81,8 @@ export function useLiveStay(stayId: Id<"stays">, onBackToHub: () => void) {
   const [tourStep, setTourStep] = useState(0);
   const [tourSuppressedForRole, setTourSuppressedForRole] =
     useState<GuideRole | null>(null);
-  const [destructiveAction, setDestructiveAction] = useState<
-    | { type: "end" }
-    | { type: "cancelCharge"; obligationId: Id<"obligations">; title: string }
-    | null
-  >(null);
+  const [destructiveAction, setDestructiveAction] =
+    useState<DestructiveAction | null>(null);
 
   useEffect(() => {
     const handleLocationHash = () => {
@@ -140,8 +138,15 @@ export function useLiveStay(stayId: Id<"stays">, onBackToHub: () => void) {
   );
   const createContribution = useMutation(api.contributions.create);
   const confirmContribution = useMutation(api.contributions.confirm);
+  const disputeContribution = useMutation(api.contributions.dispute);
+  const voidContribution = useMutation(api.contributions.voidContribution);
   const createChore = useMutation(api.chores.create);
   const toggleChore = useMutation(api.chores.toggle);
+  const voidChore = useMutation(api.chores.voidChore);
+  const voidClaim = useMutation(api.rewards.voidClaim);
+  const updateStayName = useMutation(api.stays.updateName);
+  const regenerateCode = useMutation(api.referral.regenerateCode);
+  const updateHouseholdTerms = useMutation(api.terms.updateCurrent);
   const createAnnouncement = useMutation(api.announcements.create);
   const createAdhocCharge = useMutation(api.obligations.createAdhocCharge);
   const voidAdhocCharge = useMutation(api.obligations.voidAdhocCharge);
@@ -777,6 +782,57 @@ export function useLiveStay(stayId: Id<"stays">, onBackToHub: () => void) {
     }
   }
 
+  async function saveStayName(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    if (!beginSubmit()) return;
+    try {
+      await updateStayName({ stayId, name: value(form, "name") });
+      setPanel(null);
+      notify("Stay name updated.");
+    } catch (reason) {
+      setActionError(
+        reason instanceof Error
+          ? reason.message
+          : "We could not rename this stay. Please try again.",
+      );
+    } finally {
+      finishSubmit();
+    }
+  }
+
+  async function saveHouseholdTerms(updatedTerms: GuestTerms) {
+    if (!beginSubmit()) return;
+    try {
+      await updateHouseholdTerms({ stayId, terms: updatedTerms });
+      setPanel(null);
+      notify(
+        "Household defaults updated. Guests on the default agreement need to review and accept it.",
+      );
+    } catch (reason) {
+      setActionError(
+        reason instanceof Error
+          ? reason.message
+          : "We could not save this change. Please try again.",
+      );
+    } finally {
+      finishSubmit();
+    }
+  }
+
+  async function disputeContributionEntry(contributionId: Id<"contributions">) {
+    try {
+      await disputeContribution({ contributionId });
+      notify("Contribution marked as disputed.");
+    } catch (reason) {
+      notify(
+        reason instanceof Error
+          ? reason.message
+          : "We could not dispute this contribution.",
+      );
+    }
+  }
+
   async function saveGuestAgreement(updatedTerms: GuestTerms) {
     if (!editingGuestId) return;
     if (!beginSubmit()) return;
@@ -813,6 +869,20 @@ export function useLiveStay(stayId: Id<"stays">, onBackToHub: () => void) {
     } else if (destructiveAction?.type === "cancelCharge") {
       await voidAdhocCharge({ obligationId: destructiveAction.obligationId });
       notify("Charge cancelled. Its history is retained.");
+    } else if (destructiveAction?.type === "voidContribution") {
+      await voidContribution({
+        contributionId: destructiveAction.contributionId,
+      });
+      notify("Contribution voided. Its history is retained.");
+    } else if (destructiveAction?.type === "voidChore") {
+      await voidChore({ choreId: destructiveAction.choreId });
+      notify("Chore voided. Its history is retained.");
+    } else if (destructiveAction?.type === "voidClaim") {
+      await voidClaim({ claimId: destructiveAction.claimId });
+      notify("Reward claim voided. Its history is retained.");
+    } else if (destructiveAction?.type === "regenerateCode") {
+      await regenerateCode({ stayId });
+      notify("New join code created. The old code no longer works.");
     }
   }
 
@@ -898,6 +968,9 @@ export function useLiveStay(stayId: Id<"stays">, onBackToHub: () => void) {
     savePaymentOptions,
     editingGuestId,
     saveGuestAgreement,
+    saveStayName,
+    saveHouseholdTerms,
+    disputeContributionEntry,
     inviteUrl,
     inviteMode,
     makeInvite,

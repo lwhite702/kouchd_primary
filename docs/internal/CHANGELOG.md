@@ -2,6 +2,22 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-10-28 — Web host corrections parity (WRE-246)
+
+- Wired existing backend functions into the web workspace:
+  - `contributions:dispute` and `contributions:voidContribution` in the Ledger.
+  - `chores:voidChore` on the chore board.
+  - `rewards:voidClaim` in the rewards hub.
+  - `stays:updateName` behind **Rename stay**.
+  - `referral:regenerateCode` behind **New code** in the invite panel.
+  - `terms:updateCurrent` behind **Edit household defaults**, reusing `GuestAgreementForm` with a new `intro` prop.
+- Each button appears only where the server allows the action, matching iOS: the host or the record's creator (or claimant), and dispute only for pending entries someone else added. Hidden on ended stays.
+- `DestructiveAction` and `destructiveActionCopy` moved to `components/workspace/types.ts` so all confirmations share copy.
+- The invite panel closes before the new-code confirmation, because the confirmation isn't a top-layer dialog.
+- Version prepared as `1.0.0-rc.16` (rc.14 is WRE-242, rc.15 is WRE-244).
+- Evidence: `tsc --noEmit` clean, ESLint has no new findings, Vitest passed (33 files, 177 tests, including new `tests/destructive-actions.test.ts`), and `npm run release:check` passed. Not exercised in a browser against a live Convex deployment.
+- Not done: no push notifications or overdue payment plan screens (post-1.0). Public help pages wait for release verification.
+
 ## 2026-10-26 — Polish landing and marketing pages, update Mintlify tokens and roadmap (WRE-240)
 
 - Polished public marketing and landing pages across accessibility, motion, visual hierarchy, and conversion:

@@ -1,5 +1,5 @@
 {
   "type": "rc",
-  "version": "1.0.0-rc.13",
-  "reason": "Polish landing and marketing pages across accessibility, motion, and navigation."
+  "version": "1.0.0-rc.16",
+  "reason": "Add host corrections to web that iOS already has: void and dispute contributions, void chores and reward claims, rename a stay, new join code, and household default terms (WRE-246)."
 }

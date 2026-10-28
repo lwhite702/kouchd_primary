@@ -12,7 +12,16 @@ import { formatDate } from "@/components/workspace/types";
 import type { WorkspaceState } from "./use-live-stay";
 
 export function ChoresScreen({ state }: { state: WorkspaceState }) {
-  const { setPanel, isEnded, members, toggleChore, chores } = state;
+  const {
+    setPanel,
+    isEnded,
+    isHost,
+    bundle,
+    members,
+    toggleChore,
+    chores,
+    setDestructiveAction,
+  } = state;
   return (
     <div key="chores" className="screen-transition">
       <div className="page-heading">
@@ -96,6 +105,24 @@ export function ChoresScreen({ state }: { state: WorkspaceState }) {
                     : item.assignee}
                 </span>
               </div>
+              {!isEnded &&
+                (isHost || item.createdBy === bundle.membership.userId) && (
+                  <div className="row-actions">
+                    <button
+                      className="mini-button danger"
+                      type="button"
+                      onClick={() =>
+                        setDestructiveAction({
+                          type: "voidChore",
+                          choreId: item._id,
+                          title: item.title,
+                        })
+                      }
+                    >
+                      Void
+                    </button>
+                  </div>
+                )}
             </article>
           ))}
       </div>

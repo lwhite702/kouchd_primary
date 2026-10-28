@@ -14,6 +14,7 @@
 
 ### Fixed
 
+- **Web host corrections parity (WRE-246)**: The web app now has the record corrections iOS already offered. In the Ledger, people can dispute a pending contribution they didn't add and void contributions; in Chores and rewards, the host or the person who added a record can void it. Hosts can rename a stay, create a new join code (the old one stops working), and edit household default terms. Void, new-code, end-stay, and cancel-charge confirmations now share one copy helper (`destructiveActionCopy`). No backend changes; the server keeps enforcing who can act.
 - Fixed the iOS `AppConfig` declaration so the merged launch candidate compiles cleanly in the release workflow.
 - Fixed an iOS SwiftUI compiler timeout in `RootView` by splitting screen composition and lifecycle callbacks into focused helpers.
 - Patch Next.js to 16.4.3 and DOMPurify to 3.4.17, align the framework lint configuration, and refresh compatible dependencies. Local full and runtime audits report zero advisories; release requires its own promotion approval.

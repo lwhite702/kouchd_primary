@@ -34,6 +34,7 @@ export function ContributionsScreen({ state }: { state: WorkspaceState }) {
     waiveLateFee,
     setDestructiveAction,
     confirmContribution,
+    disputeContributionEntry,
     stayId,
   } = state;
   return (
@@ -235,6 +236,14 @@ export function ContributionsScreen({ state }: { state: WorkspaceState }) {
           selectedGuestId={financialGuestId}
           currentBalanceCents={balance}
           onNotify={notify}
+          viewerId={bundle.membership.userId}
+          onVoidClaim={(claim) =>
+            setDestructiveAction({
+              type: "voidClaim",
+              claimId: claim._id,
+              title: claim.title,
+            })
+          }
         />
       </FeatureGate>
       <section className="section-block">
@@ -260,21 +269,46 @@ export function ContributionsScreen({ state }: { state: WorkspaceState }) {
                 {formatMoney(item.amountCents)}
                 <small>{formatDate(item.date)}</small>
               </div>
-              {!isEnded &&
-                item.status === "pending" &&
-                item.createdBy !== bundle.membership.userId && (
-                  <div className="row-actions">
+              {!isEnded && (
+                <div className="row-actions">
+                  {item.status === "pending" &&
+                    item.createdBy !== bundle.membership.userId && (
+                      <>
+                        <button
+                          className="mini-button"
+                          type="button"
+                          onClick={() =>
+                            void confirmContribution({ contributionId: item._id })
+                          }
+                        >
+                          Confirm
+                        </button>
+                        <button
+                          className="mini-button"
+                          type="button"
+                          onClick={() => void disputeContributionEntry(item._id)}
+                        >
+                          Dispute
+                        </button>
+                      </>
+                    )}
+                  {(isHost || item.createdBy === bundle.membership.userId) && (
                     <button
-                      className="mini-button"
+                      className="mini-button danger"
                       type="button"
                       onClick={() =>
-                        void confirmContribution({ contributionId: item._id })
+                        setDestructiveAction({
+                          type: "voidContribution",
+                          contributionId: item._id,
+                          title: `${formatMoney(item.amountCents)} ${item.type.replaceAll("_", " ")}`,
+                        })
                       }
                     >
-                      Confirm
+                      Void
                     </button>
-                  </div>
-                )}
+                  )}
+                </div>
+              )}
             </article>
           ))}
         </div>
