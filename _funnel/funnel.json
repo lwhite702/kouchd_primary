@@ -1,0 +1,363 @@
+{
+  "v": 1,
+  "app": "kouchd",
+  "placements": [
+    {
+      "id": "host_onboarding",
+      "name": "Host onboarding",
+      "kind": "onboarding",
+      "exp": "2",
+      "note": "Kouchd is not yet on sale, so there are no confirmed views or installs for the A/B test. At the owner’s request, a third major variant was added, updating the split to 34/33/33; no confidence threshold is claimed, and once traffic arrives we will read direction only until enough views accumulate. The guided hypothesis is that choosing the main household priority first will make guidance more relevant while preserving creation of the first agreement; the next hypothesis is to personalize rule order by stay type. Control screen order was carried over from HostOnboardingWizard.",
+      "variants": [
+        {
+          "id": "current",
+          "name": "Current host flow",
+          "status": "draft",
+          "weight": 100,
+          "change": "As it is now",
+          "note": "Current implementation: five screens — stay schedule, house rules, contribution rewards, financial rules, and the final agreement.",
+          "screens": [
+            {
+              "id": "stay_schedule",
+              "order": 1,
+              "name": "Stay Schedule"
+            },
+            {
+              "id": "living_expectations",
+              "order": 2,
+              "name": "Living Expectations"
+            },
+            {
+              "id": "contribution_rewards",
+              "order": 3,
+              "name": "Contribution Rewards"
+            },
+            {
+              "id": "financial_rules",
+              "order": 4,
+              "name": "Financial Rules"
+            },
+            {
+              "id": "final_agreement",
+              "order": 5,
+              "name": "Final Agreement"
+            }
+          ]
+        },
+        {
+          "id": "compact",
+          "name": "Shorter path to agreement",
+          "status": "stopped",
+          "weight": 0,
+          "change": "Onboarding is one screen shorter: rules and financial settings are combined, so the result appears sooner",
+          "note": "The compact mockup combines five current steps into four: promise and context, dates and rules, a personalized agreement draft, then an invitation. It keeps the real data needed to create a stay and shows a verifiable product property instead of an invented testimonial. The final screen leaves room to continue into the paywall once billing is connected; no prices or terms are invented.",
+          "mockup": "apps/kouchd/_funnel/onboarding/compact.html",
+          "screens": [
+            {
+              "id": "s1",
+              "title": "A calmer shared stay"
+            },
+            {
+              "id": "s2",
+              "title": "The shape of the stay"
+            },
+            {
+              "id": "s3",
+              "title": "Your first agreement draft"
+            },
+            {
+              "id": "s4",
+              "title": "Ready for the household"
+            }
+          ]
+        },
+        {
+          "id": "guided",
+          "name": "Home-priority onboarding",
+          "status": "stopped",
+          "weight": 0,
+          "change": "Ask for the main household priority first, then tailor the guidance order to it",
+          "note": "The guided mockup starts by asking the host to choose a main priority, uses it to order the rules, and shows an agreement draft before inviting guests. It keeps the real data needed to create a stay and shows a verifiable product property instead of an invented testimonial. The final screen leaves room to continue into the paywall once billing is connected; no prices or terms are invented.",
+          "mockup": "apps/kouchd/_funnel/onboarding/guided.html",
+          "screens": [
+            {
+              "id": "s1",
+              "title": "A clearer stay starts here"
+            },
+            {
+              "id": "s2",
+              "title": "Your starting point"
+            },
+            {
+              "id": "s3",
+              "title": "A useful first result"
+            },
+            {
+              "id": "s4",
+              "title": "Ready for the household"
+            }
+          ]
+        }
+      ],
+      "history": [
+        {
+          "exp": "0",
+          "from": [],
+          "to": [
+            "current"
+          ],
+          "hypothesis": "Baseline inventory of the current host onboarding before experiments begin.",
+          "variants": [
+            {
+              "id": "current",
+              "name": "Current host flow",
+              "change": "As it is now",
+              "views": null,
+              "purchases": null,
+              "conv": null
+            }
+          ],
+          "winner": null,
+          "result": "No experiment was run: according to the owner, Kouchd is not yet on sale and there are no confirmed views.",
+          "source": "apps/kouchd/_funnel/funnel.json, app status in_progress, 2026-10-15"
+        },
+        {
+          "exp": "1",
+          "from": [
+            "current",
+            "compact"
+          ],
+          "to": [
+            "current",
+            "compact",
+            "guided"
+          ],
+          "hypothesis": "Shorter flow versus the current flow; there was not enough data for a conclusion, so guided was added to test personalization by household priority.",
+          "variants": [
+            {
+              "id": "current",
+              "name": "Current host flow",
+              "change": "As it is now",
+              "views": null,
+              "purchases": null,
+              "conv": null
+            },
+            {
+              "id": "compact",
+              "name": "Shorter path to agreement",
+              "change": "Onboarding is one screen shorter: rules and financial settings are combined, so the result appears sooner",
+              "views": null,
+              "purchases": null,
+              "conv": null
+            }
+          ],
+          "winner": null,
+          "result": "The experiment has not started: according to the owner, Kouchd is not yet on sale and there are no confirmed views.",
+          "source": "apps/kouchd/_funnel/funnel.json, host_onboarding exp 1, 2026-10-15"
+        }
+      ]
+    },
+    {
+      "id": "guest_onboarding",
+      "name": "Guest onboarding",
+      "kind": "onboarding",
+      "exp": "1",
+      "note": "Kouchd is not yet on sale, so there are no confirmed views or installs for the A/B test. One control variant remains at 100% for now. The next hypothesis is to combine the welcome screen with a terms overview and test whether agreement acceptance increases without reducing rule comprehension; a second variant will be added once stable traffic appears. Screen order was carried over from GuestOnboardingFlow.",
+      "variants": [
+        {
+          "id": "current",
+          "name": "Current guest flow",
+          "status": "draft",
+          "weight": 100,
+          "change": "As it is now",
+          "note": "Current implementation: four screens — welcome, house rules, financial agreement, and final acceptance.",
+          "screens": [
+            {
+              "id": "welcome",
+              "order": 1,
+              "name": "Welcome"
+            },
+            {
+              "id": "living_expectations",
+              "order": 2,
+              "name": "Living Expectations"
+            },
+            {
+              "id": "financial_agreement",
+              "order": 3,
+              "name": "Financial Agreement"
+            },
+            {
+              "id": "final_acceptance",
+              "order": 4,
+              "name": "Final Acceptance"
+            }
+          ]
+        }
+      ],
+      "history": []
+    },
+    {
+      "id": "kouchd_plus_paywall",
+      "name": "Kouchd Plus paywall",
+      "kind": "paywall",
+      "exp": "1",
+      "note": "The code contains PaywallModal and the RevenueCat Web SDK, but no active PaywallModal call was found in the app; billing and paywall feature flags are off by default. There are no sales or confirmed views, so the first test is planned as two 50/50 variants: an annual plan with a 7-day trial versus the current dynamic paywall. Expected traffic for the new app is below the confidence threshold, so read the result as directional and run the test for 4–8 weeks after the placement is connected; the next hypothesis is annual-first versus monthly-first without a trial.",
+      "variants": [
+        {
+          "id": "current",
+          "name": "Current RevenueCat paywall",
+          "status": "draft",
+          "weight": 50,
+          "change": "As it is now",
+          "note": "PaywallModal shows Kouchd Plus, an Early Access Preview state when flags are off, and the dynamic RevenueCat paywall when flags are on; the placement is not yet connected to the user flow.",
+          "screens": [
+            {
+              "id": "plus_header",
+              "order": 1,
+              "name": "Kouchd Plus"
+            },
+            {
+              "id": "revenuecat_content",
+              "order": 2,
+              "name": "RevenueCat paywall content"
+            },
+            {
+              "id": "close_or_back",
+              "order": 3,
+              "name": "Close or back"
+            }
+          ]
+        },
+        {
+          "id": "annual_trial",
+          "name": "Annual plan with a 7-day trial",
+          "status": "draft",
+          "weight": 50,
+          "change": "The annual plan is selected by default and includes 7 days free before annual renewal",
+          "note": "Hypothesis: Kouchd’s ongoing shared-agreement value is clearer when people see the same Free/Plus hierarchy as the approved Figma pricing frame, an annual access option, and a short free trial. The mockup carries over the Figma presentation: cream canvas, Manrope, Kouchd menu navigation, a Free card, and a sage Plus card with $79/year and $7.99/month; required purchase terms remain explicit, with no trial toggle or timer.",
+          "mockup": "apps/kouchd/_funnel/paywalls/annual_trial.html",
+          "screens": [
+            {
+              "id": "plus_promise",
+              "order": 1,
+              "name": "Kouchd Plus promise"
+            },
+            {
+              "id": "annual_plan",
+              "order": 2,
+              "name": "Annual plan with trial"
+            },
+            {
+              "id": "purchase_terms",
+              "order": 3,
+              "name": "Purchase terms and restore"
+            }
+          ]
+        }
+      ],
+      "history": []
+    }
+  ],
+  "checks": {
+    "host_onboarding.current": {
+      "at": "2026-10-15T19:58:56-04:00",
+      "by": "agent",
+      "items": {
+        "onboarding_each_launch": false,
+        "paywall_continues_flow": false,
+        "questions_change_product": true,
+        "result_before_purchase": false,
+        "paywall_required_elements": false,
+        "no_trial_toggle": true,
+        "visible_close_and_restore": false,
+        "no_fake_timer_or_analysis": true,
+        "no_custom_review_prompt": true,
+        "no_empty_after_purchase": false,
+        "passport_and_weights": true,
+        "ui_test": false,
+        "screenshots": false
+      }
+    },
+    "host_onboarding.compact": {
+      "at": "2026-10-15T19:58:56-04:00",
+      "by": "agent",
+      "items": {
+        "mockup_390x844": true,
+        "screens_in_order": true,
+        "promise_screen": true,
+        "questions_change_product": true,
+        "result_before_purchase": true,
+        "verified_property_instead_of_fake_social_proof": true,
+        "paywall_required_elements": false,
+        "no_trial_toggle": true,
+        "no_fake_timer_or_analysis": true,
+        "no_custom_review_prompt": true,
+        "paywall_continues_same_flow": false,
+        "passport_and_weights": true,
+        "ui_test": false,
+        "screenshots": false
+      }
+    },
+    "host_onboarding.guided": {
+      "at": "2026-10-15T19:58:56-04:00",
+      "by": "agent",
+      "items": {
+        "mockup_390x844": true,
+        "screens_in_order": true,
+        "promise_screen": true,
+        "questions_change_product": true,
+        "result_before_purchase": true,
+        "verified_property_instead_of_fake_social_proof": true,
+        "paywall_required_elements": false,
+        "no_trial_toggle": true,
+        "no_fake_timer_or_analysis": true,
+        "no_custom_review_prompt": true,
+        "paywall_continues_same_flow": false,
+        "passport_and_weights": true,
+        "ui_test": false,
+        "screenshots": false
+      }
+    },
+    "guest_onboarding.current": {
+      "at": "2026-10-15T19:58:56-04:00",
+      "by": "agent",
+      "items": {
+        "onboarding_each_launch": false,
+        "paywall_continues_flow": false,
+        "questions_change_product": true,
+        "result_before_purchase": false,
+        "paywall_required_elements": false,
+        "no_trial_toggle": true,
+        "visible_close_and_restore": false,
+        "no_fake_timer_or_analysis": true,
+        "no_custom_review_prompt": true,
+        "no_empty_after_purchase": false,
+        "passport_and_weights": true,
+        "ui_test": false,
+        "screenshots": false
+      }
+    },
+    "kouchd_plus_paywall.current": {
+      "at": "2026-10-15T19:58:56-04:00",
+      "by": "agent",
+      "items": {
+        "mockup_or_screenshot": false,
+        "subscription_name_and_duration": false,
+        "included_features": false,
+        "renewal_price_prominent": false,
+        "trial_duration_and_after_price": false,
+        "auto_renewal_disclosure": false,
+        "terms_and_privacy_links": false,
+        "restore_purchases": false,
+        "visible_close_44pt": false,
+        "no_trial_toggle": true,
+        "no_fake_timer_or_analysis": true,
+        "no_custom_review_prompt": true,
+        "paywall_continues_onboarding": false,
+        "ui_test": false,
+        "screenshots": false
+      }
+    }
+  }
+}

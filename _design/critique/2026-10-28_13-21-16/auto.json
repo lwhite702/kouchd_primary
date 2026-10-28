@@ -1,0 +1,98 @@
+{
+ "v": 1,
+ "at": "2026-10-28T13:21:16-04:00",
+ "app": "kouchd",
+ "run": "apps/kouchd/checks/agent/2026-10-28_13-20-24",
+ "sheet": null,
+ "shots": [
+  {
+   "name": "swipe left",
+   "theme": "light",
+   "bg": "#EFF5F1",
+   "luma": 0.81,
+   "png": "apps/kouchd/checks/agent/2026-10-28_13-20-24/01-swipe-left.png"
+  },
+  {
+   "name": "sleep 2",
+   "theme": "light",
+   "bg": "#EFF5F1",
+   "luma": 0.81,
+   "png": "apps/kouchd/checks/agent/2026-10-28_13-20-24/02-sleep-2.png"
+  },
+  {
+   "name": "Step 2 light",
+   "theme": "light",
+   "bg": "#EFF5F1",
+   "luma": 0.81,
+   "png": "apps/kouchd/checks/agent/2026-10-28_13-20-24/03-shot-step-2-light.png"
+  },
+  {
+   "name": "appearance dark",
+   "theme": "dark",
+   "bg": "#0E1713",
+   "luma": 0.14,
+   "png": "apps/kouchd/checks/agent/2026-10-28_13-20-24/04-appearance-dark.png"
+  },
+  {
+   "name": "sleep 6",
+   "theme": "dark",
+   "bg": "#0E1713",
+   "luma": 0.14,
+   "png": "apps/kouchd/checks/agent/2026-10-28_13-20-24/05-sleep-6.png"
+  },
+  {
+   "name": "Step 2 dark",
+   "theme": "dark",
+   "bg": "#0E1713",
+   "luma": 0.14,
+   "png": "apps/kouchd/checks/agent/2026-10-28_13-20-24/06-shot-step-2-dark.png"
+  },
+  {
+   "name": "swipe left",
+   "theme": "dark",
+   "bg": "#0E1713",
+   "luma": 0.13,
+   "png": "apps/kouchd/checks/agent/2026-10-28_13-20-24/07-swipe-left.png"
+  },
+  {
+   "name": "sleep 2",
+   "theme": "dark",
+   "bg": "#0E1713",
+   "luma": 0.13,
+   "png": "apps/kouchd/checks/agent/2026-10-28_13-20-24/08-sleep-2.png"
+  },
+  {
+   "name": "Step 3 dark",
+   "theme": "dark",
+   "bg": "#0E1713",
+   "luma": 0.13,
+   "png": "apps/kouchd/checks/agent/2026-10-28_13-20-24/09-shot-step-3-dark.png"
+  },
+  {
+   "name": "swipe left",
+   "theme": "dark",
+   "bg": "#0E1713",
+   "luma": 0.14,
+   "png": "apps/kouchd/checks/agent/2026-10-28_13-20-24/10-swipe-left.png"
+  },
+  {
+   "name": "sleep 2",
+   "theme": "dark",
+   "bg": "#0E1713",
+   "luma": 0.14,
+   "png": "apps/kouchd/checks/agent/2026-10-28_13-20-24/11-sleep-2.png"
+  },
+  {
+   "name": "Step 4 dark",
+   "theme": "dark",
+   "bg": "#0E1713",
+   "luma": 0.14,
+   "png": "apps/kouchd/checks/agent/2026-10-28_13-20-24/12-shot-step-4-dark.png"
+  }
+ ],
+ "palette": {
+  "bg": "#EFF5F1",
+  "accent": "#144C37"
+ },
+ "findings": []
+}

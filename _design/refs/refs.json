@@ -1,0 +1,137 @@
+{
+ "v": 1,
+ "at": "2026-10-19T08:36:30-04:00",
+ "country": "us",
+ "terms": [
+  "shared living management"
+ ],
+ "sheet": "_design/refs/sheet.jpg",
+ "apps": [
+  {
+   "n": 1,
+   "rank": 2,
+   "term": "shared living management",
+   "id": 333244247,
+   "name": "LOFT Living",
+   "seller": "RealPage, Inc.",
+   "ratings": 20396,
+   "rating": 4.3,
+   "genre": "Lifestyle",
+   "price": "Free",
+   "url": "https://apps.apple.com/us/app/loft-living/id333244247?uo=4",
+   "folder": "01-loft-living",
+   "files": [
+    "_design/refs/01-loft-living/icon.jpg",
+    "_design/refs/01-loft-living/01.jpg",
+    "_design/refs/01-loft-living/02.jpg",
+    "_design/refs/01-loft-living/03.jpg",
+    "_design/refs/01-loft-living/04.jpg"
+   ]
+  },
+  {
+   "n": 2,
+   "rank": 6,
+   "term": "shared living management",
+   "id": 1115101477,
+   "name": "SmartLife: Smart Living",
+   "seller": "Volcano Technology Limited",
+   "ratings": 267231,
+   "rating": 4.72,
+   "genre": "Lifestyle",
+   "price": "Free",
+   "url": "https://apps.apple.com/us/app/smartlife-smart-living/id1115101477?uo=4",
+   "folder": "02-smartlife-smart-living",
+   "files": [
+    "_design/refs/02-smartlife-smart-living/icon.jpg",
+    "_design/refs/02-smartlife-smart-living/01.jpg",
+    "_design/refs/02-smartlife-smart-living/02.jpg",
+    "_design/refs/02-smartlife-smart-living/03.jpg",
+    "_design/refs/02-smartlife-smart-living/04.jpg"
+   ]
+  },
+  {
+   "n": 3,
+   "rank": 9,
+   "term": "shared living management",
+   "id": 945419466,
+   "name": "TownSq Community",
+   "seller": "INNO3 SOFTWARE LTDA - ME",
+   "ratings": 11498,
+   "rating": 4.66,
+   "genre": "Lifestyle",
+   "price": "Free",
+   "url": "https://apps.apple.com/us/app/townsq-community/id945419466?uo=4",
+   "folder": "03-townsq-community",
+   "files": [
+    "_design/refs/03-townsq-community/icon.jpg",
+    "_design/refs/03-townsq-community/01.jpg",
+    "_design/refs/03-townsq-community/02.jpg",
+    "_design/refs/03-townsq-community/03.jpg",
+    "_design/refs/03-townsq-community/04.jpg"
+   ]
+  },
+  {
+   "n": 4,
+   "rank": 12,
+   "term": "shared living management",
+   "id": 1232780281,
+   "name": "Notion: Notes, Tasks, AI",
+   "seller": "Notion Labs, Incorporated",
+   "ratings": 90431,
+   "rating": 4.78,
+   "genre": "Productivity",
+   "price": "Free",
+   "url": "https://apps.apple.com/us/app/notion-notes-tasks-ai/id1232780281?uo=4",
+   "folder": "04-notion-notes-tasks-ai",
+   "files": [
+    "_design/refs/04-notion-notes-tasks-ai/icon.jpg",
+    "_design/refs/04-notion-notes-tasks-ai/01.jpg",
+    "_design/refs/04-notion-notes-tasks-ai/02.jpg",
+    "_design/refs/04-notion-notes-tasks-ai/03.jpg",
+    "_design/refs/04-notion-notes-tasks-ai/04.jpg"
+   ]
+  },
+  {
+   "n": 5,
+   "rank": 13,
+   "term": "shared living management",
+   "id": 1583716313,
+   "name": "Westdale Living",
+   "seller": "Yardi Systems, Inc.",
+   "ratings": 2138,
+   "rating": 4.57,
+   "genre": "Utilities",
+   "price": "Free",
+   "url": "https://apps.apple.com/us/app/westdale-living/id1583716313?uo=4",
+   "folder": "05-westdale-living",
+   "files": [
+    "_design/refs/05-westdale-living/icon.jpg",
+    "_design/refs/05-westdale-living/01.png",
+    "_design/refs/05-westdale-living/02.png",
+    "_design/refs/05-westdale-living/03.png",
+    "_design/refs/05-westdale-living/04.png"
+   ]
+  },
+  {
+   "n": 6,
+   "rank": 15,
+   "term": "shared living management",
+   "id": 1277551323,
+   "name": "Customer App - Zoho Assist",
+   "seller": "Zoho Corporation",
+   "ratings": 3412,
+   "rating": 4.09,
+   "genre": "Utilities",
+   "price": "Free",
+   "url": "https://apps.apple.com/us/app/customer-app-zoho-assist/id1277551323?uo=4",
+   "folder": "06-customer-app-zoho-assist",
+   "files": [
+    "_design/refs/06-customer-app-zoho-assist/icon.jpg",
+    "_design/refs/06-customer-app-zoho-assist/01.jpg",
+    "_design/refs/06-customer-app-zoho-assist/02.jpg",
+    "_design/refs/06-customer-app-zoho-assist/03.jpg",
+    "_design/refs/06-customer-app-zoho-assist/04.jpg"
+   ]
+  }
+ ]
+}

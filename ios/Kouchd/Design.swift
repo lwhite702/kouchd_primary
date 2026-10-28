@@ -1,14 +1,37 @@
 import SwiftUI
+import UIKit
 
 enum Palette {
-  static let cream = Color(red: 0.966, green: 0.949, blue: 0.917)
+  static let canvas = Color(uiColor: UIColor { traits in
+    traits.userInterfaceStyle == .dark
+      ? UIColor(red: 0.055, green: 0.090, blue: 0.073, alpha: 1)
+      : UIColor(red: 0.937, green: 0.961, blue: 0.945, alpha: 1)
+  })
+  static let card = Color(uiColor: UIColor { traits in
+    traits.userInterfaceStyle == .dark
+      ? UIColor(red: 0.105, green: 0.145, blue: 0.125, alpha: 1)
+      : UIColor.white
+  })
   static let forest = Color(red: 0.090, green: 0.306, blue: 0.224)
-  static let ink = Color(red: 0.086, green: 0.141, blue: 0.118)
-  static let muted = Color(red: 0.412, green: 0.443, blue: 0.412)
+  static let link = Color(uiColor: UIColor { traits in
+    traits.userInterfaceStyle == .dark
+      ? UIColor(red: 0.42, green: 0.82, blue: 0.62, alpha: 1)
+      : UIColor(red: 0.090, green: 0.306, blue: 0.224, alpha: 1)
+  })
+  static let ink = Color(uiColor: UIColor { traits in
+    traits.userInterfaceStyle == .dark
+      ? UIColor(red: 0.930, green: 0.955, blue: 0.940, alpha: 1)
+      : UIColor(red: 0.086, green: 0.141, blue: 0.118, alpha: 1)
+  })
+  static let muted = Color(uiColor: UIColor { traits in
+    traits.userInterfaceStyle == .dark
+      ? UIColor(red: 0.690, green: 0.750, blue: 0.710, alpha: 1)
+      : UIColor(red: 0.412, green: 0.443, blue: 0.412, alpha: 1)
+  })
   static let lime = Color(red: 0.870, green: 0.950, blue: 0.370)
   static let line = Color(red: 0.875, green: 0.870, blue: 0.829)
-  static let heading = Font.custom("Manrope", size: 33, relativeTo: .largeTitle).weight(.bold)
-  static let section = Font.custom("Manrope", size: 23, relativeTo: .title2).weight(.bold)
+  static let heading = Font.system(size: 33, weight: .bold, design: .rounded)
+  static let section = Font.system(size: 23, weight: .bold, design: .rounded)
 }
 
 struct Page<Content: View>: View {
@@ -22,11 +45,11 @@ struct Page<Content: View>: View {
         content
       }
       .padding(20)
+      .padding(.bottom, 72)
       .frame(maxWidth: 720, alignment: .leading)
       .frame(maxWidth: .infinity)
     }
-    .background(Palette.cream.ignoresSafeArea())
-    .kouchdEntrance()
+    .background(Palette.canvas.ignoresSafeArea())
   }
 }
 
@@ -36,8 +59,22 @@ struct Card<Content: View>: View {
     VStack(alignment: .leading, spacing: 14) { content }
       .padding(20)
       .frame(maxWidth: .infinity, alignment: .leading)
-      .background(.white, in: RoundedRectangle(cornerRadius: 24))
-      .kouchdEntrance(delay: 0.04)
+      .background(Palette.card, in: RoundedRectangle(cornerRadius: 24))
+  }
+}
+
+struct ActionCard<Content: View>: View {
+  @ViewBuilder let content: Content
+  init(@ViewBuilder content: () -> Content) { self.content = content() }
+  var body: some View {
+    VStack(alignment: .leading, spacing: 14) { content }
+      .padding(20)
+      .frame(maxWidth: .infinity, alignment: .leading)
+      .background(Palette.card, in: RoundedRectangle(cornerRadius: 24))
+      .overlay {
+        RoundedRectangle(cornerRadius: 24)
+          .stroke(Palette.link.opacity(0.38), lineWidth: 1.5)
+      }
   }
 }
 
@@ -47,7 +84,7 @@ struct Pill: View {
     Text(text.uppercased())
       .font(.caption2.weight(.bold))
       .tracking(1)
-      .foregroundStyle(Palette.forest)
+      .foregroundStyle(Color.black.opacity(0.82))
       .padding(.horizontal, 12).padding(.vertical, 7)
       .background(Palette.lime, in: Capsule())
   }
@@ -59,10 +96,19 @@ struct PrimaryButton: View {
   let action: () -> Void
   var body: some View {
     Button(action: action) {
-      Text(title).font(.headline).frame(maxWidth: .infinity)
-        .padding(.vertical, 15)
+      ZStack {
+        RoundedRectangle(cornerRadius: 16)
+          .fill(Palette.forest)
+        Text(title)
+          .font(.headline)
+          .foregroundStyle(.white)
+      }
+      .frame(maxWidth: .infinity)
+      .frame(height: 52)
+      .contentShape(RoundedRectangle(cornerRadius: 16))
     }
-    .buttonStyle(KouchdButtonStyle())
+    .buttonStyle(.plain)
+    .accessibilityLabel(title)
     .opacity(isEnabled ? 1 : 0.5)
   }
 }
@@ -89,12 +135,72 @@ struct DataRow: View {
   }
 }
 
+/// A consistent visual affordance for destinations shown inside cards and pages.
+/// Informational rows stay neutral; navigation rows use the app accent, an icon,
+/// and a chevron so people can immediately tell that the whole row is tappable.
+struct NavigationRow<Destination: View>: View {
+  let title: String
+  let subtitle: String?
+  let symbol: String
+  @ViewBuilder let destination: Destination
+
+  init(
+    _ title: String,
+    subtitle: String? = nil,
+    symbol: String,
+    @ViewBuilder destination: () -> Destination
+  ) {
+    self.title = title
+    self.subtitle = subtitle
+    self.symbol = symbol
+    self.destination = destination()
+  }
+
+  var body: some View {
+    NavigationLink {
+      destination
+    } label: {
+      HStack(spacing: 12) {
+        Image(systemName: symbol)
+          .font(.subheadline.weight(.semibold))
+          .frame(width: 30, height: 30)
+          .foregroundStyle(Palette.link)
+          .background(Palette.link.opacity(0.13), in: RoundedRectangle(cornerRadius: 9))
+        VStack(alignment: .leading, spacing: 3) {
+          Text(title)
+            .font(.subheadline.weight(.semibold))
+            .foregroundStyle(Palette.ink)
+          if let subtitle {
+            Text(subtitle)
+              .font(.caption)
+              .foregroundStyle(Palette.muted)
+          }
+        }
+        Spacer(minLength: 12)
+        Image(systemName: "chevron.right")
+          .font(.caption.weight(.bold))
+          .foregroundStyle(Palette.link)
+          .accessibilityHidden(true)
+      }
+      .padding(.horizontal, 12)
+      .frame(minHeight: 48)
+      .background(Palette.link.opacity(0.07), in: RoundedRectangle(cornerRadius: 14))
+      .contentShape(Rectangle())
+    }
+    .buttonStyle(.plain)
+    .accessibilityIdentifier(
+      "navigation." + title.lowercased().replacingOccurrences(of: " ", with: "-")
+    )
+    .accessibilityHint("Opens a new screen")
+  }
+}
+
 struct EmptyCard: View {
   let title: String
   let message: String
   var body: some View {
     Card {
-      Image(systemName: "sparkle").font(.title2).foregroundStyle(Palette.forest)
+      Image(systemName: "sparkle").font(.title2).foregroundStyle(Palette.link)
       Text(title).font(.headline)
       Text(message).font(.subheadline).foregroundStyle(Palette.muted)
     }
@@ -127,37 +233,6 @@ enum KouchdMotion {
   }
 }
 
-private struct KouchdEntrance: ViewModifier {
-  @Environment(\.accessibilityReduceMotion) private var reduceMotion
-  @State private var visible = false
-  var delay: Double
-  func body(content: Content) -> some View {
-    content.opacity(visible ? 1 : 0)
-      .offset(y: visible || reduceMotion ? 0 : 10)
-      .onAppear {
-        withAnimation(KouchdMotion.animation(reduceMotion).delay(reduceMotion ? 0 : delay)) { visible = true }
-      }
-  }
-}
-
-extension View {
-  func kouchdEntrance(delay: Double = 0) -> some View {
-    modifier(KouchdEntrance(delay: delay))
-  }
-}
-
-private struct KouchdButtonStyle: ButtonStyle {
-  @Environment(\.accessibilityReduceMotion) private var reduceMotion
-  func makeBody(configuration: Configuration) -> some View {
-    configuration.label.foregroundStyle(.white)
-      .background(Palette.forest, in: RoundedRectangle(cornerRadius: 16))
-      .scaleEffect(configuration.isPressed && !reduceMotion ? 0.98 : 1)
-      .opacity(configuration.isPressed ? 0.85 : 1)
-      .animation(KouchdMotion.animation(reduceMotion), value: configuration.isPressed)
-  }
-}
-
-
 // Keep each navigation stack mounted while a selected stay or guest loads.
 struct LoadedStayContent<Content: View>: View {
   let loading: Bool
@@ -169,7 +244,7 @@ struct LoadedStayContent<Content: View>: View {
         if loading {
           ProgressView("Opening your stay")
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(Palette.cream.ignoresSafeArea()).transition(.opacity)
+            .background(Palette.canvas.ignoresSafeArea()).transition(.opacity)
         }
       }
       .animation(KouchdMotion.animation(reduceMotion), value: loading)

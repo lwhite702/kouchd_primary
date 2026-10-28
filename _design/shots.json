@@ -1,0 +1,568 @@
+{
+  "v": 1,
+  "slug": "kouchd",
+  "app_id": "6818980215",
+  "strings": "_design/shots.strings.json",
+  "screens": {
+    "dir": "_design/screens",
+    "fallback": [
+      "en-US"
+    ],
+    "aspect": [
+      1320,
+      2868
+    ]
+  },
+  "devices": {
+    "iphone-6.9": {
+      "size": [
+        1290,
+        2796
+      ],
+      "slot": "APP_IPHONE_67"
+    },
+    "ipad-13": {
+      "size": [
+        2064,
+        2752
+      ],
+      "slot": "APP_IPAD_PRO_3GEN_129"
+    }
+  },
+  "locales": {
+    "primary": "en-US",
+    "render": [
+      "en-US"
+    ],
+    "map": {}
+  },
+  "theme": {
+    "name": "forest-cream",
+    "tokens": {
+      "cream": "#F7F2E9",
+      "forest": "#174E39",
+      "ink": "#16241E",
+      "lime": "#DEF25F",
+      "muted": "#69716A"
+    },
+    "modes": {
+      "cream": {
+        "bg": "var(--cream)",
+        "fg": "var(--ink)"
+      },
+      "forest": {
+        "bg": "var(--forest)",
+        "fg": "#FFFFFF",
+        "shadow": "rgba(23,78,57,.28)"
+      },
+      "lime": {
+        "bg": "var(--lime)",
+        "fg": "var(--ink)",
+        "acc": "var(--forest)",
+        "accFg": "#FFFFFF"
+      },
+      "ink": {
+        "bg": "var(--ink)",
+        "fg": "var(--cream)"
+      }
+    },
+    "fonts": {
+      "latin": {
+        "family": "Manrope",
+        "stack": "-apple-system,BlinkMacSystemFont,'SF Pro Display',system-ui,sans-serif"
+      }
+    },
+    "type": {
+      "eye": 40,
+      "sub": 44,
+      "h1": {
+        "size": 150,
+        "min": 68,
+        "step": 4,
+        "fit": "shrink"
+      },
+      "copyblock": {
+        "left": 92,
+        "top": 125,
+        "right": 92
+      }
+    },
+    "device": {
+      "width": 870,
+      "radius": 132,
+      "bezel": 16,
+      "island": [
+        250,
+        74
+      ],
+      "shadow": {
+        "kind": "soft",
+        "dx": 0,
+        "dy": 34,
+        "color": "rgba(22,36,30,.28)"
+      }
+    },
+    "texture": "none",
+    "innerFrame": {
+      "inset": 42,
+      "width": 8
+    }
+  },
+  "variants": {
+    "A": {
+      "title": "A shared stay, clearly held",
+      "layout": "classic",
+      "frames": [
+        {
+          "text": "f1",
+          "mode": "forest",
+          "screen": "welcome",
+          "device": {
+            "x": 210,
+            "y": 1060
+          },
+          "blocks": [
+            {
+              "type": "chips",
+              "text": "f1chips",
+              "active": 0,
+              "x": 100,
+              "y": 820,
+              "width": 1090
+            }
+          ]
+        },
+        {
+          "text": "f2",
+          "mode": "cream",
+          "screen": "stay",
+          "device": {
+            "x": 210,
+            "y": 1060
+          }
+        },
+        {
+          "text": "f3",
+          "mode": "lime",
+          "screen": "ledger",
+          "device": {
+            "x": 210,
+            "y": 1060
+          }
+        },
+        {
+          "text": "f4",
+          "mode": "forest",
+          "screen": "chores",
+          "device": {
+            "x": 210,
+            "y": 1060
+          }
+        },
+        {
+          "text": "f5",
+          "mode": "cream",
+          "screen": "role",
+          "device": {
+            "x": 210,
+            "y": 1060
+          }
+        }
+      ]
+    },
+    "B": {
+      "title": "Shared living, made clear",
+      "layout": "band",
+      "frames": [
+        {
+          "text": "f1",
+          "mode": "forest",
+          "screen": "welcome",
+          "device": {
+            "x": 210,
+            "y": 1060
+          },
+          "blocks": [
+            {
+              "type": "chips",
+              "text": "f1chips",
+              "active": 1,
+              "x": 100,
+              "y": 820,
+              "width": 1090
+            }
+          ]
+        },
+        {
+          "text": "f2",
+          "mode": "lime",
+          "screen": "stay",
+          "device": {
+            "x": 210,
+            "y": 1130
+          }
+        },
+        {
+          "text": "f3",
+          "mode": "cream",
+          "screen": "ledger",
+          "device": {
+            "x": 210,
+            "y": 1070
+          }
+        },
+        {
+          "text": "f4",
+          "mode": "forest",
+          "screen": "chores",
+          "device": {
+            "x": 210,
+            "y": 1070
+          }
+        },
+        {
+          "text": "f5",
+          "mode": "ink",
+          "screen": "role",
+          "device": {
+            "x": 210,
+            "y": 1070
+          }
+        }
+      ]
+    },
+    "E": {
+      "title": "A shared stay, clearly held",
+      "layout": "classic",
+      "frames": [
+        {
+          "text": "f1",
+          "mode": "forest",
+          "screen": "welcome",
+          "device": {
+            "x": 210,
+            "y": 1060,
+            "rotate": -1.6
+          },
+          "blocks": [
+            {
+              "type": "chips",
+              "text": "f1chips",
+              "active": 0,
+              "x": 100,
+              "y": 820,
+              "width": 1090
+            },
+            {
+              "type": "circle",
+              "size": 360,
+              "x": 930,
+              "y": 420,
+              "color": "rgba(222,242,95,.25)"
+            }
+          ]
+        },
+        {
+          "text": "f2",
+          "mode": "cream",
+          "screen": "stay",
+          "device": {
+            "x": 210,
+            "y": 1060,
+            "rotate": 2.0
+          },
+          "blocks": [
+            {
+              "type": "circle",
+              "size": 330,
+              "x": 940,
+              "y": 440,
+              "color": "rgba(23,78,57,.12)"
+            },
+            {
+              "type": "stamp",
+              "text": "f2stamp",
+              "right": 92,
+              "y": 790,
+              "rotate": 3
+            }
+          ]
+        },
+        {
+          "text": "f3",
+          "mode": "lime",
+          "screen": "ledger",
+          "device": {
+            "x": 210,
+            "y": 1060,
+            "rotate": -2.1
+          },
+          "blocks": [
+            {
+              "type": "circle",
+              "size": 350,
+              "x": 930,
+              "y": 430,
+              "color": "rgba(23,78,57,.14)"
+            },
+            {
+              "type": "stamp",
+              "text": "f3stamp",
+              "x": 92,
+              "y": 790,
+              "rotate": -3
+            }
+          ]
+        },
+        {
+          "text": "f4",
+          "mode": "forest",
+          "screen": "chores",
+          "device": {
+            "x": 210,
+            "y": 1060,
+            "rotate": 1.5
+          },
+          "blocks": [
+            {
+              "type": "circle",
+              "size": 360,
+              "x": 930,
+              "y": 430,
+              "color": "rgba(247,242,233,.16)"
+            },
+            {
+              "type": "stamp",
+              "text": "f4stamp",
+              "right": 92,
+              "y": 790,
+              "rotate": 4
+            }
+          ]
+        },
+        {
+          "text": "f5",
+          "mode": "cream",
+          "screen": "role",
+          "device": {
+            "x": 210,
+            "y": 1060,
+            "rotate": -1.4
+          },
+          "blocks": [
+            {
+              "type": "circle",
+              "size": 340,
+              "x": 950,
+              "y": 450,
+              "color": "rgba(222,242,95,.24)"
+            },
+            {
+              "type": "stamp",
+              "text": "f5stamp",
+              "x": 92,
+              "y": 790,
+              "rotate": -4
+            }
+          ]
+        },
+        {
+          "text": "f6",
+          "mode": "forest",
+          "screen": "post-host-home",
+          "device": {
+            "x": 210,
+            "y": 1060,
+            "rotate": -2.2
+          },
+          "blocks": [
+            {
+              "type": "circle",
+              "size": 380,
+              "x": 900,
+              "y": 430,
+              "color": "rgba(222,242,95,.28)"
+            },
+            {
+              "type": "stamp",
+              "text": "f6stamp",
+              "x": 92,
+              "y": 790,
+              "rotate": -4
+            }
+          ]
+        },
+        {
+          "text": "f7",
+          "mode": "lime",
+          "screen": "post-guest-ledger",
+          "device": {
+            "x": 210,
+            "y": 1060,
+            "rotate": 1.8
+          },
+          "blocks": [
+            {
+              "type": "circle",
+              "size": 350,
+              "x": 950,
+              "y": 420,
+              "color": "rgba(23,78,57,.16)"
+            },
+            {
+              "type": "stamp",
+              "text": "f7stamp",
+              "right": 94,
+              "y": 790,
+              "rotate": 4
+            }
+          ]
+        },
+        {
+          "text": "f8",
+          "mode": "cream",
+          "screen": "post-guest-chores",
+          "device": {
+            "x": 210,
+            "y": 1060,
+            "rotate": -1.5
+          },
+          "blocks": [
+            {
+              "type": "circle",
+              "size": 330,
+              "x": 930,
+              "y": 470,
+              "color": "rgba(222,242,95,.30)"
+            },
+            {
+              "type": "stamp",
+              "text": "f8stamp",
+              "x": 92,
+              "y": 790,
+              "rotate": -3
+            }
+          ]
+        },
+        {
+          "text": "f9",
+          "mode": "forest",
+          "screen": "post-host-stay",
+          "device": {
+            "x": 210,
+            "y": 1060,
+            "rotate": 2.1
+          },
+          "blocks": [
+            {
+              "type": "circle",
+              "size": 360,
+              "x": 920,
+              "y": 420,
+              "color": "rgba(247,242,233,.18)"
+            },
+            {
+              "type": "stamp",
+              "text": "f9stamp",
+              "right": 92,
+              "y": 790,
+              "rotate": 3
+            }
+          ]
+        },
+        {
+          "text": "f10",
+          "mode": "cream",
+          "screen": "post-host-home-dark",
+          "device": {
+            "x": 210,
+            "y": 1060,
+            "rotate": -1.7
+          },
+          "blocks": [
+            {
+              "type": "circle",
+              "size": 340,
+              "x": 950,
+              "y": 460,
+              "color": "rgba(222,242,95,.26)"
+            },
+            {
+              "type": "stamp",
+              "text": "f10stamp",
+              "x": 92,
+              "y": 790,
+              "rotate": -4
+            }
+          ]
+        }
+      ]
+    },
+    "F": {
+      "title": "Kouchd on iPad",
+      "layout": "classic",
+      "frames": [
+        {
+          "text": "f1",
+          "mode": "forest",
+          "screen": "ipad-onboarding",
+          "device": { "width": 1500, "y": 930, "rotate": -2.0 },
+          "blocks": [
+            { "type": "circle", "size": 520, "x": 1500, "y": 370, "color": "rgba(247,242,233,.15)" },
+            { "type": "chips", "text": "f1chips", "x": 100, "y": 650, "width": 1750 }
+          ]
+        },
+        {
+          "text": "f6",
+          "mode": "cream",
+          "screen": "ipad-home-light",
+          "device": { "width": 1500, "y": 930, "rotate": 1.8 },
+          "blocks": [
+            { "type": "circle", "size": 540, "x": 1510, "y": 380, "color": "rgba(23,78,57,.14)" },
+            { "type": "stamp", "text": "f6stamp", "x": 120, "y": 650, "rotate": -5 }
+          ]
+        },
+        {
+          "text": "f3",
+          "mode": "lime",
+          "screen": "ipad-ledger",
+          "device": { "width": 1500, "y": 930, "rotate": -1.8 },
+          "blocks": [
+            { "type": "circle", "size": 520, "x": 1490, "y": 360, "color": "rgba(23,78,57,.16)" },
+            { "type": "stamp", "text": "f3stamp", "right": 120, "y": 670, "rotate": 5 }
+          ]
+        },
+        {
+          "text": "f4",
+          "mode": "forest",
+          "screen": "ipad-chores",
+          "device": { "width": 1500, "y": 930, "rotate": 2.0 },
+          "blocks": [
+            { "type": "circle", "size": 560, "x": 1500, "y": 350, "color": "rgba(247,242,233,.16)" },
+            { "type": "stamp", "text": "f4stamp", "x": 120, "y": 650, "rotate": -5 }
+          ]
+        },
+        {
+          "text": "f2",
+          "mode": "cream",
+          "screen": "ipad-stay",
+          "device": { "width": 1500, "y": 930, "rotate": -1.9 },
+          "blocks": [
+            { "type": "circle", "size": 530, "x": 1510, "y": 380, "color": "rgba(222,242,95,.30)" },
+            { "type": "stamp", "text": "f2stamp", "right": 120, "y": 650, "rotate": 5 }
+          ]
+        },
+        {
+          "text": "f10",
+          "mode": "cream",
+          "screen": "ipad-home-dark",
+          "device": { "width": 1500, "y": 930, "rotate": 1.9 },
+          "blocks": [
+            { "type": "circle", "size": 550, "x": 1490, "y": 370, "color": "rgba(222,242,95,.20)" },
+            { "type": "stamp", "text": "f10stamp", "x": 120, "y": 650, "rotate": -5 }
+          ]
+        }
+      ]
+    }
+  }
+}

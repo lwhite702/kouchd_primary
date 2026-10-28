@@ -1,5 +1,5 @@
 {
-  "originHash" : "9e66e3d487b4e461fc109b7d99df804b77ed3f0ef446c5fd96159e4a485a7767",
+  "originHash" : "5ef2e5f0cc62a494294489f9af6c2172a4a9daa4add3dc5882d2fd7ac167c132",
   "pins" : [
     {
       "identity" : "clerk-convex-swift",
@@ -15,8 +15,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/clerk/clerk-ios.git",
       "state" : {
-        "revision" : "55b70c27ae525b4f49c9bd08e69d8bec35352593",
-        "version" : "1.5.8"
+        "revision" : "173d9382073d6a7a9b439c1e810c42c9ec77a25f",
+        "version" : "1.6.1"
       }
     },
     {
@@ -44,6 +44,15 @@
       "state" : {
         "revision" : "faf1703e6fc71c699e911ff0e306c58ad7c756c0",
         "version" : "5.0.11"
+      }
+    },
+    {
+      "identity" : "purchases-ios",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/RevenueCat/purchases-ios.git",
+      "state" : {
+        "revision" : "62df33e85b1aefaecbf7f19e89e71e2322ec15ac",
+        "version" : "5.96.0"
       }
     }
   ],

@@ -1,0 +1,98 @@
+{
+ "v": 1,
+ "at": "2026-10-27T05:44:43-04:00",
+ "app": "kouchd",
+ "run": "apps/kouchd/checks/agent/2026-10-27_05-44-13",
+ "sheet": null,
+ "shots": [
+  {
+   "name": "Home light",
+   "theme": "light",
+   "bg": "#F7FAF8",
+   "luma": 0.86,
+   "png": "apps/kouchd/checks/agent/2026-10-27_05-44-13/01-shot-home-light.png"
+  },
+  {
+   "name": "appearance dark",
+   "theme": "dark",
+   "bg": "#0D1612",
+   "luma": 0.2,
+   "png": "apps/kouchd/checks/agent/2026-10-27_05-44-13/02-appearance-dark.png"
+  },
+  {
+   "name": "sleep 3",
+   "theme": "dark",
+   "bg": "#0D1612",
+   "luma": 0.2,
+   "png": "apps/kouchd/checks/agent/2026-10-27_05-44-13/03-sleep-3.png"
+  },
+  {
+   "name": "Home dark",
+   "theme": "dark",
+   "bg": "#0D1612",
+   "luma": 0.2,
+   "png": "apps/kouchd/checks/agent/2026-10-27_05-44-13/04-shot-home-dark.png"
+  },
+  {
+   "name": "tap Stay",
+   "theme": "dark",
+   "bg": "#1C2621",
+   "luma": 0.15,
+   "png": "apps/kouchd/checks/agent/2026-10-27_05-44-13/05-tap-stay.png"
+  },
+  {
+   "name": "scroll down",
+   "theme": "dark",
+   "bg": "#1D2923",
+   "luma": 0.17,
+   "png": "apps/kouchd/checks/agent/2026-10-27_05-44-13/06-scroll-down.png"
+  },
+  {
+   "name": "tap --force Settings and reminders",
+   "theme": "dark",
+   "bg": "#1C2722",
+   "luma": 0.15,
+   "png": "apps/kouchd/checks/agent/2026-10-27_05-44-13/07-tap-settings-and-reminders.png"
+  },
+  {
+   "name": "sleep 1",
+   "theme": "dark",
+   "bg": "#1C2722",
+   "luma": 0.15,
+   "png": "apps/kouchd/checks/agent/2026-10-27_05-44-13/08-sleep-1.png"
+  },
+  {
+   "name": "Settings dark",
+   "theme": "dark",
+   "bg": "#1C2722",
+   "luma": 0.15,
+   "png": "apps/kouchd/checks/agent/2026-10-27_05-44-13/09-shot-settings-dark.png"
+  },
+  {
+   "name": "appearance light",
+   "theme": "light",
+   "bg": "#FAFBFB",
+   "luma": 0.93,
+   "png": "apps/kouchd/checks/agent/2026-10-27_05-44-13/10-appearance-light.png"
+  },
+  {
+   "name": "sleep 3",
+   "theme": "light",
+   "bg": "#FAFBFB",
+   "luma": 0.93,
+   "png": "apps/kouchd/checks/agent/2026-10-27_05-44-13/11-sleep-3.png"
+  },
+  {
+   "name": "Settings light",
+   "theme": "light",
+   "bg": "#FAFBFB",
+   "luma": 0.93,
+   "png": "apps/kouchd/checks/agent/2026-10-27_05-44-13/12-shot-settings-light.png"
+  }
+ ],
+ "palette": {
+  "bg": "#FAFBFB",
+  "accent": "#3C6A58"
+ },
+ "findings": []
+}

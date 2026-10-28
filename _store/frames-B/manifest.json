@@ -1,0 +1,81 @@
+{
+  "v": 1,
+  "variant": "B",
+  "title": "Shared living, made clear",
+  "created": "2026-10-19T10:55:25-04:00",
+  "tool": "adopted",
+  "config": "apps/kouchd/_design/shots.json",
+  "template": null,
+  "strings": null,
+  "theme": "forest-cream",
+  "device": "iphone-6.9",
+  "size": [
+    1290,
+    2796
+  ],
+  "slot": "APP_IPHONE_67",
+  "devices": {
+    "iphone-6.9": {
+      "size": [
+        1290,
+        2796
+      ],
+      "slot": "APP_IPHONE_67",
+      "locales": 1,
+      "frames": 1,
+      "files": 1
+    }
+  },
+  "locales": [
+    "en"
+  ],
+  "source_locales": [
+    "en"
+  ],
+  "screens_locale": {
+    "en": "unknown"
+  },
+  "frames": 1,
+  "files": 1,
+  "uploaded": null,
+  "uploaded_to_asc": null,
+  "uploaded_history": null,
+  "experiment": null,
+  "supersedes": null,
+  "superseded_by": null,
+  "warnings": [
+    {
+      "code": "alpha_channel",
+      "locale": "en",
+      "frame": 1,
+      "text": "kouchd-plus-paywall.png: colour type 6, ASC такие кадры не принимает"
+    },
+    {
+      "code": "size_mismatch",
+      "locale": "en",
+      "frame": 1,
+      "text": "kouchd-plus-paywall.png: 1206×2622, ожидали 1290×2796"
+    }
+  ],
+  "note": "набор принят как есть (adopt): PNG собраны чужим инструментом",
+  "render": {
+    "node": "v22.23.1",
+    "chrome": null,
+    "puppeteer_core": null,
+    "ms": 0
+  },
+  "items": [
+    {
+      "locale": "en",
+      "source_locale": "en",
+      "device": "iphone-6.9",
+      "index": 1,
+      "path": "iphone-6.9/en/01.png",
+      "bytes": 243097,
+      "md5": "9b0627d9d1454bb26b6e2b46b0140fb4",
+      "screen": null,
+      "screen_locale": null,
+      "text": "kouchd-plus-paywall"
+    }
+  ]
+}

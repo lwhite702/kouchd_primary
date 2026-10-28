@@ -1,0 +1,123 @@
+{
+ "v": 1,
+ "at": "2026-10-19T08:29:11-04:00",
+ "app": "kouchd",
+ "run": "apps/kouchd/checks/agent/2026-10-19_08-27-45",
+ "sheet": null,
+ "shots": [
+  {
+   "name": "appearance light",
+   "theme": "light",
+   "bg": "#F7F7FA",
+   "luma": 0.94,
+   "png": "apps/kouchd/checks/agent/2026-10-19_08-27-45/01-appearance-light.png"
+  },
+  {
+   "name": "launch --fresh",
+   "theme": "light",
+   "bg": "#014F37",
+   "luma": 0.25,
+   "png": "apps/kouchd/checks/agent/2026-10-19_08-27-45/02-launch.png"
+  },
+  {
+   "name": "sleep 2",
+   "theme": "light",
+   "bg": "#F6F2EA",
+   "luma": 0.94,
+   "png": "apps/kouchd/checks/agent/2026-10-19_08-27-45/03-sleep-2.png"
+  },
+  {
+   "name": "welcome-light",
+   "theme": "light",
+   "bg": "#F6F2EA",
+   "luma": 0.94,
+   "png": "apps/kouchd/checks/agent/2026-10-19_08-27-45/04-shot-welcome-light.png"
+  },
+  {
+   "name": "tap --force About Kouchd",
+   "theme": "light",
+   "bg": "#F7F2EA",
+   "luma": 0.9,
+   "png": "apps/kouchd/checks/agent/2026-10-19_08-27-45/05-tap-about-kouchd.png"
+  },
+  {
+   "name": "sleep 1",
+   "theme": "light",
+   "bg": "#F7F2EA",
+   "luma": 0.9,
+   "png": "apps/kouchd/checks/agent/2026-10-19_08-27-45/06-sleep-1.png"
+  },
+  {
+   "name": "about-light",
+   "theme": "light",
+   "bg": "#F7F2EA",
+   "luma": 0.9,
+   "png": "apps/kouchd/checks/agent/2026-10-19_08-27-45/07-shot-about-light.png"
+  },
+  {
+   "name": "wait Kouchd Plus 5",
+   "theme": "light",
+   "bg": "#F7F2EA",
+   "luma": 0.9,
+   "png": "apps/kouchd/checks/agent/2026-10-19_08-27-45/08-wait-kouchd-plus-5.png"
+  },
+  {
+   "name": "tap --force Open Kouchd Plus",
+   "theme": "light",
+   "bg": "#F6F2EA",
+   "luma": 0.93,
+   "png": "apps/kouchd/checks/agent/2026-10-19_08-27-45/09-tap-open-kouchd-plus.png"
+  },
+  {
+   "name": "sleep 1",
+   "theme": "light",
+   "bg": "#F6F2EA",
+   "luma": 0.93,
+   "png": "apps/kouchd/checks/agent/2026-10-19_08-27-45/10-sleep-1.png"
+  },
+  {
+   "name": "plus-light",
+   "theme": "light",
+   "bg": "#F6F2EA",
+   "luma": 0.93,
+   "png": "apps/kouchd/checks/agent/2026-10-19_08-27-45/11-shot-plus-light.png"
+  },
+  {
+   "name": "appearance dark",
+   "theme": "dark",
+   "bg": "#0E1613",
+   "luma": 0.12,
+   "png": "apps/kouchd/checks/agent/2026-10-19_08-27-45/12-appearance-dark.png"
+  },
+  {
+   "name": "plus-dark",
+   "theme": "dark",
+   "bg": "#0E1613",
+   "luma": 0.12,
+   "png": "apps/kouchd/checks/agent/2026-10-19_08-27-45/13-shot-plus-dark.png"
+  },
+  {
+   "name": "appearance light",
+   "theme": "light",
+   "bg": "#F6F2EA",
+   "luma": 0.93,
+   "png": "apps/kouchd/checks/agent/2026-10-19_08-27-45/14-appearance-light.png"
+  }
+ ],
+ "palette": {
+  "bg": "#F6F2EA",
+  "accent": "#4A7461"
+ },
+ "findings": [
+  {
+   "level": "warn",
+   "what": "кнопки меньше 44 × 44 pt: Open account 36×36",
+   "where": "sleep 2"
+  },
+  {
+   "level": "warn",
+   "what": "кнопки меньше 44 × 44 pt: Open account 36×36",
+   "where": "welcome-light"
+  }
+ ]
+}

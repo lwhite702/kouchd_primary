@@ -1,0 +1,13 @@
+{
+  "en-US": {
+    "name": "Chore Tracker - Kouchd",
+    "subtitle": "Household Manager for Stays",
+    "keywords": "shared living,household,stay,house rules,chores,contributions,guest,host,ledger",
+    "promotional_text": "Keep a shared stay clear, calm, and easier to coordinate.",
+    "description": "Make sharing a home feel simpler.\n\nWhether you are hosting a guest, living with a roommate, or staying with someone you know, Kouchd keeps the important details in one calm, shared place.\n\nSTART ON THE SAME PAGE\n\n• Agree on stay dates and house expectations\n• Keep agreements and schedule changes together\n• Invite people with a private link or code\n\nTAKE THE AWKWARDNESS OUT OF CONTRIBUTIONS\n\n• Record contributions made outside Kouchd\n• See what is confirmed, pending, or disputed\n• Keep a clear history everyone involved can review\n\nMAKE EVERYDAY LIVING EASIER\n\n• Coordinate chores and check-ins\n• Share household notes and reminders\n• See what needs attention at a glance\n\nA GENEROUS FREE PLAN\n\nStart organizing a shared stay with Kouchd’s free plan. Guests always use Kouchd free, so everyone can stay informed and take part without being asked to subscribe.\n\nKOUCHD PLUS FOR HOSTS\n\nHosts can upgrade to Kouchd Plus for expanded tools that make a shared stay easier to manage. Choose a monthly or annual plan, and keep every guest on the free experience.\n\nKouchd helps hosts, guests, and roommates spend less time sorting out details—and more time feeling at home.\n\nKouchd records agreements and contributions. It does not collect, hold, transfer, or process payments. Payment arrangements happen directly between the people involved, outside Kouchd.",
+    "whats_new": "Initial release with shared stays, agreements, contribution records, chores, and check-ins."
+  },
+  "support_url": "https://help.kouchd.com",
+  "marketing_url": "https://kouchd.com",
+  "privacy_url": "https://kouchd.com/privacy"
+}

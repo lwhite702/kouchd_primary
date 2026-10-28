@@ -1,0 +1,40 @@
+{
+  "app": "Kouchd",
+  "kind": "raw simulator footage",
+  "containsRealAccountData": false,
+  "files": [
+    {
+      "file": "guest-raw.mp4",
+      "label": "Guest feature capture",
+      "bytes": 14743295,
+      "durationSeconds": 24.167,
+      "width": 1320,
+      "height": 2868,
+      "frameRate": 28.75,
+      "codec": "H.264",
+      "sha256": "9b394aec6b2990de7486e4d5223c9a97284e4faa49650152b49f366c585eafc3"
+    },
+    {
+      "file": "host-raw.mp4",
+      "label": "Host feature capture",
+      "bytes": 17346917,
+      "durationSeconds": 23.825,
+      "width": 1320,
+      "height": 2868,
+      "frameRate": 32.953,
+      "codec": "H.264",
+      "sha256": "502d7100f85f37c41dae23da3bf67d8c9a3fdc35438162d81a512d76d7dbdb4e"
+    },
+    {
+      "file": "promo-raw.mp4",
+      "label": "Promotional capture",
+      "bytes": 20145028,
+      "durationSeconds": 27.515,
+      "width": 1320,
+      "height": 2868,
+      "frameRate": 29.918,
+      "codec": "H.264",
+      "sha256": "05d6f6a20c1c312c105acc31cc78f5c22961de54b7c7c4a41f70d1b285047561"
+    }
+  ]
+}

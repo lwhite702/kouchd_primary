@@ -20,11 +20,11 @@
   },
   "fonts": {
     "heading": {
-      "family": "Manrope",
+      "family": "Nunito Sans",
       "weight": 800
     },
     "body": {
-      "family": "Manrope",
+      "family": "Nunito Sans",
       "weight": 400
     }
   },
@@ -88,9 +88,7 @@
   "interaction": {
     "drilldown": false
   },
-  "search": {
-    "prompt": "Search guides, rules, or ledger help..."
-  },
+  "search": {},
   "navbar": {
     "links": [
       {
@@ -112,18 +110,39 @@
       {
         "header": "Product",
         "items": [
-          { "label": "Kouchd App", "href": "https://kouchd.com" },
-          { "label": "Quickstart", "href": "/quickstart" },
-          { "label": "Host Guide", "href": "/hosts/getting-started" },
-          { "label": "Guest Guide", "href": "/guests/joining-a-stay" },
-          { "label": "Reminders", "href": "/using-notifications" }
+          {
+            "label": "Kouchd App",
+            "href": "https://kouchd.com"
+          },
+          {
+            "label": "Quickstart",
+            "href": "/quickstart"
+          },
+          {
+            "label": "Host Guide",
+            "href": "/hosts/getting-started"
+          },
+          {
+            "label": "Guest Guide",
+            "href": "/guests/joining-a-stay"
+          },
+          {
+            "label": "Reminders",
+            "href": "/using-notifications"
+          }
         ]
       },
       {
         "header": "Trust & Privacy",
         "items": [
-          { "label": "Stay Agreements", "href": "/legal-trust/stay-agreements" },
-          { "label": "Privacy & Security", "href": "/legal-trust/privacy-and-security" }
+          {
+            "label": "Stay Agreements",
+            "href": "/legal-trust/stay-agreements"
+          },
+          {
+            "label": "Privacy & Security",
+            "href": "/legal-trust/privacy-and-security"
+          }
         ]
       }
     ]
@@ -150,7 +169,7 @@
   "thumbnails": {
     "appearance": "light",
     "fonts": {
-      "family": "Manrope"
+      "family": "Nunito Sans"
     }
   },
   "seo": {

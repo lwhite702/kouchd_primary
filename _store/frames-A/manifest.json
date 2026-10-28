@@ -1,0 +1,118 @@
+{
+  "v": 1,
+  "variant": "A",
+  "title": "A shared stay, clearly held",
+  "created": "2026-10-19T17:17:33-04:00",
+  "tool": "shots@1.0.0",
+  "config": "apps/kouchd/_design/shots.json",
+  "template": "layout:classic",
+  "strings": "apps/kouchd/_design/shots.strings.json",
+  "theme": "forest-cream",
+  "device": "iphone-6.9",
+  "size": [
+    1290,
+    2796
+  ],
+  "slot": "APP_IPHONE_67",
+  "devices": {
+    "iphone-6.9": {
+      "size": [
+        1290,
+        2796
+      ],
+      "slot": "APP_IPHONE_67",
+      "locales": 1,
+      "frames": 5,
+      "files": 5
+    }
+  },
+  "locales": [
+    "en-US"
+  ],
+  "source_locales": [
+    "en-US"
+  ],
+  "screens_locale": {
+    "en-US": "own"
+  },
+  "frames": 5,
+  "files": 5,
+  "uploaded": null,
+  "uploaded_to_asc": null,
+  "uploaded_history": null,
+  "experiment": null,
+  "supersedes": "history/A/20261019-1716",
+  "superseded_by": null,
+  "warnings": [],
+  "note": null,
+  "render": {
+    "node": "v22.23.1",
+    "chrome": "Chrome/155.0.8059.85",
+    "puppeteer_core": "23.11.1",
+    "jobs": 1,
+    "flat": false,
+    "ms": 3991
+  },
+  "items": [
+    {
+      "locale": "en-US",
+      "source_locale": "en-US",
+      "device": "iphone-6.9",
+      "index": 1,
+      "path": "iphone-6.9/en-US/01.png",
+      "bytes": 282427,
+      "md5": "1f80b1dac1533b5fd3baabe7359626b1",
+      "screen": "welcome",
+      "screen_locale": "en-US",
+      "text": "f1"
+    },
+    {
+      "locale": "en-US",
+      "source_locale": "en-US",
+      "device": "iphone-6.9",
+      "index": 2,
+      "path": "iphone-6.9/en-US/02.png",
+      "bytes": 295133,
+      "md5": "7898d0d504d1c895d375cf40871d2bd2",
+      "screen": "stay",
+      "screen_locale": "en-US",
+      "text": "f2"
+    },
+    {
+      "locale": "en-US",
+      "source_locale": "en-US",
+      "device": "iphone-6.9",
+      "index": 3,
+      "path": "iphone-6.9/en-US/03.png",
+      "bytes": 286077,
+      "md5": "662f14a2ab05a0a193f795e27a7346ce",
+      "screen": "ledger",
+      "screen_locale": "en-US",
+      "text": "f3"
+    },
+    {
+      "locale": "en-US",
+      "source_locale": "en-US",
+      "device": "iphone-6.9",
+      "index": 4,
+      "path": "iphone-6.9/en-US/04.png",
+      "bytes": 284218,
+      "md5": "844c2af3c24586b754360aa86c8170d8",
+      "screen": "chores",
+      "screen_locale": "en-US",
+      "text": "f4"
+    },
+    {
+      "locale": "en-US",
+      "source_locale": "en-US",
+      "device": "iphone-6.9",
+      "index": 5,
+      "path": "iphone-6.9/en-US/05.png",
+      "bytes": 309373,
+      "md5": "9a8636e2258985ca7edd1d77a208f747",
+      "screen": "role",
+      "screen_locale": "en-US",
+      "text": "f5"
+    }
+  ]
+}

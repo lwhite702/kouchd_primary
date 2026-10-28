@@ -1,0 +1,782 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=390, initial-scale=1, viewport-fit=cover">
+  <title>Kouchd · Annual trial paywall</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800;850&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: light;
+      --canvas: #f7f3eb;
+      --surface: #fffefa;
+      --sage: #e9f2e4;
+      --forest: #184f3a;
+      --forest-deep: #123d2e;
+      --ink: #17251f;
+      --secondary: #55635a;
+      --muted: #728076;
+      --border: #ded8ce;
+      --line: #e3dccd;
+      --lime: #dff26b;
+      --lime-hover: #e8f88e;
+      --terracotta: #a45339;
+      --amber: #92582b;
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body {
+      margin: 0;
+      padding: 24px 0 64px;
+      background: #e8eee8;
+      color: var(--ink);
+      font-family: 'Manrope', ui-sans-serif, system-ui, -apple-system, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    main { width: 390px; margin: 0 auto; }
+    .screen {
+      position: relative;
+      min-height: 844px;
+      padding: 16px 20px 32px;
+      background: var(--canvas);
+      border: 1px solid #e0d8cb;
+      border-radius: 40px;
+      box-shadow: 0 20px 50px rgba(23, 37, 31, 0.14), 0 2px 10px rgba(23, 37, 31, 0.04);
+      overflow: hidden;
+    }
+
+    /* iOS Status Bar Notch Cue */
+    .status-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 4px 8px 12px;
+      font-size: 14px;
+      font-weight: 750;
+      color: var(--ink);
+    }
+    .status-time { letter-spacing: -0.02em; }
+    .status-icons {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .status-icons svg {
+      display: block;
+      fill: currentColor;
+    }
+
+    /* Top Sheet Navigation */
+    .nav {
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .brand {
+      color: var(--forest);
+      font-size: 24px;
+      line-height: 1;
+      font-weight: 850;
+      letter-spacing: -0.06em;
+      text-decoration: none;
+    }
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .restore-link {
+      background: none;
+      border: none;
+      color: var(--secondary);
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 650;
+      padding: 6px 10px;
+      cursor: pointer;
+      border-radius: 99px;
+      transition: background 0.15s ease, color 0.15s ease;
+    }
+    .restore-link:hover {
+      background: rgba(24, 79, 58, 0.06);
+      color: var(--forest);
+    }
+    .close-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: #eae3d5;
+      border: none;
+      display: grid;
+      place-items: center;
+      color: #4a584f;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: 700;
+      transition: all 0.15s ease;
+    }
+    .close-btn:hover {
+      background: #dfd7c7;
+      color: var(--ink);
+      transform: scale(1.05);
+    }
+
+    /* Intro & Eyebrow */
+    .intro { margin-top: 6px; }
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0 0 12px;
+      color: var(--amber);
+      font-size: 11px;
+      line-height: 1.2;
+      font-weight: 850;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    .eyebrow::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      flex: 0 0 7px;
+      border-radius: 50%;
+      background: #c67e3e;
+    }
+    h1 {
+      margin: 0 0 12px;
+      color: var(--ink);
+      font-size: 32px;
+      line-height: 1.1;
+      font-weight: 800;
+      letter-spacing: -0.055em;
+    }
+    .v21-highlight-forest { color: var(--forest); }
+    .v21-highlight-moss { color: #3b745b; }
+    .v21-highlight-terracotta { color: var(--terracotta); }
+    .intro p {
+      margin: 0;
+      color: var(--secondary);
+      font-size: 15px;
+      line-height: 1.55;
+    }
+
+    /* Billing Interval Switcher */
+    .billing-toggle-wrap {
+      margin: 20px 0 0;
+      display: flex;
+      justify-content: center;
+    }
+    .billing-toggle {
+      display: inline-flex;
+      padding: 4px;
+      border-radius: 999px;
+      background: #ebe4d6;
+      border: 1px solid rgba(24, 79, 58, 0.1);
+      width: 100%;
+    }
+    .billing-opt {
+      flex: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: none;
+      background: transparent;
+      color: #59675f;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 750;
+      cursor: pointer;
+      transition: all 0.18s ease;
+    }
+    .billing-opt.active {
+      background: var(--surface);
+      color: var(--forest);
+      box-shadow: 0 2px 8px rgba(18, 61, 46, 0.1);
+    }
+    .save-badge {
+      font-size: 10px;
+      font-weight: 850;
+      padding: 2px 6px;
+      border-radius: 99px;
+      background: var(--lime);
+      color: #17251f;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    /* Plans Container */
+    .plans {
+      display: grid;
+      gap: 16px;
+      margin-top: 18px;
+    }
+
+    /* Featured Plus Card (Hero Tier) */
+    .plan.plus {
+      position: relative;
+      padding: 22px 20px 20px;
+      border: 2px solid var(--forest);
+      border-radius: 24px;
+      background: var(--sage);
+      box-shadow: 0 8px 24px rgba(24, 79, 58, 0.08);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .plus-badge {
+      position: absolute;
+      top: -12px;
+      right: 18px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 11px;
+      border-radius: 99px;
+      background: var(--forest);
+      color: #fffdf8;
+      font-size: 10.5px;
+      font-weight: 850;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+    .plan-label {
+      margin: 0 0 6px;
+      color: var(--forest);
+      font-size: 10.5px;
+      line-height: 1.3;
+      font-weight: 850;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    h2 {
+      margin: 0 0 6px;
+      color: var(--ink);
+      font-size: 24px;
+      line-height: 1.15;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+    }
+    .promise {
+      margin: 0 0 12px;
+      color: #45554b;
+      font-size: 14px;
+      line-height: 1.5;
+      font-weight: 600;
+    }
+    .price-row {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      margin: 0 0 4px;
+    }
+    .amount {
+      color: var(--forest);
+      font-size: 38px;
+      line-height: 1;
+      font-weight: 850;
+      letter-spacing: -0.05em;
+    }
+    .period {
+      font-size: 15px;
+      font-weight: 700;
+      color: #4a5c51;
+    }
+    .summary {
+      margin: 0 0 14px;
+      color: var(--secondary);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    /* Features List with crisp SVG checkmarks */
+    .features {
+      display: grid;
+      gap: 10px;
+      margin: 14px 0 18px;
+      padding-top: 14px;
+      border-top: 1px solid rgba(24, 79, 58, 0.15);
+    }
+    .feature {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      color: #2b3b31;
+      font-size: 13.5px;
+      line-height: 1.45;
+      font-weight: 600;
+    }
+    .feature-check {
+      width: 17px;
+      height: 17px;
+      flex: 0 0 17px;
+      margin-top: 2px;
+      color: var(--forest);
+    }
+    .feature strong {
+      font-weight: 800;
+      color: var(--ink);
+    }
+
+    /* 3-Step Trial Timeline */
+    .timeline {
+      margin: 14px 0 18px;
+      padding: 13px 14px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.65);
+      border: 1px solid rgba(24, 79, 58, 0.12);
+      display: grid;
+      gap: 9px;
+    }
+    .timeline-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 12.5px;
+      line-height: 1.4;
+    }
+    .timeline-dot {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #d8ebd2;
+      border: 1.5px solid var(--forest);
+      display: grid;
+      place-items: center;
+      font-size: 10px;
+      font-weight: 800;
+      color: var(--forest);
+      flex: 0 0 18px;
+      margin-top: 1px;
+    }
+    .timeline-step strong {
+      color: var(--forest);
+      font-weight: 800;
+    }
+    .timeline-step span {
+      color: #4a584f;
+    }
+
+    /* Primary & Secondary Buttons */
+    .cta {
+      width: 100%;
+      min-height: 52px;
+      border: 0;
+      border-radius: 999px;
+      padding: 14px 20px;
+      font-family: inherit;
+      font-size: 15.5px;
+      line-height: 1;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: all 0.18s ease;
+    }
+    .plus .cta {
+      background: var(--lime);
+      color: #17251f;
+      box-shadow: 0 4px 14px rgba(24, 79, 58, 0.15);
+    }
+    .plus .cta:hover {
+      background: var(--lime-hover);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px rgba(24, 79, 58, 0.2);
+    }
+    .cta-subtext {
+      margin: 8px 0 0;
+      text-align: center;
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--forest);
+    }
+
+    /* Free Card (Secondary Option) */
+    .plan.free {
+      padding: 18px 20px;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      background: var(--surface);
+    }
+    .free .plan-label { color: #6a776f; }
+    .free .features {
+      margin: 12px 0 16px;
+      padding-top: 10px;
+      border-top: 1px solid #eee8dc;
+      gap: 8px;
+    }
+    .free .feature { font-size: 13.5px; color: #4e5e54; }
+    .free .feature-check { color: #52735f; }
+    .free .cta {
+      background: transparent;
+      border: 1.5px solid #bdc7bd;
+      color: var(--forest);
+      min-height: 44px;
+      font-size: 14px;
+    }
+    .free .cta:hover {
+      background: rgba(24, 79, 58, 0.05);
+      border-color: var(--forest);
+    }
+
+    /* Guest Reassurance Banner */
+    .guest-banner {
+      margin-top: 16px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: #fdfaf4;
+      border: 1px dashed #d9d0c2;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .guest-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #e9f2e4;
+      color: var(--forest);
+      display: grid;
+      place-items: center;
+      flex: 0 0 28px;
+    }
+    .guest-text {
+      font-size: 11.5px;
+      line-height: 1.45;
+      color: #55635a;
+    }
+    .guest-text strong {
+      color: var(--forest);
+    }
+
+    /* Terms & Legal Footer */
+    .terms {
+      margin: 18px 0 0;
+      color: #6b7770;
+      font-size: 11px;
+      line-height: 1.55;
+      text-align: center;
+    }
+    .legal-links {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin-top: 12px;
+      font-size: 11px;
+    }
+    .legal-links a {
+      color: var(--secondary);
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      cursor: pointer;
+    }
+    .fine {
+      margin: 10px 0 0;
+      text-align: center;
+      color: #79877e;
+      font-size: 10.5px;
+      line-height: 1.5;
+    }
+
+    /* Toast notification for interactive feedback */
+    .toast {
+      position: absolute;
+      bottom: 24px;
+      left: 20px;
+      right: 20px;
+      background: var(--ink);
+      color: #fffdf8;
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 10px 24px rgba(0,0,0,0.2);
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 100;
+      pointer-events: none;
+    }
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <main aria-label="Kouchd Plus annual trial paywall mockup">
+    <section class="screen">
+      <!-- iOS Status Bar -->
+      <div class="status-bar" aria-hidden="true">
+        <span class="status-time">9:41</span>
+        <div class="status-icons">
+          <!-- Signal icon -->
+          <svg width="17" height="11" viewBox="0 0 17 11">
+            <rect x="0" y="8" width="3" height="3" rx="1"/>
+            <rect x="4.5" y="5.5" width="3" height="5.5" rx="1"/>
+            <rect x="9" y="3" width="3" height="8" rx="1"/>
+            <rect x="13.5" y="0" width="3" height="11" rx="1"/>
+          </svg>
+          <!-- Wi-Fi icon -->
+          <svg width="15" height="11" viewBox="0 0 15 11">
+            <path d="M7.5 3C4.8 3 2.4 4.1 0.7 5.8L7.5 13.5L14.3 5.8C12.6 4.1 10.2 3 7.5 3Z" transform="translate(0, -3)"/>
+          </svg>
+          <!-- Battery icon -->
+          <svg width="24" height="11" viewBox="0 0 24 11">
+            <rect x="0.5" y="0.5" width="20" height="10" rx="3" fill="none" stroke="currentColor"/>
+            <rect x="2" y="2" width="17" height="7" rx="1.5"/>
+            <path d="M22 3.5C22.6 3.5 23 3.9 23 4.5V6.5C23 7.1 22.6 7.5 22 7.5V3.5Z"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Navigation -->
+      <nav class="nav">
+        <span class="brand">kouchd</span>
+        <div class="nav-actions">
+          <button type="button" class="restore-link" id="restoreBtn">Restore</button>
+          <button type="button" class="close-btn" id="closeBtn" aria-label="Close paywall">✕</button>
+        </div>
+      </nav>
+
+      <!-- Header -->
+      <header class="intro">
+        <p class="eyebrow">SIMPLE PLANS FOR SHARED LIVING</p>
+        <h1>Start free. <span class="v21-highlight-forest">Add more room</span> when hosting grows.</h1>
+        <p>Start with the shared essentials. Choose Kouchd Plus for flexible stay terms, helpful reminders, and easier household routines.</p>
+
+        <!-- Billing Interval Switcher -->
+        <div class="billing-toggle-wrap">
+          <div class="billing-toggle">
+            <button type="button" class="billing-opt active" id="btnAnnual">
+              <span>Annual</span>
+              <span class="save-badge">Save 17%</span>
+            </button>
+            <button type="button" class="billing-opt" id="btnMonthly">
+              <span>Monthly</span>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <!-- Plans -->
+      <div class="plans">
+        <!-- Plan 1: Kouchd Plus (Hero Tier) -->
+        <article class="plan plus" id="plusPlanCard">
+          <div class="plus-badge" id="plusBadge">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:2px"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            <span id="badgeText">7-DAY FREE TRIAL</span>
+          </div>
+          <p class="plan-label">BEST FOR ACTIVE HOSTS</p>
+          <h2>Kouchd <span class="v21-highlight-forest">Plus</span></h2>
+          <p class="promise">Tired of reminding everybody? Let Kouchd handle the follow-ups.</p>
+          
+          <div class="price-row">
+            <span class="amount" id="plusAmount">$79</span>
+            <span class="period" id="plusPeriod">/ year</span>
+          </div>
+          <p class="summary" id="plusSummary">Billed annually at $79/yr ($6.58/mo equivalent). Guests always join free.</p>
+
+          <div class="features">
+            <div class="feature">
+              <svg class="feature-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              <span><strong>Flexible agreements</strong> &amp; contribution schedules</span>
+            </div>
+            <div class="feature">
+              <svg class="feature-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              <span><strong>Recurring chores</strong> &amp; rotating assignments</span>
+            </div>
+            <div class="feature">
+              <svg class="feature-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              <span><strong>Automated reminders</strong> &amp; Household Pulse</span>
+            </div>
+            <div class="feature">
+              <svg class="feature-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              <span><strong>Household exports</strong> &amp; welcome guides</span>
+            </div>
+          </div>
+
+          <!-- 3-Step Trial Timeline -->
+          <div class="timeline" id="trialTimeline">
+            <div class="timeline-step">
+              <span class="timeline-dot">1</span>
+              <div>
+                <strong>Today</strong>
+                <span> · Immediate full access to Kouchd Plus ($0 due now)</span>
+              </div>
+            </div>
+            <div class="timeline-step">
+              <span class="timeline-dot">2</span>
+              <div>
+                <strong>Day 5</strong>
+                <span> · Gentle reminder before trial ends</span>
+              </div>
+            </div>
+            <div class="timeline-step">
+              <span class="timeline-dot">3</span>
+              <div>
+                <strong>Day 7</strong>
+                <span> · Renews at $79/year unless cancelled</span>
+              </div>
+            </div>
+          </div>
+
+          <button type="button" class="cta" id="ctaPlus">
+            <span id="ctaPlusText">Try 7 days free</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </button>
+          <p class="cta-subtext" id="ctaSubtext">No charge until Day 7 · Cancel anytime</p>
+        </article>
+
+        <!-- Plan 2: Kouchd Free (Secondary Tier) -->
+        <article class="plan free">
+          <p class="plan-label">THE SHARED-LIVING FOUNDATION</p>
+          <h2>Kouchd <span class="v21-highlight-moss">Free</span></h2>
+          <p class="promise">Someone staying over? Get everyone on the same page.</p>
+          <div class="price-row">
+            <span class="amount" style="color:var(--ink); font-size:32px;">Free</span>
+            <span class="period">forever</span>
+          </div>
+          <p class="summary">A private home base for the essentials of a shared stay. Free for hosts and guests.</p>
+          
+          <div class="features">
+            <div class="feature">
+              <svg class="feature-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>1 active household stay at a time</span>
+            </div>
+            <div class="feature">
+              <svg class="feature-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>House details &amp; shared stay agreement</span>
+            </div>
+            <div class="feature">
+              <svg class="feature-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>Record outside contributions &amp; chores</span>
+            </div>
+          </div>
+          <button type="button" class="cta" id="ctaFree">Continue with Free</button>
+        </article>
+      </div>
+
+      <!-- Guest Reassurance Banner -->
+      <div class="guest-banner">
+        <div class="guest-icon">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+        <div class="guest-text">
+          <strong>Guests always join 100% free.</strong> Enter your host's household code to join a stay without payment.
+        </div>
+      </div>
+
+      <!-- Subscription Legal & Terms -->
+      <p class="terms" id="termsText">
+        7 days free, then $79/year. Subscription renews automatically every year until cancelled. Payment is charged to your Apple ID.
+      </p>
+      
+      <div class="legal-links">
+        <a onclick="showToast('Opening Terms of Service...')">Terms of Use</a>
+        <a onclick="showToast('Opening Privacy Policy...')">Privacy Policy</a>
+      </div>
+
+      <p class="fine">
+        Cancel at least 24 hours before the trial ends in your Apple ID Subscriptions. Guests participate for free. Contributions are shared records; Kouchd does not move money.
+      </p>
+
+      <!-- Feedback Toast -->
+      <div class="toast" id="toast">
+        <span id="toastMsg">Action completed</span>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    (function() {
+      let isAnnual = true;
+      const btnAnnual = document.getElementById('btnAnnual');
+      const btnMonthly = document.getElementById('btnMonthly');
+      const plusAmount = document.getElementById('plusAmount');
+      const plusPeriod = document.getElementById('plusPeriod');
+      const plusSummary = document.getElementById('plusSummary');
+      const plusBadge = document.getElementById('plusBadge');
+      const badgeText = document.getElementById('badgeText');
+      const trialTimeline = document.getElementById('trialTimeline');
+      const ctaPlusText = document.getElementById('ctaPlusText');
+      const ctaSubtext = document.getElementById('ctaSubtext');
+      const termsText = document.getElementById('termsText');
+      const toast = document.getElementById('toast');
+      const toastMsg = document.getElementById('toastMsg');
+
+      function showToast(msg) {
+        toastMsg.textContent = msg;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2400);
+      }
+      window.showToast = showToast;
+
+      function updateView() {
+        if (isAnnual) {
+          btnAnnual.classList.add('active');
+          btnMonthly.classList.remove('active');
+          plusAmount.textContent = '$79';
+          plusPeriod.textContent = '/ year';
+          plusSummary.textContent = 'Billed annually at $79/yr ($6.58/mo equivalent). Save 17%. Guests always join free.';
+          badgeText.textContent = '7-DAY FREE TRIAL';
+          trialTimeline.style.display = 'grid';
+          ctaPlusText.textContent = 'Try 7 days free';
+          ctaSubtext.textContent = 'No charge until Day 7 · Cancel anytime';
+          termsText.textContent = '7 days free, then $79/year. Subscription renews automatically every year until cancelled. Payment is charged to your Apple ID.';
+        } else {
+          btnAnnual.classList.remove('active');
+          btnMonthly.classList.add('active');
+          plusAmount.textContent = '$7.99';
+          plusPeriod.textContent = '/ month';
+          plusSummary.textContent = 'Billed monthly at $7.99/mo. Cancel anytime. Guests always join free.';
+          badgeText.textContent = 'MONTHLY PLAN';
+          trialTimeline.style.display = 'none';
+          ctaPlusText.textContent = 'Get Kouchd Plus';
+          ctaSubtext.textContent = 'Billed monthly · Cancel anytime';
+          termsText.textContent = '$7.99 billed monthly. Subscription renews automatically each month until cancelled. Payment is charged to your Apple ID.';
+        }
+      }
+
+      btnAnnual.addEventListener('click', () => {
+        isAnnual = true;
+        updateView();
+      });
+
+      btnMonthly.addEventListener('click', () => {
+        isAnnual = false;
+        updateView();
+      });
+
+      document.getElementById('ctaPlus').addEventListener('click', () => {
+        if (isAnnual) {
+          showToast('Starting 7-day free trial of Kouchd Plus...');
+        } else {
+          showToast('Activating Kouchd Plus monthly subscription...');
+        }
+      });
+
+      document.getElementById('ctaFree').addEventListener('click', () => {
+        showToast('Continuing with Kouchd Free ($0 forever)...');
+      });
+
+      document.getElementById('closeBtn').addEventListener('click', () => {
+        showToast('Paywall dismissed · Returning to stay');
+      });
+
+      document.getElementById('restoreBtn').addEventListener('click', () => {
+        showToast('Restoring purchases with Apple ID...');
+      });
+    })();
+  </script>
+</body>
+</html>

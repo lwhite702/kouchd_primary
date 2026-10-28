@@ -1,0 +1,155 @@
+{
+ "v": 1,
+ "at": "2026-10-22T04:49:37-04:00",
+ "app": "kouchd",
+ "run": "apps/kouchd/checks/agent/2026-10-22_04-48-54",
+ "sheet": null,
+ "shots": [
+  {
+   "name": "launch --fresh",
+   "theme": "light",
+   "bg": "#000000",
+   "luma": 0.0,
+   "png": "apps/kouchd/checks/agent/2026-10-22_04-48-54/01-launch.png"
+  },
+  {
+   "name": "01-welcome",
+   "theme": "light",
+   "bg": "#0C130F",
+   "luma": 0.1,
+   "png": "apps/kouchd/checks/agent/2026-10-22_04-48-54/02-shot-01-welcome.png"
+  },
+  {
+   "name": "tap Sign in or create an account --force",
+   "theme": "light",
+   "bg": "#232325",
+   "luma": 0.15,
+   "png": "apps/kouchd/checks/agent/2026-10-22_04-48-54/03-tap-sign-in-or.png"
+  },
+  {
+   "name": "02-auth",
+   "theme": "light",
+   "bg": "#232325",
+   "luma": 0.15,
+   "png": "apps/kouchd/checks/agent/2026-10-22_04-48-54/04-shot-02-auth.png"
+  },
+  {
+   "name": "tap Close --force",
+   "theme": "light",
+   "bg": "#0E1713",
+   "luma": 0.12,
+   "png": "apps/kouchd/checks/agent/2026-10-22_04-48-54/05-tap-close.png"
+  },
+  {
+   "name": "tap About Kouchd --force",
+   "theme": "light",
+   "bg": "#0E1713",
+   "luma": 0.13,
+   "png": "apps/kouchd/checks/agent/2026-10-22_04-48-54/06-tap-about-kouchd.png"
+  },
+  {
+   "name": "03-about",
+   "theme": "light",
+   "bg": "#0E1713",
+   "luma": 0.13,
+   "png": "apps/kouchd/checks/agent/2026-10-22_04-48-54/07-shot-03-about.png"
+  },
+  {
+   "name": "tap Open Kouchd Plus --force",
+   "theme": "light",
+   "bg": "#F7F3E9",
+   "luma": 0.89,
+   "png": "apps/kouchd/checks/agent/2026-10-22_04-48-54/08-tap-open-kouchd-plus.png"
+  },
+  {
+   "name": "04-paywall",
+   "theme": "light",
+   "bg": "#F7F2E9",
+   "luma": 0.89,
+   "png": "apps/kouchd/checks/agent/2026-10-22_04-48-54/09-shot-04-paywall.png"
+  },
+  {
+   "name": "tap Restore Purchases --force",
+   "theme": "light",
+   "bg": "#F7F2E9",
+   "luma": 0.89,
+   "png": "apps/kouchd/checks/agent/2026-10-22_04-48-54/10-tap-restore-purchases.png"
+  },
+  {
+   "name": "05-restore",
+   "theme": "light",
+   "bg": "#F7F2E9",
+   "luma": 0.89,
+   "png": "apps/kouchd/checks/agent/2026-10-22_04-48-54/11-shot-05-restore.png"
+  },
+  {
+   "name": "appearance dark",
+   "theme": "dark",
+   "bg": "#F7F2E9",
+   "luma": 0.89,
+   "png": "apps/kouchd/checks/agent/2026-10-22_04-48-54/12-appearance-dark.png"
+  },
+  {
+   "name": "06-paywall-dark",
+   "theme": "dark",
+   "bg": "#F7F2E9",
+   "luma": 0.89,
+   "png": "apps/kouchd/checks/agent/2026-10-22_04-48-54/13-shot-06-paywall-dark.png"
+  },
+  {
+   "name": "home",
+   "theme": "dark",
+   "bg": "#23243A",
+   "luma": 0.2,
+   "png": "apps/kouchd/checks/agent/2026-10-22_04-48-54/14-home.png"
+  },
+  {
+   "name": "07-home",
+   "theme": "dark",
+   "bg": "#23243A",
+   "luma": 0.2,
+   "png": "apps/kouchd/checks/agent/2026-10-22_04-48-54/15-shot-07-home.png"
+  }
+ ],
+ "palette": {
+  "bg": "#0E1713",
+  "accent": "#114A34"
+ },
+ "findings": [
+  {
+   "level": "bad",
+   "what": "фон «кремовая бумага» #F7F3E9 — главный признак ИИ-дизайна по умолчанию",
+   "where": "tap Open Kouchd Plus --force"
+  },
+  {
+   "level": "bad",
+   "what": "фон «кремовая бумага» #F7F2E9 — главный признак ИИ-дизайна по умолчанию",
+   "where": "04-paywall"
+  },
+  {
+   "level": "bad",
+   "what": "фон «кремовая бумага» #F7F2E9 — главный признак ИИ-дизайна по умолчанию",
+   "where": "tap Restore Purchases --force"
+  },
+  {
+   "level": "bad",
+   "what": "фон «кремовая бумага» #F7F2E9 — главный признак ИИ-дизайна по умолчанию",
+   "where": "05-restore"
+  },
+  {
+   "level": "bad",
+   "what": "тёмная тема не включилась: снимок светлый (яркость 0.89)",
+   "where": "appearance dark"
+  },
+  {
+   "level": "bad",
+   "what": "тёмная тема не включилась: снимок светлый (яркость 0.89)",
+   "where": "06-paywall-dark"
+  },
+  {
+   "level": "bad",
+   "what": "модная гарнитура Manrope — сейчас она у всех, нужна своя с характером",
+   "where": "docs.json"
+  }
+ ]
+}

@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kouchd App Preview Videos</title>
+  <style>
+    :root { color-scheme: light; --cream:#f8f4e8; --forest:#13583c; --lime:#defc52; --ink:#13251d; }
+    * { box-sizing: border-box; }
+    body { margin:0; padding:48px 28px 64px; background:var(--cream); color:var(--ink); font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display",sans-serif; }
+    header { max-width:1180px; margin:0 auto 34px; display:flex; align-items:end; justify-content:space-between; gap:24px; }
+    h1 { margin:0; max-width:720px; font-size:clamp(42px,6vw,78px); letter-spacing:-.055em; line-height:.95; }
+    header p { margin:0; max-width:360px; color:#59645e; font-size:18px; line-height:1.45; }
+    main { max-width:1180px; margin:0 auto; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:24px; }
+    article { position:relative; padding:18px; border:1px solid rgba(19,88,60,.16); border-radius:34px; background:rgba(255,255,255,.72); box-shadow:0 22px 70px rgba(25,54,42,.11); }
+    article:nth-child(3) { background:var(--forest); color:white; transform:translateY(-10px); }
+    .label { display:inline-flex; margin:2px 2px 14px; padding:8px 12px; border-radius:999px; background:var(--lime); color:var(--forest); font-size:13px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+    video { display:block; width:100%; aspect-ratio:886/1920; border-radius:22px; background:#000; box-shadow:0 10px 35px rgba(0,0,0,.18); }
+    h2 { margin:17px 4px 5px; font-size:25px; letter-spacing:-.03em; }
+    article p { margin:0 4px 3px; color:#647069; line-height:1.4; }
+    article:nth-child(3) p { color:rgba(255,255,255,.72); }
+    @media (max-width:900px) { header { align-items:start; flex-direction:column; } main { grid-template-columns:1fr; max-width:440px; } article:nth-child(3) { transform:none; } }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Three ways to see Kouchd.</h1>
+    <p>Real simulator footage, customer-facing demo data, and App Preview-ready delivery.</p>
+  </header>
+  <main>
+    <article>
+      <span class="label">For hosts</span>
+      <video controls playsinline preload="metadata" src="kouchd-host-features.mp4"></video>
+      <h2>Host features</h2>
+      <p>23.83 seconds · 886×1920 · H.264 · 30 fps</p>
+    </article>
+    <article>
+      <span class="label">For guests</span>
+      <video controls playsinline preload="metadata" src="kouchd-guest-features.mp4"></video>
+      <h2>Guest features</h2>
+      <p>24.17 seconds · 886×1920 · H.264 · 30 fps</p>
+    </article>
+    <article>
+      <span class="label">Promo</span>
+      <video controls playsinline preload="metadata" src="kouchd-promo.mp4"></video>
+      <h2>Promo with motion</h2>
+      <p>27.53 seconds · branded cards and animated feature callouts</p>
+    </article>
+  </main>
+</body>
+</html>

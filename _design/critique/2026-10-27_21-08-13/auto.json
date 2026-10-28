@@ -1,0 +1,84 @@
+{
+ "v": 1,
+ "at": "2026-10-27T21:08:14-04:00",
+ "app": "kouchd",
+ "run": "apps/kouchd/checks/agent/2026-10-27_21-07-28",
+ "sheet": null,
+ "shots": [
+  {
+   "name": "sleep 3",
+   "theme": "light",
+   "bg": "#F7FAF8",
+   "luma": 0.86,
+   "png": "apps/kouchd/checks/agent/2026-10-27_21-07-28/01-sleep-3.png"
+  },
+  {
+   "name": "tap Stay",
+   "theme": "light",
+   "bg": "#F9FBFA",
+   "luma": 0.95,
+   "png": "apps/kouchd/checks/agent/2026-10-27_21-07-28/02-tap-stay.png"
+  },
+  {
+   "name": "sleep 2",
+   "theme": "light",
+   "bg": "#F9FBFA",
+   "luma": 0.95,
+   "png": "apps/kouchd/checks/agent/2026-10-27_21-07-28/03-sleep-2.png"
+  },
+  {
+   "name": "Host stay information light",
+   "theme": "light",
+   "bg": "#F9FBFA",
+   "luma": 0.95,
+   "png": "apps/kouchd/checks/agent/2026-10-27_21-07-28/04-shot-host-stay-information.png"
+  },
+  {
+   "name": "scroll down",
+   "theme": "light",
+   "bg": "#F7F9F8",
+   "luma": 0.91,
+   "png": "apps/kouchd/checks/agent/2026-10-27_21-07-28/05-scroll-down.png"
+  },
+  {
+   "name": "scroll down",
+   "theme": "light",
+   "bg": "#F7F9F8",
+   "luma": 0.91,
+   "png": "apps/kouchd/checks/agent/2026-10-27_21-07-28/06-scroll-down.png"
+  },
+  {
+   "name": "Host stay actions light",
+   "theme": "light",
+   "bg": "#F7F9F8",
+   "luma": 0.91,
+   "png": "apps/kouchd/checks/agent/2026-10-27_21-07-28/07-shot-host-stay-actions.png"
+  },
+  {
+   "name": "appearance dark",
+   "theme": "dark",
+   "bg": "#1D2923",
+   "luma": 0.16,
+   "png": "apps/kouchd/checks/agent/2026-10-27_21-07-28/08-appearance-dark.png"
+  },
+  {
+   "name": "sleep 2",
+   "theme": "dark",
+   "bg": "#1D2923",
+   "luma": 0.16,
+   "png": "apps/kouchd/checks/agent/2026-10-27_21-07-28/09-sleep-2.png"
+  },
+  {
+   "name": "Host stay actions dark",
+   "theme": "dark",
+   "bg": "#1D2923",
+   "luma": 0.16,
+   "png": "apps/kouchd/checks/agent/2026-10-27_21-07-28/10-shot-host-stay-actions.png"
+  }
+ ],
+ "palette": {
+  "bg": "#F7F9F8",
+  "accent": "#C5DE58"
+ },
+ "findings": []
+}

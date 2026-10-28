@@ -80,3 +80,13 @@
 - Configuration: Added `background.decoration: "gradient"` to `docs.json` for warm brand green ambient gradient styling.
 - Content styling: Upgraded guides across `index.mdx` and `help/` with `<Tip>`, `<Info>`, `<Note>`, `<Warning>`, `<Check>`, `<Steps>`/`<Step>`, and cross-linking `<CardGroup>` components.
 - Verification: `mintlify validate` passed, `mintlify broken-links` passed (zero broken links), `docs.json` parsed successfully, and `git diff --check` passed cleanly.
+
+### Help Center & documentation sync (2026-10-12)
+
+- Reviewed remote main through commit `98c8887` (v0.4.2) and local active branches.
+- Updated public Help Center changelog (`help/product/changelog.mdx`) with October 2026 releases: native iOS SwiftUI client (0.4.0–0.4.2), Figma V2.1 web host overview, `app.kouchd.com` subdomain workspace routing, master Wrelik legal suite, and Help Center visual enhancements.
+- Updated public roadmap (`help/product/roadmap.mdx`): moved shipped native iOS app and V2.1 host overview to "Available in the current apps"; kept in-development Household Coordination (shopping lists, recurring chores with reminders, check-ins), RevenueCat host subscriptions, and Knock automated reminders under "In progress" without promised dates.
+- Updated host guides (`help/hosts/getting-started.mdx`, `help/hosts/house-rules-and-chores.mdx`), quickstart (`help/quickstart.mdx`), and root welcome (`index.mdx`) to document the V2.1 Home Base hero, 3 summary metrics, multi-platform access, and `app.kouchd.com` routing.
+- Updated root `docs.json` navbar and action links to target `https://app.kouchd.com`.
+- Preserved strict outside-payment-only semantics and documentation boundary rules.
+- Validated via `mintlify validate`, `mintlify broken-links`, JSON parsing of `docs.json`, and `git diff --check`.

@@ -1,0 +1,63 @@
+{
+ "v": 1,
+ "at": "2026-10-27T21:10:00-04:00",
+ "app": "kouchd",
+ "run": "apps/kouchd/checks/agent/2026-10-27_21-09-30",
+ "sheet": null,
+ "shots": [
+  {
+   "name": "sleep 3",
+   "theme": "light",
+   "bg": "#F7FAF9",
+   "luma": 0.83,
+   "png": "apps/kouchd/checks/agent/2026-10-27_21-09-30/01-sleep-3.png"
+  },
+  {
+   "name": "tap --force Open contribution ledger",
+   "theme": "light",
+   "bg": "#F8FAF9",
+   "luma": 0.92,
+   "png": "apps/kouchd/checks/agent/2026-10-27_21-09-30/02-tap-open-contribution-ledger.png"
+  },
+  {
+   "name": "sleep 2",
+   "theme": "light",
+   "bg": "#F8FAF9",
+   "luma": 0.92,
+   "png": "apps/kouchd/checks/agent/2026-10-27_21-09-30/03-sleep-2.png"
+  },
+  {
+   "name": "Contribution ledger light",
+   "theme": "light",
+   "bg": "#F8FAF9",
+   "luma": 0.92,
+   "png": "apps/kouchd/checks/agent/2026-10-27_21-09-30/04-shot-contribution-ledger-lig.png"
+  },
+  {
+   "name": "appearance dark",
+   "theme": "dark",
+   "bg": "#0E1612",
+   "luma": 0.16,
+   "png": "apps/kouchd/checks/agent/2026-10-27_21-09-30/05-appearance-dark.png"
+  },
+  {
+   "name": "sleep 3",
+   "theme": "dark",
+   "bg": "#0E1612",
+   "luma": 0.16,
+   "png": "apps/kouchd/checks/agent/2026-10-27_21-09-30/06-sleep-3.png"
+  },
+  {
+   "name": "Contribution ledger dark",
+   "theme": "dark",
+   "bg": "#0E1612",
+   "luma": 0.16,
+   "png": "apps/kouchd/checks/agent/2026-10-27_21-09-30/07-shot-contribution-ledger-dar.png"
+  }
+ ],
+ "palette": {
+  "bg": "#F8FAF9",
+  "accent": "#3B6958"
+ },
+ "findings": []
+}

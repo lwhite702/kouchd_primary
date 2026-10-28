@@ -1,0 +1,151 @@
+{
+  "fill": {
+    "automatic-gradient": "extended-srgb:0.07059,0.30588,0.22745,1.00000"
+  },
+  "groups": [
+    {
+      "name": "Couch mark",
+      "layers": [
+        {
+          "glass": true,
+          "hidden": false,
+          "image-name": "glints.png",
+          "name": "Highlights",
+          "opacity": 1,
+          "position": {
+            "scale": 1,
+            "translation-in-points": [
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "glass": true,
+          "hidden": false,
+          "image-name": "couch-base.png",
+          "name": "Couch base",
+          "opacity": 1,
+          "position": {
+            "scale": 1,
+            "translation-in-points": [
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "glass": true,
+          "hidden": false,
+          "image-name": "couch-back.png",
+          "name": "Couch back",
+          "opacity": 1,
+          "position": {
+            "scale": 1,
+            "translation-in-points": [
+              0,
+              0
+            ]
+          }
+        }
+      ],
+      "shadow": {
+        "kind": "neutral",
+        "opacity": 0.62
+      },
+      "translucency": {
+        "enabled": true,
+        "value": 0.18
+      }
+    },
+    {
+      "name": "Glass cushion",
+      "layers": [
+        {
+          "blend-mode": "normal",
+          "glass": true,
+          "hidden": false,
+          "image-name": "glass-cushion.png",
+          "name": "Glass cushion",
+          "opacity": 1,
+          "position": {
+            "scale": 1,
+            "translation-in-points": [
+              0,
+              0
+            ]
+          }
+        }
+      ],
+      "shadow": {
+        "kind": "neutral",
+        "opacity": 0.35
+      },
+      "translucency": {
+        "enabled": true,
+        "value": 0.45
+      }
+    },
+    {
+      "name": "Atmosphere",
+      "layers": [
+        {
+          "blend-mode": "normal",
+          "glass": false,
+          "hidden": false,
+          "image-name": "ambient-glow.png",
+          "name": "Ambient glow",
+          "opacity": 1,
+          "position": {
+            "scale": 1,
+            "translation-in-points": [
+              0,
+              0
+            ]
+          }
+        }
+      ],
+      "shadow": {
+        "kind": "neutral",
+        "opacity": 0.1
+      },
+      "translucency": {
+        "enabled": false,
+        "value": 0
+      }
+    },
+    {
+      "name": "Background",
+      "layers": [
+        {
+          "blend-mode": "normal",
+          "glass": false,
+          "hidden": false,
+          "image-name": "background.png",
+          "name": "Forest background",
+          "position": {
+            "scale": 1,
+            "translation-in-points": [
+              0,
+              0
+            ]
+          }
+        }
+      ],
+      "shadow": {
+        "kind": "neutral",
+        "opacity": 0.2
+      },
+      "translucency": {
+        "enabled": false,
+        "value": 0
+      }
+    }
+  ],
+  "supported-platforms": {
+    "circles": [
+      "watchOS"
+    ],
+    "squares": "shared"
+  }
+}

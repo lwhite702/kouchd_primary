@@ -1,0 +1,202 @@
+{
+ "v": 1,
+ "at": "2026-10-17T17:01:59-04:00",
+ "app": "kouchd",
+ "run": "apps/kouchd/checks/agent/2026-10-17_17-01-16",
+ "sheet": null,
+ "shots": [
+  {
+   "name": "launch --fresh",
+   "theme": "light",
+   "bg": "#014F37",
+   "luma": 0.25,
+   "png": "apps/kouchd/checks/agent/2026-10-17_17-01-16/01-launch.png"
+  },
+  {
+   "name": "sleep 3",
+   "theme": "light",
+   "bg": "#F6F2EA",
+   "luma": 0.94,
+   "png": "apps/kouchd/checks/agent/2026-10-17_17-01-16/02-sleep-3.png"
+  },
+  {
+   "name": "expect Create a stay",
+   "theme": "light",
+   "bg": "#F6F2EA",
+   "luma": 0.94,
+   "png": "apps/kouchd/checks/agent/2026-10-17_17-01-16/03-expect-create-a-stay.png"
+  },
+  {
+   "name": "tap Create a stay",
+   "theme": "light",
+   "bg": "#F6F2EA",
+   "luma": 0.94,
+   "png": "apps/kouchd/checks/agent/2026-10-17_17-01-16/04-tap-create-a-stay.png"
+  },
+  {
+   "name": "sleep 1",
+   "theme": "light",
+   "bg": "#F6F2EA",
+   "luma": 0.94,
+   "png": "apps/kouchd/checks/agent/2026-10-17_17-01-16/05-sleep-1.png"
+  },
+  {
+   "name": "expect Stay name",
+   "theme": "light",
+   "bg": "#F6F2EA",
+   "luma": 0.94,
+   "png": "apps/kouchd/checks/agent/2026-10-17_17-01-16/06-expect-stay-name.png"
+  },
+  {
+   "name": "create-stay",
+   "theme": "light",
+   "bg": "#F6F2EA",
+   "luma": 0.94,
+   "png": "apps/kouchd/checks/agent/2026-10-17_17-01-16/07-shot-create-stay.png"
+  },
+  {
+   "name": "tap --id BackButton",
+   "theme": "light",
+   "bg": "#F6F2EA",
+   "luma": 0.94,
+   "png": "apps/kouchd/checks/agent/2026-10-17_17-01-16/08-tap-backbutton.png"
+  },
+  {
+   "name": "tap Join with a code",
+   "theme": "light",
+   "bg": "#F6F2EA",
+   "luma": 0.94,
+   "png": "apps/kouchd/checks/agent/2026-10-17_17-01-16/09-tap-join-with-a.png"
+  },
+  {
+   "name": "expect Referral code",
+   "theme": "light",
+   "bg": "#F6F2EA",
+   "luma": 0.94,
+   "png": "apps/kouchd/checks/agent/2026-10-17_17-01-16/10-expect-referral-code.png"
+  },
+  {
+   "name": "join-stay",
+   "theme": "light",
+   "bg": "#F6F2EA",
+   "luma": 0.94,
+   "png": "apps/kouchd/checks/agent/2026-10-17_17-01-16/11-shot-join-stay.png"
+  }
+ ],
+ "palette": {
+  "bg": "#F6F2EA",
+  "accent": "#205440"
+ },
+ "findings": [
+  {
+   "level": "bad",
+   "what": "фон «кремовая бумага» #F6F2EA — главный признак ИИ-дизайна по умолчанию",
+   "where": "sleep 3"
+  },
+  {
+   "level": "warn",
+   "what": "кнопки меньше 44 × 44 pt: Open account 36×36",
+   "where": "sleep 3"
+  },
+  {
+   "level": "bad",
+   "what": "фон «кремовая бумага» #F6F2EA — главный признак ИИ-дизайна по умолчанию",
+   "where": "expect Create a stay"
+  },
+  {
+   "level": "warn",
+   "what": "кнопки меньше 44 × 44 pt: Open account 36×36",
+   "where": "expect Create a stay"
+  },
+  {
+   "level": "bad",
+   "what": "фон «кремовая бумага» #F6F2EA — главный признак ИИ-дизайна по умолчанию",
+   "where": "tap Create a stay"
+  },
+  {
+   "level": "warn",
+   "what": "кнопки меньше 44 × 44 pt: Open account 36×36",
+   "where": "tap Create a stay"
+  },
+  {
+   "level": "bad",
+   "what": "фон «кремовая бумага» #F6F2EA — главный признак ИИ-дизайна по умолчанию",
+   "where": "sleep 1"
+  },
+  {
+   "level": "warn",
+   "what": "кнопки меньше 44 × 44 pt: Open account 36×36",
+   "where": "sleep 1"
+  },
+  {
+   "level": "bad",
+   "what": "фон «кремовая бумага» #F6F2EA — главный признак ИИ-дизайна по умолчанию",
+   "where": "expect Stay name"
+  },
+  {
+   "level": "warn",
+   "what": "кнопки меньше 44 × 44 pt: Open account 36×36",
+   "where": "expect Stay name"
+  },
+  {
+   "level": "bad",
+   "what": "фон «кремовая бумага» #F6F2EA — главный признак ИИ-дизайна по умолчанию",
+   "where": "create-stay"
+  },
+  {
+   "level": "warn",
+   "what": "кнопки меньше 44 × 44 pt: Open account 36×36",
+   "where": "create-stay"
+  },
+  {
+   "level": "bad",
+   "what": "фон «кремовая бумага» #F6F2EA — главный признак ИИ-дизайна по умолчанию",
+   "where": "tap --id BackButton"
+  },
+  {
+   "level": "warn",
+   "what": "кнопки меньше 44 × 44 pt: Open account 36×36",
+   "where": "tap --id BackButton"
+  },
+  {
+   "level": "bad",
+   "what": "фон «кремовая бумага» #F6F2EA — главный признак ИИ-дизайна по умолчанию",
+   "where": "tap Join with a code"
+  },
+  {
+   "level": "warn",
+   "what": "кнопки меньше 44 × 44 pt: Open account 36×36",
+   "where": "tap Join with a code"
+  },
+  {
+   "level": "bad",
+   "what": "фон «кремовая бумага» #F6F2EA — главный признак ИИ-дизайна по умолчанию",
+   "where": "expect Referral code"
+  },
+  {
+   "level": "warn",
+   "what": "кнопки меньше 44 × 44 pt: Open account 36×36",
+   "where": "expect Referral code"
+  },
+  {
+   "level": "bad",
+   "what": "фон «кремовая бумага» #F6F2EA — главный признак ИИ-дизайна по умолчанию",
+   "where": "join-stay"
+  },
+  {
+   "level": "warn",
+   "what": "кнопки меньше 44 × 44 pt: Open account 36×36",
+   "where": "join-stay"
+  },
+  {
+   "level": "warn",
+   "what": "нет снимков в тёмной теме: в прогоне не было шага «appearance dark»",
+   "where": ""
+  },
+  {
+   "level": "bad",
+   "what": "модная гарнитура Manrope — сейчас она у всех, нужна своя с характером",
+   "where": "docs.json"
+  }
+ ]
+}

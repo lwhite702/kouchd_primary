@@ -10,6 +10,7 @@ struct StayScreen: View {
   @State private var showingEdit = false
   var body: some View {
     Page(title: "Your stay") {
+      Text("Stay information").font(Palette.section)
       Card {
         HStack { Pill(text: store.isHost ? "Host" : "Guest"); Spacer(); Pill(text: store.bundle["stay"]["status"].text) }
         Text(store.stayName).font(.title2.bold())
@@ -17,9 +18,6 @@ struct StayScreen: View {
         DataRow(title: "Until", detail: store.bundle["terms"]["endDate"].text)
         DataRow(title: "Rhythm", detail: store.bundle["terms"]["cadence"].text.capitalized)
         DataRow(title: "Contribution", detail: Display.money(store.bundle["terms"]["rateCents"].int))
-        if store.isHost && !store.isEnded {
-          Button("Edit stay name") { showingEdit = true }
-        }
       }
       Card {
         Text("The people").font(.headline)
@@ -28,14 +26,27 @@ struct StayScreen: View {
           DataRow(title: member["person"]["name"].text,
                   detail: member["membership"]["role"].text.capitalized)
         }
-        if store.isHost && !store.isEnded {
-          PrimaryButton(title: "Invite a guest") { showingInvite = true }
-        }
       }
       Card {
         Text("House notes").font(.headline)
-        Text(store.bundle["terms"]["houseNotes"].text.isEmpty
-             ? "No notes yet." : store.bundle["terms"]["houseNotes"].text)
+        if store.bundle["terms"]["houseNotes"].text.isEmpty {
+          Text("No house notes have been shared yet.")
+            .font(.subheadline).foregroundStyle(Palette.muted)
+        } else {
+          Text(store.bundle["terms"]["houseNotes"].text)
+            .font(.subheadline).foregroundStyle(Palette.ink)
+        }
+      }
+      Card {
+        Text("Latest announcement").font(.headline)
+        if let announcement = store.announcements.first {
+          Text(announcement.title).font(.subheadline.weight(.semibold))
+          Text(announcement["body"].text)
+            .font(.subheadline).foregroundStyle(Palette.muted)
+        } else {
+          Text("No household announcements yet.")
+            .font(.subheadline).foregroundStyle(Palette.muted)
+        }
       }
       Card {
         Text("Around the home").font(.headline)
@@ -44,31 +55,53 @@ struct StayScreen: View {
           if !detail.isEmpty { DataRow(title: field.label, detail: detail) }
         }
         if HouseDetail.fields.allSatisfy({ store.bundle["stay"]["houseInfo"][$0.key].text.isEmpty }) {
-          Text("Your host hasn't added house details yet.").foregroundStyle(Palette.muted)
+          Text(store.isHost
+               ? "No house details have been shared yet."
+               : "Your host hasn't added house details yet.")
+            .font(.subheadline).foregroundStyle(Palette.muted)
         }
       }
-      Card {
-        Text("Pay outside Kouchd").font(.headline)
-        Text("Choose an option with your host, then record the contribution in the ledger.")
-          .font(.subheadline).foregroundStyle(Palette.muted)
-        ForEach(store.bundle["stay"]["paymentOptions"].items.indices, id: \.self) { index in
-          let option = store.bundle["stay"]["paymentOptions"].items[index]
-          DataRow(title: option["provider"].text.capitalized, detail: option["detail"].text)
+
+      Text("Things you can do").font(Palette.section)
+      ActionCard {
+        Text("Stay planning").font(.headline)
+        NavigationRow("Guest agreement", symbol: "doc.text") { AgreementScreen(store: store) }
+        NavigationRow(
+          "Schedule changes",
+          subtitle: "Request or review changes to stay dates",
+          symbol: "calendar.badge.clock"
+        ) { ScheduleScreen(store: store) }
+        NavigationRow("Occupied nights", symbol: "calendar") { OccupancyScreen(store: store) }
+      }
+      ActionCard {
+        Text("Household").font(.headline)
+        if store.isHost && !store.isEnded {
+          PrimaryButton(title: "Invite a guest") { showingInvite = true }
+          NavigationRow("Edit house notes", subtitle: "Update the shared stay agreement", symbol: "note.text") {
+            TermsEditScreen(store: store)
+          }
+          NavigationRow("Post an announcement", subtitle: "Share a household update", symbol: "megaphone") {
+            HostControlsScreen(store: store)
+          }
+          NavigationRow("Add house details", subtitle: "Share Wi-Fi and access details", symbol: "house") {
+            HouseInfoScreen(store: store)
+          }
         }
+        NavigationRow("Contribution rewards", symbol: "gift") { RewardsScreen(store: store) }
+        NavigationRow("Household activity", symbol: "clock.arrow.circlepath") { ActivityScreen(store: store) }
       }
-      Card {
-        Text("More for your stay").font(.headline)
-        NavigationLink("Guest agreement") { AgreementScreen(store: store) }
-        NavigationLink("Schedule changes") { ScheduleScreen(store: store) }
-        NavigationLink("Occupied nights") { OccupancyScreen(store: store) }
-        NavigationLink("Contribution rewards") { RewardsScreen(store: store) }
-        NavigationLink("Household activity") { ActivityScreen(store: store) }
-        NavigationLink("Settings and reminders") { SettingsScreen(store: store) }
-        NavigationLink("Create another stay") { CreateStayScreen(store: store) }
-        NavigationLink("Join another stay") { JoinCodeScreen(store: store) }
-      }
-      if store.isHost && !store.isEnded {
-        NavigationLink("Host controls") { HostControlsScreen(store: store) }
+      ActionCard {
+        Text("Account and stays").font(.headline)
+        if store.isHost && !store.isEnded {
+          Button("Edit stay name") { showingEdit = true }
+            .buttonStyle(.bordered)
+        }
+        NavigationRow("Settings and reminders", symbol: "bell") { SettingsScreen(store: store) }
+        NavigationRow("Create another stay", symbol: "plus.circle") { CreateStayScreen(store: store) }
+        NavigationRow("Join another stay", symbol: "person.badge.plus") { JoinCodeScreen(store: store) }
+        if store.isHost && !store.isEnded {
+          NavigationRow("Host controls", symbol: "slider.horizontal.3") { HostControlsScreen(store: store) }
+        }
       }
     }
     .sheet(isPresented: $showingInvite) { InviteForm(store: store) }
@@ -116,7 +149,7 @@ struct AgreementScreen: View {
                 "stayId": store.selectedStayID,
                 "initialCadence": cadence
               ]
-              if cadence == "weekly" { args["initialPaymentDayOfWeek"] = weekday }
+              if cadence == "weekly" { args["initialPaymentDayOfWeek"] = Double(weekday) }
               _ = await store.mutate("terms:acceptCurrent", args)
             }
           }
@@ -240,6 +273,7 @@ struct CreateStayScreen: View {
   @State private var cadence = "weekly"
   @State private var notes = ""
   @State private var busy = false
+  @State private var creationRequestID = UUID().uuidString
   @State private var weekday = 1
   @State private var checkInEnabled = false
   @State private var checkIn = Date.now
@@ -270,20 +304,21 @@ struct CreateStayScreen: View {
             var terms: [String: ConvexEncodable?] = [
               "startDate": Display.date(start), "endDate": Display.date(end),
               "cadence": cadence,
-              "rateCents": Int((Double(rate) ?? 0) * 100),
-              "earlyDiscountEnabled": false, "earlyDiscountPercentage": 0,
-              "earlyDiscountDays": 0, "lateFeeEnabled": false,
-              "lateFeeCents": 0, "graceDays": 0, "houseNotes": notes
+              "rateCents": Double(Int((Double(rate) ?? 0) * 100)),
+              "earlyDiscountEnabled": false, "earlyDiscountPercentage": Double(0),
+              "earlyDiscountDays": Double(0), "lateFeeEnabled": false,
+              "lateFeeCents": Double(0), "graceDays": Double(0), "houseNotes": notes
             ]
-            if cadence == "weekly" { terms["paymentDayOfWeek"] = weekday }
+            if cadence == "weekly" { terms["paymentDayOfWeek"] = Double(weekday) }
             var args: [String: ConvexEncodable?] = [
-              "name": name, "timezone": TimeZone.current.identifier, "terms": terms
+              "name": name, "creationRequestId": creationRequestID,
+              "timezone": TimeZone.current.identifier, "terms": terms
             ]
             if checkInEnabled { args["nextCheckInDate"] = Display.date(checkIn) }
             if await store.joinOrCreateStay("stays:create", args) { dismiss() }
             busy = false
           }
-        }.disabled(busy || name.count < 2 || (Double(rate) ?? 0) <= 0)
+        }.disabled(busy || name.trimmingCharacters(in: .whitespaces).count < 2 || (Double(rate) ?? 0) <= 0)
       }
     }
     .navigationTitle("Create stay")

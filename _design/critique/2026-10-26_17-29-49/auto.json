@@ -1,0 +1,121 @@
+{
+ "v": 1,
+ "at": "2026-10-26T17:29:49-04:00",
+ "app": "kouchd",
+ "run": "apps/kouchd/checks/agent/2026-10-26_17-29-17",
+ "sheet": null,
+ "shots": [
+  {
+   "name": "sleep 5",
+   "theme": "light",
+   "bg": "#F7F3EB",
+   "luma": 0.86,
+   "png": "apps/kouchd/checks/agent/2026-10-26_17-29-17/01-sleep-5.png"
+  },
+  {
+   "name": "Home light",
+   "theme": "light",
+   "bg": "#F7F3EB",
+   "luma": 0.86,
+   "png": "apps/kouchd/checks/agent/2026-10-26_17-29-17/02-shot-home-light.png"
+  },
+  {
+   "name": "appearance dark",
+   "theme": "dark",
+   "bg": "#0E1612",
+   "luma": 0.19,
+   "png": "apps/kouchd/checks/agent/2026-10-26_17-29-17/03-appearance-dark.png"
+  },
+  {
+   "name": "sleep 1",
+   "theme": "dark",
+   "bg": "#0E1612",
+   "luma": 0.19,
+   "png": "apps/kouchd/checks/agent/2026-10-26_17-29-17/04-sleep-1.png"
+  },
+  {
+   "name": "Home dark",
+   "theme": "dark",
+   "bg": "#0E1612",
+   "luma": 0.19,
+   "png": "apps/kouchd/checks/agent/2026-10-26_17-29-17/05-shot-home-dark.png"
+  },
+  {
+   "name": "tap Stay",
+   "theme": "dark",
+   "bg": "#1C2721",
+   "luma": 0.15,
+   "png": "apps/kouchd/checks/agent/2026-10-26_17-29-17/06-tap-stay.png"
+  },
+  {
+   "name": "scroll down",
+   "theme": "dark",
+   "bg": "#1D2923",
+   "luma": 0.17,
+   "png": "apps/kouchd/checks/agent/2026-10-26_17-29-17/07-scroll-down.png"
+  },
+  {
+   "name": "tap --force Settings and reminders",
+   "theme": "dark",
+   "bg": "#1C2621",
+   "luma": 0.15,
+   "png": "apps/kouchd/checks/agent/2026-10-26_17-29-17/08-tap-settings-and-reminders.png"
+  },
+  {
+   "name": "sleep 1",
+   "theme": "dark",
+   "bg": "#1C2621",
+   "luma": 0.15,
+   "png": "apps/kouchd/checks/agent/2026-10-26_17-29-17/09-sleep-1.png"
+  },
+  {
+   "name": "Settings dark",
+   "theme": "dark",
+   "bg": "#1C2621",
+   "luma": 0.15,
+   "png": "apps/kouchd/checks/agent/2026-10-26_17-29-17/10-shot-settings-dark.png"
+  },
+  {
+   "name": "appearance light",
+   "theme": "light",
+   "bg": "#FCFCFB",
+   "luma": 0.93,
+   "png": "apps/kouchd/checks/agent/2026-10-26_17-29-17/11-appearance-light.png"
+  },
+  {
+   "name": "sleep 1",
+   "theme": "light",
+   "bg": "#FCFCFB",
+   "luma": 0.93,
+   "png": "apps/kouchd/checks/agent/2026-10-26_17-29-17/12-sleep-1.png"
+  },
+  {
+   "name": "Settings light",
+   "theme": "light",
+   "bg": "#FCFCFB",
+   "luma": 0.93,
+   "png": "apps/kouchd/checks/agent/2026-10-26_17-29-17/13-shot-settings-light.png"
+  }
+ ],
+ "palette": {
+  "bg": "#FCFCFB",
+  "accent": "#3A6957"
+ },
+ "findings": [
+  {
+   "level": "bad",
+   "what": "фон «кремовая бумага» #F7F3EB — главный признак ИИ-дизайна по умолчанию",
+   "where": "sleep 5"
+  },
+  {
+   "level": "bad",
+   "what": "фон «кремовая бумага» #F7F3EB — главный признак ИИ-дизайна по умолчанию",
+   "where": "Home light"
+  },
+  {
+   "level": "bad",
+   "what": "модная гарнитура Manrope — сейчас она у всех, нужна своя с характером",
+   "where": "docs.json"
+  }
+ ]
+}

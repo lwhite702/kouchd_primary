@@ -1,0 +1,93 @@
+{
+  "v": 1,
+  "primary": "en-US",
+  "limits": {
+    "eye": 34,
+    "h1": 60,
+    "sub": 130
+  },
+  "locales": {
+    "en-US": {
+      "bucket": "latin",
+      "frames": {
+        "f1": {
+          "eye": "SHARED STAYS",
+          "h1": "A calmer way to share a stay.",
+          "acc": "share a stay",
+          "sub": "Keep agreements, contributions, chores, and check-ins together."
+        },
+        "f2": {
+          "eye": "YOUR STAY",
+          "h1": "Know the details before arrival.",
+          "acc": "before arrival",
+          "sub": "Stay dates, house details, agreements, and schedule changes in one place."
+        },
+        "f3": {
+          "eye": "SHARED RECORD",
+          "h1": "Know what was agreed.",
+          "acc": "what was agreed",
+          "sub": "Record contributions made outside Kouchd. People involved confirm or dispute the shared record."
+        },
+        "f4": {
+          "eye": "EVERYDAY LIVING",
+          "h1": "Keep the small things moving.",
+          "acc": "small things moving",
+          "sub": "Coordinate chores, check-ins, and occupied nights without the guessing game."
+        },
+        "f5": {
+          "eye": "START TOGETHER",
+          "h1": "Find your place in the stay.",
+          "acc": "your place",
+          "sub": "Host a stay or join someone who has invited you."
+        },
+        "f6": {
+          "eye": "YOUR HOME BASE",
+          "h1": "See the stay in motion.",
+          "acc": "stay in motion",
+          "sub": "A clear home view for the people, details, and next steps that keep a shared stay moving."
+        },
+        "f7": {
+          "eye": "SHARED RECORD",
+          "h1": "Know what was agreed.",
+          "acc": "what was agreed",
+          "sub": "Keep contributions, confirmations, and shared decisions visible to everyone involved."
+        },
+        "f8": {
+          "eye": "EVERYDAY LIVING",
+          "h1": "Keep the small things moving.",
+          "acc": "small things moving",
+          "sub": "Coordinate chores and check-ins with a calm view of what needs attention next."
+        },
+        "f9": {
+          "eye": "YOUR STAY",
+          "h1": "Know the details before arrival.",
+          "acc": "before arrival",
+          "sub": "Stay dates, household details, and expectations stay together in one place."
+        },
+        "f10": {
+          "eye": "A SHARED HOME",
+          "h1": "One place for the stay.",
+          "acc": "One place",
+          "sub": "Hosts and guests share the same clear view from first invite to final check-in."
+        }
+      },
+      "parts": {
+        "f1chips": [
+          "AGREEMENTS",
+          "CONTRIBUTIONS",
+          "CHORES",
+          "CHECK-INS"
+        ],
+        "f6stamp": "LIVE TOGETHER",
+        "f7stamp": "CLEARLY HELD",
+        "f8stamp": "KEEP MOVING",
+        "f9stamp": "STAY READY",
+        "f10stamp": "SHARED HOME",
+        "f2stamp": "BEFORE ARRIVAL",
+        "f3stamp": "OUTSIDE THE APP",
+        "f4stamp": "EVERYDAY FLOW",
+        "f5stamp": "START TOGETHER"
+      }
+    }
+  }
+}

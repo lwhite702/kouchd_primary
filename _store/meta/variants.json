@@ -1,0 +1,45 @@
+{
+  "v": 1,
+  "created": "2026-10-15",
+  "limits": {
+    "name": 30,
+    "subtitle": 30,
+    "keywords": 100,
+    "promo": 170
+  },
+  "locales": {
+    "en-US": {
+      "name": [
+        {
+          "text": "Chore Tracker - Kouchd",
+          "len": 22,
+          "current": true
+        },
+        {
+          "text": "Kouchd",
+          "len": 6,
+          "current": false
+        }
+      ],
+      "subtitle": [
+        {
+          "text": "Household Manager for Stays",
+          "len": 27,
+          "current": true
+        },
+        {
+          "text": "Shared stays, clearly held",
+          "len": 25,
+          "current": false
+        }
+      ],
+      "keywords": [
+        {
+          "text": "shared living,household,stay,house rules,chores,contributions,guest,host,ledger",
+          "len": 79,
+          "current": false
+        }
+      ]
+    }
+  }
+}

@@ -10,14 +10,14 @@ import {
   LogLevel,
 } from "@revenuecat/purchases-js";
 
-export const REVENUECAT_WEB_API_KEY =
-  process.env.NEXT_PUBLIC_REVENUECAT_WEB_API_KEY || "test_VWbMTqHFVImetHzikZnfkVxyUMi";
+export const REVENUECAT_WEB_API_KEY = process.env.NEXT_PUBLIC_REVENUECAT_WEB_API_KEY;
 
 export const ENTITLEMENT_KOUCHD_PLUS = "kouchd_plus";
 
 export const PRODUCT_IDENTIFIERS = {
   YEARLY: "yearly",
   MONTHLY: "monthly",
+  LIFETIME: "lifetime",
 } as const;
 
 let configurePromise: Promise<Purchases> | null = null;
@@ -28,6 +28,10 @@ let configurePromise: Promise<Purchases> | null = null;
 export async function getRevenueCatClient(appUserId?: string): Promise<Purchases> {
   if (typeof window === "undefined") {
     throw new Error("RevenueCat Purchases Web SDK can only be executed in a browser environment.");
+  }
+
+  if (!REVENUECAT_WEB_API_KEY) {
+    throw new Error("RevenueCat is not configured. Set NEXT_PUBLIC_REVENUECAT_WEB_API_KEY.");
   }
 
   // Set debug logs in development
@@ -84,12 +88,13 @@ export async function checkKouchdPlusAccess(appUserId?: string): Promise<boolean
 }
 
 /**
- * Fetch available offerings and default packages (yearly and monthly).
+ * Fetch available offerings and the configured Kouchd Plus packages.
  */
 export async function getSubscriptionOfferings(appUserId?: string): Promise<{
   currentOffering: Offering | null;
   yearlyPackage: Package | null;
   monthlyPackage: Package | null;
+  lifetimePackage: Package | null;
 }> {
   const client = await getRevenueCatClient(appUserId);
   const offerings = await client.getOfferings();
@@ -99,6 +104,11 @@ export async function getSubscriptionOfferings(appUserId?: string): Promise<{
     currentOffering: current,
     yearlyPackage: current?.annual ?? current?.packagesById[PRODUCT_IDENTIFIERS.YEARLY] ?? null,
     monthlyPackage: current?.monthly ?? current?.packagesById[PRODUCT_IDENTIFIERS.MONTHLY] ?? null,
+    lifetimePackage:
+      current?.lifetime ??
+      current?.packagesById[PRODUCT_IDENTIFIERS.LIFETIME] ??
+      current?.packagesById.kouchd_plus_lifetime ??
+      null,
   };
 }
 

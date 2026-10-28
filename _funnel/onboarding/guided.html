@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=390, initial-scale=1, viewport-fit=cover">
+  <title>Kouchd · Guided host onboarding</title>
+  <style>
+    :root { --ink:#17382d; --muted:#68776e; --line:#d8e3da; --cream:#f7f4ec; --paper:#fffefa; --green:#1f5945; --lime:#d8f36b; --mint:#eaf4eb; }
+    * { box-sizing:border-box; } body { margin:0; padding:24px 0 48px; background:#e5ece6; color:var(--ink); font:15px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,sans-serif; }
+    main { width:390px; margin:auto; } .screen { min-height:844px; margin-bottom:24px; padding:28px 22px 24px; display:flex; flex-direction:column; background:var(--cream); border:1px solid #d1ddd3; box-shadow:0 16px 42px rgba(23,56,45,.12); }
+    .top { display:flex; align-items:center; justify-content:space-between; color:var(--muted); font-size:12px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+    .mark { display:grid; place-items:center; width:34px; height:34px; border-radius:12px; background:var(--green); color:white; font-weight:900; }
+    .progress { display:flex; gap:5px; margin-top:22px; } .progress i { height:5px; flex:1; border-radius:99px; background:#d6e0d7; } .progress i.on { background:var(--green); }
+    .content { flex:1; display:flex; flex-direction:column; justify-content:center; } .eyebrow { margin:0 0 10px; color:var(--green); font-size:12px; font-weight:850; letter-spacing:.08em; text-transform:uppercase; }
+    h1,h2 { margin:0 0 14px; letter-spacing:-.045em; line-height:1.06; } h1 { max-width:320px; font-size:34px; } h2 { font-size:27px; } p { margin:0; color:var(--muted); }
+    .hero { margin-top:22px; padding:18px; border:1px solid var(--line); border-radius:22px; background:var(--paper); } .hero strong { display:block; margin-bottom:6px; font-size:17px; }
+    .choices { display:grid; gap:10px; margin-top:22px; } .choice { display:flex; align-items:center; gap:12px; padding:15px; border:1px solid var(--line); border-radius:16px; background:var(--paper); font-weight:800; }
+    .choice.selected { border-color:var(--green); box-shadow:0 0 0 2px rgba(31,89,69,.12); } .radio { width:18px; height:18px; flex:none; border:2px solid #9bad9f; border-radius:50%; } .selected .radio { border:5px solid var(--green); }
+    .focus { margin-top:22px; padding:18px; border-radius:20px; background:var(--mint); border:1px solid #cfe2d1; } .focus strong { display:block; margin-bottom:5px; }
+    .summary { display:grid; gap:10px; margin-top:20px; } .row { display:flex; justify-content:space-between; gap:14px; padding:13px 14px; border:1px solid var(--line); border-radius:15px; background:var(--paper); } .row span { color:var(--muted); } .row strong { text-align:right; }
+    .proof { margin-top:18px; padding:14px 16px; border-left:4px solid var(--green); background:#f0f7f0; } .proof strong { display:block; margin-bottom:3px; }
+    .plus { margin-top:18px; padding:18px; border-radius:20px; background:var(--green); color:#fff; } .plus p { color:#dce9df; } .fine { margin-top:14px; font-size:11px; }
+    .actions { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:24px; } button { border:0; border-radius:14px; padding:14px 18px; color:var(--ink); background:var(--lime); font:inherit; font-weight:850; } .back { padding:12px 4px; background:transparent; color:var(--muted); }
+    .legal { display:flex; gap:14px; margin-top:16px; color:var(--muted); font-size:11px; }
+  </style>
+</head>
+<body>
+  <main aria-label="Kouchd guided host onboarding mockup">
+    <section class="screen" id="s1">
+      <div class="top"><span class="mark">K</span><span>Guided setup · 1 of 4</span></div>
+      <div class="progress"><i class="on"></i><i></i><i></i><i></i></div>
+      <div class="content">
+        <p class="eyebrow">A clearer stay starts here</p>
+        <h1>What would make this household easier to coordinate?</h1>
+        <p>Your answer chooses the first setup prompts. You can change every detail before sharing the agreement.</p>
+        <div class="choices">
+          <div class="choice selected"><span class="radio"></span><span>Make expectations easy to follow</span></div>
+          <div class="choice"><span class="radio"></span><span>Keep contributions predictable</span></div>
+          <div class="choice"><span class="radio"></span><span>Share chores without chasing</span></div>
+        </div>
+      </div>
+      <div class="actions"><button class="back">Skip</button><button>Personalize setup →</button></div>
+    </section>
+
+    <section class="screen" id="s2">
+      <div class="top"><span class="mark">K</span><span>Guided setup · 2 of 4</span></div>
+      <div class="progress"><i class="on"></i><i class="on"></i><i></i><i></i></div>
+      <div class="content">
+        <p class="eyebrow">Your starting point</p>
+        <h2>Let’s make expectations visible first.</h2>
+        <p>These suggestions fill the agreement draft. Nothing is locked, and guests can review the same wording.</p>
+        <div class="focus"><strong>Focus: shared expectations</strong><span>We’ll start with house rules, then add dates, contribution rhythm, and check-ins.</span></div>
+        <div class="choices">
+          <div class="choice selected"><span class="radio"></span><span>Quiet hours and shared spaces</span></div>
+          <div class="choice selected"><span class="radio"></span><span>Guest notice and clean-up</span></div>
+          <div class="choice"><span class="radio"></span><span>Add my own guidance</span></div>
+        </div>
+      </div>
+      <div class="actions"><button class="back">← Back</button><button>Set the stay →</button></div>
+    </section>
+
+    <section class="screen" id="s3">
+      <div class="top"><span class="mark">K</span><span>Guided setup · 3 of 4</span></div>
+      <div class="progress"><i class="on"></i><i class="on"></i><i class="on"></i><i></i></div>
+      <div class="content">
+        <p class="eyebrow">A useful first result</p>
+        <h2>Your household plan is taking shape.</h2>
+        <p>Here is the reviewable draft created from your priority and choices.</p>
+        <div class="summary">
+          <div class="row"><span>Priority</span><strong>Shared expectations</strong></div>
+          <div class="row"><span>Stay dates</span><strong>Oct 20 – Nov 03, 2026</strong></div>
+          <div class="row"><span>Contribution rhythm</span><strong>Weekly · Friday</strong></div>
+          <div class="row"><span>House rules</span><strong>2 selected</strong></div>
+        </div>
+        <div class="proof"><strong>Clear before you invite.</strong><span>Kouchd records the agreement and contributions; payment happens through the host’s external options.</span></div>
+      </div>
+      <div class="actions"><button class="back">← Edit</button><button>Review the agreement →</button></div>
+    </section>
+
+    <section class="screen" id="s4">
+      <div class="top"><span class="mark">K</span><span>Guided setup · 4 of 4</span></div>
+      <div class="progress"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></div>
+      <div class="content">
+        <p class="eyebrow">Ready for the household</p>
+        <h2>Invite guests to review the same plan.</h2>
+        <p>After the agreement is ready, keep coordinating chores, check-ins, and contributions in one shared record.</p>
+        <div class="plus"><strong>Next: Kouchd Plus</strong><p>When subscription billing is connected, the paywall continues this flow with configured plan names, prices, trial terms, restore option, and legal links.</p></div>
+        <p class="fine">This draft uses no invented pricing, timer, testimonial, or purchase result. The current app has no connected paywall placement.</p>
+      </div>
+      <div class="actions"><button class="back">← Back</button><button>Open my stay →</button></div>
+      <div class="legal"><span>Terms</span><span>Privacy</span><span>Restore purchases</span></div>
+    </section>
+  </main>
+</body>
+</html>

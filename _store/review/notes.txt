@@ -1,0 +1,3 @@
+Kouchd helps hosts and guests coordinate private shared stays. Guests use Kouchd free. Kouchd records agreements, chores, and contributions; it does not collect, hold, transfer, or process payments.
+
+Sign in with the provided review email. When Clerk asks for the verification code, enter the six-digit code provided in the App Review password field. The test account opens an authenticated demo stay with Home, Ledger, Chores, and Stay available for review.

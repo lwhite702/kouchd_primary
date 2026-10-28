@@ -58,7 +58,7 @@ export function LandingPage({ hasClerk = true }: LandingPageProps) {
       <section className="v21-hero" aria-labelledby="v21-hero-title">
         <div className="v21-hero-copy">
           <p className="v21-eyebrow"><span /> A calmer way to share a home</p>
-          <h1 id="v21-hero-title">Make room for<br className="v21-desktop-break" /> a better stay.</h1>
+          <h1 id="v21-hero-title">Make room for<br className="v21-desktop-break" /> <span className="v21-highlight-forest">a better stay.</span></h1>
           <p className="v21-lede">Kouchd brings house details and updates, a contribution ledger, shared chores, and check-ins into one private space for hosts and guests.</p>
           <div className="v21-hero-actions"><StartButton hasClerk={hasClerk} /><a className="v21-text-link" href="#features">Explore the tools <ArrowDown size={16} /></a></div>
           <p className="v21-invite-note">Already invited? Open the link your host shared with you.</p>
@@ -71,7 +71,7 @@ export function LandingPage({ hasClerk = true }: LandingPageProps) {
       </section>
 
       <section className="v21-proof" aria-labelledby="v21-proof-title">
-        <div className="v21-proof-heading"><p className="v21-eyebrow v21-eyebrow-light">A clearer picture for everyone</p><h2 id="v21-proof-title">Your shared stay,<br className="v21-desktop-break" /> all in one place.</h2><p>See who is coming, what everyone agreed to, and what needs attention next.</p></div>
+        <div className="v21-proof-heading"><p className="v21-eyebrow v21-eyebrow-light">A clearer picture for everyone</p><h2 id="v21-proof-title">Your shared stay,<br className="v21-desktop-break" /> <span className="v21-highlight-moss">all in one place.</span></h2><p>See who is coming, what everyone agreed to, and what needs attention next.</p></div>
         <div className="v21-proof-grid">
           <article className="v21-proof-card"><span className="v21-proof-icon"><Users size={19} /></span><span className="v21-proof-label">Guests</span><strong>5</strong><small>3 confirmed · 2 pending</small></article>
           <article className="v21-proof-card"><span className="v21-proof-icon"><ClipboardList size={19} /></span><span className="v21-proof-label">Contributions</span><strong className="v21-proof-word">Recorded</strong><small>Recorded outside Kouchd</small></article>
@@ -94,7 +94,7 @@ export function LandingPage({ hasClerk = true }: LandingPageProps) {
           </div>
           <span className="v21-preview-orbit orbit-one" /><span className="v21-preview-orbit orbit-two" />
         </div>
-        <div className="v21-product-copy"><p className="v21-eyebrow">A look inside Kouchd</p><h2 id="v21-product-title">Your shared stay,<br /> clearly organized.</h2><p>House details and updates, contribution records, chores, and check-ins—all in one view.</p><a className="v21-text-link" href="#features">Explore the tools <ArrowRight size={16} /></a></div>
+        <div className="v21-product-copy"><p className="v21-eyebrow">A look inside Kouchd</p><h2 id="v21-product-title">Your shared stay,<br /> <span className="v21-highlight-forest">clearly organized.</span></h2><p>House details and updates, contribution records, chores, and check-ins—all in one view.</p><a className="v21-text-link" href="#features">Explore the tools <ArrowRight size={16} /></a></div>
       </section>
 
       <section className="v21-feature-tour" id="features" aria-labelledby="v21-feature-title">
@@ -161,7 +161,7 @@ export function LandingPage({ hasClerk = true }: LandingPageProps) {
       </section>
 
       <section className="v21-how" id="how-it-works" aria-labelledby="v21-how-title">
-        <div className="v21-section-heading"><p className="v21-eyebrow">Simple from the start</p><h2 id="v21-how-title">Stay details, updates, and to-dos—together.</h2></div>
+        <div className="v21-section-heading"><p className="v21-eyebrow">Simple from the start</p><h2 id="v21-how-title">Stay details, updates, and <span className="v21-highlight-moss">to-dos—together.</span></h2></div>
         <div className="v21-steps">
           <article><span className="v21-step-number">01</span><h3>Set up the stay</h3><p>Add people, dates, and the house details everyone should know.</p></article>
           <article><span className="v21-step-number">02</span><h3>Get on the same page</h3><p>Share expectations and keep updates in one place everyone can return to.</p></article>

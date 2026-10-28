@@ -1,0 +1,105 @@
+{
+ "v": 1,
+ "at": "2026-10-28T13:18:59-04:00",
+ "app": "kouchd",
+ "run": "apps/kouchd/checks/agent/2026-10-28_13-17-40",
+ "sheet": null,
+ "shots": [
+  {
+   "name": "swipe left",
+   "theme": "light",
+   "bg": "#F7F9F7",
+   "luma": 0.91,
+   "png": "apps/kouchd/checks/agent/2026-10-28_13-17-40/01-swipe-left.png"
+  },
+  {
+   "name": "sleep 2",
+   "theme": "light",
+   "bg": "#F7F9F7",
+   "luma": 0.91,
+   "png": "apps/kouchd/checks/agent/2026-10-28_13-17-40/02-sleep-2.png"
+  },
+  {
+   "name": "Step 2 light",
+   "theme": "light",
+   "bg": "#F7F9F7",
+   "luma": 0.91,
+   "png": "apps/kouchd/checks/agent/2026-10-28_13-17-40/03-shot-step-2-light.png"
+  },
+  {
+   "name": "appearance dark",
+   "theme": "dark",
+   "bg": "#0E1713",
+   "luma": 0.13,
+   "png": "apps/kouchd/checks/agent/2026-10-28_13-17-40/04-appearance-dark.png"
+  },
+  {
+   "name": "sleep 6",
+   "theme": "dark",
+   "bg": "#0E1713",
+   "luma": 0.13,
+   "png": "apps/kouchd/checks/agent/2026-10-28_13-17-40/05-sleep-6.png"
+  },
+  {
+   "name": "Step 2 dark",
+   "theme": "dark",
+   "bg": "#0E1713",
+   "luma": 0.13,
+   "png": "apps/kouchd/checks/agent/2026-10-28_13-17-40/06-shot-step-2-dark.png"
+  },
+  {
+   "name": "swipe left",
+   "theme": "dark",
+   "bg": "#0E1713",
+   "luma": 0.14,
+   "png": "apps/kouchd/checks/agent/2026-10-28_13-17-40/07-swipe-left.png"
+  },
+  {
+   "name": "sleep 2",
+   "theme": "dark",
+   "bg": "#0E1713",
+   "luma": 0.14,
+   "png": "apps/kouchd/checks/agent/2026-10-28_13-17-40/08-sleep-2.png"
+  },
+  {
+   "name": "swipe left",
+   "theme": "dark",
+   "bg": "#0E1713",
+   "luma": 0.14,
+   "png": "apps/kouchd/checks/agent/2026-10-28_13-17-40/09-swipe-left.png"
+  },
+  {
+   "name": "sleep 2",
+   "theme": "dark",
+   "bg": "#0E1713",
+   "luma": 0.14,
+   "png": "apps/kouchd/checks/agent/2026-10-28_13-17-40/10-sleep-2.png"
+  },
+  {
+   "name": "swipe left",
+   "theme": "dark",
+   "bg": "#0E1713",
+   "luma": 0.13,
+   "png": "apps/kouchd/checks/agent/2026-10-28_13-17-40/11-swipe-left.png"
+  },
+  {
+   "name": "sleep 2",
+   "theme": "dark",
+   "bg": "#0E1713",
+   "luma": 0.13,
+   "png": "apps/kouchd/checks/agent/2026-10-28_13-17-40/12-sleep-2.png"
+  },
+  {
+   "name": "Role selection dark",
+   "theme": "dark",
+   "bg": "#0E1713",
+   "luma": 0.13,
+   "png": "apps/kouchd/checks/agent/2026-10-28_13-17-40/13-shot-role-selection-dark.png"
+  }
+ ],
+ "palette": {
+  "bg": "#F7F9F7",
+  "accent": "#124A34"
+ },
+ "findings": []
+}

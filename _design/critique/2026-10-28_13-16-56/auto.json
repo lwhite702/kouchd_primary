@@ -1,0 +1,164 @@
+{
+ "v": 1,
+ "at": "2026-10-28T13:16:56-04:00",
+ "app": "kouchd",
+ "run": "apps/kouchd/checks/agent/2026-10-28_13-13-12",
+ "sheet": null,
+ "shots": [
+  {
+   "name": "swipe left",
+   "theme": "light",
+   "bg": "#F7F9F7",
+   "luma": 0.91,
+   "png": "apps/kouchd/checks/agent/2026-10-28_13-13-12/01-swipe-left.png"
+  },
+  {
+   "name": "sleep 2",
+   "theme": "light",
+   "bg": "#F7F9F7",
+   "luma": 0.91,
+   "png": "apps/kouchd/checks/agent/2026-10-28_13-13-12/02-sleep-2.png"
+  },
+  {
+   "name": "Onboarding step 2 light",
+   "theme": "light",
+   "bg": "#F7F9F7",
+   "luma": 0.91,
+   "png": "apps/kouchd/checks/agent/2026-10-28_13-13-12/03-shot-onboarding-step-2.png"
+  },
+  {
+   "name": "swipe left",
+   "theme": "light",
+   "bg": "#EFF5F1",
+   "luma": 0.91,
+   "png": "apps/kouchd/checks/agent/2026-10-28_13-13-12/04-swipe-left.png"
+  },
+  {
+   "name": "sleep 2",
+   "theme": "light",
+   "bg": "#EFF5F1",
+   "luma": 0.91,
+   "png": "apps/kouchd/checks/agent/2026-10-28_13-13-12/05-sleep-2.png"
+  },
+  {
+   "name": "Onboarding step 3 light",
+   "theme": "light",
+   "bg": "#EFF5F1",
+   "luma": 0.91,
+   "png": "apps/kouchd/checks/agent/2026-10-28_13-13-12/06-shot-onboarding-step-3.png"
+  },
+  {
+   "name": "swipe left",
+   "theme": "light",
+   "bg": "#F7FAF8",
+   "luma": 0.91,
+   "png": "apps/kouchd/checks/agent/2026-10-28_13-13-12/07-swipe-left.png"
+  },
+  {
+   "name": "sleep 2",
+   "theme": "light",
+   "bg": "#F7FAF8",
+   "luma": 0.91,
+   "png": "apps/kouchd/checks/agent/2026-10-28_13-13-12/08-sleep-2.png"
+  },
+  {
+   "name": "Onboarding step 4 light",
+   "theme": "light",
+   "bg": "#F7FAF8",
+   "luma": 0.91,
+   "png": "apps/kouchd/checks/agent/2026-10-28_13-13-12/09-shot-onboarding-step-4.png"
+  },
+  {
+   "name": "swipe left",
+   "theme": "light",
+   "bg": "#EFF5F1",
+   "luma": 0.89,
+   "png": "apps/kouchd/checks/agent/2026-10-28_13-13-12/10-swipe-left.png"
+  },
+  {
+   "name": "sleep 2",
+   "theme": "light",
+   "bg": "#EFF5F1",
+   "luma": 0.89,
+   "png": "apps/kouchd/checks/agent/2026-10-28_13-13-12/11-sleep-2.png"
+  },
+  {
+   "name": "Onboarding role selection light",
+   "theme": "light",
+   "bg": "#EFF5F1",
+   "luma": 0.89,
+   "png": "apps/kouchd/checks/agent/2026-10-28_13-13-12/12-shot-onboarding-role-selecti.png"
+  }
+ ],
+ "palette": {
+  "bg": "#EFF5F1",
+  "accent": "#124A34"
+ },
+ "findings": [
+  {
+   "level": "warn",
+   "what": "кнопки меньше 44 × 44 pt: Back 38×20, Skip 33×20",
+   "where": "swipe left"
+  },
+  {
+   "level": "warn",
+   "what": "кнопки меньше 44 × 44 pt: Back 38×20, Skip 33×20",
+   "where": "sleep 2"
+  },
+  {
+   "level": "warn",
+   "what": "кнопки меньше 44 × 44 pt: Back 38×20, Skip 33×20",
+   "where": "Onboarding step 2 light"
+  },
+  {
+   "level": "warn",
+   "what": "кнопки меньше 44 × 44 pt: Back 38×20, Skip 33×20",
+   "where": "swipe left"
+  },
+  {
+   "level": "warn",
+   "what": "кнопки меньше 44 × 44 pt: Back 38×20, Skip 33×20",
+   "where": "sleep 2"
+  },
+  {
+   "level": "warn",
+   "what": "кнопки меньше 44 × 44 pt: Back 38×20, Skip 33×20",
+   "where": "Onboarding step 3 light"
+  },
+  {
+   "level": "warn",
+   "what": "кнопки меньше 44 × 44 pt: Back 38×20, Skip 33×20",
+   "where": "swipe left"
+  },
+  {
+   "level": "warn",
+   "what": "кнопки меньше 44 × 44 pt: Back 38×20, Skip 33×20",
+   "where": "sleep 2"
+  },
+  {
+   "level": "warn",
+   "what": "кнопки меньше 44 × 44 pt: Back 38×20, Skip 33×20",
+   "where": "Onboarding step 4 light"
+  },
+  {
+   "level": "warn",
+   "what": "кнопки меньше 44 × 44 pt: Back 38×20, Skip 33×20",
+   "where": "swipe left"
+  },
+  {
+   "level": "warn",
+   "what": "кнопки меньше 44 × 44 pt: Back 38×20, Skip 33×20",
+   "where": "sleep 2"
+  },
+  {
+   "level": "warn",
+   "what": "кнопки меньше 44 × 44 pt: Back 38×20, Skip 33×20",
+   "where": "Onboarding role selection light"
+  },
+  {
+   "level": "warn",
+   "what": "нет снимков в тёмной теме: в прогоне не было шага «appearance dark»",
+   "where": ""
+  }
+ ]
+}

@@ -1,0 +1,118 @@
+{
+ "v": 1,
+ "note": "Appto: опись файлов этого приложения в хранилище Cloudflare R2 (Настройки › Cloudflare). Файлы зашифрованы на Маке, ключа здесь нет. Не правь руками.",
+ "files": {
+  "help/images/chore-board.png": {
+   "sha256": "5fb2b07f667641c11ba8b5184bd8d9d8698a6a10fbb1769e9a4524b1f5b3bb0c",
+   "size": 84688,
+   "mtime": 1791849912440,
+   "objects": [
+    "8239ed4910f3c3131f73f44120c3eff54ad86f16711202c08358bb0469f65ed1"
+   ]
+  },
+  "help/images/dashboard-overview.png": {
+   "sha256": "251388e0c6c9635d2af5a58e61b408e2d2a395cdca02d14efb22befc4fdff680",
+   "size": 110972,
+   "mtime": 1791849912482,
+   "objects": [
+    "b2b2152fb7c8c9de7804ab78fbb0ada1fb3bd61df4c2c456569d04a7f92f92d5"
+   ]
+  },
+  "help/images/host-wizard-rules.png": {
+   "sha256": "739c21490e6dcce3ff36ed666bcff5c3fba650233189a8eda15a5868e2de737c",
+   "size": 70968,
+   "mtime": 1791849912446,
+   "objects": [
+    "5a18aa4b2d81669830ff48d318a453467a807e950d606126ddfe82ba3f8cebc0"
+   ]
+  },
+  "help/images/join-referral-code.png": {
+   "sha256": "6ecd44b19248eeaf164f9ce4d8529a609b7f2c2e593c989056a296a7f3c99d47",
+   "size": 59583,
+   "mtime": 1791849912454,
+   "objects": [
+    "c74d31671bd9f510d662ec4e5e3e607d21235624d2fb70bf895236add5b4280c"
+   ]
+  },
+  "help/images/ledger-management.png": {
+   "sha256": "d498940870d6b0313d7b716bc5603d146defe5bf007669220b5f6b79f17a13c4",
+   "size": 112256,
+   "mtime": 1791849912443,
+   "objects": [
+    "5b13cbd8c4692c22926c1f67817ffd9bef8048116a7d7ac2c94669fd29a14d51"
+   ]
+  },
+  "help/images/rewards-hub.png": {
+   "sha256": "81b6e8f40d6b248b313f187376ad0a6f2aac89c0aeb846cb82fd1c8da3f8719a",
+   "size": 104269,
+   "mtime": 1791849912485,
+   "objects": [
+    "7ef9c7ecf5708ead6aed4eae8383271bc38a15c414db38d2d87b12ea937d8790"
+   ]
+  },
+  "ios/Artwork/AppIcon-rounded.png": {
+   "sha256": "2a178bb5769416f0f734054c9ca555bd0551d2b08be35f52b2f57a4db0c11a0d",
+   "size": 42919,
+   "mtime": 1791849911924,
+   "objects": [
+    "0802af63c48e406561af004f012837918cf6130e4ca91ad35fa983b5526ba4d1"
+   ]
+  },
+  "public/brand/kouchd-icon-square.jpeg": {
+   "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "size": 0,
+   "mtime": 1789015857438,
+   "objects": [
+    "d31622eb86dcc3e1c99d181145f8f49d9dd072d77fd71cf8ad417a7609817d06"
+   ]
+  },
+  "public/brand/kouchd-icon-square.png": {
+   "sha256": "312036dd0388ed0ebaad2c6e872e7e01b895e68e04490c994b5b1802a62fb147",
+   "size": 22833,
+   "mtime": 1791849912047,
+   "objects": [
+    "b1d156d3245107addbe0e68a0c8e315254d5fe9a1d15cbd38970b8c8bfa4a45a"
+   ]
+  },
+  "public/brand/kouchd-icon.jpeg": {
+   "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "size": 0,
+   "mtime": 1789015857442,
+   "objects": [
+    "d31622eb86dcc3e1c99d181145f8f49d9dd072d77fd71cf8ad417a7609817d06"
+   ]
+  },
+  "public/brand/kouchd-icon.png": {
+   "sha256": "2aebf27a233da6c810f8a28dec71d67a285840f0dd72ea65397fd515ff617d6b",
+   "size": 21890,
+   "mtime": 1791849912049,
+   "objects": [
+    "4766a7b3ef4dcfb1f0c7162efba31129f3e0e81e1dbc8770ead516b13fe80279"
+   ]
+  },
+  "public/brand/kouchd-logo-horizontal.jpeg": {
+   "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "size": 0,
+   "mtime": 1789015857443,
+   "objects": [
+    "d31622eb86dcc3e1c99d181145f8f49d9dd072d77fd71cf8ad417a7609817d06"
+   ]
+  },
+  "public/brand/kouchd-logo-horizontal.png": {
+   "sha256": "2ebb64584cb2a976c0fc30587a9ae20e9811bb97d1a1bfba231d284a629629f2",
+   "size": 4465,
+   "mtime": 1791849912051,
+   "objects": [
+    "05a3c503a4bf7b25fcce76e787ea73b783571b9f183ed87195859682c7ff5b36"
+   ]
+  },
+  "public/icon.jpeg": {
+   "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "size": 0,
+   "mtime": 1789015837453,
+   "objects": [
+    "d31622eb86dcc3e1c99d181145f8f49d9dd072d77fd71cf8ad417a7609817d06"
+   ]
+  }
+ }
+}

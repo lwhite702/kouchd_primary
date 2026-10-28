@@ -122,15 +122,15 @@ struct TermsEditScreen: View {
   private func save() {
     var fields: [String: ConvexEncodable?] = [
       "startDate": start, "endDate": end, "cadence": cadence,
-      "billingBasis": billing, "rateCents": Int((Double(rate) ?? 0) * 100),
+      "billingBasis": billing, "rateCents": Double(Int((Double(rate) ?? 0) * 100)),
       "earlyDiscountEnabled": earlyDiscount,
-      "earlyDiscountPercentage": earlyDiscount ? (Int(earlyPercent) ?? 0) : 0,
-      "earlyDiscountDays": earlyDiscount ? (Int(earlyDays) ?? 0) : 0,
+      "earlyDiscountPercentage": Double(earlyDiscount ? (Int(earlyPercent) ?? 0) : 0),
+      "earlyDiscountDays": Double(earlyDiscount ? (Int(earlyDays) ?? 0) : 0),
       "lateFeeEnabled": lateFee,
-      "lateFeeCents": lateFee ? Int((Double(lateCents) ?? 0) * 100) : 0,
-      "graceDays": lateFee ? (Int(grace) ?? 0) : 0, "houseNotes": notes
+      "lateFeeCents": Double(lateFee ? Int((Double(lateCents) ?? 0) * 100) : 0),
+      "graceDays": Double(lateFee ? (Int(grace) ?? 0) : 0), "houseNotes": notes
     ]
-    if cadence == "weekly" { fields["paymentDayOfWeek"] = weekday }
+    if cadence == "weekly" { fields["paymentDayOfWeek"] = Double(weekday) }
     fields["houseRules"] = Value.array(houseRules.map(\.value))
     fields["rewards"] = Value.object([
       "enabled": .bool(rewardEnabled), "coinName": .string(coinName),

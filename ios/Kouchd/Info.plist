@@ -24,10 +24,10 @@
 	<string>$(CLERK_PUBLISHABLE_KEY)</string>
 	<key>CONVEX_URL</key>
 	<string>$(CONVEX_URL)</string>
-	<key>UIAppFonts</key>
-	<array>
-		<string>Manrope.ttf</string>
-	</array>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<key>REVENUECAT_IOS_API_KEY</key>
+	<string>$(REVENUECAT_IOS_API_KEY)</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UISupportedInterfaceOrientations</key>

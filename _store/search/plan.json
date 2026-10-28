@@ -1,0 +1,111 @@
+{
+  "v": 1,
+  "app": "kouchd",
+  "updated": "2026-10-19T15:05:00-04:00",
+  "by": "agent",
+  "primary": "en-US",
+  "locales": [
+    {
+      "locale": "en-US",
+      "role": "primary",
+      "write": "english",
+      "why": "Primary language and first-release source for Kouchd."
+    },
+    {
+      "locale": "es-MX",
+      "role": "pool",
+      "write": "english",
+      "why": "US-indexed pool locale; keep English ASO terms for the shared US search pool."
+    },
+    {
+      "locale": "pt-BR",
+      "role": "pool",
+      "write": "english",
+      "why": "US-indexed pool locale; keep English ASO terms for the shared US search pool."
+    },
+    {
+      "locale": "fr-FR",
+      "role": "pool",
+      "write": "english",
+      "why": "US-indexed pool locale; keep English ASO terms for the shared US search pool."
+    },
+    {
+      "locale": "ru",
+      "role": "pool",
+      "write": "english",
+      "why": "US-indexed pool locale; keep English ASO terms for the shared US search pool."
+    },
+    {
+      "locale": "ko",
+      "role": "pool",
+      "write": "english",
+      "why": "US-indexed pool locale; keep English ASO terms for the shared US search pool."
+    },
+    {
+      "locale": "zh-Hans",
+      "role": "pool",
+      "write": "english",
+      "why": "US-indexed pool locale; keep English ASO terms for the shared US search pool."
+    },
+    {
+      "locale": "zh-Hant",
+      "role": "pool",
+      "write": "english",
+      "why": "US-indexed pool locale; keep English ASO terms for the shared US search pool."
+    },
+    {
+      "locale": "ar-SA",
+      "role": "pool",
+      "write": "english",
+      "why": "US-indexed pool locale; keep English ASO terms for the shared US search pool."
+    },
+    {
+      "locale": "vi",
+      "role": "pool",
+      "write": "english",
+      "why": "US-indexed pool locale; keep English ASO terms for the shared US search pool."
+    },
+    {
+      "locale": "en-GB",
+      "role": "market",
+      "write": "translation",
+      "why": "Configured first-release market; prepare UK English store copy."
+    },
+    {
+      "locale": "de-DE",
+      "role": "market",
+      "write": "translation",
+      "why": "Configured first-release market; prepare German store copy."
+    },
+    {
+      "locale": "fr-FR",
+      "role": "market",
+      "write": "translation",
+      "why": "Configured first-release market; prepare French store copy. This locale is also in the US-indexed pool."
+    },
+    {
+      "locale": "es-ES",
+      "role": "market",
+      "write": "translation",
+      "why": "Configured first-release market; prepare Spanish store copy."
+    },
+    {
+      "locale": "pt-BR",
+      "role": "market",
+      "write": "translation",
+      "why": "Configured first-release market; prepare Brazilian Portuguese store copy. This locale is also in the US-indexed pool."
+    },
+    {
+      "locale": "ja",
+      "role": "market",
+      "write": "translation",
+      "why": "Configured first-release market; prepare Japanese store copy."
+    },
+    {
+      "locale": "ru",
+      "role": "market",
+      "write": "translation",
+      "why": "Configured first-release market; prepare Russian store copy. This locale is also in the US-indexed pool."
+    }
+  ]
+}

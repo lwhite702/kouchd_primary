@@ -1,0 +1,42 @@
+{
+  "v": 1,
+  "at": "2026-10-22T06:08:01-04:00",
+  "score": 78,
+  "today": [
+    {
+      "what": "Keep the current promotional text and prepare a launch App Store event after the app is live.",
+      "why": "Promotional text is already 4/4; an event is not scoreable while the app is not on sale.",
+      "price": "No new version; event requires the app to be live"
+    },
+    {
+      "what": "Collect and answer the first 1–2 star reviews after launch.",
+      "why": "No reviews exist yet, so the reviews portion is not scored; there are no responses to add now.",
+      "price": "No new version"
+    }
+  ],
+  "week": [
+    {
+      "what": "Replace the en-US keywords with a unique, fuller set: shared living,stay,house rules,chores,contributions,guest,host,ledger,roommate,planner,organizer.",
+      "why": "Uses 96/100 characters, removes the repeated “household” term, and should raise Keywords 4/8 → 8/8 plus No repeats 2/4 → 4/4.",
+      "price": "New version"
+    },
+    {
+      "what": "Keep “Chore Tracker - Kouchd” and “Household Manager for Stays” as the name and subtitle.",
+      "why": "The main query is already fully in the name (12/12) and the subtitle is already full (8/8); no change is needed.",
+      "price": "No new version"
+    }
+  ],
+  "month": [
+    {
+      "what": "Add unique keywords across the remaining US-indexed locales: es-MX, pt-BR, fr-FR, ru, ko, zh-Hans, zh-Hant, ar-SA, and vi.",
+      "why": "US search coverage is 1/10; filling the pool can raise Languages US search reads from 1/10 to 10/10.",
+      "price": "New version"
+    },
+    {
+      "what": "Keep the current 10-frame set and demo video unless post-launch conversion data identifies a weak frame.",
+      "why": "The first three frames clearly communicate shared stays, stay details, and shared contribution records within a quick scan; screenshots are 10/10 and video is 4/4.",
+      "price": "No new version"
+    }
+  ],
+  "note": "First three frames pass the three-second clarity check: shared stay coordination, arrival details, and contribution records are immediately legible. Search rivals include Chorsee, Sweepy, Tody, Nipto, Cozi, FlatUp, and Staymates. Reviews are unavailable because Kouchd is not on sale yet."
+}

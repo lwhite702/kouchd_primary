@@ -1,0 +1,201 @@
+{
+  "v": 1,
+  "variant": "F",
+  "title": "принятый набор F",
+  "created": "2026-10-28T03:31:07-04:00",
+  "tool": "adopted",
+  "config": "apps/kouchd/_design/shots.json",
+  "template": null,
+  "strings": null,
+  "theme": "forest-cream",
+  "device": "iphone-6.9",
+  "size": [
+    1290,
+    2796
+  ],
+  "slot": "APP_IPHONE_67",
+  "devices": {
+    "iphone-6.9": {
+      "size": [
+        1290,
+        2796
+      ],
+      "slot": "APP_IPHONE_67",
+      "locales": 1,
+      "frames": 6,
+      "files": 6
+    }
+  },
+  "locales": [
+    "en-US"
+  ],
+  "source_locales": [
+    "en-US"
+  ],
+  "screens_locale": {
+    "en-US": "unknown"
+  },
+  "frames": 6,
+  "files": 6,
+  "uploaded": null,
+  "uploaded_to_asc": null,
+  "uploaded_history": null,
+  "experiment": null,
+  "supersedes": null,
+  "superseded_by": null,
+  "warnings": [
+    {
+      "code": "alpha_channel",
+      "locale": "en-US",
+      "frame": 1,
+      "text": "01.png: colour type 6, ASC такие кадры не принимает"
+    },
+    {
+      "code": "size_mismatch",
+      "locale": "en-US",
+      "frame": 1,
+      "text": "01.png: 2064×2752, ожидали 1290×2796"
+    },
+    {
+      "code": "alpha_channel",
+      "locale": "en-US",
+      "frame": 2,
+      "text": "02.png: colour type 6, ASC такие кадры не принимает"
+    },
+    {
+      "code": "size_mismatch",
+      "locale": "en-US",
+      "frame": 2,
+      "text": "02.png: 2064×2752, ожидали 1290×2796"
+    },
+    {
+      "code": "alpha_channel",
+      "locale": "en-US",
+      "frame": 3,
+      "text": "03.png: colour type 6, ASC такие кадры не принимает"
+    },
+    {
+      "code": "size_mismatch",
+      "locale": "en-US",
+      "frame": 3,
+      "text": "03.png: 2064×2752, ожидали 1290×2796"
+    },
+    {
+      "code": "alpha_channel",
+      "locale": "en-US",
+      "frame": 4,
+      "text": "04.png: colour type 6, ASC такие кадры не принимает"
+    },
+    {
+      "code": "size_mismatch",
+      "locale": "en-US",
+      "frame": 4,
+      "text": "04.png: 2064×2752, ожидали 1290×2796"
+    },
+    {
+      "code": "alpha_channel",
+      "locale": "en-US",
+      "frame": 5,
+      "text": "05.png: colour type 6, ASC такие кадры не принимает"
+    },
+    {
+      "code": "size_mismatch",
+      "locale": "en-US",
+      "frame": 5,
+      "text": "05.png: 2064×2752, ожидали 1290×2796"
+    },
+    {
+      "code": "alpha_channel",
+      "locale": "en-US",
+      "frame": 6,
+      "text": "06.png: colour type 6, ASC такие кадры не принимает"
+    },
+    {
+      "code": "size_mismatch",
+      "locale": "en-US",
+      "frame": 6,
+      "text": "06.png: 2064×2752, ожидали 1290×2796"
+    }
+  ],
+  "note": "набор принят как есть (adopt): PNG собраны чужим инструментом",
+  "render": {
+    "node": "v22.23.1",
+    "chrome": null,
+    "puppeteer_core": null,
+    "ms": 0
+  },
+  "items": [
+    {
+      "locale": "en-US",
+      "source_locale": "en-US",
+      "device": "iphone-6.9",
+      "index": 1,
+      "path": "iphone-6.9/en-US/01.png",
+      "bytes": 235862,
+      "md5": "05219aabf2231654e9ae796110bf9fb5",
+      "screen": null,
+      "screen_locale": null,
+      "text": "01"
+    },
+    {
+      "locale": "en-US",
+      "source_locale": "en-US",
+      "device": "iphone-6.9",
+      "index": 2,
+      "path": "iphone-6.9/en-US/02.png",
+      "bytes": 349070,
+      "md5": "e348aa33beef00a4f197b3dc602445b8",
+      "screen": null,
+      "screen_locale": null,
+      "text": "02"
+    },
+    {
+      "locale": "en-US",
+      "source_locale": "en-US",
+      "device": "iphone-6.9",
+      "index": 3,
+      "path": "iphone-6.9/en-US/03.png",
+      "bytes": 327049,
+      "md5": "972daf588ed6050a16107bd5ef4c7a1e",
+      "screen": null,
+      "screen_locale": null,
+      "text": "03"
+    },
+    {
+      "locale": "en-US",
+      "source_locale": "en-US",
+      "device": "iphone-6.9",
+      "index": 4,
+      "path": "iphone-6.9/en-US/04.png",
+      "bytes": 247981,
+      "md5": "3109c345e5c799f12efc2f1a3376b38e",
+      "screen": null,
+      "screen_locale": null,
+      "text": "04"
+    },
+    {
+      "locale": "en-US",
+      "source_locale": "en-US",
+      "device": "iphone-6.9",
+      "index": 5,
+      "path": "iphone-6.9/en-US/05.png",
+      "bytes": 363264,
+      "md5": "f54d3508a7f7fc0d328188ba2c2a0a35",
+      "screen": null,
+      "screen_locale": null,
+      "text": "05"
+    },
+    {
+      "locale": "en-US",
+      "source_locale": "en-US",
+      "device": "iphone-6.9",
+      "index": 6,
+      "path": "iphone-6.9/en-US/06.png",
+      "bytes": 348966,
+      "md5": "e43aec78c961feec1b00dc55a11a3860",
+      "screen": null,
+      "screen_locale": null,
+      "text": "06"
+    }
+  ]
+}

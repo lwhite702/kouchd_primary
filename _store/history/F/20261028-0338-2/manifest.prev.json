@@ -1,0 +1,167 @@
+{
+  "v": 1,
+  "variant": "F",
+  "title": "Kouchd on iPad",
+  "created": "2026-10-28T03:38:07-04:00",
+  "tool": "shots@1.0.0",
+  "config": "apps/kouchd/_design/shots.json",
+  "template": "layout:classic",
+  "strings": "apps/kouchd/_design/shots.strings.json",
+  "theme": "forest-cream",
+  "device": "ipad-13",
+  "size": [
+    2064,
+    2752
+  ],
+  "slot": "APP_IPAD_PRO_3GEN_129",
+  "devices": {
+    "ipad-13": {
+      "size": [
+        2064,
+        2752
+      ],
+      "slot": "APP_IPAD_PRO_3GEN_129",
+      "locales": 1,
+      "frames": 6,
+      "files": 6
+    }
+  },
+  "locales": [
+    "en-US"
+  ],
+  "source_locales": [
+    "en-US"
+  ],
+  "screens_locale": {
+    "en-US": "own"
+  },
+  "frames": 6,
+  "files": 6,
+  "uploaded": null,
+  "uploaded_to_asc": null,
+  "uploaded_history": null,
+  "experiment": null,
+  "supersedes": "history/F/20261028-0336",
+  "superseded_by": null,
+  "warnings": [
+    {
+      "code": "screen_aspect",
+      "locale": "en-US",
+      "frame": 1,
+      "text": "ipad-onboarding.png 2064×2752, а screens.aspect обещает 1320×2868"
+    },
+    {
+      "code": "screen_aspect",
+      "locale": "en-US",
+      "frame": 2,
+      "text": "ipad-home-light.png 2064×2752, а screens.aspect обещает 1320×2868"
+    },
+    {
+      "code": "screen_aspect",
+      "locale": "en-US",
+      "frame": 3,
+      "text": "ipad-ledger.png 2064×2752, а screens.aspect обещает 1320×2868"
+    },
+    {
+      "code": "screen_aspect",
+      "locale": "en-US",
+      "frame": 4,
+      "text": "ipad-chores.png 2064×2752, а screens.aspect обещает 1320×2868"
+    },
+    {
+      "code": "screen_aspect",
+      "locale": "en-US",
+      "frame": 5,
+      "text": "ipad-stay.png 2064×2752, а screens.aspect обещает 1320×2868"
+    },
+    {
+      "code": "screen_aspect",
+      "locale": "en-US",
+      "frame": 6,
+      "text": "ipad-home-dark.png 2064×2752, а screens.aspect обещает 1320×2868"
+    }
+  ],
+  "note": null,
+  "render": {
+    "node": "v22.23.1",
+    "chrome": "Chrome/156.0.8078.48",
+    "puppeteer_core": "23.11.1",
+    "jobs": 1,
+    "flat": false,
+    "ms": 6227
+  },
+  "items": [
+    {
+      "locale": "en-US",
+      "source_locale": "en-US",
+      "device": "ipad-13",
+      "index": 1,
+      "path": "ipad-13/en-US/01.png",
+      "bytes": 445592,
+      "md5": "fbf0d3d8cdb4719bf02dfee2e4f9edf4",
+      "screen": "ipad-onboarding",
+      "screen_locale": "en-US",
+      "text": "f1"
+    },
+    {
+      "locale": "en-US",
+      "source_locale": "en-US",
+      "device": "ipad-13",
+      "index": 2,
+      "path": "ipad-13/en-US/02.png",
+      "bytes": 555322,
+      "md5": "00cfdf03c8287d2b90fe7f099230f94c",
+      "screen": "ipad-home-light",
+      "screen_locale": "en-US",
+      "text": "f6"
+    },
+    {
+      "locale": "en-US",
+      "source_locale": "en-US",
+      "device": "ipad-13",
+      "index": 3,
+      "path": "ipad-13/en-US/03.png",
+      "bytes": 535001,
+      "md5": "8e57f4c6cba30b5c583593498d388f53",
+      "screen": "ipad-ledger",
+      "screen_locale": "en-US",
+      "text": "f3"
+    },
+    {
+      "locale": "en-US",
+      "source_locale": "en-US",
+      "device": "ipad-13",
+      "index": 4,
+      "path": "ipad-13/en-US/04.png",
+      "bytes": 454321,
+      "md5": "e5c788300ca9360f9b55b5d57db7480b",
+      "screen": "ipad-chores",
+      "screen_locale": "en-US",
+      "text": "f4"
+    },
+    {
+      "locale": "en-US",
+      "source_locale": "en-US",
+      "device": "ipad-13",
+      "index": 5,
+      "path": "ipad-13/en-US/05.png",
+      "bytes": 574517,
+      "md5": "47a6bb7a96bfbc8e9010132a8ec39e31",
+      "screen": "ipad-stay",
+      "screen_locale": "en-US",
+      "text": "f2"
+    },
+    {
+      "locale": "en-US",
+      "source_locale": "en-US",
+      "device": "ipad-13",
+      "index": 6,
+      "path": "ipad-13/en-US/06.png",
+      "bytes": 516423,
+      "md5": "97245026ded757bb1eab18425d3da50f",
+      "screen": "ipad-home-dark",
+      "screen_locale": "en-US",
+      "text": "f10"
+    }
+  ]
+}

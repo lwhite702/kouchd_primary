@@ -1,0 +1,102 @@
+{
+ "v": 1,
+ "at": "2026-10-26T12:16:55-04:00",
+ "app": "kouchd",
+ "run": "apps/kouchd/checks/agent/2026-10-26_12-02-58",
+ "sheet": null,
+ "shots": [
+  {
+   "name": "launch --fresh",
+   "theme": "light",
+   "bg": "#000000",
+   "luma": 0.0,
+   "png": "apps/kouchd/checks/agent/2026-10-26_12-02-58/01-launch.png"
+  },
+  {
+   "name": "sleep 2",
+   "theme": "light",
+   "bg": "#F7F3EB",
+   "luma": 0.8,
+   "png": "apps/kouchd/checks/agent/2026-10-26_12-02-58/02-sleep-2.png"
+  },
+  {
+   "name": "tap --id introduction.signIn",
+   "theme": "light",
+   "bg": "#F7F2EB",
+   "luma": 0.8,
+   "png": "apps/kouchd/checks/agent/2026-10-26_12-02-58/03-tap-introduction-signin.png"
+  },
+  {
+   "name": "sleep 1",
+   "theme": "light",
+   "bg": "#F7F7FA",
+   "luma": 0.94,
+   "png": "apps/kouchd/checks/agent/2026-10-26_12-02-58/04-sleep-1.png"
+  },
+  {
+   "name": "sign-in",
+   "theme": "light",
+   "bg": "#F7F7FA",
+   "luma": 0.94,
+   "png": "apps/kouchd/checks/agent/2026-10-26_12-02-58/05-shot-sign-in.png"
+  },
+  {
+   "name": "expect Welcome",
+   "theme": "light",
+   "bg": "#F7F7FA",
+   "luma": 0.94,
+   "png": "apps/kouchd/checks/agent/2026-10-26_12-02-58/06-expect-welcome.png"
+  }
+ ],
+ "palette": {
+  "bg": "#F7F7FA",
+  "accent": "#154D37"
+ },
+ "findings": [
+  {
+   "level": "bad",
+   "what": "фон «кремовая бумага» #F7F3EB — главный признак ИИ-дизайна по умолчанию",
+   "where": "sleep 2"
+  },
+  {
+   "level": "warn",
+   "what": "кнопки меньше 44 × 44 pt: Skip 33×20",
+   "where": "sleep 2"
+  },
+  {
+   "level": "bad",
+   "what": "фон «кремовая бумага» #F7F2EB — главный признак ИИ-дизайна по умолчанию",
+   "where": "tap --id introduction.signIn"
+  },
+  {
+   "level": "warn",
+   "what": "кнопки меньше 44 × 44 pt: Skip 33×20",
+   "where": "tap --id introduction.signIn"
+  },
+  {
+   "level": "warn",
+   "what": "кнопки меньше 44 × 44 pt: Skip 33×20",
+   "where": "sleep 1"
+  },
+  {
+   "level": "warn",
+   "what": "кнопки меньше 44 × 44 pt: Skip 33×20",
+   "where": "sign-in"
+  },
+  {
+   "level": "warn",
+   "what": "кнопки меньше 44 × 44 pt: Skip 33×20",
+   "where": "expect Welcome"
+  },
+  {
+   "level": "warn",
+   "what": "нет снимков в тёмной теме: в прогоне не было шага «appearance dark»",
+   "where": ""
+  },
+  {
+   "level": "bad",
+   "what": "модная гарнитура Manrope — сейчас она у всех, нужна своя с характером",
+   "where": "docs.json"
+  }
+ ]
+}

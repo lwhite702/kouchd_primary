@@ -1,0 +1,128 @@
+{
+ "v": 1,
+ "at": "2026-10-18T16:56:00-04:00",
+ "app": "kouchd",
+ "run": "apps/kouchd/checks/agent/2026-10-18_16-55-16",
+ "sheet": null,
+ "shots": [
+  {
+   "name": "appearance dark",
+   "theme": "dark",
+   "bg": "#1B2621",
+   "luma": 0.14,
+   "png": "apps/kouchd/checks/agent/2026-10-18_16-55-16/01-appearance-dark.png"
+  },
+  {
+   "name": "launch --fresh",
+   "theme": "dark",
+   "bg": "#014F37",
+   "luma": 0.25,
+   "png": "apps/kouchd/checks/agent/2026-10-18_16-55-16/02-launch.png"
+  },
+  {
+   "name": "sleep 2",
+   "theme": "dark",
+   "bg": "#0E1713",
+   "luma": 0.12,
+   "png": "apps/kouchd/checks/agent/2026-10-18_16-55-16/03-sleep-2.png"
+  },
+  {
+   "name": "tap --force About Kouchd",
+   "theme": "dark",
+   "bg": "#0D1612",
+   "luma": 0.14,
+   "png": "apps/kouchd/checks/agent/2026-10-18_16-55-16/04-tap-about-kouchd.png"
+  },
+  {
+   "name": "sleep 1",
+   "theme": "dark",
+   "bg": "#0D1612",
+   "luma": 0.14,
+   "png": "apps/kouchd/checks/agent/2026-10-18_16-55-16/05-sleep-1.png"
+  },
+  {
+   "name": "about-dark",
+   "theme": "dark",
+   "bg": "#0D1612",
+   "luma": 0.14,
+   "png": "apps/kouchd/checks/agent/2026-10-18_16-55-16/06-shot-about-dark.png"
+  },
+  {
+   "name": "wait Kouchd Plus 5",
+   "theme": "dark",
+   "bg": "#0D1612",
+   "luma": 0.14,
+   "png": "apps/kouchd/checks/agent/2026-10-18_16-55-16/07-wait-kouchd-plus-5.png"
+  },
+  {
+   "name": "tap --force Open Kouchd Plus",
+   "theme": "dark",
+   "bg": "#0E1613",
+   "luma": 0.12,
+   "png": "apps/kouchd/checks/agent/2026-10-18_16-55-16/08-tap-open-kouchd-plus.png"
+  },
+  {
+   "name": "sleep 1",
+   "theme": "dark",
+   "bg": "#0E1613",
+   "luma": 0.12,
+   "png": "apps/kouchd/checks/agent/2026-10-18_16-55-16/09-sleep-1.png"
+  },
+  {
+   "name": "plus-dark",
+   "theme": "dark",
+   "bg": "#0E1613",
+   "luma": 0.12,
+   "png": "apps/kouchd/checks/agent/2026-10-18_16-55-16/10-shot-plus-dark.png"
+  },
+  {
+   "name": "wait Restore Purchases 5",
+   "theme": "dark",
+   "bg": "#0E1613",
+   "luma": 0.12,
+   "png": "apps/kouchd/checks/agent/2026-10-18_16-55-16/11-wait-restore-purchases-5.png"
+  },
+  {
+   "name": "tap --force Restore Purchases",
+   "theme": "dark",
+   "bg": "#080D0B",
+   "luma": 0.08,
+   "png": "apps/kouchd/checks/agent/2026-10-18_16-55-16/12-tap-restore-purchases.png"
+  },
+  {
+   "name": "sleep 1",
+   "theme": "dark",
+   "bg": "#080D0B",
+   "luma": 0.08,
+   "png": "apps/kouchd/checks/agent/2026-10-18_16-55-16/13-sleep-1.png"
+  },
+  {
+   "name": "restore-dark",
+   "theme": "dark",
+   "bg": "#080D0B",
+   "luma": 0.08,
+   "png": "apps/kouchd/checks/agent/2026-10-18_16-55-16/14-shot-restore-dark.png"
+  }
+ ],
+ "palette": {
+  "bg": null,
+  "accent": null
+ },
+ "findings": [
+  {
+   "level": "warn",
+   "what": "кнопки меньше 44 × 44 pt: Open account 36×36",
+   "where": "appearance dark"
+  },
+  {
+   "level": "warn",
+   "what": "кнопки меньше 44 × 44 pt: Open account 36×36",
+   "where": "sleep 2"
+  },
+  {
+   "level": "bad",
+   "what": "модная гарнитура Manrope — сейчас она у всех, нужна своя с характером",
+   "where": "docs.json"
+  }
+ ]
+}

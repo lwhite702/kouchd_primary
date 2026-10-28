@@ -1,0 +1,25 @@
+{
+  "v": 1,
+  "builds": [
+    {
+      "version": "1.0.0",
+      "build": "6",
+      "at": "2026-10-28T02:37:16Z",
+      "by": "agent",
+      "source": "archive",
+      "key": true,
+      "placements": {
+        "host_onboarding": [
+          "current"
+        ],
+        "guest_onboarding": [
+          "current"
+        ],
+        "kouchd_plus_paywall": [
+          "current",
+          "annual_trial"
+        ]
+      }
+    }
+  ]
+}

@@ -6,12 +6,13 @@ import SwiftUI
 struct HomeScreen: View {
   let store: KouchdStore
   var body: some View {
+    let stays = store.stays
     ScrollView {
       VStack(alignment: .leading, spacing: 24) {
         HStack {
           Menu {
-            ForEach(store.stays.indices, id: \.self) { index in
-              let stay = store.stays[index]["stay"]
+            ForEach(stays.indices, id: \.self) { index in
+              let stay = stays[index]["stay"]
               Button(stay["name"].text.isEmpty ? "Shared stay" : stay["name"].text) {
                 store.selectStay(stay["_id"].text)
               }
@@ -20,7 +21,7 @@ struct HomeScreen: View {
             HStack(spacing: 5) {
               Text(store.stayName).font(.headline)
               Image(systemName: "chevron.down").font(.caption2)
-            }.foregroundStyle(Palette.forest)
+            }.foregroundStyle(Palette.link)
           }
           Spacer()
           Text(String(store.viewer["name"].text.prefix(2)).uppercased())
@@ -31,7 +32,7 @@ struct HomeScreen: View {
         }
         VStack(alignment: .leading, spacing: 8) {
           Text(store.isHost ? "A little room, well shared." : "Make yourself at home.")
-            .font(Palette.heading).foregroundStyle(Palette.forest)
+            .font(Palette.heading).foregroundStyle(Palette.link)
             .accessibilityAddTraits(.isHeader)
           Text(store.isHost
                ? "Welcome back, \(store.viewer["name"].text)."
@@ -41,30 +42,38 @@ struct HomeScreen: View {
         if store.isHost {
           VStack(alignment: .leading, spacing: 14) {
             Text(store.stayName.uppercased()).font(.caption.bold())
-              .foregroundStyle(Palette.lime)
-            Text("\(store.stays.count) stays. One welcoming home.")
-              .font(Palette.section).foregroundStyle(.white)
+              .foregroundColor(Palette.lime)
+            Text("\(stays.count) stays. One welcoming home.")
+              .font(Palette.section).foregroundColor(.white)
             Text("Next shared check-in · \(store.bundle["stay"]["nextCheckInDate"].text.isEmpty ? "Set a date" : store.bundle["stay"]["nextCheckInDate"].text)")
-              .font(.subheadline).foregroundStyle(.white.opacity(0.8))
+              .font(.subheadline).foregroundColor(.white.opacity(0.8))
           }
           .padding(24).frame(maxWidth: .infinity, alignment: .leading)
           .background(Palette.forest, in: RoundedRectangle(cornerRadius: 24))
           Text("Your stays").font(Palette.section)
-          ForEach(store.stays.indices, id: \.self) { index in
-            let stay = store.stays[index]["stay"]
+          ForEach(stays.indices, id: \.self) { index in
+            let stay = stays[index]["stay"]
             Button {
               store.selectStay(stay["_id"].text)
             } label: {
               VStack(alignment: .leading, spacing: 14) {
                 Text(stay["name"].text.isEmpty ? "Shared stay" : stay["name"].text)
-                  .font(.title3.bold()).foregroundStyle(Palette.forest)
+                  .font(.title3.bold()).foregroundStyle(Palette.ink)
                 Text(stay["status"].text.capitalized)
                   .font(.subheadline).foregroundStyle(Palette.muted)
                 Rectangle().fill(Palette.line).frame(height: 1)
-                Text("Open household details").font(.subheadline).foregroundStyle(Palette.forest)
+                HStack {
+                  Text("Open household details")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(Palette.ink)
+                  Spacer()
+                  Image(systemName: "chevron.right")
+                    .font(.caption.weight(.bold))
+                    .foregroundStyle(Palette.link)
+                }
               }
               .padding(22).frame(maxWidth: .infinity, alignment: .leading)
-              .background(.white, in: RoundedRectangle(cornerRadius: 24))
+              .background(Palette.card, in: RoundedRectangle(cornerRadius: 24))
               .overlay(RoundedRectangle(cornerRadius: 24).stroke(Palette.line))
             }.buttonStyle(.plain)
           }
@@ -75,10 +84,10 @@ struct HomeScreen: View {
               .font(.largeTitle.bold()).foregroundStyle(.white)
             Text("Due \(store.ledger.first?["dueDate"].text ?? "later")")
               .font(.subheadline).foregroundStyle(.white.opacity(0.85))
-            NavigationLink("View contributions") { LedgerScreen(store: store) }
+            NavigationLink("Open contribution ledger") { LedgerScreen(store: store) }
               .font(.headline).foregroundStyle(Palette.ink)
               .frame(maxWidth: .infinity).padding(14)
-              .background(.white, in: RoundedRectangle(cornerRadius: 14))
+              .background(Palette.card, in: RoundedRectangle(cornerRadius: 14))
           }
           .padding(24).frame(maxWidth: .infinity, alignment: .leading)
           .background(Palette.forest, in: RoundedRectangle(cornerRadius: 24))
@@ -95,7 +104,7 @@ struct HomeScreen: View {
               .font(.subheadline).foregroundStyle(Palette.muted)
           }
         }
-      if store.stays.count > 1 {
+      if stays.count > 1 {
         Picker("Stay", selection: Binding(
           get: { store.selectedStayID },
           set: { store.selectStay($0) }
@@ -115,15 +124,8 @@ struct HomeScreen: View {
         Card {
           Text("Your agreement needs review").font(.headline)
           Text("Read the current terms before recording new activity.")
-          NavigationLink("Review agreement") { AgreementScreen(store: store) }
+          NavigationRow("Review agreement", symbol: "doc.text") { AgreementScreen(store: store) }
         }
-      }
-      Card {
-        Text("Contribution balance").font(.subheadline).foregroundStyle(Palette.muted)
-        Text(Display.money(store.ledger.reduce(0) { $0 + $1["balanceCents"].int }))
-          .font(.system(size: 38, weight: .bold, design: .rounded))
-          .foregroundStyle(Palette.forest)
-        NavigationLink("Open ledger") { LedgerScreen(store: store) }
       }
       HStack(spacing: 12) {
         NavigationLink { ChoresScreen(store: store) } label: {
@@ -142,9 +144,13 @@ struct HomeScreen: View {
       }
       Card {
         Text("Your next steps").font(.headline)
-        NavigationLink("Stay details and agreement") { StayScreen(store: store) }
-        NavigationLink("Occupied nights") { OccupancyScreen(store: store) }
-        NavigationLink("Schedule requests") { ScheduleScreen(store: store) }
+        NavigationRow("Stay details and agreement", symbol: "house") { StayScreen(store: store) }
+        NavigationRow("Occupied nights", symbol: "calendar") { OccupancyScreen(store: store) }
+        NavigationRow(
+          "Schedule changes",
+          subtitle: "Request or review changes to stay dates",
+          symbol: "calendar.badge.clock"
+        ) { ScheduleScreen(store: store) }
       }
       if !store.activity.isEmpty {
         Card {
@@ -157,11 +163,11 @@ struct HomeScreen: View {
       }
       }
       .padding(24)
+      .padding(.bottom, 72)
       .frame(maxWidth: 720, alignment: .leading)
       .frame(maxWidth: .infinity)
     }
-    .background(Palette.cream.ignoresSafeArea())
-    .kouchdEntrance()
+    .background(Palette.canvas.ignoresSafeArea())
     .toolbar(.hidden, for: .navigationBar)
   }
 }
@@ -171,7 +177,11 @@ private struct StatCard: View {
   let label: String
   var body: some View {
     VStack(alignment: .leading, spacing: 10) {
-      Text(number).font(.title.bold())
+      HStack {
+        Text(number).font(.title.bold())
+        Spacer()
+        Image(systemName: "chevron.right").font(.caption.weight(.bold))
+      }
       Text(label).font(.caption)
     }
     .foregroundStyle(Palette.forest)
@@ -210,6 +220,15 @@ struct LedgerScreen: View {
           .font(.subheadline).foregroundStyle(Palette.muted)
         if !store.isEnded {
           PrimaryButton(title: "Record a contribution") { showingContribution = true }
+        }
+      }
+      Card {
+        Text("Pay outside Kouchd").font(.headline)
+        Text("Choose an option with your host, then record the contribution here in the ledger.")
+          .font(.subheadline).foregroundStyle(Palette.muted)
+        ForEach(store.bundle["stay"]["paymentOptions"].items.indices, id: \.self) { index in
+          let option = store.bundle["stay"]["paymentOptions"].items[index]
+          DataRow(title: option["provider"].text.capitalized, detail: option["detail"].text)
         }
       }
       if store.ledger.isEmpty {
@@ -274,8 +293,8 @@ struct LedgerScreen: View {
           }
         }
       }
-      NavigationLink("Contribution rewards") { RewardsScreen(store: store) }
-      NavigationLink("Schedule changes") { ScheduleScreen(store: store) }
+      NavigationRow("Contribution rewards", symbol: "gift") { RewardsScreen(store: store) }
+      NavigationRow("Schedule changes", symbol: "calendar.badge.clock") { ScheduleScreen(store: store) }
     }
     .sheet(isPresented: $showingContribution) { ContributionForm(store: store) }
   }
@@ -359,7 +378,7 @@ struct ChoresScreen: View {
               Task { _ = await store.mutate("chores:toggle", ["choreId": chore.id]) }
             } label: {
               Image(systemName: chore["completed"].flag ? "checkmark.circle.fill" : "circle")
-                .font(.title2).foregroundStyle(Palette.forest)
+                .font(.title2).foregroundStyle(Palette.link)
                 .frame(minWidth: 44, minHeight: 44)
             }.disabled(store.isEnded || !chore["voidedAt"].text.isEmpty).accessibilityLabel(chore["completed"].flag ? "Mark incomplete" : "Mark complete")
             VStack(alignment: .leading, spacing: 4) {
@@ -377,7 +396,7 @@ struct ChoresScreen: View {
           }
         }
       }
-      NavigationLink("Occupied nights") { OccupancyScreen(store: store) }
+      NavigationRow("Occupied nights", symbol: "calendar") { OccupancyScreen(store: store) }
     }
     .sheet(isPresented: $showingCreate) { ChoreForm(store: store) }
   }

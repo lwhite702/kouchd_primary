@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=390, initial-scale=1, viewport-fit=cover">
+  <title>Kouchd · Compact host onboarding</title>
+  <style>
+    :root { color-scheme: light; --ink:#17382d; --muted:#66736b; --line:#d8e2da; --cream:#f8f5ee; --paper:#fffdf9; --lime:#d8f36b; --green:#1f5945; --soft:#edf4e9; }
+    * { box-sizing:border-box; }
+    body { margin:0; padding:24px 0 48px; background:#e8eee8; color:var(--ink); font:15px/1.45 Inter, ui-sans-serif, system-ui, -apple-system, sans-serif; }
+    main { width:390px; margin:0 auto; }
+    .screen { min-height:844px; margin:0 0 24px; padding:28px 22px 24px; display:flex; flex-direction:column; background:var(--cream); border:1px solid #d4ded4; box-shadow:0 16px 42px rgba(23,56,45,.12); }
+    .top { display:flex; justify-content:space-between; align-items:center; color:var(--muted); font-size:12px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; }
+    .mark { display:inline-grid; place-items:center; width:34px; height:34px; border-radius:12px; background:var(--green); color:#fff; font-weight:800; }
+    .progress { display:flex; gap:5px; margin-top:22px; }
+    .progress i { display:block; height:5px; flex:1; border-radius:99px; background:#d5dfd5; }
+    .progress i.on { background:var(--green); }
+    .content { flex:1; display:flex; flex-direction:column; justify-content:center; }
+    .eyebrow { margin:0 0 10px; color:var(--green); font-size:12px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+    h1 { max-width:320px; margin:0 0 14px; font-size:34px; line-height:1.05; letter-spacing:-.045em; }
+    h2 { margin:0 0 10px; font-size:26px; line-height:1.08; letter-spacing:-.03em; }
+    p { margin:0; color:var(--muted); }
+    .promise { margin:18px 0 24px; padding:18px; border-radius:22px; background:var(--paper); border:1px solid var(--line); }
+    .promise strong { display:block; margin-bottom:6px; font-size:17px; }
+    .choice-grid { display:grid; gap:10px; margin-top:24px; }
+    .choice, .field, .rule, .plan { padding:14px 15px; border:1px solid var(--line); border-radius:16px; background:var(--paper); }
+    .choice { display:flex; align-items:center; justify-content:space-between; font-weight:750; }
+    .choice.selected { border-color:var(--green); box-shadow:0 0 0 2px rgba(31,89,69,.12); }
+    .dot { width:18px; height:18px; border:2px solid #9db0a3; border-radius:50%; }
+    .selected .dot { border:5px solid var(--green); }
+    .fields { display:grid; gap:12px; margin-top:20px; }
+    .field small, .plan small { display:block; color:var(--muted); font-size:11px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; }
+    .field strong { display:block; margin-top:4px; font-size:16px; }
+    .rules { display:flex; flex-wrap:wrap; gap:8px; margin-top:20px; }
+    .rule { padding:9px 11px; font-size:13px; }
+    .result { margin-top:20px; padding:18px; border-radius:20px; background:var(--soft); border:1px solid #cfe0cf; }
+    .result-row { display:flex; justify-content:space-between; gap:12px; padding:10px 0; border-bottom:1px solid #d7e6d7; }
+    .result-row:last-child { border-bottom:0; padding-bottom:0; }
+    .result-row span { color:var(--muted); }
+    .result-row strong { text-align:right; }
+    .proof { margin-top:18px; padding:14px 16px; border-left:4px solid var(--green); background:#f1f7ef; color:var(--ink); }
+    .proof strong { display:block; margin-bottom:3px; }
+    .actions { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:24px; }
+    button { border:0; border-radius:14px; padding:14px 18px; font:inherit; font-weight:800; color:var(--ink); background:var(--lime); }
+    .back { padding:12px 4px; color:var(--muted); background:transparent; }
+    .fine { margin-top:14px; color:var(--muted); font-size:11px; }
+    .plus { margin-top:18px; padding:18px; border-radius:20px; background:var(--green); color:#fff; }
+    .plus p, .plus li { color:#dce9df; }
+    .plus ul { margin:12px 0 0; padding-left:18px; }
+    .legal { display:flex; gap:14px; margin-top:16px; color:var(--muted); font-size:11px; }
+  </style>
+</head>
+<body>
+  <main aria-label="Kouchd compact host onboarding mockup">
+    <section class="screen" id="s1">
+      <div class="top"><span class="mark">K</span><span>Host setup · 1 of 4</span></div>
+      <div class="progress"><i class="on"></i><i></i><i></i><i></i></div>
+      <div class="content">
+        <p class="eyebrow">A calmer shared stay</p>
+        <h1>Make the plan clear before anyone arrives.</h1>
+        <p>Kouchd keeps dates, expectations, contributions, chores, and check-ins in one private household record.</p>
+        <div class="promise"><strong>Start with the part that matters.</strong><span>We’ll turn a few choices into a stay plan you can review together.</span></div>
+        <p class="eyebrow">What are you setting up?</p>
+        <div class="choice-grid">
+          <div class="choice selected"><span>A temporary shared stay</span><span class="dot"></span></div>
+          <div class="choice"><span>A recurring household rhythm</span><span class="dot"></span></div>
+        </div>
+      </div>
+      <div class="actions"><button class="back">Skip</button><button>Set the dates →</button></div>
+    </section>
+
+    <section class="screen" id="s2">
+      <div class="top"><span class="mark">K</span><span>Host setup · 2 of 4</span></div>
+      <div class="progress"><i class="on"></i><i class="on"></i><i></i><i></i></div>
+      <div class="content">
+        <p class="eyebrow">The shape of the stay</p>
+        <h2>Choose the rhythm everyone can see.</h2>
+        <p>These choices fill the first agreement draft and can be edited before you invite guests.</p>
+        <div class="fields">
+          <div class="field"><small>Stay window</small><strong>Oct 20 – Nov 03, 2026</strong></div>
+          <div class="field"><small>Contribution rhythm</small><strong>Weekly · Friday</strong></div>
+          <div class="field"><small>Next check-in</small><strong>Oct 27, 2026</strong></div>
+        </div>
+        <p class="eyebrow" style="margin-top:24px">What should be clear?</p>
+        <div class="rules"><span class="rule">Quiet hours</span><span class="rule">Shared spaces</span><span class="rule">Guest notice</span><span class="rule">Clean-up</span></div>
+      </div>
+      <div class="actions"><button class="back">← Back</button><button>Shape the agreement →</button></div>
+    </section>
+
+    <section class="screen" id="s3">
+      <div class="top"><span class="mark">K</span><span>Host setup · 3 of 4</span></div>
+      <div class="progress"><i class="on"></i><i class="on"></i><i class="on"></i><i></i></div>
+      <div class="content">
+        <p class="eyebrow">Your first agreement draft</p>
+        <h2>Here’s the plan your household can review.</h2>
+        <p>The summary is ready before you invite anyone. Optional rules stay optional.</p>
+        <div class="result">
+          <div class="result-row"><span>Stay</span><strong>Oct 20 – Nov 03</strong></div>
+          <div class="result-row"><span>Cadence</span><strong>Weekly on Friday</strong></div>
+          <div class="result-row"><span>House rules</span><strong>4 selected</strong></div>
+          <div class="result-row"><span>Check-in</span><strong>Oct 27</strong></div>
+        </div>
+        <div class="proof"><strong>Built for a clear handoff.</strong><span>Kouchd records the agreement and contributions; payment happens through the host’s external options.</span></div>
+      </div>
+      <div class="actions"><button class="back">← Edit</button><button>Review and invite →</button></div>
+    </section>
+
+    <section class="screen" id="s4">
+      <div class="top"><span class="mark">K</span><span>Host setup · 4 of 4</span></div>
+      <div class="progress"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></div>
+      <div class="content">
+        <p class="eyebrow">Ready for the household</p>
+        <h2>Invite guests to review the same plan.</h2>
+        <p>Keep the agreement visible, then coordinate chores, check-ins, and contributions in one shared record.</p>
+        <div class="plus"><strong>Next: Kouchd Plus</strong><p>When subscription billing is connected, the paywall continues this flow here with the configured plan names, prices, trial terms, restore option, and legal links.</p></div>
+        <p class="fine">This draft does not invent pricing or a testimonial. The current app has no connected paywall placement.</p>
+      </div>
+      <div class="actions"><button class="back">← Back</button><button>Open my stay →</button></div>
+      <div class="legal"><span>Terms</span><span>Privacy</span><span>Restore purchases</span></div>
+    </section>
+  </main>
+</body>
+</html>

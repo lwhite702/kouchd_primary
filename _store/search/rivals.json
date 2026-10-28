@@ -1,0 +1,1315 @@
+{
+  "v": 1,
+  "app": "kouchd",
+  "updated": "2026-10-19T11:42:00-04:00",
+  "by": "agent",
+  "cc": "us",
+  "at": "2026-10-19",
+  "terms": [
+    "household chores",
+    "chore tracker",
+    "shared living",
+    "house rules",
+    "household organizer",
+    "roommate chores",
+    "shared household"
+  ],
+  "rivals": [
+    {
+      "id": "1498897320",
+      "name": "Sweepy: Home Cleaning Schedule",
+      "seller": "Appsent (U.S.)",
+      "votes": 10668,
+      "rating": 4.7171,
+      "price": 0.0,
+      "iap": null,
+      "langs": 8,
+      "updated": "2026-02-04",
+      "released": "2020-03-25",
+      "places": [
+        {
+          "term": "household chores",
+          "place": 1
+        },
+        {
+          "term": "chore tracker",
+          "place": 7
+        },
+        {
+          "term": "roommate chores",
+          "place": 10
+        }
+      ],
+      "growth": null,
+      "icon": "icons/1498897320.png",
+      "note": "US iTunes Search result; in-app-purchase flag unavailable from the public search response."
+    },
+    {
+      "id": "595339588",
+      "name": "Tody",
+      "seller": "Looploop IVS",
+      "votes": 10777,
+      "rating": 4.82611,
+      "price": 0.0,
+      "iap": null,
+      "langs": 10,
+      "updated": "2026-10-15",
+      "released": "2013-01-29",
+      "places": [
+        {
+          "term": "household chores",
+          "place": 2
+        }
+      ],
+      "growth": null,
+      "icon": "icons/595339588.png",
+      "note": "US iTunes Search result; in-app-purchase flag unavailable from the public search response."
+    },
+    {
+      "id": "1604578415",
+      "name": "House Chores Cleaning Schedule",
+      "seller": "HOME TASKER - CLEANING SCHEDULE ORGANIZER LTD",
+      "votes": 2978,
+      "rating": 4.81229,
+      "price": 0.0,
+      "iap": null,
+      "langs": 31,
+      "updated": "2026-10-14",
+      "released": "2022-04-11",
+      "places": [
+        {
+          "term": "household chores",
+          "place": 3
+        },
+        {
+          "term": "chore tracker",
+          "place": 8
+        }
+      ],
+      "growth": null,
+      "icon": "icons/1604578415.png",
+      "note": "US iTunes Search result; in-app-purchase flag unavailable from the public search response."
+    },
+    {
+      "id": "6755568953",
+      "name": "Routinely Chores Tracker",
+      "seller": "Ray Wu",
+      "votes": 1,
+      "rating": 5,
+      "price": 0.0,
+      "iap": null,
+      "langs": 1,
+      "updated": "2026-04-24",
+      "released": "2025-11-24",
+      "places": [
+        {
+          "term": "household chores",
+          "place": 4
+        },
+        {
+          "term": "chore tracker",
+          "place": 5
+        }
+      ],
+      "growth": null,
+      "icon": "icons/6755568953.png",
+      "note": "US iTunes Search result; in-app-purchase flag unavailable from the public search response."
+    },
+    {
+      "id": "1504877473",
+      "name": "Nipto: Split Chores",
+      "seller": "Nipto",
+      "votes": 897,
+      "rating": 4.6845,
+      "price": 0.0,
+      "iap": null,
+      "langs": 10,
+      "updated": "2026-10-10",
+      "released": "2020-05-25",
+      "places": [
+        {
+          "term": "household chores",
+          "place": 5
+        },
+        {
+          "term": "roommate chores",
+          "place": 6
+        }
+      ],
+      "growth": null,
+      "icon": "icons/1504877473.png",
+      "note": "US iTunes Search result; in-app-purchase flag unavailable from the public search response."
+    },
+    {
+      "id": "6755438672",
+      "name": "ADHD Cleaning: Schedule Family",
+      "seller": "Akash Gupta",
+      "votes": 1,
+      "rating": 2,
+      "price": 0.0,
+      "iap": null,
+      "langs": 7,
+      "updated": "2026-09-22",
+      "released": "2025-12-02",
+      "places": [
+        {
+          "term": "household chores",
+          "place": 6
+        }
+      ],
+      "growth": null,
+      "icon": "icons/6755438672.png",
+      "note": "US iTunes Search result; in-app-purchase flag unavailable from the public search response."
+    },
+    {
+      "id": "1611068600",
+      "name": "Chorsee: Chores Tracker",
+      "seller": "Boring But Good LLC",
+      "votes": 11911,
+      "rating": 4.58047,
+      "price": 0.0,
+      "iap": null,
+      "langs": 1,
+      "updated": "2026-09-05",
+      "released": "2022-04-06",
+      "places": [
+        {
+          "term": "household chores",
+          "place": 7
+        },
+        {
+          "term": "chore tracker",
+          "place": 1
+        },
+        {
+          "term": "roommate chores",
+          "place": 8
+        }
+      ],
+      "growth": null,
+      "icon": "icons/1611068600.png",
+      "note": "US iTunes Search result; in-app-purchase flag unavailable from the public search response."
+    },
+    {
+      "id": "1450486923",
+      "name": "Routine Planner, Habit Tracker",
+      "seller": "Routinery Corp.",
+      "votes": 18076,
+      "rating": 4.71565,
+      "price": 0.0,
+      "iap": null,
+      "langs": 12,
+      "updated": "2026-10-15",
+      "released": "2019-01-27",
+      "places": [
+        {
+          "term": "household chores",
+          "place": 8
+        }
+      ],
+      "growth": null,
+      "icon": "icons/1450486923.png",
+      "note": "US iTunes Search result; in-app-purchase flag unavailable from the public search response."
+    },
+    {
+      "id": "6786705286",
+      "name": "Household Chores App",
+      "seller": "Slavko Stojadinovic",
+      "votes": 0,
+      "rating": 0,
+      "price": 0.0,
+      "iap": null,
+      "langs": 2,
+      "updated": "2026-07-24",
+      "released": "2026-07-24",
+      "places": [
+        {
+          "term": "household chores",
+          "place": 9
+        }
+      ],
+      "growth": null,
+      "icon": "icons/6786705286.png",
+      "note": "US iTunes Search result; in-app-purchase flag unavailable from the public search response."
+    },
+    {
+      "id": "407108860",
+      "name": "Cozi Family Organizer",
+      "seller": "Cozi",
+      "votes": 401289,
+      "rating": 4.80697,
+      "price": 0.0,
+      "iap": null,
+      "langs": 1,
+      "updated": "2026-08-31",
+      "released": "2010-12-21",
+      "places": [
+        {
+          "term": "household chores",
+          "place": 10
+        }
+      ],
+      "growth": null,
+      "icon": "icons/407108860.png",
+      "note": "US iTunes Search result; in-app-purchase flag unavailable from the public search response."
+    },
+    {
+      "id": "1564891793",
+      "name": "Tidy: House Cleaning Schedule",
+      "seller": "Chakhouski Artsiom",
+      "votes": 1884,
+      "rating": 4.67197,
+      "price": 0.0,
+      "iap": null,
+      "langs": 13,
+      "updated": "2026-10-18",
+      "released": "2022-02-22",
+      "places": [
+        {
+          "term": "chore tracker",
+          "place": 2
+        }
+      ],
+      "growth": null,
+      "icon": "icons/1564891793.png",
+      "note": "US iTunes Search result; in-app-purchase flag unavailable from the public search response."
+    },
+    {
+      "id": "6783816253",
+      "name": "Chores Tracker - ChoreBuddy",
+      "seller": "Uttamchand Sancheti",
+      "votes": 15,
+      "rating": 4.93333,
+      "price": 0.0,
+      "iap": null,
+      "langs": 1,
+      "updated": "2026-09-18",
+      "released": "2026-08-06",
+      "places": [
+        {
+          "term": "chore tracker",
+          "place": 3
+        }
+      ],
+      "growth": null,
+      "icon": "icons/6783816253.png",
+      "note": "US iTunes Search result; in-app-purchase flag unavailable from the public search response."
+    },
+    {
+      "id": "1438388363",
+      "name": "Habit Tracker",
+      "seller": "Inner Grow Limited",
+      "votes": 148052,
+      "rating": 4.79126,
+      "price": 0.0,
+      "iap": null,
+      "langs": 10,
+      "updated": "2026-10-15",
+      "released": "2019-01-31",
+      "places": [
+        {
+          "term": "chore tracker",
+          "place": 4
+        }
+      ],
+      "growth": null,
+      "icon": "icons/1438388363.png",
+      "note": "US iTunes Search result; in-app-purchase flag unavailable from the public search response."
+    },
+    {
+      "id": "1528595748",
+      "name": "Finch: Self-Care Pet",
+      "seller": "Finch Care Public Benefit Corporation",
+      "votes": 765397,
+      "rating": 4.94729,
+      "price": 0.0,
+      "iap": null,
+      "langs": 1,
+      "updated": "2026-10-15",
+      "released": "2021-05-12",
+      "places": [
+        {
+          "term": "chore tracker",
+          "place": 6
+        }
+      ],
+      "growth": null,
+      "icon": "icons/1528595748.png",
+      "note": "US iTunes Search result; in-app-purchase flag unavailable from the public search response."
+    },
+    {
+      "id": "6801662014",
+      "name": "CarryHalf: Chore Tracker",
+      "seller": "Minzy Studios LLC",
+      "votes": 0,
+      "rating": 0,
+      "price": 0.0,
+      "iap": null,
+      "langs": 1,
+      "updated": "2026-10-08",
+      "released": "2026-09-07",
+      "places": [
+        {
+          "term": "chore tracker",
+          "place": 9
+        }
+      ],
+      "growth": null,
+      "icon": "icons/6801662014.png",
+      "note": "US iTunes Search result; in-app-purchase flag unavailable from the public search response."
+    },
+    {
+      "id": "1539660929",
+      "name": "FlatUp! - Manage shared living",
+      "seller": "App-Entwicklung und Vermarktung Haller & Tanzmeier UG",
+      "votes": 3,
+      "rating": 4.33333,
+      "price": 0.0,
+      "iap": null,
+      "langs": 1,
+      "updated": "2025-06-11",
+      "released": "2021-01-02",
+      "places": [
+        {
+          "term": "shared living",
+          "place": 1
+        }
+      ],
+      "growth": null,
+      "icon": "icons/1539660929.png",
+      "note": "US iTunes Search result; in-app-purchase flag unavailable from the public search response."
+    },
+    {
+      "id": "6751341507",
+      "name": "Staymates - Shared Living App",
+      "seller": "KELVIN RAMDHUN",
+      "votes": 0,
+      "rating": 0,
+      "price": 0.0,
+      "iap": null,
+      "langs": 1,
+      "updated": "2026-07-04",
+      "released": "2025-10-27",
+      "places": [
+        {
+          "term": "shared living",
+          "place": 2
+        }
+      ],
+      "growth": null,
+      "icon": "icons/6751341507.png",
+      "note": "US iTunes Search result; in-app-purchase flag unavailable from the public search response."
+    },
+    {
+      "id": "400181250",
+      "name": "SpareRoom",
+      "seller": "Flatshare Ltd",
+      "votes": 4184,
+      "rating": 4.69025,
+      "price": 0.0,
+      "iap": null,
+      "langs": 1,
+      "updated": "2026-09-14",
+      "released": "2011-03-31",
+      "places": [
+        {
+          "term": "shared living",
+          "place": 3
+        }
+      ],
+      "growth": null,
+      "icon": "icons/400181250.png",
+      "note": "US iTunes Search result; in-app-purchase flag unavailable from the public search response."
+    },
+    {
+      "id": "6451357468",
+      "name": "UPSIDE Living",
+      "seller": "UPSIDE LIVING L.L.C",
+      "votes": 0,
+      "rating": 0,
+      "price": 0.0,
+      "iap": null,
+      "langs": 1,
+      "updated": "2025-07-30",
+      "released": "2023-07-21",
+      "places": [
+        {
+          "term": "shared living",
+          "place": 4
+        }
+      ],
+      "growth": null,
+      "icon": "icons/6451357468.png",
+      "note": "US iTunes Search result; in-app-purchase flag unavailable from the public search response."
+    },
+    {
+      "id": "6748727744",
+      "name": "Luumi – Shared Living App",
+      "seller": "Pavel Sivak",
+      "votes": 0,
+      "rating": 0,
+      "price": 0.0,
+      "iap": null,
+      "langs": 4,
+      "updated": "2026-10-12",
+      "released": "2025-07-18",
+      "places": [
+        {
+          "term": "shared living",
+          "place": 5
+        }
+      ],
+      "growth": null,
+      "icon": "icons/6748727744.png",
+      "note": "US iTunes Search result; in-app-purchase flag unavailable from the public search response."
+    },
+    {
+      "id": "1606780589",
+      "name": "LiveIn - Share Your Moment",
+      "seller": "Livehouse Limited",
+      "votes": 30478,
+      "rating": 4.7367,
+      "price": 0.0,
+      "iap": null,
+      "langs": 9,
+      "updated": "2023-12-29",
+      "released": "2022-01-26",
+      "places": [
+        {
+          "term": "shared living",
+          "place": 6
+        }
+      ],
+      "growth": null,
+      "icon": "icons/1606780589.png",
+      "note": "US iTunes Search result; in-app-purchase flag unavailable from the public search response."
+    },
+    {
+      "id": "6753794415",
+      "name": "Roomies - Smart Shared Living",
+      "seller": "Yonatan Rotem",
+      "votes": 1,
+      "rating": 5,
+      "price": 0.0,
+      "iap": null,
+      "langs": 9,
+      "updated": "2026-09-30",
+      "released": "2025-10-21",
+      "places": [
+        {
+          "term": "shared living",
+          "place": 7
+        }
+      ],
+      "growth": null,
+      "icon": "icons/6753794415.png",
+      "note": "US iTunes Search result; in-app-purchase flag unavailable from the public search response."
+    },
+    {
+      "id": "1034649547",
+      "name": "Tuya: Smart Life, Smart Living",
+      "seller": "Tuya Smart Inc.",
+      "votes": 44487,
+      "rating": 4.58972,
+      "price": 0.0,
+      "iap": null,
+      "langs": 65,
+      "updated": "2026-10-19",
+      "released": "2015-11-07",
+      "places": [
+        {
+          "term": "shared living",
+          "place": 8
+        }
+      ],
+      "growth": null,
+      "icon": "icons/1034649547.png",
+      "note": "US iTunes Search result; in-app-purchase flag unavailable from the public search response."
+    },
+    {
+      "id": "1115101477",
+      "name": "SmartLife: Smart Living",
+      "seller": "Volcano Technology Limited",
+      "votes": 267231,
+      "rating": 4.72265,
+      "price": 0.0,
+      "iap": null,
+      "langs": 65,
+      "updated": "2026-10-18",
+      "released": "2016-05-26",
+      "places": [
+        {
+          "term": "shared living",
+          "place": 9
+        }
+      ],
+      "growth": null,
+      "icon": "icons/1115101477.png",
+      "note": "US iTunes Search result; in-app-purchase flag unavailable from the public search response."
+    },
+    {
+      "id": "333244247",
+      "name": "LOFT Living",
+      "seller": "RealPage, Inc.",
+      "votes": 20396,
+      "rating": 4.30344,
+      "price": 0.0,
+      "iap": null,
+      "langs": 1,
+      "updated": "2026-10-19",
+      "released": "2009-10-06",
+      "places": [
+        {
+          "term": "shared living",
+          "place": 10
+        }
+      ],
+      "growth": null,
+      "icon": "icons/333244247.png",
+      "note": "US iTunes Search result; in-app-purchase flag unavailable from the public search response."
+    },
+    {
+      "id": "6804032345",
+      "name": "House Rules - Party Games",
+      "seller": "Jarrod Luca",
+      "votes": 2,
+      "rating": 5,
+      "price": 0.0,
+      "iap": null,
+      "langs": 1,
+      "updated": "2026-10-09",
+      "released": "2026-09-15",
+      "places": [
+        {
+          "term": "house rules",
+          "place": 1
+        }
+      ],
+      "growth": null,
+      "icon": "icons/6804032345.png",
+      "note": "US iTunes Search result; in-app-purchase flag unavailable from the public search response."
+    },
+    {
+      "id": "6760158866",
+      "name": "House Rules - Scorekeeper",
+      "seller": "Backpocket Apps LLC",
+      "votes": 7,
+      "rating": 4.42856,
+      "price": 0.0,
+      "iap": null,
+      "langs": 1,
+      "updated": "2026-06-16",
+      "released": "2026-03-25",
+      "places": [
+        {
+          "term": "house rules",
+          "place": 2
+        }
+      ],
+      "growth": null,
+      "icon": "icons/6760158866.png",
+      "note": "US iTunes Search result; in-app-purchase flag unavailable from the public search response."
+    },
+    {
+      "id": "1614588021",
+      "name": "Dream House Design: Tile Match",
+      "seller": "Xian Diankou Software Technology Co., Ltd.",
+      "votes": 30857,
+      "rating": 4.64804,
+      "price": 0.0,
+      "iap": null,
+      "langs": 1,
+      "updated": "2026-10-15",
+      "released": "2022-04-13",
+      "places": [
+        {
+          "term": "house rules",
+          "place": 3
+        }
+      ],
+      "growth": null,
+      "icon": "icons/1614588021.png",
+      "note": "US iTunes Search result; in-app-purchase flag unavailable from the public search response."
+    },
+    {
+      "id": "6801270715",
+      "name": "Card Games - House Rules Cards",
+      "seller": "EvDev Studios, LLC",
+      "votes": 3,
+      "rating": 5,
+      "price": 0.0,
+      "iap": null,
+      "langs": 1,
+      "updated": "2026-10-11",
+      "released": "2026-09-21",
+      "places": [
+        {
+          "term": "house rules",
+          "place": 4
+        }
+      ],
+      "growth": null,
+      "icon": "icons/6801270715.png",
+      "note": "US iTunes Search result; in-app-purchase flag unavailable from the public search response."
+    },
+    {
+      "id": "1413668881",
+      "name": "My Home - Design Dreams",
+      "seller": "ZenLife Games Pte. Ltd.",
+      "votes": 433704,
+      "rating": 4.71896,
+      "price": 0.0,
+      "iap": null,
+      "langs": 1,
+      "updated": "2025-11-26",
+      "released": "2018-08-13",
+      "places": [
+        {
+          "term": "house rules",
+          "place": 5
+        }
+      ],
+      "growth": null,
+      "icon": "icons/1413668881.png",
+      "note": "US iTunes Search result; in-app-purchase flag unavailable from the public search response."
+    },
+    {
+      "id": "1546447477",
+      "name": "Merge Matters - House Design",
+      "seller": "GreenPixel Ltd",
+      "votes": 38521,
+      "rating": 4.57275,
+      "price": 0.0,
+      "iap": null,
+      "langs": 13,
+      "updated": "2023-12-07",
+      "released": "2021-01-02",
+      "places": [
+        {
+          "term": "house rules",
+          "place": 6
+        }
+      ],
+      "growth": null,
+      "icon": "icons/1546447477.png",
+      "note": "US iTunes Search result; in-app-purchase flag unavailable from the public search response."
+    },
+    {
+      "id": "1562797124",
+      "name": "My House - Home Design Games",
+      "seller": "Happy Life Studios",
+      "votes": 3734,
+      "rating": 4.43599,
+      "price": 0.0,
+      "iap": null,
+      "langs": 1,
+      "updated": "2025-12-15",
+      "released": "2021-05-06",
+      "places": [
+        {
+          "term": "house rules",
+          "place": 7
+        }
+      ],
+      "growth": null,
+      "icon": "icons/1562797124.png",
+      "note": "US iTunes Search result; in-app-purchase flag unavailable from the public search response."
+    },
+    {
+      "id": "1458748729",
+      "name": "Sweet House : Design",
+      "seller": "湘週 郑",
+      "votes": 2337,
+      "rating": 4.57809,
+      "price": 0.0,
+      "iap": null,
+      "langs": 10,
+      "updated": "2021-03-15",
+      "released": "2019-04-23",
+      "places": [
+        {
+          "term": "house rules",
+          "place": 8
+        }
+      ],
+      "growth": null,
+      "icon": "icons/1458748729.png",
+      "note": "US iTunes Search result; in-app-purchase flag unavailable from the public search response."
+    },
+    {
+      "id": "1624917988",
+      "name": "House Renovation Master",
+      "seller": "Rollic Games Oyun Yazilim ve Pazarlama Anonim Sirketi",
+      "votes": 3606,
+      "rating": 4.71326,
+      "price": 0.0,
+      "iap": null,
+      "langs": 1,
+      "updated": "2022-10-14",
+      "released": "2022-05-26",
+      "places": [
+        {
+          "term": "house rules",
+          "place": 9
+        }
+      ],
+      "growth": null,
+      "icon": "icons/1624917988.png",
+      "note": "US iTunes Search result; in-app-purchase flag unavailable from the public search response."
+    },
+    {
+      "id": "1438898374",
+      "name": "Homematch - Home Design Games",
+      "seller": "TAPBLAZE, LLC",
+      "votes": 10716,
+      "rating": 4.52912,
+      "price": 0.0,
+      "iap": null,
+      "langs": 1,
+      "updated": "2026-09-30",
+      "released": "2019-01-14",
+      "places": [
+        {
+          "term": "house rules",
+          "place": 10
+        }
+      ],
+      "growth": null,
+      "icon": "icons/1438898374.png",
+      "note": "US iTunes Search result; in-app-purchase flag unavailable from the public search response."
+    },
+    {
+      "id": "1499198946",
+      "name": "Structured: Daily Planner Todo",
+      "seller": "unorderly GmbH",
+      "votes": 167738,
+      "rating": 4.7938,
+      "price": 0.0,
+      "iap": null,
+      "langs": 28,
+      "updated": "2026-09-29",
+      "released": "2020-04-09",
+      "places": [
+        {
+          "term": "household organizer",
+          "place": 1
+        }
+      ],
+      "growth": null,
+      "icon": "icons/1499198946.png",
+      "note": "US iTunes Search result; in-app-purchase flag unavailable from the public search response."
+    },
+    {
+      "id": "496889629",
+      "name": "FamilyWall: Family Organizer",
+      "seller": "Family & Co",
+      "votes": 24300,
+      "rating": 4.8437,
+      "price": 0.0,
+      "iap": null,
+      "langs": 11,
+      "updated": "2026-09-27",
+      "released": "2012-01-28",
+      "places": [
+        {
+          "term": "household organizer",
+          "place": 2
+        }
+      ],
+      "growth": null,
+      "icon": "icons/496889629.png",
+      "note": "US iTunes Search result; in-app-purchase flag unavailable from the public search response."
+    },
+    {
+      "id": "6757863672",
+      "name": "OneHaus: Household Organizer",
+      "seller": "Stuart Blackler",
+      "votes": 1,
+      "rating": 5,
+      "price": 0.0,
+      "iap": null,
+      "langs": 11,
+      "updated": "2026-09-25",
+      "released": "2026-06-04",
+      "places": [
+        {
+          "term": "household organizer",
+          "place": 3
+        }
+      ],
+      "growth": null,
+      "icon": "icons/6757863672.png",
+      "note": "US iTunes Search result; in-app-purchase flag unavailable from the public search response."
+    },
+    {
+      "id": "840810742",
+      "name": "Flatastic: Household Chores",
+      "seller": "Flatastic GmbH",
+      "votes": 307,
+      "rating": 4.72964,
+      "price": 0.0,
+      "iap": null,
+      "langs": 2,
+      "updated": "2026-09-30",
+      "released": "2015-12-06",
+      "places": [
+        {
+          "term": "household organizer",
+          "place": 4
+        },
+        {
+          "term": "roommate chores",
+          "place": 9
+        }
+      ],
+      "growth": null,
+      "icon": "icons/840810742.png",
+      "note": "US iTunes Search result; in-app-purchase flag unavailable from the public search response."
+    },
+    {
+      "id": "6739814562",
+      "name": "Household Organizer - Homzie",
+      "seller": "Christopher Arm",
+      "votes": 1,
+      "rating": 5,
+      "price": 0.0,
+      "iap": null,
+      "langs": 4,
+      "updated": "2026-10-16",
+      "released": "2025-02-05",
+      "places": [
+        {
+          "term": "household organizer",
+          "place": 5
+        },
+        {
+          "term": "shared household",
+          "place": 10
+        }
+      ],
+      "growth": null,
+      "icon": "icons/6739814562.png",
+      "note": "US iTunes Search result; in-app-purchase flag unavailable from the public search response."
+    },
+    {
+      "id": "6761503774",
+      "name": "Box Keeper - Storage Organizer",
+      "seller": "Bruno Costa Ramos",
+      "votes": 0,
+      "rating": 0,
+      "price": 0.0,
+      "iap": null,
+      "langs": 1,
+      "updated": "2026-05-04",
+      "released": "2026-04-26",
+      "places": [
+        {
+          "term": "household organizer",
+          "place": 6
+        }
+      ],
+      "growth": null,
+      "icon": "icons/6761503774.png",
+      "note": "US iTunes Search result; in-app-purchase flag unavailable from the public search response."
+    },
+    {
+      "id": "1408133031",
+      "name": "Kukini - Family Organizer",
+      "seller": "Steven Pal",
+      "votes": 87,
+      "rating": 4.63218,
+      "price": 0.0,
+      "iap": null,
+      "langs": 1,
+      "updated": "2026-10-08",
+      "released": "2018-07-29",
+      "places": [
+        {
+          "term": "household organizer",
+          "place": 7
+        }
+      ],
+      "growth": null,
+      "icon": "icons/1408133031.png",
+      "note": "US iTunes Search result; in-app-purchase flag unavailable from the public search response."
+    },
+    {
+      "id": "1456102211",
+      "name": "Tend Task: Household Organizer",
+      "seller": "Tend Task, Inc.",
+      "votes": 1,
+      "rating": 1,
+      "price": 0.0,
+      "iap": null,
+      "langs": 1,
+      "updated": "2026-08-01",
+      "released": "2019-08-24",
+      "places": [
+        {
+          "term": "household organizer",
+          "place": 8
+        }
+      ],
+      "growth": null,
+      "icon": "icons/1456102211.png",
+      "note": "US iTunes Search result; in-app-purchase flag unavailable from the public search response."
+    },
+    {
+      "id": "1541899076",
+      "name": "Family Tools: Family Organizer",
+      "seller": "Zerin Technologies LLC",
+      "votes": 77,
+      "rating": 4.28571,
+      "price": 0.0,
+      "iap": null,
+      "langs": 1,
+      "updated": "2025-11-20",
+      "released": "2020-12-30",
+      "places": [
+        {
+          "term": "household organizer",
+          "place": 9
+        }
+      ],
+      "growth": null,
+      "icon": "icons/1541899076.png",
+      "note": "US iTunes Search result; in-app-purchase flag unavailable from the public search response."
+    },
+    {
+      "id": "6761740740",
+      "name": "Burr: Household Organizer",
+      "seller": "Adaely Group LLC",
+      "votes": 2,
+      "rating": 5,
+      "price": 0.0,
+      "iap": null,
+      "langs": 1,
+      "updated": "2026-10-18",
+      "released": "2026-09-13",
+      "places": [
+        {
+          "term": "household organizer",
+          "place": 10
+        }
+      ],
+      "growth": null,
+      "icon": "icons/6761740740.png",
+      "note": "US iTunes Search result; in-app-purchase flag unavailable from the public search response."
+    },
+    {
+      "id": "6759210004",
+      "name": "Roomie - Household Organizer",
+      "seller": "Roomie App, LLC",
+      "votes": 4,
+      "rating": 5,
+      "price": 0.0,
+      "iap": null,
+      "langs": 1,
+      "updated": "2026-09-29",
+      "released": "2026-03-08",
+      "places": [
+        {
+          "term": "roommate chores",
+          "place": 1
+        }
+      ],
+      "growth": null,
+      "icon": "icons/6759210004.png",
+      "note": "US iTunes Search result; in-app-purchase flag unavailable from the public search response."
+    },
+    {
+      "id": "6470965926",
+      "name": "BoBo - Co-living Made Simple",
+      "seller": "BoBo App, Inc.",
+      "votes": 12,
+      "rating": 4.75,
+      "price": 0.0,
+      "iap": null,
+      "langs": 1,
+      "updated": "2024-09-25",
+      "released": "2024-08-28",
+      "places": [
+        {
+          "term": "roommate chores",
+          "place": 2
+        }
+      ],
+      "growth": null,
+      "icon": "icons/6470965926.png",
+      "note": "US iTunes Search result; in-app-purchase flag unavailable from the public search response."
+    },
+    {
+      "id": "6751163705",
+      "name": "Roommate chore chart: Roomiz",
+      "seller": "PIERRE-ALEXANDRE GALLIOT",
+      "votes": 5,
+      "rating": 5,
+      "price": 0.0,
+      "iap": null,
+      "langs": 1,
+      "updated": "2026-10-17",
+      "released": "2025-09-13",
+      "places": [
+        {
+          "term": "roommate chores",
+          "place": 3
+        }
+      ],
+      "growth": null,
+      "icon": "icons/6751163705.png",
+      "note": "US iTunes Search result; in-app-purchase flag unavailable from the public search response."
+    },
+    {
+      "id": "6762134346",
+      "name": "ChoreCycle - Chore Rotation",
+      "seller": "慧慧 高",
+      "votes": 0,
+      "rating": 0,
+      "price": 0.0,
+      "iap": null,
+      "langs": 1,
+      "updated": "2026-06-23",
+      "released": "2026-04-14",
+      "places": [
+        {
+          "term": "roommate chores",
+          "place": 4
+        }
+      ],
+      "growth": null,
+      "icon": "icons/6762134346.png",
+      "note": "US iTunes Search result; in-app-purchase flag unavailable from the public search response."
+    },
+    {
+      "id": "6773518599",
+      "name": "Notch: Roommate Chores",
+      "seller": "Anas Youala",
+      "votes": 0,
+      "rating": 0,
+      "price": 0.0,
+      "iap": null,
+      "langs": 6,
+      "updated": "2026-10-16",
+      "released": "2026-06-16",
+      "places": [
+        {
+          "term": "roommate chores",
+          "place": 5
+        }
+      ],
+      "growth": null,
+      "icon": "icons/6773518599.png",
+      "note": "US iTunes Search result; in-app-purchase flag unavailable from the public search response."
+    },
+    {
+      "id": "1482170167",
+      "name": "Dwell: Roommate Home Organizer",
+      "seller": "Springtown Labs Inc.",
+      "votes": 84,
+      "rating": 4.57143,
+      "price": 0.0,
+      "iap": null,
+      "langs": 1,
+      "updated": "2025-08-04",
+      "released": "2019-11-12",
+      "places": [
+        {
+          "term": "roommate chores",
+          "place": 7
+        }
+      ],
+      "growth": null,
+      "icon": "icons/1482170167.png",
+      "note": "US iTunes Search result; in-app-purchase flag unavailable from the public search response."
+    },
+    {
+      "id": "6806660220",
+      "name": "Homekeep: Shared Household",
+      "seller": "Tim Ruijter",
+      "votes": 0,
+      "rating": 0,
+      "price": 0.0,
+      "iap": null,
+      "langs": 1,
+      "updated": "2026-10-19",
+      "released": "2026-10-14",
+      "places": [
+        {
+          "term": "shared household",
+          "place": 1
+        }
+      ],
+      "growth": null,
+      "icon": "icons/6806660220.png",
+      "note": "US iTunes Search result; in-app-purchase flag unavailable from the public search response."
+    },
+    {
+      "id": "1662481936",
+      "name": "Household Fair Share",
+      "seller": "Andrea Rethy",
+      "votes": 1,
+      "rating": 5,
+      "price": 0.0,
+      "iap": null,
+      "langs": 1,
+      "updated": "2026-02-01",
+      "released": "2023-01-27",
+      "places": [
+        {
+          "term": "shared household",
+          "place": 2
+        }
+      ],
+      "growth": null,
+      "icon": "icons/1662481936.png",
+      "note": "US iTunes Search result; in-app-purchase flag unavailable from the public search response."
+    },
+    {
+      "id": "331302745",
+      "name": "Grocery List - Listonic",
+      "seller": "Listonic sp. z o.o.",
+      "votes": 10215,
+      "rating": 4.69956,
+      "price": 0.0,
+      "iap": null,
+      "langs": 42,
+      "updated": "2026-10-10",
+      "released": "2009-10-15",
+      "places": [
+        {
+          "term": "shared household",
+          "place": 3
+        }
+      ],
+      "growth": null,
+      "icon": "icons/331302745.png",
+      "note": "US iTunes Search result; in-app-purchase flag unavailable from the public search response."
+    },
+    {
+      "id": "6796077876",
+      "name": "Cotcot : Shared Household",
+      "seller": "Pierre BOULC'H",
+      "votes": 0,
+      "rating": 0,
+      "price": 0.0,
+      "iap": null,
+      "langs": 6,
+      "updated": "2026-10-18",
+      "released": "2026-09-30",
+      "places": [
+        {
+          "term": "shared household",
+          "place": 4
+        }
+      ],
+      "growth": null,
+      "icon": "icons/6796077876.png",
+      "note": "US iTunes Search result; in-app-purchase flag unavailable from the public search response."
+    },
+    {
+      "id": "1300063587",
+      "name": "PlanPop: Shared Calendar",
+      "seller": "Moments Technologies Inc.",
+      "votes": 989,
+      "rating": 4.79676,
+      "price": 0.0,
+      "iap": null,
+      "langs": 7,
+      "updated": "2026-10-15",
+      "released": "2017-11-23",
+      "places": [
+        {
+          "term": "shared household",
+          "place": 5
+        }
+      ],
+      "growth": null,
+      "icon": "icons/1300063587.png",
+      "note": "US iTunes Search result; in-app-purchase flag unavailable from the public search response."
+    },
+    {
+      "id": "6756810437",
+      "name": "Better Roommate: Household App",
+      "seller": "Min Thet Maung",
+      "votes": 2,
+      "rating": 5,
+      "price": 0.0,
+      "iap": null,
+      "langs": 1,
+      "updated": "2026-03-10",
+      "released": "2026-03-10",
+      "places": [
+        {
+          "term": "shared household",
+          "place": 6
+        }
+      ],
+      "growth": null,
+      "icon": "icons/6756810437.png",
+      "note": "US iTunes Search result; in-app-purchase flag unavailable from the public search response."
+    },
+    {
+      "id": "6800872295",
+      "name": "Flatmate - Shared Household",
+      "seller": "Tomasz Szeliga",
+      "votes": 0,
+      "rating": 0,
+      "price": 0.0,
+      "iap": null,
+      "langs": 1,
+      "updated": "2026-10-08",
+      "released": "2026-09-28",
+      "places": [
+        {
+          "term": "shared household",
+          "place": 7
+        }
+      ],
+      "growth": null,
+      "icon": "icons/6800872295.png",
+      "note": "US iTunes Search result; in-app-purchase flag unavailable from the public search response."
+    },
+    {
+      "id": "6761345464",
+      "name": "Shared To Do List — Carry",
+      "seller": "JAMIE CUNNIAM MURPHY",
+      "votes": 1,
+      "rating": 5,
+      "price": 0.0,
+      "iap": null,
+      "langs": 7,
+      "updated": "2026-10-05",
+      "released": "2026-05-18",
+      "places": [
+        {
+          "term": "shared household",
+          "place": 8
+        }
+      ],
+      "growth": null,
+      "icon": "icons/6761345464.png",
+      "note": "US iTunes Search result; in-app-purchase flag unavailable from the public search response."
+    },
+    {
+      "id": "6754535044",
+      "name": "Casito: Shared Life Organizer",
+      "seller": "BELEN MARIN ROCA",
+      "votes": 5,
+      "rating": 4.8,
+      "price": 0.0,
+      "iap": null,
+      "langs": 1,
+      "updated": "2026-10-19",
+      "released": "2026-03-07",
+      "places": [
+        {
+          "term": "shared household",
+          "place": 9
+        }
+      ],
+      "growth": null,
+      "icon": "icons/6754535044.png",
+      "note": "US iTunes Search result; in-app-purchase flag unavailable from the public search response."
+    }
+  ]
+}

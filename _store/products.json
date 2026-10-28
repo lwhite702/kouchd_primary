@@ -1,0 +1,72 @@
+{
+  "v": 1,
+  "at": "2026-10-26T11:55:35-04:00",
+  "source": "asc.py list-products",
+  "app": {
+    "id": "6818980215",
+    "slug": "kouchd",
+    "name": "Kouchd"
+  },
+  "groups": [
+    {
+      "id": "22490546",
+      "name": "Kouchd Plus",
+      "count": 2
+    }
+  ],
+  "products": [
+    {
+      "id": "6824218227",
+      "productId": "kouchd_plus_monthly",
+      "name": "Kouchd Plus Monthly",
+      "kind": "subscription",
+      "type": null,
+      "period": "ONE_MONTH",
+      "state": "READY_TO_SUBMIT",
+      "group": "Kouchd Plus",
+      "groupId": "22490546",
+      "groupLevel": 1,
+      "familySharable": false,
+      "priceUsd": "8.99",
+      "base": null,
+      "priceNext": null
+    },
+    {
+      "id": "6824218440",
+      "productId": "kouchd_plus_yearly",
+      "name": "Kouchd Plus Yearly",
+      "kind": "subscription",
+      "type": null,
+      "period": "ONE_YEAR",
+      "state": "READY_TO_SUBMIT",
+      "group": "Kouchd Plus",
+      "groupId": "22490546",
+      "groupLevel": 2,
+      "familySharable": false,
+      "priceUsd": "89.99",
+      "base": null,
+      "priceNext": null
+    },
+    {
+      "id": "6825683436",
+      "productId": "kouchd_plus_lifetime",
+      "name": "Kouchd Plus Lifetime",
+      "kind": "iap",
+      "type": "NON_CONSUMABLE",
+      "period": null,
+      "state": "READY_TO_SUBMIT",
+      "group": null,
+      "groupId": null,
+      "groupLevel": null,
+      "familySharable": false,
+      "priceUsd": "149.99",
+      "base": {
+        "territory": "USA",
+        "price": "149.99",
+        "currency": "USD"
+      },
+      "priceNext": null
+    }
+  ],
+  "notes": []
+}

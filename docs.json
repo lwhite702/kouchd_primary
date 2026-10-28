@@ -84,7 +84,7 @@
       "anchors": [
         {
           "anchor": "Open App",
-          "href": "https://kouchd.com",
+          "href": "https://app.kouchd.com",
           "icon": "house"
         }
       ]
@@ -93,20 +93,18 @@
   "interaction": {
     "drilldown": false
   },
-  "search": {
-    "prompt": "Search guides, rules, or ledger help..."
-  },
+  "search": {},
   "navbar": {
     "links": [
       {
         "label": "Web App",
-        "href": "https://kouchd.com"
+        "href": "https://app.kouchd.com"
       }
     ],
     "primary": {
       "type": "button",
       "label": "Open Kouchd",
-      "href": "https://kouchd.com"
+      "href": "https://app.kouchd.com"
     }
   },
   "footer": {
@@ -117,17 +115,35 @@
       {
         "header": "Product",
         "items": [
-          { "label": "Open Kouchd", "href": "https://kouchd.com" },
-          { "label": "Roadmap", "href": "/help/product/roadmap" },
-          { "label": "Changelog", "href": "/help/product/changelog" }
+          {
+            "label": "Open Kouchd",
+            "href": "https://app.kouchd.com"
+          },
+          {
+            "label": "Roadmap",
+            "href": "/help/product/roadmap"
+          },
+          {
+            "label": "Changelog",
+            "href": "/help/product/changelog"
+          }
         ]
       },
       {
         "header": "Help & trust",
         "items": [
-          { "label": "Quickstart", "href": "/help/quickstart" },
-          { "label": "Notification settings", "href": "/help/notifications/notification-preferences" },
-          { "label": "Privacy & security", "href": "/help/legal-trust/privacy-and-security" }
+          {
+            "label": "Quickstart",
+            "href": "/help/quickstart"
+          },
+          {
+            "label": "Notification settings",
+            "href": "/help/notifications/notification-preferences"
+          },
+          {
+            "label": "Privacy & security",
+            "href": "/help/legal-trust/privacy-and-security"
+          }
         ]
       }
     ]
@@ -154,7 +170,7 @@
   "thumbnails": {
     "appearance": "light",
     "fonts": {
-      "family": "Manrope"
+      "family": "Nunito Sans"
     }
   },
   "seo": {

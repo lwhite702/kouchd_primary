@@ -1,8 +1,43 @@
+import ClerkKit
 import ClerkConvex
 import Combine
 import ConvexMobile
 import Foundation
 import Observation
+
+/// Convex expects the Clerk JWT template named `convex`. The shared bridge
+/// defaults to Clerk's session token, which authenticates Clerk but is not
+/// accepted by Convex's issuer configuration.
+@MainActor
+final class KouchdConvexAuthProvider: AuthProvider {
+  typealias T = String
+
+  func login(onIdToken: @Sendable @escaping (String?) -> Void) async throws -> String {
+    try await token(onIdToken: onIdToken)
+  }
+
+  func loginFromCache(onIdToken: @Sendable @escaping (String?) -> Void) async throws -> String {
+    try await token(onIdToken: onIdToken)
+  }
+
+  func logout() async throws {
+    try await Clerk.shared.auth.signOut()
+  }
+
+  nonisolated func extractIdToken(from authResult: String) -> String { authResult }
+
+  private func token(onIdToken: @Sendable @escaping (String?) -> Void) async throws -> String {
+    guard Clerk.shared.isLoaded else { throw ClerkConvexAuthError.clerkNotLoaded }
+    guard let session = Clerk.shared.session else {
+      throw ClerkConvexAuthError.noActiveSession
+    }
+    guard let token = try await session.getToken(.init(template: "convex")) else {
+      throw ClerkConvexAuthError.tokenRetrievalFailed("Convex JWT template returned nil")
+    }
+    onIdToken(token)
+    return token
+  }
+}
 
 enum AppConfig {
   static var clerkKey: String {
@@ -10,6 +45,12 @@ enum AppConfig {
   }
   static var convexURL: String {
     Bundle.main.object(forInfoDictionaryKey: "CONVEX_URL") as? String ?? ""
+  }
+  static var revenueCatAPIKey: String {
+    Bundle.main.object(forInfoDictionaryKey: "REVENUECAT_IOS_API_KEY") as? String ?? ""
+  }
+  static var revenueCatIsConfigured: Bool {
+    revenueCatAPIKey.hasPrefix("appl_")
   }
   static var isConfigured: Bool {
     clerkKey.hasPrefix("pk_") && convexURL.hasPrefix("https://")
@@ -54,22 +95,168 @@ enum AppConfig {
   private var staySubscriptions: [AnyCancellable] = []
   private var financialSubscriptions: [AnyCancellable] = []
   private var adminSubscriptions: [String: [AnyCancellable]] = [:]
+  private var convexAuthStarted = false
 
   init() {
     client = ConvexClientWithAuth(
       deploymentUrl: AppConfig.convexURL,
-      authProvider: ClerkConvexAuthProvider()
+      authProvider: KouchdConvexAuthProvider()
     )
     authSubscription = client.authState
       .receive(on: DispatchQueue.main)
       .sink { [weak self] state in
         guard let self else { return }
-        if case .authenticated = state {
-          Task { await self.syncUser(name: nil) }
-        } else if case .unauthenticated = state {
+        if case .unauthenticated = state {
           self.reset()
         }
       }
+  }
+
+  /// Populates a fictional household for App Store captures. This is only
+  /// reachable from DEBUG launch arguments handled by `RootView`.
+  func loadScreenshotDemo(role: String) {
+    let isHostDemo = role == "host"
+    let viewerID = isHostDemo ? "demo-host" : "demo-guest"
+    let viewerName = isHostDemo ? "Maya" : "Jordan"
+    let stay = demoObject([
+      "_id": .string("demo-stay"),
+      "name": .string("Maple Street House"),
+      "status": .string("active"),
+      "nextCheckInDate": .string("Sunday, Nov 1"),
+      "houseInfo": demoObject([
+        "wifiNetwork": .string("Maple House Guest"),
+        "parkingNotes": .string("Driveway or east side of Maple Street"),
+        "trashDay": .string("Thursday morning")
+      ]),
+      "paymentOptions": .array([
+        demoObject(["provider": .string("venmo"), "detail": .string("Coordinate with Maya")])
+      ])
+    ])
+    let terms = demoObject([
+      "_id": .string("demo-terms"),
+      "version": .number(2),
+      "startDate": .string("Oct 24, 2026"),
+      "endDate": .string("Nov 21, 2026"),
+      "cadence": .string("weekly"),
+      "rateCents": .number(42500),
+      "billingBasis": .string("fixed_period"),
+      "houseNotes": .string("Quiet hours after 10 PM. Please reset shared spaces before bed."),
+      "houseRules": .array([
+        demoObject([
+          "title": .string("Shared spaces"),
+          "description": .string("Leave the kitchen and living room ready for the next person.")
+        ])
+      ])
+    ])
+    let hostMember = demoObject([
+      "membership": demoObject([
+        "role": .string("host"), "status": .string("active"),
+        "acceptedTermsId": .string("demo-terms")
+      ]),
+      "person": demoObject(["id": .string("demo-host"), "name": .string("Maya Chen")])
+    ])
+    let guestMember = demoObject([
+      "membership": demoObject([
+        "role": .string("guest"), "status": .string("active"),
+        "acceptedTermsId": .string("demo-terms")
+      ]),
+      "person": demoObject(["id": .string("demo-guest"), "name": .string("Jordan Lee")])
+    ])
+
+    viewer = demoObject(["id": .string(viewerID), "name": .string(viewerName)])
+    stays = [demoObject([
+      "stay": stay,
+      "membership": demoObject(["role": .string(role), "status": .string("active")])
+    ])]
+    bundle = demoObject([
+      "stay": stay,
+      "terms": terms,
+      "membership": demoObject([
+        "role": .string(role), "status": .string("active"),
+        "acceptedTermsId": .string("demo-terms")
+      ]),
+      "members": .array([hostMember, guestMember])
+    ])
+    ledger = [demoObject([
+      "_id": .string("demo-ledger"),
+      "title": .string("November household share"),
+      "dueDate": .string("Nov 1, 2026"),
+      "type": .string("cadence"),
+      "effectiveChargeCents": .number(42500),
+      "creditedCents": .number(15000),
+      "balanceCents": .number(27500),
+      "status": .string("due"),
+      "lateFeeCents": .number(0),
+      "lateFeeWaived": .bool(false)
+    ])]
+    contributions = [demoObject([
+      "_id": .string("demo-contribution"),
+      "type": .string("household contribution"),
+      "status": .string("confirmed"),
+      "amountCents": .number(15000),
+      "date": .string("Oct 24, 2026"),
+      "note": .string("First part of November household share"),
+      "createdBy": .string("demo-guest")
+    ])]
+    chores = [
+      demoObject([
+        "_id": .string("demo-chore-1"),
+        "title": .string("Take out recycling"),
+        "assignee": .string("guest"),
+        "assigneeUserId": .string("demo-guest"),
+        "dueDate": .string("Thursday"),
+        "note": .string("Bins go curbside Thursday evening."),
+        "createdBy": .string("demo-host"),
+        "completed": .bool(false),
+        "voidedAt": .string("")
+      ]),
+      demoObject([
+        "_id": .string("demo-chore-2"),
+        "title": .string("Kitchen reset"),
+        "assignee": .string("shared"),
+        "dueDate": .string("Tonight"),
+        "note": .string("Counters clear, dishwasher running."),
+        "createdBy": .string("demo-host"),
+        "completed": .bool(false),
+        "voidedAt": .string("")
+      ])
+    ]
+    announcements = [demoObject([
+      "_id": .string("demo-announcement"),
+      "title": .string("Sunday dinner at 7"),
+      "body": .string("Add anything you want from the market to the house list.")
+    ])]
+    activity = [
+      demoObject(["_id": .string("demo-activity-1"), "kind": .string("chore"), "detail": .string("Jordan added recycling to this week’s list")]),
+      demoObject(["_id": .string("demo-activity-2"), "kind": .string("agreement"), "detail": .string("House notes were updated")])
+    ]
+    wallet = demoObject([
+      "availablePoints": .number(80),
+      "dollarEquivalentCents": .number(800),
+      "settings": demoObject(["enabled": .bool(true), "coinName": .string("House points")]),
+      "claims": .array([])
+    ])
+    rules = []
+    schedule = []
+    nights = []
+    selectedStayID = "demo-stay"
+    selectedGuestID = "demo-guest"
+    isLoading = false
+    isStayLoading = false
+    isFinancialLoading = false
+    error = ""
+  }
+
+  func connectAuthenticatedUser() async {
+    guard !convexAuthStarted else { return }
+    convexAuthStarted = true
+    let result = await client.login()
+    guard case .success = result else {
+      convexAuthStarted = false
+      isLoading = false
+      return
+    }
+    await syncUser(name: nil)
   }
 
   func loadAccount() {
@@ -296,4 +483,8 @@ enum AppConfig {
     let value = bundle["stay"]["name"].text
     return value.isEmpty ? "Shared stay" : value
   }
+}
+
+private func demoObject(_ fields: [String: Value]) -> Value {
+  .object(fields)
 }

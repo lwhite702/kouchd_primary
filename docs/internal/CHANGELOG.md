@@ -109,3 +109,15 @@ Internal engineering record. This file is excluded from Mintlify navigation and 
 - Defined 14 canonical flags in `lib/flags/config.ts` covering household coordination, core roadmap features, onboarding, messaging, and RevenueCat monetization. Provisioned all 14 flags in PostHog project `Kouchd` (`595950`).
 - Integrated RevenueCat Web SDK and created responsive `PaywallModal` and `useKouchdPlus` gated behind `feature_revenuecat_paywall`, `feature_billing_portal`, `feature_kouchd_plus_entitlement`, and `feature_customer_center`.
 - Added automated unit and integration tests in `tests/feature-flags.test.ts`. Verified `npx convex codegen`, `npm run typecheck` (0 errors), `npm run test` (all 17 test suites, 77 tests pass), and `npm run lint`.
+
+### 2026-10-12 — Help Center & Documentation Synchronization
+
+- Synchronized public Mintlify Help Center (`help/`, `index.mdx`, `docs.json`) with shipped `main` releases (`v0.4.0`–`v0.4.2`):
+  - Added October 2026 public changelog entry for native iOS app release (SwiftUI, typed navigation), Figma V2.1 host overview, `app.kouchd.com` subdomain workspace routing, master Wrelik legal suite, and Help Center visual styling.
+  - Updated public roadmap to include shipped native iOS app and V2.1 host overview under "Available in the current apps". Kept shared household coordination, flexible schedules/overnights, RevenueCat host subscriptions, and automated Knock agreement reminders under "In progress" without promised dates.
+  - Updated host getting started guide with V2.1 Host Overview (home base hero, 3 summary metrics, needs attention, and recent activity feed) and multi-platform access.
+  - Updated house rules and chores guide with chore assignments and activity logging across web and iOS.
+  - Updated quickstart guide and root index to reflect `app.kouchd.com` workspace access and native iOS availability.
+  - Updated `docs.json` navigation links to direct application actions to `app.kouchd.com`.
+- Preserved strict Kouchd financial semantics: outside contribution records only; Kouchd does not process payments.
+- Verified with `mintlify validate` and `mintlify broken-links`.

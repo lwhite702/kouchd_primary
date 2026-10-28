@@ -1,0 +1,91 @@
+{
+ "v": 1,
+ "at": "2026-10-27T14:37:40-04:00",
+ "app": "kouchd",
+ "run": "apps/kouchd/checks/agent/2026-10-27_14-36-47",
+ "sheet": null,
+ "shots": [
+  {
+   "name": "appearance dark",
+   "theme": "dark",
+   "bg": "#1C2722",
+   "luma": 0.15,
+   "png": "apps/kouchd/checks/agent/2026-10-27_14-36-47/01-appearance-dark.png"
+  },
+  {
+   "name": "sleep 10",
+   "theme": "dark",
+   "bg": "#1C2722",
+   "luma": 0.15,
+   "png": "apps/kouchd/checks/agent/2026-10-27_14-36-47/02-sleep-10.png"
+  },
+  {
+   "name": "Home dark settled",
+   "theme": "dark",
+   "bg": "#1C2722",
+   "luma": 0.15,
+   "png": "apps/kouchd/checks/agent/2026-10-27_14-36-47/03-shot-home-dark-settled.png"
+  },
+  {
+   "name": "tap Stay",
+   "theme": "dark",
+   "bg": "#1C2822",
+   "luma": 0.16,
+   "png": "apps/kouchd/checks/agent/2026-10-27_14-36-47/04-tap-stay.png"
+  },
+  {
+   "name": "scroll down",
+   "theme": "dark",
+   "bg": "#1D2923",
+   "luma": 0.16,
+   "png": "apps/kouchd/checks/agent/2026-10-27_14-36-47/05-scroll-down.png"
+  },
+  {
+   "name": "tap --force Settings and reminders",
+   "theme": "dark",
+   "bg": "#1C2722",
+   "luma": 0.15,
+   "png": "apps/kouchd/checks/agent/2026-10-27_14-36-47/06-tap-settings-and-reminders.png"
+  },
+  {
+   "name": "sleep 1",
+   "theme": "dark",
+   "bg": "#1C2722",
+   "luma": 0.15,
+   "png": "apps/kouchd/checks/agent/2026-10-27_14-36-47/07-sleep-1.png"
+  },
+  {
+   "name": "Settings dark settled",
+   "theme": "dark",
+   "bg": "#1C2722",
+   "luma": 0.15,
+   "png": "apps/kouchd/checks/agent/2026-10-27_14-36-47/08-shot-settings-dark-settled.png"
+  },
+  {
+   "name": "appearance light",
+   "theme": "light",
+   "bg": "#FAFBFA",
+   "luma": 0.93,
+   "png": "apps/kouchd/checks/agent/2026-10-27_14-36-47/09-appearance-light.png"
+  },
+  {
+   "name": "sleep 10",
+   "theme": "light",
+   "bg": "#FAFBFA",
+   "luma": 0.93,
+   "png": "apps/kouchd/checks/agent/2026-10-27_14-36-47/10-sleep-10.png"
+  },
+  {
+   "name": "Settings light settled",
+   "theme": "light",
+   "bg": "#FAFBFA",
+   "luma": 0.93,
+   "png": "apps/kouchd/checks/agent/2026-10-27_14-36-47/11-shot-settings-light-settled.png"
+  }
+ ],
+ "palette": {
+  "bg": "#FAFBFA",
+  "accent": "#3C6A58"
+ },
+ "findings": []
+}

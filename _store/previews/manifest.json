@@ -1,0 +1,37 @@
+{
+  "app": "Kouchd",
+  "createdAt": "2026-10-25",
+  "capture": {
+    "device": "iPhone 18 Pro Max simulator",
+    "data": "Built-in customer-facing demo data",
+    "containsRealAccountData": false
+  },
+  "delivery": {
+    "width": 886,
+    "height": 1920,
+    "frameRate": 30,
+    "codec": "H.264",
+    "orientation": "portrait",
+    "slot": "iPhone 6.5-inch / 6.7-inch App Preview"
+  },
+  "videos": [
+    {
+      "file": "kouchd-host-features.mp4",
+      "audience": "Hosts",
+      "durationSeconds": 23.83,
+      "story": "Host home, contribution ledger, shared chores, stay details, and Kouchd Plus positioning."
+    },
+    {
+      "file": "kouchd-guest-features.mp4",
+      "audience": "Guests",
+      "durationSeconds": 24.17,
+      "story": "Guest home, upcoming contribution, shared chores, stay details, and the always-free guest promise."
+    },
+    {
+      "file": "kouchd-promo.mp4",
+      "audience": "Promo",
+      "durationSeconds": 27.53,
+      "story": "Faster brand-led tour with animated title cards and feature callouts over real app footage."
+    }
+  ]
+}

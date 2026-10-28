@@ -1,0 +1,114 @@
+{
+ "v": 1,
+ "at": "2026-10-17T17:02:23-04:00",
+ "app": "kouchd",
+ "run": "apps/kouchd/checks/agent/2026-10-17_17-02-04",
+ "sheet": null,
+ "shots": [
+  {
+   "name": "launch --fresh",
+   "theme": "light",
+   "bg": "#014F37",
+   "luma": 0.25,
+   "png": "apps/kouchd/checks/agent/2026-10-17_17-02-04/01-launch.png"
+  },
+  {
+   "name": "sleep 3",
+   "theme": "light",
+   "bg": "#F6F2EA",
+   "luma": 0.94,
+   "png": "apps/kouchd/checks/agent/2026-10-17_17-02-04/02-sleep-3.png"
+  },
+  {
+   "name": "setup-light",
+   "theme": "light",
+   "bg": "#F6F2EA",
+   "luma": 0.94,
+   "png": "apps/kouchd/checks/agent/2026-10-17_17-02-04/03-shot-setup-light.png"
+  },
+  {
+   "name": "appearance dark",
+   "theme": "dark",
+   "bg": "#0E1713",
+   "luma": 0.12,
+   "png": "apps/kouchd/checks/agent/2026-10-17_17-02-04/04-appearance-dark.png"
+  },
+  {
+   "name": "sleep 1",
+   "theme": "dark",
+   "bg": "#0E1713",
+   "luma": 0.12,
+   "png": "apps/kouchd/checks/agent/2026-10-17_17-02-04/05-sleep-1.png"
+  },
+  {
+   "name": "setup-dark",
+   "theme": "dark",
+   "bg": "#0E1713",
+   "luma": 0.12,
+   "png": "apps/kouchd/checks/agent/2026-10-17_17-02-04/06-shot-setup-dark.png"
+  },
+  {
+   "name": "appearance light",
+   "theme": "light",
+   "bg": "#F6F2EA",
+   "luma": 0.94,
+   "png": "apps/kouchd/checks/agent/2026-10-17_17-02-04/07-appearance-light.png"
+  }
+ ],
+ "palette": {
+  "bg": "#F6F2EA",
+  "accent": "#205440"
+ },
+ "findings": [
+  {
+   "level": "bad",
+   "what": "фон «кремовая бумага» #F6F2EA — главный признак ИИ-дизайна по умолчанию",
+   "where": "sleep 3"
+  },
+  {
+   "level": "warn",
+   "what": "кнопки меньше 44 × 44 pt: Open account 36×36",
+   "where": "sleep 3"
+  },
+  {
+   "level": "bad",
+   "what": "фон «кремовая бумага» #F6F2EA — главный признак ИИ-дизайна по умолчанию",
+   "where": "setup-light"
+  },
+  {
+   "level": "warn",
+   "what": "кнопки меньше 44 × 44 pt: Open account 36×36",
+   "where": "setup-light"
+  },
+  {
+   "level": "warn",
+   "what": "кнопки меньше 44 × 44 pt: Open account 36×36",
+   "where": "appearance dark"
+  },
+  {
+   "level": "warn",
+   "what": "кнопки меньше 44 × 44 pt: Open account 36×36",
+   "where": "sleep 1"
+  },
+  {
+   "level": "warn",
+   "what": "кнопки меньше 44 × 44 pt: Open account 36×36",
+   "where": "setup-dark"
+  },
+  {
+   "level": "bad",
+   "what": "фон «кремовая бумага» #F6F2EA — главный признак ИИ-дизайна по умолчанию",
+   "where": "appearance light"
+  },
+  {
+   "level": "warn",
+   "what": "кнопки меньше 44 × 44 pt: Open account 36×36",
+   "where": "appearance light"
+  },
+  {
+   "level": "bad",
+   "what": "модная гарнитура Manrope — сейчас она у всех, нужна своя с характером",
+   "where": "docs.json"
+  }
+ ]
+}

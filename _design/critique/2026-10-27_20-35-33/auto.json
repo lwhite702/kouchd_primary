@@ -1,0 +1,70 @@
+{
+ "v": 1,
+ "at": "2026-10-27T20:35:33-04:00",
+ "app": "kouchd",
+ "run": "apps/kouchd/checks/agent/2026-10-27_20-35-09",
+ "sheet": null,
+ "shots": [
+  {
+   "name": "Settings light final",
+   "theme": "light",
+   "bg": "#1C2621",
+   "luma": 0.15,
+   "png": "apps/kouchd/checks/agent/2026-10-27_20-35-09/01-shot-settings-light-final.png"
+  },
+  {
+   "name": "appearance dark",
+   "theme": "dark",
+   "bg": "#1C2621",
+   "luma": 0.15,
+   "png": "apps/kouchd/checks/agent/2026-10-27_20-35-09/02-appearance-dark.png"
+  },
+  {
+   "name": "sleep 8",
+   "theme": "dark",
+   "bg": "#0D1612",
+   "luma": 0.2,
+   "png": "apps/kouchd/checks/agent/2026-10-27_20-35-09/03-sleep-8.png"
+  },
+  {
+   "name": "Settings dark final",
+   "theme": "dark",
+   "bg": "#0D1612",
+   "luma": 0.2,
+   "png": "apps/kouchd/checks/agent/2026-10-27_20-35-09/04-shot-settings-dark-final.png"
+  },
+  {
+   "name": "back",
+   "theme": "dark",
+   "bg": "#0D1612",
+   "luma": 0.2,
+   "png": "apps/kouchd/checks/agent/2026-10-27_20-35-09/05-back.png"
+  },
+  {
+   "name": "sleep 1",
+   "theme": "dark",
+   "bg": "#0D1612",
+   "luma": 0.2,
+   "png": "apps/kouchd/checks/agent/2026-10-27_20-35-09/06-sleep-1.png"
+  },
+  {
+   "name": "tap Home",
+   "theme": "dark",
+   "bg": "#0D1612",
+   "luma": 0.2,
+   "png": "apps/kouchd/checks/agent/2026-10-27_20-35-09/07-tap-home.png"
+  },
+  {
+   "name": "Host home dark final",
+   "theme": "dark",
+   "bg": "#0D1612",
+   "luma": 0.2,
+   "png": "apps/kouchd/checks/agent/2026-10-27_20-35-09/08-shot-host-home-dark.png"
+  }
+ ],
+ "palette": {
+  "bg": "#1C2621",
+  "accent": "#22533F"
+ },
+ "findings": []
+}

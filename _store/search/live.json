@@ -1,0 +1,396 @@
+{
+  "v": 1,
+  "app": "kouchd",
+  "appId": "6818980215",
+  "at": "2026-10-28T03:13:49-04:00",
+  "by": "asc.py store-live",
+  "readOnly": true,
+  "name": "Chore Tracker - Kouchd",
+  "bundleId": "com.wrelikbrands.kouchd",
+  "primaryLocale": "en-US",
+  "versions": [
+    {
+      "version": "1.0",
+      "state": "PREPARE_FOR_SUBMISSION",
+      "created": "2026-10-04T02:27:48-07:00"
+    }
+  ],
+  "version": "1.0",
+  "state": "PREPARE_FOR_SUBMISSION",
+  "locales": {
+    "de-DE": {
+      "name": "Haushaltsplaner - Kouchd",
+      "subtitle": "Für WG und gemeinsames Wohnen",
+      "privacyUrl": "https://kouchd.com/privacy",
+      "privacyChoicesUrl": null,
+      "keywords": "WG,Haushalt,Aufgaben,Mitbewohner,Gäste,Gastgeber,Hausregeln,Absprachen,Planer,Checkliste",
+      "description": "Gemeinsames Wohnen kann einfacher sein.\n\nKouchd gibt Gastgebern, Gästen und Mitbewohnern einen ruhigen gemeinsamen Ort für Aufenthaltsdaten, Hausregeln, Absprachen, Aufgaben, Check-ins und Beitragsnachweise. Lade Personen privat ein, halte Änderungen zusammen und erkenne auf einen Blick, was ansteht.\n\nEIN GROSSZÜGIGER KOSTENLOSER PLAN\n\nStarte mit dem kostenlosen Kouchd-Plan. Gäste nutzen Kouchd immer kostenlos und können informiert bleiben und mitmachen, ohne ein Abo abzuschließen. Gastgeber können mit Kouchd Plus zusätzliche Funktionen nutzen – monatlich oder jährlich.\n\nKouchd dokumentiert Absprachen und Beiträge. Kouchd nimmt keine Zahlungen an, verwahrt, überträgt oder verarbeitet kein Geld. Zahlungsvereinbarungen erfolgen direkt zwischen den Beteiligten außerhalb von Kouchd.",
+      "promo": "Organisiere gemeinsames Wohnen und Aufenthalte klar, ruhig und unkompliziert.",
+      "whatsNew": null,
+      "supportUrl": "https://help.kouchd.com",
+      "marketingUrl": "https://kouchd.com",
+      "screens": {}
+    },
+    "en-GB": {
+      "name": "Chore Tracker - Kouchd",
+      "subtitle": "Shared Home & Stay Organiser",
+      "privacyUrl": "https://kouchd.com/privacy",
+      "privacyChoicesUrl": null,
+      "keywords": "shared home,household rota,chores,house rules,flatmates,guests,hosts,stay planner,agreements",
+      "description": "Make sharing a home feel simpler.\n\nKouchd gives hosts, guests and flatmates one calm place for stay dates, house expectations, agreements, chores, check-ins and contribution records. Invite people privately, keep changes together and see what needs attention at a glance.\n\nA GENEROUS FREE PLAN\n\nStart with Kouchd’s free plan. Guests always use Kouchd free, so everyone can stay informed and take part without being asked to subscribe. Hosts can upgrade to Kouchd Plus for expanded tools, with monthly and annual options.\n\nKouchd records agreements and contributions. It does not collect, hold, transfer or process payments. Payment arrangements happen directly between the people involved, outside Kouchd.",
+      "promo": "Keep a shared home or stay clear, calm and easier to coordinate.",
+      "whatsNew": null,
+      "supportUrl": "https://help.kouchd.com",
+      "marketingUrl": "https://kouchd.com",
+      "screens": {
+        "APP_IPHONE_67": [
+          {
+            "w": 1290,
+            "h": 2796,
+            "sum": "506b545e5ce1e10288f3a6f304c36ddc",
+            "file": "01.png",
+            "state": "COMPLETE",
+            "url": "https://is1-ssl.mzstatic.com/image/thumb/LoHcSSLmCNJWAdxLWQTG1g/1290x2796bb.jpg"
+          },
+          {
+            "w": 1290,
+            "h": 2796,
+            "sum": "3639b5e884527d7352d197440e2af36c",
+            "file": "02.png",
+            "state": "COMPLETE",
+            "url": "https://is1-ssl.mzstatic.com/image/thumb/zAzerzwbfgxBrQvlHJP-nA/1290x2796bb.jpg"
+          },
+          {
+            "w": 1290,
+            "h": 2796,
+            "sum": "e72bc842f60c157028437b287fa0c95d",
+            "file": "03.png",
+            "state": "COMPLETE",
+            "url": "https://is1-ssl.mzstatic.com/image/thumb/TsHCAZ085BGR2Cq8FWxTOw/1290x2796bb.jpg"
+          },
+          {
+            "w": 1290,
+            "h": 2796,
+            "sum": "525ed8ef596674369b5b3e56c40b772d",
+            "file": "04.png",
+            "state": "COMPLETE",
+            "url": "https://is1-ssl.mzstatic.com/image/thumb/nTTxE-GwT7QyYswqQNaBAQ/1290x2796bb.jpg"
+          },
+          {
+            "w": 1290,
+            "h": 2796,
+            "sum": "ee6037b36dae186c346ea433cd0bb888",
+            "file": "05.png",
+            "state": "COMPLETE",
+            "url": "https://is1-ssl.mzstatic.com/image/thumb/mlAH8eZIA7dNfZufbdR4hw/1290x2796bb.jpg"
+          },
+          {
+            "w": 1290,
+            "h": 2796,
+            "sum": "8ddfbdb7b586ced9896cc72b472fa607",
+            "file": "06.png",
+            "state": "COMPLETE",
+            "url": "https://is1-ssl.mzstatic.com/image/thumb/a_3vkcF4pNbsXdqaoHuShA/1290x2796bb.jpg"
+          },
+          {
+            "w": 1290,
+            "h": 2796,
+            "sum": "fbba67565b4473a9ef32bc8bceaef0cd",
+            "file": "07.png",
+            "state": "COMPLETE",
+            "url": "https://is1-ssl.mzstatic.com/image/thumb/LQrEaVV3MuvuGnQaCXs9rg/1290x2796bb.jpg"
+          },
+          {
+            "w": 1290,
+            "h": 2796,
+            "sum": "9e2de8d86e646bcc4eeda8c867e01dea",
+            "file": "08.png",
+            "state": "COMPLETE",
+            "url": "https://is1-ssl.mzstatic.com/image/thumb/6NPbuq7QAoJeRB6LuKgJdA/1290x2796bb.jpg"
+          },
+          {
+            "w": 1290,
+            "h": 2796,
+            "sum": "754b9e429f37585f6e50d88e22e1b51d",
+            "file": "09.png",
+            "state": "COMPLETE",
+            "url": "https://is1-ssl.mzstatic.com/image/thumb/Yof96Olsp9838GPD5wRjcQ/1290x2796bb.jpg"
+          },
+          {
+            "w": 1290,
+            "h": 2796,
+            "sum": "30741fd949480f82c363873dd738d380",
+            "file": "10.png",
+            "state": "COMPLETE",
+            "url": "https://is1-ssl.mzstatic.com/image/thumb/9fQgNjipt73zds0vmr6iYA/1290x2796bb.jpg"
+          }
+        ],
+        "APP_IPAD_PRO_3GEN_129": [
+          {
+            "w": 2064,
+            "h": 2752,
+            "sum": "05219aabf2231654e9ae796110bf9fb5",
+            "file": "01.png",
+            "state": "COMPLETE",
+            "url": "https://is1-ssl.mzstatic.com/image/thumb/5bpMGLSZusA_H0UDwPPruA/2064x2752bb.jpg"
+          },
+          {
+            "w": 2064,
+            "h": 2752,
+            "sum": "e348aa33beef00a4f197b3dc602445b8",
+            "file": "02.png",
+            "state": "COMPLETE",
+            "url": "https://is1-ssl.mzstatic.com/image/thumb/ugp9OxpC5x4LEOgqIl3GFQ/2064x2752bb.jpg"
+          },
+          {
+            "w": 2064,
+            "h": 2752,
+            "sum": "972daf588ed6050a16107bd5ef4c7a1e",
+            "file": "03.png",
+            "state": "COMPLETE",
+            "url": "https://is1-ssl.mzstatic.com/image/thumb/1bGPmgxJ_9H_pwjBIvtkMQ/2064x2752bb.jpg"
+          },
+          {
+            "w": 2064,
+            "h": 2752,
+            "sum": "3109c345e5c799f12efc2f1a3376b38e",
+            "file": "04.png",
+            "state": "COMPLETE",
+            "url": "https://is1-ssl.mzstatic.com/image/thumb/C0JK4HkdVmY4Z3FypYUlpw/2064x2752bb.jpg"
+          },
+          {
+            "w": 2064,
+            "h": 2752,
+            "sum": "f54d3508a7f7fc0d328188ba2c2a0a35",
+            "file": "05.png",
+            "state": "COMPLETE",
+            "url": "https://is1-ssl.mzstatic.com/image/thumb/RjQVfnkD0_wWZPOunlYpwg/2064x2752bb.jpg"
+          },
+          {
+            "w": 2064,
+            "h": 2752,
+            "sum": "e43aec78c961feec1b00dc55a11a3860",
+            "file": "06.png",
+            "state": "COMPLETE",
+            "url": "https://is1-ssl.mzstatic.com/image/thumb/EChcGAULl-JaVcUJSkF5Yw/2064x2752bb.jpg"
+          }
+        ]
+      }
+    },
+    "en-US": {
+      "name": "Chore Tracker - Kouchd",
+      "subtitle": "Household Manager for Stays",
+      "privacyUrl": "https://kouchd.com/privacy",
+      "privacyChoicesUrl": null,
+      "keywords": "shared living,household,stay,house rules,chores,contributions,guest,host,ledger",
+      "description": "Make sharing a home feel simpler.\n\nWhether you are hosting a guest, living with a roommate, or staying with someone you know, Kouchd keeps the important details in one calm, shared place.\n\nSTART ON THE SAME PAGE\n\n• Agree on stay dates and house expectations\n• Keep agreements and schedule changes together\n• Invite people with a private link or code\n\nTAKE THE AWKWARDNESS OUT OF CONTRIBUTIONS\n\n• Record contributions made outside Kouchd\n• See what is confirmed, pending, or disputed\n• Keep a clear history everyone involved can review\n\nMAKE EVERYDAY LIVING EASIER\n\n• Coordinate chores and check-ins\n• Share household notes and reminders\n• See what needs attention at a glance\n\nA GENEROUS FREE PLAN\n\nStart organizing a shared stay with Kouchd’s free plan. Guests always use Kouchd free, so everyone can stay informed and take part without being asked to subscribe.\n\nKOUCHD PLUS FOR HOSTS\n\nHosts can upgrade to Kouchd Plus for expanded tools that make a shared stay easier to manage. Choose a monthly or annual plan, and keep every guest on the free experience.\n\nKouchd helps hosts, guests, and roommates spend less time sorting out details—and more time feeling at home.\n\nKouchd records agreements and contributions. It does not collect, hold, transfer, or process payments. Payment arrangements happen directly between the people involved, outside Kouchd.",
+      "promo": "Keep a shared stay clear, calm, and easier to coordinate.",
+      "whatsNew": null,
+      "supportUrl": "https://help.kouchd.com",
+      "marketingUrl": "https://kouchd.com",
+      "screens": {
+        "APP_IPAD_PRO_3GEN_129": [
+          {
+            "w": 2064,
+            "h": 2752,
+            "sum": "05219aabf2231654e9ae796110bf9fb5",
+            "file": "01.png",
+            "state": "COMPLETE",
+            "url": "https://is1-ssl.mzstatic.com/image/thumb/_OKyxQixGG1Y8rggoAwWMA/2064x2752bb.jpg"
+          },
+          {
+            "w": 2064,
+            "h": 2752,
+            "sum": "e348aa33beef00a4f197b3dc602445b8",
+            "file": "02.png",
+            "state": "COMPLETE",
+            "url": "https://is1-ssl.mzstatic.com/image/thumb/Evkf4QVz9UOyoZ7ZOl5oEQ/2064x2752bb.jpg"
+          },
+          {
+            "w": 2064,
+            "h": 2752,
+            "sum": "972daf588ed6050a16107bd5ef4c7a1e",
+            "file": "03.png",
+            "state": "COMPLETE",
+            "url": "https://is1-ssl.mzstatic.com/image/thumb/D9Z8d4poyTkHy3mGYj2yBQ/2064x2752bb.jpg"
+          },
+          {
+            "w": 2064,
+            "h": 2752,
+            "sum": "3109c345e5c799f12efc2f1a3376b38e",
+            "file": "04.png",
+            "state": "COMPLETE",
+            "url": "https://is1-ssl.mzstatic.com/image/thumb/SgDEod0CMiI4RaziacLsLw/2064x2752bb.jpg"
+          },
+          {
+            "w": 2064,
+            "h": 2752,
+            "sum": "f54d3508a7f7fc0d328188ba2c2a0a35",
+            "file": "05.png",
+            "state": "COMPLETE",
+            "url": "https://is1-ssl.mzstatic.com/image/thumb/83YO6WVDYgIwjJ_6df1PkQ/2064x2752bb.jpg"
+          },
+          {
+            "w": 2064,
+            "h": 2752,
+            "sum": "e43aec78c961feec1b00dc55a11a3860",
+            "file": "06.png",
+            "state": "COMPLETE",
+            "url": "https://is1-ssl.mzstatic.com/image/thumb/u2YgYimd2JdYBKLZdOe2IQ/2064x2752bb.jpg"
+          }
+        ],
+        "APP_IPHONE_67": [
+          {
+            "w": 1290,
+            "h": 2796,
+            "sum": "506b545e5ce1e10288f3a6f304c36ddc",
+            "file": "01.png",
+            "state": "COMPLETE",
+            "url": "https://is1-ssl.mzstatic.com/image/thumb/79DsWLExhbU-MGMNNNEibg/1290x2796bb.jpg"
+          },
+          {
+            "w": 1290,
+            "h": 2796,
+            "sum": "3639b5e884527d7352d197440e2af36c",
+            "file": "02.png",
+            "state": "COMPLETE",
+            "url": "https://is1-ssl.mzstatic.com/image/thumb/uDHM-NFaDLDmeEkTbNq1Iw/1290x2796bb.jpg"
+          },
+          {
+            "w": 1290,
+            "h": 2796,
+            "sum": "e72bc842f60c157028437b287fa0c95d",
+            "file": "03.png",
+            "state": "COMPLETE",
+            "url": "https://is1-ssl.mzstatic.com/image/thumb/_D4J8OzTvvR8K4DJ_4FeIw/1290x2796bb.jpg"
+          },
+          {
+            "w": 1290,
+            "h": 2796,
+            "sum": "525ed8ef596674369b5b3e56c40b772d",
+            "file": "04.png",
+            "state": "COMPLETE",
+            "url": "https://is1-ssl.mzstatic.com/image/thumb/-hb-pcNWyEO17rHh-UO0Yw/1290x2796bb.jpg"
+          },
+          {
+            "w": 1290,
+            "h": 2796,
+            "sum": "ee6037b36dae186c346ea433cd0bb888",
+            "file": "05.png",
+            "state": "COMPLETE",
+            "url": "https://is1-ssl.mzstatic.com/image/thumb/neJWnStFhTcJ0oUOQ0pKtg/1290x2796bb.jpg"
+          },
+          {
+            "w": 1290,
+            "h": 2796,
+            "sum": "8ddfbdb7b586ced9896cc72b472fa607",
+            "file": "06.png",
+            "state": "COMPLETE",
+            "url": "https://is1-ssl.mzstatic.com/image/thumb/x9wyBIIl7LS5c_t0Np_Oug/1290x2796bb.jpg"
+          },
+          {
+            "w": 1290,
+            "h": 2796,
+            "sum": "fbba67565b4473a9ef32bc8bceaef0cd",
+            "file": "07.png",
+            "state": "COMPLETE",
+            "url": "https://is1-ssl.mzstatic.com/image/thumb/LV7AtzWCR80CnKOgyuZrKQ/1290x2796bb.jpg"
+          },
+          {
+            "w": 1290,
+            "h": 2796,
+            "sum": "9e2de8d86e646bcc4eeda8c867e01dea",
+            "file": "08.png",
+            "state": "COMPLETE",
+            "url": "https://is1-ssl.mzstatic.com/image/thumb/ak4SMQr7MBWnmxo9NKPCkg/1290x2796bb.jpg"
+          },
+          {
+            "w": 1290,
+            "h": 2796,
+            "sum": "754b9e429f37585f6e50d88e22e1b51d",
+            "file": "09.png",
+            "state": "COMPLETE",
+            "url": "https://is1-ssl.mzstatic.com/image/thumb/5sVdciZKqWWiuoM9Uo0NYA/1290x2796bb.jpg"
+          },
+          {
+            "w": 1290,
+            "h": 2796,
+            "sum": "30741fd949480f82c363873dd738d380",
+            "file": "10.png",
+            "state": "COMPLETE",
+            "url": "https://is1-ssl.mzstatic.com/image/thumb/oFn2c2FmJiye026NR-L-bQ/1290x2796bb.jpg"
+          }
+        ]
+      }
+    },
+    "es-ES": {
+      "name": "Tareas del hogar - Kouchd",
+      "subtitle": "Para convivir y compartir",
+      "privacyUrl": "https://kouchd.com/privacy",
+      "privacyChoicesUrl": null,
+      "keywords": "convivencia,tareas,hogar,compartido,compañeros,casa,normas,acuerdos,estancia,planificador",
+      "description": "Haz que compartir casa resulte más sencillo.\n\nKouchd ofrece a anfitriones, invitados y compañeros de piso un lugar común y tranquilo para guardar fechas, normas de la casa, acuerdos, tareas, seguimientos y registros de aportaciones. Invita a otras personas de forma privada, reúne los cambios y consulta de un vistazo qué necesita atención.\n\nUN PLAN GRATUITO GENEROSO\n\nEmpieza con el plan gratuito de Kouchd. Los invitados siempre usan Kouchd gratis, para que todos puedan informarse y participar sin tener que suscribirse. Los anfitriones pueden pasarse a Kouchd Plus para obtener más herramientas, con opciones mensuales y anuales.\n\nKouchd registra acuerdos y aportaciones. No cobra, guarda, transfiere ni procesa pagos. Cualquier acuerdo de pago se realiza directamente entre las personas implicadas, fuera de Kouchd.",
+      "promo": "Organiza una casa o estancia compartida de forma clara, tranquila y sencilla.",
+      "whatsNew": null,
+      "supportUrl": "https://help.kouchd.com",
+      "marketingUrl": "https://kouchd.com",
+      "screens": {}
+    },
+    "fr-FR": {
+      "name": "Tâches partagées - Kouchd",
+      "subtitle": "Maison, colocation et séjours",
+      "privacyUrl": "https://kouchd.com/privacy",
+      "privacyChoicesUrl": null,
+      "keywords": "colocation,tâches,ménagères,maison,partagée,règles,accords,séjour,planning,invités,hôtes",
+      "description": "Simplifiez la vie à plusieurs.\n\nKouchd offre aux hôtes, invités et colocataires un espace commun et apaisé pour les dates de séjour, règles de la maison, accords, tâches, suivis et historiques de contributions. Invitez chacun en privé, centralisez les changements et voyez rapidement ce qui demande votre attention.\n\nUNE OFFRE GRATUITE GÉNÉREUSE\n\nCommencez avec l’offre gratuite de Kouchd. Les invités utilisent toujours Kouchd gratuitement : chacun peut rester informé et participer sans devoir s’abonner. Les hôtes peuvent passer à Kouchd Plus pour obtenir des outils supplémentaires, au mois ou à l’année.\n\nKouchd consigne les accords et les contributions. L’application n’encaisse, ne conserve, ne transfère et ne traite aucun paiement. Les arrangements financiers se font directement entre les personnes concernées, en dehors de Kouchd.",
+      "promo": "Organisez une maison ou un séjour partagé avec clarté et sérénité.",
+      "whatsNew": null,
+      "supportUrl": "https://help.kouchd.com",
+      "marketingUrl": "https://kouchd.com",
+      "screens": {}
+    },
+    "ja": {
+      "name": "家事管理 - Kouchd",
+      "subtitle": "共同生活をもっとスムーズに",
+      "privacyUrl": "https://kouchd.com/privacy",
+      "privacyChoicesUrl": null,
+      "keywords": "家事,共同生活,ルームメイト,シェアハウス,宿泊,ルール,約束,予定,ゲスト,ホスト",
+      "description": "共同生活を、もっとシンプルに。\n\nKouchdは、ホスト、ゲスト、ルームメイトが、滞在日程、家のルール、合意事項、家事、チェックイン、負担の記録を一か所で共有できる落ち着いたスペースです。非公開で招待し、変更内容をまとめ、必要なことをひと目で確認できます。\n\n充実した無料プラン\n\nKouchdの無料プランから始められます。ゲストはいつでも無料で利用できるため、登録を求められることなく、情報を確認して参加できます。ホストは月額または年額のKouchd Plusで、より多くの管理機能を利用できます。\n\nKouchdは合意事項と負担を記録するためのサービスです。支払いの受領、保管、送金、処理は行いません。支払いに関する取り決めは、Kouchdの外で当事者同士が直接行います。",
+      "promo": "共同生活や滞在の予定を、分かりやすく穏やかにまとめましょう。",
+      "whatsNew": null,
+      "supportUrl": "https://help.kouchd.com",
+      "marketingUrl": "https://kouchd.com",
+      "screens": {}
+    },
+    "pt-BR": {
+      "name": "Tarefas de Casa - Kouchd",
+      "subtitle": "Moradia compartilhada",
+      "privacyUrl": "https://kouchd.com/privacy",
+      "privacyChoicesUrl": null,
+      "keywords": "tarefas,casa,moradia,compartilhada,república,acordos,regras,hóspede,anfitrião,rotina",
+      "description": "Deixe a convivência mais simples.\n\nO Kouchd oferece a anfitriões, hóspedes e colegas de casa um espaço compartilhado e tranquilo para datas da estadia, regras da casa, acordos, tarefas, check-ins e registros de contribuições. Convide pessoas com privacidade, mantenha as mudanças reunidas e veja rapidamente o que precisa de atenção.\n\nUM PLANO GRATUITO GENEROSO\n\nComece com o plano gratuito do Kouchd. Hóspedes sempre usam o Kouchd gratuitamente, para que todos possam acompanhar e participar sem precisar assinar. Anfitriões podem escolher o Kouchd Plus para ter mais recursos, com opções mensais e anuais.\n\nO Kouchd registra acordos e contribuições. Ele não recebe, guarda, transfere nem processa pagamentos. Qualquer acordo de pagamento acontece diretamente entre as pessoas envolvidas, fora do Kouchd.",
+      "promo": "Organize uma casa ou estadia compartilhada com clareza, calma e simplicidade.",
+      "whatsNew": null,
+      "supportUrl": "https://help.kouchd.com",
+      "marketingUrl": "https://kouchd.com",
+      "screens": {}
+    },
+    "ru": {
+      "name": "Домашние дела — Kouchd",
+      "subtitle": "Для гостей и соседей",
+      "privacyUrl": "https://kouchd.com/privacy",
+      "privacyChoicesUrl": null,
+      "keywords": "быт,соседи,дела,дом,обязанности,гости,правила,договоренности,график,совместное проживание",
+      "description": "Совместная жизнь может быть проще.\n\nKouchd дает хозяевам, гостям и соседям единое спокойное место для дат проживания, правил дома, договоренностей, домашних дел, отметок и учета вкладов. Приглашайте людей приватно, храните изменения вместе и сразу видьте, что требует внимания.\n\nЩЕДРЫЙ БЕСПЛАТНЫЙ ПЛАН\n\nНачните с бесплатного плана Kouchd. Гости всегда пользуются Kouchd бесплатно, поэтому каждый может быть в курсе и участвовать без подписки. Хозяева могут перейти на Kouchd Plus и получить дополнительные инструменты с ежемесячной или годовой оплатой.\n\nKouchd фиксирует договоренности и вклады. Приложение не принимает, не хранит, не переводит и не обрабатывает платежи. Все платежные договоренности участники выполняют напрямую вне Kouchd.",
+      "promo": "Организуйте совместный быт или проживание спокойно, понятно и без лишней суеты.",
+      "whatsNew": null,
+      "supportUrl": "https://help.kouchd.com",
+      "marketingUrl": "https://kouchd.com",
+      "screens": {}
+    }
+  },
+  "next": null,
+  "versionId": "fc42fe67-1d18-41a1-b0f3-107292fafee7",
+  "created": "2026-10-04T02:27:48-07:00",
+  "infoState": "PREPARE_FOR_SUBMISSION"
+}

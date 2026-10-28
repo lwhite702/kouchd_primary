@@ -1,0 +1,102 @@
+{
+ "v": 1,
+ "at": "2026-10-28T13:21:16-04:00",
+ "round": 10,
+ "sheet": null,
+ "auto": "apps/kouchd/_design/critique/2026-10-28_13-21-16/auto.json",
+ "run": "apps/kouchd/checks/agent/2026-10-28_13-20-24",
+ "scores": {
+  "character": 2,
+  "hierarchy": 2,
+  "typography": 2,
+  "color": 2,
+  "spacing": 2,
+  "dark": 2,
+  "states": 1,
+  "native": 2,
+  "funnel": 2,
+  "distinct": 2
+ },
+ "total": 19,
+ "pass_total": 16,
+ "notes": {
+  "character": "The couch mark, rounded type, warm shared-living language, lime labels, and forest palette identify Kouchd clearly.",
+  "hierarchy": "Each onboarding screen has one dominant headline and one full-width primary action.",
+  "typography": "System rounded headings and native body styles remain readable without fashion-font dependencies.",
+  "color": "Light and dark palettes maintain clear separation between canvas, cards, labels, and actions.",
+  "spacing": "Cards and controls follow consistent 12, 20, and 24 point spacing without overlap.",
+  "dark": "Fresh light-to-dark regression screenshots retain pill and primary-button text after the foreground-style fix.",
+  "states": "First-run, role choice, authenticated fixtures, purchase handoff, and restore were reviewed; error and true offline states were not exercised in this pass.",
+  "native": "Controls use SwiftUI, SF Symbols, native navigation, 44-point targets, and swipe gestures.",
+  "funnel": "Onboarding and the intentional light RevenueCat paywall use the same forest, lime, rounded-card visual language.",
+  "distinct": "The shared-stay ledger and contribution language give the flow a recognizable product-specific character."
+ },
+ "issues": [],
+ "bad": [],
+ "verdict": "pass",
+ "history": [
+  {
+   "at": "2026-10-19T08:28:15-04:00",
+   "round": 1,
+   "total": 19,
+   "verdict": "fix",
+   "sheet": null
+  },
+  {
+   "at": "2026-10-19T08:29:14-04:00",
+   "round": 2,
+   "total": 19,
+   "verdict": "pass",
+   "sheet": null
+  },
+  {
+   "at": "2026-10-26T17:30:10-04:00",
+   "round": 3,
+   "total": 19,
+   "verdict": "fix",
+   "sheet": null
+  },
+  {
+   "at": "2026-10-27T05:44:51-04:00",
+   "round": 4,
+   "total": 19,
+   "verdict": "pass",
+   "sheet": null
+  },
+  {
+   "at": "2026-10-27T14:38:05-04:00",
+   "round": 5,
+   "total": 19,
+   "verdict": "pass",
+   "sheet": null
+  },
+  {
+   "at": "2026-10-27T20:34:21-04:00",
+   "round": 6,
+   "total": 19,
+   "verdict": "fix",
+   "sheet": null
+  },
+  {
+   "at": "2026-10-27T20:35:33-04:00",
+   "round": 7,
+   "total": 19,
+   "verdict": "pass",
+   "sheet": null
+  },
+  {
+   "at": "2026-10-27T21:08:21-04:00",
+   "round": 8,
+   "total": 19,
+   "verdict": "pass",
+   "sheet": null
+  },
+  {
+   "at": "2026-10-27T21:10:53-04:00",
+   "round": 9,
+   "total": 19,
+   "verdict": "pass",
+   "sheet": null
+  }
+ ]
+}

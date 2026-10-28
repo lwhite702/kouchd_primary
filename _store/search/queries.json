@@ -1,0 +1,441 @@
+{
+  "v": 1,
+  "app": "kouchd",
+  "updated": "2026-10-22T01:55:00-04:00",
+  "by": "agent",
+  "main": "chore tracker",
+  "options": [
+    "household chores",
+    "chore tracker"
+  ],
+  "brand": "kouchd",
+  "note": "US suggestions and iTunes Search were refreshed on 2026-10-22. Owner-selected main query remains chore tracker; three secondary candidates were added from the fresh US sweep. Popularity and genre-threshold status remain unverified.",
+  "sources": {
+    "hints": "scripts/aso.py suggest, US storefront, 2026-10-19",
+    "shelf": "scripts/aso.py search / iTunes Search, US storefront, 2026-10-19",
+    "ads": null
+  },
+  "sweep": {
+    "seeds": [
+      "shared living",
+      "household chores",
+      "house rules",
+      "chore tracker",
+      "household organizer",
+      "roommate chores",
+      "shared household",
+      "chore planner",
+      "household management",
+      "shared home organizer"
+    ],
+    "phrases": [
+      "shared stays",
+      "house rules",
+      "contributions",
+      "chores",
+      "check-ins"
+    ],
+    "words": [
+      "shared living",
+      "household",
+      "stay",
+      "house rules",
+      "chores",
+      "contributions",
+      "guest",
+      "host",
+      "ledger"
+    ],
+    "cc": "us"
+  },
+  "queries": [
+    {
+      "term": "household chores",
+      "cc": [
+        "us"
+      ],
+      "from": "hint",
+      "demand": {
+        "hint": {
+          "present": true,
+          "rank": 1,
+          "seed": "household chores",
+          "at": "2026-10-19"
+        }
+      },
+      "shelf": {
+        "found": 10,
+        "first": {
+          "id": "1498897320",
+          "name": "Sweepy: Home Cleaning Schedule",
+          "votes": 10668,
+          "rating": 4.7171
+        },
+        "exact_top10": 1,
+        "at": "2026-10-19"
+      },
+      "difficulty": {
+        "band": "unknown",
+        "max_d_month": null,
+        "window": null,
+        "src": "rating_snapshots unavailable"
+      },
+      "use": {
+        "where": "name",
+        "locale": "en-US",
+        "why": "Strongest direct fit for the app's chore coordination feature; owner should decide whether it becomes the main query."
+      },
+      "track": true,
+      "why": "Exact US suggestion and a full top-ten shelf were observed; results are dominated by household cleaning and chore apps."
+    },
+    {
+      "term": "chore tracker",
+      "cc": [
+        "us"
+      ],
+      "from": "hint",
+      "demand": {
+        "hint": {
+          "present": true,
+          "rank": 3,
+          "seed": "chore tracker",
+          "at": "2026-10-19"
+        }
+      },
+      "shelf": {
+        "found": 9,
+        "first": {
+          "id": "1611068600",
+          "name": "Chorsee: Chores Tracker",
+          "votes": 11911,
+          "rating": 4.58047
+        },
+        "exact_top10": 3,
+        "at": "2026-10-19"
+      },
+      "difficulty": {
+        "band": "unknown",
+        "max_d_month": null,
+        "window": null,
+        "src": "rating_snapshots unavailable"
+      },
+      "use": {
+        "where": "name",
+        "locale": "en-US",
+        "why": "Clear, action-oriented wording for Kouchd's shared task feature; owner should compare it with household chores."
+      },
+      "track": true,
+      "why": "Exact US suggestion and a focused shelf with three names containing the phrase."
+    },
+    {
+      "term": "shared living",
+      "cc": [
+        "us"
+      ],
+      "from": "seed",
+      "demand": {
+        "hint": {
+          "present": false,
+          "rank": null,
+          "seed": "shared living",
+          "at": "2026-10-19"
+        }
+      },
+      "shelf": {
+        "found": 10,
+        "first": {
+          "id": "1539660929",
+          "name": "FlatUp! - Manage shared living",
+          "votes": 3,
+          "rating": 4.33333
+        },
+        "exact_top10": 4,
+        "at": "2026-10-19"
+      },
+      "difficulty": {
+        "band": "unknown",
+        "max_d_month": null,
+        "window": null,
+        "src": "rating_snapshots unavailable"
+      },
+      "use": {
+        "where": "keywords",
+        "locale": "en-US",
+        "why": "Directly matches Kouchd's shared-stay positioning and can support the name candidate without committing the main query."
+      },
+      "track": true,
+      "why": "The seed produced multiple shared-living app suggestions and four matching names in the US top ten, although the exact bare phrase was not suggested."
+    },
+    {
+      "term": "house rules",
+      "cc": [
+        "us"
+      ],
+      "from": "seed",
+      "demand": {
+        "hint": {
+          "present": false,
+          "rank": null,
+          "seed": "house rules",
+          "at": "2026-10-19"
+        }
+      },
+      "shelf": {
+        "found": 10,
+        "first": {
+          "id": "6804032345",
+          "name": "House Rules - Party Games",
+          "votes": 2,
+          "rating": 5
+        },
+        "exact_top10": 3,
+        "at": "2026-10-19"
+      },
+      "difficulty": {
+        "band": "unknown",
+        "max_d_month": null,
+        "window": null,
+        "src": "rating_snapshots unavailable"
+      },
+      "use": {
+        "where": "keywords",
+        "locale": "en-US",
+        "why": "Matches Kouchd's agreements and house-expectations feature; keep it in keywords while the shelf is mixed with game apps."
+      },
+      "track": true,
+      "why": "The seed returned house-rules suggestions and three matching names, but the US shelf is noisy with party and card games."
+    },
+    {
+      "term": "household organizer",
+      "cc": [
+        "us"
+      ],
+      "from": "seed",
+      "demand": {
+        "hint": {
+          "present": false,
+          "rank": null,
+          "seed": "household organizer",
+          "at": "2026-10-19"
+        }
+      },
+      "shelf": {
+        "found": 10,
+        "first": {
+          "id": "1499198946",
+          "name": "Structured: Daily Planner Todo",
+          "votes": 167738,
+          "rating": 4.7938
+        },
+        "exact_top10": 4,
+        "at": "2026-10-19"
+      },
+      "difficulty": {
+        "band": "unknown",
+        "max_d_month": null,
+        "window": null,
+        "src": "rating_snapshots unavailable"
+      },
+      "use": {
+        "where": "keywords",
+        "locale": "en-US",
+        "why": "Broad household-coordination wording that covers stays, chores, notes, and check-ins."
+      },
+      "track": true,
+      "why": "The seed returned organizer suggestions and four matching names in the US top ten; the shelf also contains broad planner apps."
+    },
+    {
+      "term": "roommate chores",
+      "cc": [
+        "us"
+      ],
+      "from": "seed",
+      "demand": {
+        "hint": {
+          "present": false,
+          "rank": null,
+          "seed": "roommate chores",
+          "at": "2026-10-19"
+        }
+      },
+      "shelf": {
+        "found": 10,
+        "first": {
+          "id": "6759210004",
+          "name": "Roomie - Household Organizer",
+          "votes": 4,
+          "rating": 5
+        },
+        "exact_top10": 1,
+        "at": "2026-10-19"
+      },
+      "difficulty": {
+        "band": "unknown",
+        "max_d_month": null,
+        "window": null,
+        "src": "rating_snapshots unavailable"
+      },
+      "use": {
+        "where": "keywords",
+        "locale": "en-US",
+        "why": "Reaches the roommate segment for shared chores without making guests or contributions sound like payments."
+      },
+      "track": true,
+      "why": "The seed returned four roommate-chore suggestions and one exact phrase match in the US top ten."
+    },
+    {
+      "term": "shared household",
+      "cc": [
+        "us"
+      ],
+      "from": "seed",
+      "demand": {
+        "hint": {
+          "present": false,
+          "rank": null,
+          "seed": "shared household",
+          "at": "2026-10-19"
+        }
+      },
+      "shelf": {
+        "found": 10,
+        "first": {
+          "id": "6806660220",
+          "name": "Homekeep: Shared Household",
+          "votes": 0,
+          "rating": 0
+        },
+        "exact_top10": 3,
+        "at": "2026-10-19"
+      },
+      "difficulty": {
+        "band": "unknown",
+        "max_d_month": null,
+        "window": null,
+        "src": "rating_snapshots unavailable"
+      },
+      "use": {
+        "where": "keywords",
+        "locale": "en-US",
+        "why": "Supports the app's shared-record and household coordination story as a secondary phrase."
+      },
+      "track": true,
+      "why": "The seed returned one branded suggestion and three matching names; no competitor brand is being proposed as a query."
+    },
+    {
+      "term": "chore planner",
+      "cc": [
+        "us"
+      ],
+      "from": "hint",
+      "demand": {
+        "hint": {
+          "present": true,
+          "rank": 1,
+          "seed": "chore planner",
+          "at": "2026-10-22"
+        }
+      },
+      "shelf": {
+        "found": 9,
+        "first": {
+          "name": "99 Recurring Reminders",
+          "votes": 29,
+          "rating": 4.7
+        },
+        "exact_top10": 0,
+        "at": "2026-10-22"
+      },
+      "difficulty": {
+        "band": "unknown",
+        "max_d_month": null,
+        "window": null,
+        "src": "rating_snapshots unavailable"
+      },
+      "use": {
+        "where": "keywords",
+        "locale": "en-US",
+        "why": "Exact US suggestion at rank 1 and a current chore-planning shelf; supports Kouchd's shared task coordination without replacing the owner-selected main query."
+      },
+      "track": true,
+      "why": "Exact US suggestion was observed; the shelf mixes dedicated chore planners with broad task apps, so keep as a secondary candidate."
+    },
+    {
+      "term": "household management",
+      "cc": [
+        "us"
+      ],
+      "from": "seed",
+      "demand": {
+        "hint": {
+          "present": false,
+          "rank": null,
+          "seed": "household management",
+          "at": "2026-10-22"
+        }
+      },
+      "shelf": {
+        "found": 9,
+        "first": {
+          "name": "House Manager & Planner",
+          "votes": 54,
+          "rating": 4.6
+        },
+        "exact_top10": 0,
+        "at": "2026-10-22"
+      },
+      "difficulty": {
+        "band": "unknown",
+        "max_d_month": null,
+        "window": null,
+        "src": "rating_snapshots unavailable"
+      },
+      "use": {
+        "where": "keywords",
+        "locale": "en-US",
+        "why": "Current US shelf directly covers household coordination; use as a broad secondary phrase, not the main name query."
+      },
+      "track": true,
+      "why": "US suggestions returned branded variants rather than the bare phrase; the shelf is relevant but broad and includes family-management apps."
+    },
+    {
+      "term": "shared home organizer",
+      "cc": [
+        "us"
+      ],
+      "from": "seed",
+      "demand": {
+        "hint": {
+          "present": false,
+          "rank": null,
+          "seed": "shared home organizer",
+          "at": "2026-10-22"
+        }
+      },
+      "shelf": {
+        "found": 9,
+        "first": {
+          "name": "Cozi Family Organizer",
+          "votes": 401512,
+          "rating": 4.8
+        },
+        "exact_top10": 0,
+        "at": "2026-10-22"
+      },
+      "difficulty": {
+        "band": "unknown",
+        "max_d_month": null,
+        "window": null,
+        "src": "rating_snapshots unavailable"
+      },
+      "use": {
+        "where": "keywords",
+        "locale": "en-US",
+        "why": "Matches Kouchd's shared-home positioning and complements the chore terms; keep secondary because the shelf is dominated by broad organizer products."
+      },
+      "track": true,
+      "why": "The US shelf is relevant and includes shared-home products, but the exact bare phrase was not suggested and the results are broad."
+    }
+  ],
+  "main_note": "Owner selected \"Chore Tracker - Kouchd\" on 2026-10-19 after comparing US suggestion rank, shelf matches, and competition."
+}

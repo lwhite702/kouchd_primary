@@ -1,0 +1,117 @@
+{
+  "v": 1,
+  "variant": "D",
+  "title": "Post-login features",
+  "created": "2026-10-21T18:20:00-04:00",
+  "tool": "simulator-capture",
+  "config": null,
+  "template": null,
+  "strings": null,
+  "theme": "forest-cream",
+  "device": "iphone-6.9",
+  "size": [
+    1290,
+    2796
+  ],
+  "slot": "APP_IPHONE_67",
+  "devices": {
+    "iphone-6.9": {
+      "size": [
+        1290,
+        2796
+      ],
+      "slot": "APP_IPHONE_67",
+      "locales": 1,
+      "frames": 5,
+      "files": 5
+    }
+  },
+  "locales": [
+    "en-US"
+  ],
+  "source_locales": [
+    "en-US"
+  ],
+  "screens_locale": {
+    "en-US": "own"
+  },
+  "frames": 5,
+  "files": 5,
+  "uploaded": null,
+  "uploaded_to_asc": null,
+  "uploaded_history": null,
+  "experiment": null,
+  "supersedes": null,
+  "superseded_by": null,
+  "warnings": [],
+  "note": "Authenticated production-Clerk simulator captures; review only.",
+  "render": {
+    "node": null,
+    "chrome": null,
+    "puppeteer_core": null,
+    "jobs": 1,
+    "ms": 0
+  },
+  "items": [
+    {
+      "locale": "en-US",
+      "source_locale": "en-US",
+      "device": "iphone-6.9",
+      "index": 1,
+      "path": "iphone-6.9/en-US/01.png",
+      "bytes": 410622,
+      "md5": "4844ba77adae46b732ff13554c21f1c3",
+      "screen": "host-home",
+      "screen_locale": "en-US",
+      "text": "host-home"
+    },
+    {
+      "locale": "en-US",
+      "source_locale": "en-US",
+      "device": "iphone-6.9",
+      "index": 2,
+      "path": "iphone-6.9/en-US/02.png",
+      "bytes": 476074,
+      "md5": "1604097fb8ede0fa1b896d9082a4e16e",
+      "screen": "guest-ledger",
+      "screen_locale": "en-US",
+      "text": "guest-ledger"
+    },
+    {
+      "locale": "en-US",
+      "source_locale": "en-US",
+      "device": "iphone-6.9",
+      "index": 3,
+      "path": "iphone-6.9/en-US/03.png",
+      "bytes": 309797,
+      "md5": "3ecb2213b4ff9949bb0bac6039d3197a",
+      "screen": "guest-chores",
+      "screen_locale": "en-US",
+      "text": "guest-chores"
+    },
+    {
+      "locale": "en-US",
+      "source_locale": "en-US",
+      "device": "iphone-6.9",
+      "index": 4,
+      "path": "iphone-6.9/en-US/04.png",
+      "bytes": 437455,
+      "md5": "d6310e4788eae162f6ee46b34fe39f6d",
+      "screen": "host-stay",
+      "screen_locale": "en-US",
+      "text": "host-stay"
+    },
+    {
+      "locale": "en-US",
+      "source_locale": "en-US",
+      "device": "iphone-6.9",
+      "index": 5,
+      "path": "iphone-6.9/en-US/05.png",
+      "bytes": 509207,
+      "md5": "0b663d20a0270422495910a455b502f3",
+      "screen": "host-home-dark",
+      "screen_locale": "en-US",
+      "text": "host-home-dark"
+    }
+  ]
+}

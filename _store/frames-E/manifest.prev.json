@@ -1,0 +1,188 @@
+{
+  "v": 1,
+  "variant": "E",
+  "title": "A shared stay, clearly held",
+  "created": "2026-10-24T12:50:19-04:00",
+  "tool": "shots@1.0.0",
+  "config": "apps/kouchd/_design/shots.json",
+  "template": "layout:classic",
+  "strings": "apps/kouchd/_design/shots.strings.json",
+  "theme": "forest-cream",
+  "device": "iphone-6.9",
+  "size": [
+    1290,
+    2796
+  ],
+  "slot": "APP_IPHONE_67",
+  "devices": {
+    "iphone-6.9": {
+      "size": [
+        1290,
+        2796
+      ],
+      "slot": "APP_IPHONE_67",
+      "locales": 1,
+      "frames": 10,
+      "files": 10
+    }
+  },
+  "locales": [
+    "en-US"
+  ],
+  "source_locales": [
+    "en-US"
+  ],
+  "screens_locale": {
+    "en-US": "own"
+  },
+  "frames": 10,
+  "files": 10,
+  "uploaded": null,
+  "uploaded_to_asc": null,
+  "uploaded_history": [
+    {
+      "at": "2026-10-22T04:58:40-04:00",
+      "version": "1.0",
+      "slot": "APP_IPHONE_67",
+      "locales": [
+        "en-US"
+      ],
+      "created": "2026-10-22T01:47:24-04:00"
+    }
+  ],
+  "experiment": null,
+  "supersedes": "history/E/20261022-0147",
+  "superseded_by": null,
+  "warnings": [],
+  "note": null,
+  "render": {
+    "node": "v22.23.1",
+    "chrome": "Chrome/155.0.8059.85",
+    "puppeteer_core": "23.11.1",
+    "jobs": 1,
+    "flat": false,
+    "ms": 6947
+  },
+  "items": [
+    {
+      "locale": "en-US",
+      "source_locale": "en-US",
+      "device": "iphone-6.9",
+      "index": 1,
+      "path": "iphone-6.9/en-US/01.png",
+      "bytes": 356569,
+      "md5": "506b545e5ce1e10288f3a6f304c36ddc",
+      "screen": "welcome",
+      "screen_locale": "en-US",
+      "text": "f1"
+    },
+    {
+      "locale": "en-US",
+      "source_locale": "en-US",
+      "device": "iphone-6.9",
+      "index": 2,
+      "path": "iphone-6.9/en-US/02.png",
+      "bytes": 412317,
+      "md5": "3639b5e884527d7352d197440e2af36c",
+      "screen": "stay",
+      "screen_locale": "en-US",
+      "text": "f2"
+    },
+    {
+      "locale": "en-US",
+      "source_locale": "en-US",
+      "device": "iphone-6.9",
+      "index": 3,
+      "path": "iphone-6.9/en-US/03.png",
+      "bytes": 399602,
+      "md5": "e72bc842f60c157028437b287fa0c95d",
+      "screen": "ledger",
+      "screen_locale": "en-US",
+      "text": "f3"
+    },
+    {
+      "locale": "en-US",
+      "source_locale": "en-US",
+      "device": "iphone-6.9",
+      "index": 4,
+      "path": "iphone-6.9/en-US/04.png",
+      "bytes": 377372,
+      "md5": "525ed8ef596674369b5b3e56c40b772d",
+      "screen": "chores",
+      "screen_locale": "en-US",
+      "text": "f4"
+    },
+    {
+      "locale": "en-US",
+      "source_locale": "en-US",
+      "device": "iphone-6.9",
+      "index": 5,
+      "path": "iphone-6.9/en-US/05.png",
+      "bytes": 415721,
+      "md5": "ee6037b36dae186c346ea433cd0bb888",
+      "screen": "role",
+      "screen_locale": "en-US",
+      "text": "f5"
+    },
+    {
+      "locale": "en-US",
+      "source_locale": "en-US",
+      "device": "iphone-6.9",
+      "index": 6,
+      "path": "iphone-6.9/en-US/06.png",
+      "bytes": 363263,
+      "md5": "8ddfbdb7b586ced9896cc72b472fa607",
+      "screen": "post-host-home",
+      "screen_locale": "en-US",
+      "text": "f6"
+    },
+    {
+      "locale": "en-US",
+      "source_locale": "en-US",
+      "device": "iphone-6.9",
+      "index": 7,
+      "path": "iphone-6.9/en-US/07.png",
+      "bytes": 420411,
+      "md5": "fbba67565b4473a9ef32bc8bceaef0cd",
+      "screen": "post-guest-ledger",
+      "screen_locale": "en-US",
+      "text": "f7"
+    },
+    {
+      "locale": "en-US",
+      "source_locale": "en-US",
+      "device": "iphone-6.9",
+      "index": 8,
+      "path": "iphone-6.9/en-US/08.png",
+      "bytes": 338417,
+      "md5": "9e2de8d86e646bcc4eeda8c867e01dea",
+      "screen": "post-guest-chores",
+      "screen_locale": "en-US",
+      "text": "f8"
+    },
+    {
+      "locale": "en-US",
+      "source_locale": "en-US",
+      "device": "iphone-6.9",
+      "index": 9,
+      "path": "iphone-6.9/en-US/09.png",
+      "bytes": 353233,
+      "md5": "754b9e429f37585f6e50d88e22e1b51d",
+      "screen": "post-host-stay",
+      "screen_locale": "en-US",
+      "text": "f9"
+    },
+    {
+      "locale": "en-US",
+      "source_locale": "en-US",
+      "device": "iphone-6.9",
+      "index": 10,
+      "path": "iphone-6.9/en-US/10.png",
+      "bytes": 366754,
+      "md5": "b68c2f2d3fda622e3ea6b9b6c220a4d4",
+      "screen": "post-host-home-dark",
+      "screen_locale": "en-US",
+      "text": "f10"
+    }
+  ]
+}

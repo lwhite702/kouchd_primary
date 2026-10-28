@@ -1,0 +1,94 @@
+{
+  "fill": {
+    "automatic-gradient": "extended-srgb:0.86275,0.94902,0.36863,1.00000"
+  },
+  "groups": [
+    {
+      "name": "Couch base",
+      "layers": [
+        {
+          "glass": true,
+          "hidden": false,
+          "image-name": "couch-base.png",
+          "name": "Forest couch base",
+          "opacity": 1,
+          "position": {
+            "scale": 1,
+            "translation-in-points": [
+              0,
+              0
+            ]
+          }
+        }
+      ],
+      "shadow": {
+        "kind": "neutral",
+        "opacity": 0.58
+      },
+      "translucency": {
+        "enabled": true,
+        "value": 0.08
+      }
+    },
+    {
+      "name": "Back cushions",
+      "layers": [
+        {
+          "glass": true,
+          "hidden": false,
+          "image-name": "glass-backrest.png",
+          "name": "Frosted back cushions",
+          "opacity": 1,
+          "position": {
+            "scale": 1,
+            "translation-in-points": [
+              0,
+              0
+            ]
+          }
+        }
+      ],
+      "shadow": {
+        "kind": "neutral",
+        "opacity": 0.35
+      },
+      "translucency": {
+        "enabled": true,
+        "value": 0.42
+      }
+    },
+    {
+      "name": "Background",
+      "layers": [
+        {
+          "blend-mode": "normal",
+          "glass": false,
+          "hidden": false,
+          "image-name": "background.png",
+          "name": "Lime background",
+          "position": {
+            "scale": 1,
+            "translation-in-points": [
+              0,
+              0
+            ]
+          }
+        }
+      ],
+      "shadow": {
+        "kind": "neutral",
+        "opacity": 0.15
+      },
+      "translucency": {
+        "enabled": false,
+        "value": 0
+      }
+    }
+  ],
+  "supported-platforms": {
+    "circles": [
+      "watchOS"
+    ],
+    "squares": "shared"
+  }
+}

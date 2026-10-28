@@ -1,0 +1,6 @@
+{
+  "v": 1,
+  "created": "2026-10-15",
+  "icons": [{ "id": "kouchd", "file": "icons/kouchd.png", "note": "PNG generated from the existing app/icon.svg, flattened to 1024×1024 with no alpha; couch mark and forest/lime palette checked against the installed simulator icon.", "current": true }],
+  "chosen": "kouchd"
+}

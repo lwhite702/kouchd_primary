@@ -1,0 +1,95 @@
+{
+  "fill": {
+    "automatic-gradient": "extended-srgb:0.87059,0.94902,0.36863,1.00000"
+  },
+  "groups": [
+    {
+      "name": "Couch",
+      "layers": [
+        {
+          "glass": true,
+          "hidden": false,
+          "image-name": "edge-highlight.png",
+          "name": "Edge highlight",
+          "opacity": 1,
+          "position": {
+            "scale": 1,
+            "translation-in-points": [
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "glass": true,
+          "hidden": false,
+          "image-name": "couch-base.png",
+          "name": "Couch base",
+          "opacity": 1,
+          "position": {
+            "scale": 1,
+            "translation-in-points": [
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "glass": true,
+          "hidden": false,
+          "image-name": "couch-back.png",
+          "name": "Couch back",
+          "opacity": 1,
+          "position": {
+            "scale": 1,
+            "translation-in-points": [
+              0,
+              0
+            ]
+          }
+        }
+      ],
+      "shadow": {
+        "kind": "neutral",
+        "opacity": 0.38
+      },
+      "translucency": {
+        "enabled": true,
+        "value": 0.08
+      }
+    },
+    {
+      "name": "Background",
+      "layers": [
+        {
+          "blend-mode": "normal",
+          "glass": false,
+          "hidden": false,
+          "image-name": "background.png",
+          "name": "Lime background",
+          "position": {
+            "scale": 1,
+            "translation-in-points": [
+              0,
+              0
+            ]
+          }
+        }
+      ],
+      "shadow": {
+        "kind": "neutral",
+        "opacity": 0.1
+      },
+      "translucency": {
+        "enabled": false,
+        "value": 0
+      }
+    }
+  ],
+  "supported-platforms": {
+    "circles": [
+      "watchOS"
+    ],
+    "squares": "shared"
+  }
+}

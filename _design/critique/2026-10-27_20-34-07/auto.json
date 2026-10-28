@@ -1,0 +1,142 @@
+{
+ "v": 1,
+ "at": "2026-10-27T20:34:07-04:00",
+ "app": "kouchd",
+ "run": "apps/kouchd/checks/agent/2026-10-27_20-33-06",
+ "sheet": null,
+ "shots": [
+  {
+   "name": "appearance dark",
+   "theme": "dark",
+   "bg": "#0D1612",
+   "luma": 0.2,
+   "png": "apps/kouchd/checks/agent/2026-10-27_20-33-06/01-appearance-dark.png"
+  },
+  {
+   "name": "sleep 10",
+   "theme": "dark",
+   "bg": "#0D1612",
+   "luma": 0.2,
+   "png": "apps/kouchd/checks/agent/2026-10-27_20-33-06/02-sleep-10.png"
+  },
+  {
+   "name": "Host home dark final",
+   "theme": "dark",
+   "bg": "#0D1612",
+   "luma": 0.2,
+   "png": "apps/kouchd/checks/agent/2026-10-27_20-33-06/03-shot-host-home-dark.png"
+  },
+  {
+   "name": "tap Stay",
+   "theme": "dark",
+   "bg": "#1C2722",
+   "luma": 0.15,
+   "png": "apps/kouchd/checks/agent/2026-10-27_20-33-06/04-tap-stay.png"
+  },
+  {
+   "name": "scroll down",
+   "theme": "dark",
+   "bg": "#1D2923",
+   "luma": 0.16,
+   "png": "apps/kouchd/checks/agent/2026-10-27_20-33-06/05-scroll-down.png"
+  },
+  {
+   "name": "tap --force Settings and reminders",
+   "theme": "dark",
+   "bg": "#1C2722",
+   "luma": 0.15,
+   "png": "apps/kouchd/checks/agent/2026-10-27_20-33-06/06-tap-settings-and-reminders.png"
+  },
+  {
+   "name": "sleep 1",
+   "theme": "dark",
+   "bg": "#1C2722",
+   "luma": 0.15,
+   "png": "apps/kouchd/checks/agent/2026-10-27_20-33-06/07-sleep-1.png"
+  },
+  {
+   "name": "Settings dark final",
+   "theme": "dark",
+   "bg": "#1C2722",
+   "luma": 0.15,
+   "png": "apps/kouchd/checks/agent/2026-10-27_20-33-06/08-shot-settings-dark-final.png"
+  },
+  {
+   "name": "tap --force About Kouchd",
+   "theme": "dark",
+   "bg": "#0E1612",
+   "luma": 0.15,
+   "png": "apps/kouchd/checks/agent/2026-10-27_20-33-06/09-tap-about-kouchd.png"
+  },
+  {
+   "name": "sleep 1",
+   "theme": "dark",
+   "bg": "#0E1612",
+   "luma": 0.15,
+   "png": "apps/kouchd/checks/agent/2026-10-27_20-33-06/10-sleep-1.png"
+  },
+  {
+   "name": "tap --force Open Kouchd Plus",
+   "theme": "dark",
+   "bg": "#F6F9F7",
+   "luma": 0.9,
+   "png": "apps/kouchd/checks/agent/2026-10-27_20-33-06/11-tap-open-kouchd-plus.png"
+  },
+  {
+   "name": "sleep 5",
+   "theme": "dark",
+   "bg": "#F6F9F7",
+   "luma": 0.9,
+   "png": "apps/kouchd/checks/agent/2026-10-27_20-33-06/12-sleep-5.png"
+  },
+  {
+   "name": "Annual trial paywall",
+   "theme": "dark",
+   "bg": "#F6F9F7",
+   "luma": 0.9,
+   "png": "apps/kouchd/checks/agent/2026-10-27_20-33-06/13-shot-annual-trial-paywall.png"
+  },
+  {
+   "name": "appearance light",
+   "theme": "light",
+   "bg": "#F6F9F7",
+   "luma": 0.9,
+   "png": "apps/kouchd/checks/agent/2026-10-27_20-33-06/14-appearance-light.png"
+  },
+  {
+   "name": "sleep 3",
+   "theme": "light",
+   "bg": "#F6F9F7",
+   "luma": 0.9,
+   "png": "apps/kouchd/checks/agent/2026-10-27_20-33-06/15-sleep-3.png"
+  },
+  {
+   "name": "Annual trial paywall light containment",
+   "theme": "light",
+   "bg": "#F6F9F7",
+   "luma": 0.9,
+   "png": "apps/kouchd/checks/agent/2026-10-27_20-33-06/16-shot-annual-trial-paywall.png"
+  }
+ ],
+ "palette": {
+  "bg": "#F6F9F7",
+  "accent": "#D4E686"
+ },
+ "findings": [
+  {
+   "level": "bad",
+   "what": "тёмная тема не включилась: снимок светлый (яркость 0.90)",
+   "where": "tap --force Open Kouchd Plus"
+  },
+  {
+   "level": "bad",
+   "what": "тёмная тема не включилась: снимок светлый (яркость 0.90)",
+   "where": "sleep 5"
+  },
+  {
+   "level": "bad",
+   "what": "тёмная тема не включилась: снимок светлый (яркость 0.90)",
+   "where": "Annual trial paywall"
+  }
+ ]
+}

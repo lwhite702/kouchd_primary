@@ -1,0 +1,179 @@
+{
+ "v": 1,
+ "at": "2026-10-26T12:19:53-04:00",
+ "app": "kouchd",
+ "run": "apps/kouchd/checks/agent/2026-10-26_12-19-27",
+ "sheet": null,
+ "shots": [
+  {
+   "name": "appearance light",
+   "theme": "light",
+   "bg": "#F7F3EB",
+   "luma": 0.8,
+   "png": "apps/kouchd/checks/agent/2026-10-26_12-19-27/01-appearance-light.png"
+  },
+  {
+   "name": "sleep 2",
+   "theme": "light",
+   "bg": "#F7F3EB",
+   "luma": 0.8,
+   "png": "apps/kouchd/checks/agent/2026-10-26_12-19-27/02-sleep-2.png"
+  },
+  {
+   "name": "onboarding-light",
+   "theme": "light",
+   "bg": "#F7F3EB",
+   "luma": 0.8,
+   "png": "apps/kouchd/checks/agent/2026-10-26_12-19-27/03-shot-onboarding-light.png"
+  },
+  {
+   "name": "appearance dark",
+   "theme": "dark",
+   "bg": "#0E1613",
+   "luma": 0.14,
+   "png": "apps/kouchd/checks/agent/2026-10-26_12-19-27/04-appearance-dark.png"
+  },
+  {
+   "name": "sleep 2",
+   "theme": "dark",
+   "bg": "#0E1613",
+   "luma": 0.14,
+   "png": "apps/kouchd/checks/agent/2026-10-26_12-19-27/05-sleep-2.png"
+  },
+  {
+   "name": "onboarding-dark",
+   "theme": "dark",
+   "bg": "#0E1613",
+   "luma": 0.14,
+   "png": "apps/kouchd/checks/agent/2026-10-26_12-19-27/06-shot-onboarding-dark.png"
+  },
+  {
+   "name": "tap --id introduction.signIn",
+   "theme": "dark",
+   "bg": "#232325",
+   "luma": 0.15,
+   "png": "apps/kouchd/checks/agent/2026-10-26_12-19-27/07-tap-introduction-signin.png"
+  },
+  {
+   "name": "sleep 2",
+   "theme": "dark",
+   "bg": "#232325",
+   "luma": 0.15,
+   "png": "apps/kouchd/checks/agent/2026-10-26_12-19-27/08-sleep-2.png"
+  },
+  {
+   "name": "sign-in-dark",
+   "theme": "dark",
+   "bg": "#232325",
+   "luma": 0.15,
+   "png": "apps/kouchd/checks/agent/2026-10-26_12-19-27/09-shot-sign-in-dark.png"
+  },
+  {
+   "name": "appearance light",
+   "theme": "light",
+   "bg": "#F7F7FA",
+   "luma": 0.94,
+   "png": "apps/kouchd/checks/agent/2026-10-26_12-19-27/10-appearance-light.png"
+  },
+  {
+   "name": "sleep 2",
+   "theme": "light",
+   "bg": "#F7F7FA",
+   "luma": 0.94,
+   "png": "apps/kouchd/checks/agent/2026-10-26_12-19-27/11-sleep-2.png"
+  },
+  {
+   "name": "sign-in-light",
+   "theme": "light",
+   "bg": "#F7F7FA",
+   "luma": 0.94,
+   "png": "apps/kouchd/checks/agent/2026-10-26_12-19-27/12-shot-sign-in-light.png"
+  }
+ ],
+ "palette": {
+  "bg": "#F7F3EB",
+  "accent": "#154D37"
+ },
+ "findings": [
+  {
+   "level": "bad",
+   "what": "фон «кремовая бумага» #F7F3EB — главный признак ИИ-дизайна по умолчанию",
+   "where": "appearance light"
+  },
+  {
+   "level": "warn",
+   "what": "кнопки меньше 44 × 44 pt: Skip 33×20",
+   "where": "appearance light"
+  },
+  {
+   "level": "bad",
+   "what": "фон «кремовая бумага» #F7F3EB — главный признак ИИ-дизайна по умолчанию",
+   "where": "sleep 2"
+  },
+  {
+   "level": "warn",
+   "what": "кнопки меньше 44 × 44 pt: Skip 33×20",
+   "where": "sleep 2"
+  },
+  {
+   "level": "bad",
+   "what": "фон «кремовая бумага» #F7F3EB — главный признак ИИ-дизайна по умолчанию",
+   "where": "onboarding-light"
+  },
+  {
+   "level": "warn",
+   "what": "кнопки меньше 44 × 44 pt: Skip 33×20",
+   "where": "onboarding-light"
+  },
+  {
+   "level": "warn",
+   "what": "кнопки меньше 44 × 44 pt: Skip 33×20",
+   "where": "appearance dark"
+  },
+  {
+   "level": "warn",
+   "what": "кнопки меньше 44 × 44 pt: Skip 33×20",
+   "where": "sleep 2"
+  },
+  {
+   "level": "warn",
+   "what": "кнопки меньше 44 × 44 pt: Skip 33×20",
+   "where": "onboarding-dark"
+  },
+  {
+   "level": "warn",
+   "what": "кнопки меньше 44 × 44 pt: Skip 33×20",
+   "where": "tap --id introduction.signIn"
+  },
+  {
+   "level": "warn",
+   "what": "кнопки меньше 44 × 44 pt: Skip 33×20",
+   "where": "sleep 2"
+  },
+  {
+   "level": "warn",
+   "what": "кнопки меньше 44 × 44 pt: Skip 33×20",
+   "where": "sign-in-dark"
+  },
+  {
+   "level": "warn",
+   "what": "кнопки меньше 44 × 44 pt: Skip 33×20",
+   "where": "appearance light"
+  },
+  {
+   "level": "warn",
+   "what": "кнопки меньше 44 × 44 pt: Skip 33×20",
+   "where": "sleep 2"
+  },
+  {
+   "level": "warn",
+   "what": "кнопки меньше 44 × 44 pt: Skip 33×20",
+   "where": "sign-in-light"
+  },
+  {
+   "level": "bad",
+   "what": "модная гарнитура Manrope — сейчас она у всех, нужна своя с характером",
+   "where": "docs.json"
+  }
+ ]
+}

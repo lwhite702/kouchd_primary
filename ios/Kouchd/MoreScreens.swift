@@ -31,7 +31,7 @@ struct ScheduleScreen: View {
               var args: [String: ConvexEncodable?] = [
                 "stayId": store.selectedStayID, "cadence": cadence
               ]
-              if cadence == "weekly" { args["paymentDayOfWeek"] = weekday }
+              if cadence == "weekly" { args["paymentDayOfWeek"] = Double(weekday) }
               _ = await store.mutate("paymentSchedule:requestChange", args)
             }
           }
@@ -124,7 +124,7 @@ struct RewardsScreen: View {
         Pill(text: store.wallet["settings"]["coinName"].text.isEmpty
              ? "Points" : store.wallet["settings"]["coinName"].text)
         Text("\(store.wallet["availablePoints"].int) available")
-          .font(.largeTitle.bold()).foregroundStyle(Palette.forest)
+          .font(.largeTitle.bold()).foregroundStyle(Palette.link)
         DataRow(title: "Credit value", detail: Display.money(store.wallet["dollarEquivalentCents"].int))
       }
       if !store.isHost && !store.isEnded && store.wallet["settings"]["enabled"].flag {
@@ -215,12 +215,23 @@ struct ActivityScreen: View {
 struct SettingsScreen: View {
   let store: KouchdStore
   @Environment(Clerk.self) private var clerk
+  @AppStorage("kouchd.darkModeEnabled") private var darkModeEnabled = false
   @State private var name = ""
   @State private var phone = ""
   @State private var email = true
   @State private var sms = false
   var body: some View {
     Page(title: "Settings") {
+      Card {
+        Text("Appearance").font(.headline)
+        Toggle("Dark mode", isOn: $darkModeEnabled)
+          .tint(Palette.link)
+        Text(darkModeEnabled
+             ? "Kouchd will stay in dark mode."
+             : "Kouchd follows your iPhone’s appearance.")
+          .font(.subheadline)
+          .foregroundStyle(Palette.muted)
+      }
       Card {
         Text("Your profile").font(.headline)
         TextField("Name", text: $name).textContentType(.name)
@@ -232,8 +243,11 @@ struct SettingsScreen: View {
             .font(.footnote).foregroundStyle(Palette.muted)
         }
         Link("Terms & Conditions", destination: URL(string: "https://kouchd.com/terms")!)
+          .foregroundStyle(Palette.ink).underline()
         Link("Privacy Policy", destination: URL(string: "https://kouchd.com/privacy")!)
+          .foregroundStyle(Palette.ink).underline()
         Link("SMS Terms Details", destination: URL(string: "https://kouchd.com/sms-opt-in")!)
+          .foregroundStyle(Palette.ink).underline()
         PrimaryButton(title: "Save preferences") {
           Task {
             let parts = name.split(whereSeparator: \.isWhitespace).map(String.init)
@@ -258,8 +272,8 @@ struct SettingsScreen: View {
       }
       Card {
         Text("Account").font(.headline)
-        NavigationLink("About Kouchd") { AboutKouchdScreen() }
-        UserButton()
+        NavigationRow("About Kouchd", symbol: "info.circle") { AboutKouchdScreen() }
+        UserButton().frame(minWidth: 44, minHeight: 44)
         DataRow(title: "Kouchd version",
                 detail: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "—")
         Button("Sign out") {
@@ -267,10 +281,10 @@ struct SettingsScreen: View {
         }
       }
       if !store.selectedStayID.isEmpty {
-        NavigationLink("Household guide") { HouseholdGuideScreen(store: store) }
+        NavigationRow("Household guide", symbol: "book") { HouseholdGuideScreen(store: store) }
       }
       if store.adminAccess.flag {
-        NavigationLink("Platform administration") { AdminScreen(store: store) }
+        NavigationRow("Platform administration", symbol: "lock.shield") { AdminScreen(store: store) }
       }
     }
     .onAppear {
@@ -322,8 +336,8 @@ struct AdminScreen: View {
           }
         }.buttonStyle(.plain)
       }
-      NavigationLink("Contribution records and exceptions") { AdminFinancialScreen(store: store) }
-      NavigationLink("SMS consent history") { AdminSMSHistory(events: store.adminSms) }
+      NavigationRow("Contribution records and exceptions", symbol: "list.bullet.clipboard") { AdminFinancialScreen(store: store) }
+      NavigationRow("SMS consent history", symbol: "message") { AdminSMSHistory(events: store.adminSms) }
       Card {
         Text("Financial exceptions").font(.headline)
         DataRow(title: "Recent contributions",
@@ -368,10 +382,10 @@ struct AdminUserScreen: View {
           Text(member["status"].text.capitalized).font(.subheadline)
           DataRow(title: "Host", detail: member["hostName"].text)
           DataRow(title: "Stay status", detail: member["stayStatus"].text)
-          NavigationLink("View stay") { AdminStayScreen(store: store, stayID: member["stayId"].text) }
+          NavigationRow("View stay", symbol: "house") { AdminStayScreen(store: store, stayID: member["stayId"].text) }
         }
       }
-      NavigationLink("SMS consent history") { AdminSMSHistory(events: store.adminUserDetail["smsEvents"].items) }
+      NavigationRow("SMS consent history", symbol: "message") { AdminSMSHistory(events: store.adminUserDetail["smsEvents"].items) }
     }
     .task { store.loadAdminUser(userID) }
     .confirmationDialog("Change this person's platform access?", isPresented: $confirmRoleChange) {
@@ -451,11 +465,11 @@ struct HostControlsScreen: View {
       }
       Card {
         Text("Stay management").font(.headline)
-        NavigationLink("Edit agreement") { TermsEditScreen(store: store) }
-        NavigationLink("House details") { HouseInfoScreen(store: store) }
-        NavigationLink("Outside payment options") { PaymentOptionsScreen(store: store) }
-        NavigationLink("Add a one-time charge") { AdhocChargeScreen(store: store) }
-        NavigationLink("Reward rules") { RewardRulesScreen(store: store) }
+        NavigationRow("Edit agreement", symbol: "doc.text") { TermsEditScreen(store: store) }
+        NavigationRow("House details", symbol: "house") { HouseInfoScreen(store: store) }
+        NavigationRow("Outside payment options", symbol: "creditcard") { PaymentOptionsScreen(store: store) }
+        NavigationRow("Add a one-time charge", symbol: "plus.circle") { AdhocChargeScreen(store: store) }
+        NavigationRow("Reward rules", symbol: "star") { RewardRulesScreen(store: store) }
       }
       Card {
         Text("End this stay").font(.headline)
@@ -580,7 +594,7 @@ struct HouseholdGuideScreen: View {
           }.buttonStyle(.borderedProminent).tint(Palette.forest)
         }
         Button("Skip for now") { save(status: "skipped", close: true) }
-        NavigationLink("Open stay details") { StayScreen(store: store) }
+        NavigationRow("Open stay details", symbol: "house") { StayScreen(store: store) }
       }
     }
     .onAppear {
