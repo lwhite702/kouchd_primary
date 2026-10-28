@@ -291,3 +291,26 @@ extension Value {
     return try? JSONDecoder().decode(type, from: data)
   }
 }
+
+/// Client-side mirrors of stay settings rules enforced by `convex/stays.ts`.
+enum HouseholdSettings {
+  /// `stays:updateAgreementAutoAccept` accepts whole hours from 1 to 720.
+  static let autoAcceptHourRange = 1...720
+  static let defaultAutoAcceptHours = 24
+
+  /// Stays created before the setting existed have no value and behave as enabled.
+  static func autoAcceptEnabled(_ value: Value) -> Bool {
+    if case .bool(let enabled) = value { return enabled }
+    return true
+  }
+
+  static func autoAcceptHours(_ stored: Int) -> Int {
+    autoAcceptHourRange.contains(stored) ? stored : defaultAutoAcceptHours
+  }
+
+  /// `stays:updateGuestPreferredName` requires 1 to 80 characters after trimming.
+  static func isValidPreferredName(_ name: String) -> Bool {
+    let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+    return !trimmed.isEmpty && trimmed.count <= 80
+  }
+}

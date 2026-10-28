@@ -14,6 +14,7 @@
 
 ### Fixed
 
+- **iOS settings and ledger summary parity (WRE-247)**: Hosts on iOS can now set each guest's display name and the agreement automatic-acceptance window (or turn it off) from **Host controls**, and the iOS Ledger shows the same summary as web (total charges, confirmed credit, remaining scheduled, and entries awaiting confirmation) from `obligations:summary`. No backend changes.
 - Fixed the iOS `AppConfig` declaration so the merged launch candidate compiles cleanly in the release workflow.
 - Fixed an iOS SwiftUI compiler timeout in `RootView` by splitting screen composition and lifecycle callbacks into focused helpers.
 - Patch Next.js to 16.4.3 and DOMPurify to 3.4.17, align the framework lint configuration, and refresh compatible dependencies. Local full and runtime audits report zero advisories; release requires its own promotion approval.

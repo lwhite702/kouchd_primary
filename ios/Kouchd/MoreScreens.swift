@@ -592,6 +592,80 @@ struct AdminStayScreen: View {
   }
 }
 
+/// Mirrors the web "Automatic acceptance" setting backed by `stays:updateAgreementAutoAccept`.
+private struct AgreementAutoAcceptCard: View {
+  let store: KouchdStore
+  @State private var enabled: Bool
+  @State private var hours: Int
+  @State private var saving = false
+
+  init(store: KouchdStore) {
+    self.store = store
+    let stay = store.bundle["stay"]
+    // Stays created before this setting existed default to on, 24 hours, as on web.
+    _enabled = State(initialValue: HouseholdSettings.autoAcceptEnabled(stay["agreementAutoAcceptEnabled"]))
+    _hours = State(initialValue: HouseholdSettings.autoAcceptHours(stay["agreementAutoAcceptHours"].int))
+  }
+
+  var body: some View {
+    Card {
+      Text("Automatic acceptance").font(.headline)
+      Text("If a guest doesn't respond, their pending agreement is accepted after this many hours. Turn it off to require each guest to accept.")
+        .font(.subheadline).foregroundStyle(Palette.muted)
+      Toggle("Accept pending agreements automatically", isOn: $enabled)
+      if enabled {
+        Stepper("After \(hours) \(hours == 1 ? "hour" : "hours")", value: $hours, in: HouseholdSettings.autoAcceptHourRange)
+      }
+      PrimaryButton(title: saving ? "Saving…" : "Save") {
+        guard !saving else { return }
+        saving = true
+        Task {
+          _ = await store.mutate("stays:updateAgreementAutoAccept", [
+            "stayId": store.selectedStayID, "enabled": enabled, "hours": Double(hours)
+          ])
+          saving = false
+        }
+      }.disabled(saving)
+    }
+  }
+}
+
+/// Mirrors the web guest preferred-name field backed by `stays:updateGuestPreferredName`.
+private struct GuestNamesCard: View {
+  let store: KouchdStore
+  @State private var names: [String: String] = [:]
+  @State private var savingID = ""
+
+  var body: some View {
+    Card {
+      Text("Guest display names").font(.headline)
+      Text("Choose the name everyone in the stay sees for each guest.")
+        .font(.subheadline).foregroundStyle(Palette.muted)
+      ForEach(store.guests, id: \.guestPersonID) { guest in
+        let id = guest.guestPersonID
+        HStack {
+          TextField("Display name", text: Binding(
+            get: { names[id] ?? guest["person"]["name"].text },
+            set: { names[id] = $0 }
+          )).textFieldStyle(.roundedBorder)
+          Button(savingID == id ? "Saving…" : "Save") {
+            let name = names[id] ?? guest["person"]["name"].text
+            savingID = id
+            Task {
+              _ = await store.mutate("stays:updateGuestPreferredName", [
+                "stayId": store.selectedStayID, "guestUserId": id, "preferredName": name
+              ])
+              savingID = ""
+            }
+          }
+          .buttonStyle(.bordered)
+          .disabled(!savingID.isEmpty || !HouseholdSettings.isValidPreferredName(names[id] ?? guest["person"]["name"].text))
+        }
+      }
+    }
+  }
+}
+
 struct HostControlsScreen: View {
   let store: KouchdStore
   @State private var announcementTitle = ""
@@ -619,6 +693,11 @@ struct HostControlsScreen: View {
             "stayId": store.selectedStayID
           ]) }
         }
+      }
+      if !store.isEnded {
+        AgreementAutoAcceptCard(store: store)
+          .id("\(store.bundle["stay"]["agreementAutoAcceptEnabled"].flag)-\(store.bundle["stay"]["agreementAutoAcceptHours"].int)")
+        if !store.guests.isEmpty { GuestNamesCard(store: store) }
       }
       Card {
         Text("Stay management").font(.headline)

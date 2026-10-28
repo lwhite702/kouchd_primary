@@ -147,6 +147,7 @@ private enum KouchdAuthError: LocalizedError {
   var bundle: Value = .null
   var typedAgreement: AgreementRecord?
   var ledger: [Value] = []
+  var ledgerSummary: Value = .null
   var contributions: [Value] = []
   var chores: [Value] = []
   var announcements: [Value] = []
@@ -303,6 +304,7 @@ private enum KouchdAuthError: LocalizedError {
     bundle = .null
     typedAgreement = nil
     ledger = []
+    ledgerSummary = .null
     typedLedger = []
     contributions = []
     chores = []
@@ -415,6 +417,7 @@ private enum KouchdAuthError: LocalizedError {
     bundle = .null
     typedAgreement = nil
     ledger = []
+    ledgerSummary = .null
     typedLedger = []
     contributions = []
     chores = []
@@ -442,12 +445,13 @@ private enum KouchdAuthError: LocalizedError {
   private func loadGuestData() {
     guard !selectedStayID.isEmpty else { return }
     financialGeneration += 1
-    pendingFinancialQueries = ["contributions:list", "rewards:getWallet", "obligations:list"]
+    pendingFinancialQueries = ["contributions:list", "rewards:getWallet", "obligations:list", "obligations:summary"]
     isFinancialLoading = true
     financialError = ""
     financialSubscriptions.removeAll()
     contributions = []
     ledger = []
+    ledgerSummary = .null
     typedLedger = []
     nights = []
     wallet = .null
@@ -457,6 +461,7 @@ private enum KouchdAuthError: LocalizedError {
     watch("rewards:getWallet", args: args, into: \.wallet, financial: true)
     args["asOfDate"] = Display.date(timezone: bundle["stay"]["timezone"].text)
     watch("obligations:list", args: args, into: \.ledger, financial: true)
+    watch("obligations:summary", args: args, into: \.ledgerSummary, financial: true)
     reloadFeatures()
   }
 

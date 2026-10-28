@@ -2,6 +2,19 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-10-28 — iOS settings and ledger summary parity (WRE-247)
+
+- `ios/Kouchd/MoreScreens.swift`: **Host controls** gets two new cards:
+  - **Automatic acceptance** calls `stays:updateAgreementAutoAccept` (1–720 hours, or off).
+  - **Guest display names** calls `stays:updateGuestPreferredName`.
+  - Both are hidden on ended stays.
+- `ios/Kouchd/Service.swift`: the store watches `obligations:summary` with the same stay, guest, and date arguments as the ledger, and resets it with the other financial data.
+- `ios/Kouchd/MainScreens.swift`: `LedgerSummaryCard` uses web's labels.
+- `ios/Kouchd/Models.swift`: the `HouseholdSettings` rules (default on, 24 hours, hour range, name length) mirror the server.
+- Numbers are sent as `Double`, matching the WRE-242 encoding fix.
+- Evidence: the simulator build succeeded, `KouchdTests` passed (15 tests, including 4 new `HouseholdSettingsTests`), and `npm run release:check` passed for `1.0.0-rc.17`. Not exercised while signed in.
+- Not done: no in-app notification feed (needs the Knock iOS SDK) and no push notifications (post-1.0).
+
 ## 2026-10-26 — Polish landing and marketing pages, update Mintlify tokens and roadmap (WRE-240)
 
 - Polished public marketing and landing pages across accessibility, motion, visual hierarchy, and conversion:
