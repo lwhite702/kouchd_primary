@@ -2,6 +2,12 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-10-28 — Fix web sign-in button guard and native stay creation (WRE-242)
+
+- Fixed `SignInFormGuard` in `components/sign-in-form-guard.tsx` to prevent disabling the submit button on password, OTP, and MFA verification steps when the identifier input is no longer rendered.
+- Verified native stay creation parameter encoding to ensure all numerical terms (`rateCents`, `earlyDiscountPercentage`, `earlyDiscountDays`, `lateFeeCents`, `graceDays`, `paymentDayOfWeek`) serialize as IEEE 754 floats (`Double`) matching Convex's `v.number()` validator schema.
+- Added redirects in the marketing configuration (`/sign-in` and `/sign-up` to `https://app.kouchd.com/`) to prevent 404 errors during web auth navigation.
+
 ## 2026-10-26 — Polish landing and marketing pages, update Mintlify tokens and roadmap (WRE-240)
 
 - Polished public marketing and landing pages across accessibility, motion, visual hierarchy, and conversion:

@@ -24,7 +24,17 @@ export function SignInFormGuard({ children }: { children: React.ReactNode }) {
       const { input, submitBtn } = findElements();
       if (!submitBtn) return;
 
-      const hasValue = Boolean(input && input.value.trim().length > 0);
+      // Only guard the initial identifier step if an identifier input exists.
+      // On password, OTP code, or MFA steps, do not interfere with Clerk's native button state.
+      if (!input) {
+        submitBtn.disabled = false;
+        submitBtn.removeAttribute("disabled");
+        submitBtn.setAttribute("aria-disabled", "false");
+        submitBtn.classList.remove("kouchd-submit-disabled");
+        return;
+      }
+
+      const hasValue = Boolean(input.value.trim().length > 0);
       if (hasValue) {
         submitBtn.disabled = false;
         submitBtn.removeAttribute("disabled");
