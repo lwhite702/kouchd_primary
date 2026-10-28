@@ -470,7 +470,6 @@ export function LiveStay({
               <ShoppingList
                 stayId={stayId}
                 viewerId={bundle.membership.userId}
-                isHost={Boolean(isHost)}
                 isEnded={isEnded}
               />
             </FeatureGate>
