@@ -7,6 +7,7 @@ struct ShoppingScreen: View {
   @State private var note = ""
   @State private var personal = false
   @State private var submitting = false
+  @State private var editing: EditingShoppingItem?
 
   var body: some View {
     Page(title: "Shopping list") {
@@ -46,15 +47,84 @@ struct ShoppingScreen: View {
               }.buttonStyle(.bordered)
             }
           }
-          if !store.isEnded {
-            Button("Remove item", role: .destructive) {
-              Task { _ = await store.mutate("shopping:remove", ["itemId": item.id]) }
+          if !store.isEnded && canEdit(item) {
+            HStack {
+              Button("Edit item") { editing = EditingShoppingItem(item: item) }
+              Spacer()
+              Button("Remove item", role: .destructive) {
+                Task { _ = await store.mutate("shopping:remove", ["itemId": item.id]) }
+              }
             }
           }
         }
       }
     }
     .stayFeature(.shopping, store: store)
+    .sheet(item: $editing) { editing in ShoppingItemForm(store: store, item: editing.item) }
+  }
+
+  // Mirrors the server rule: shared items are editable by any member; personal items by their creator or the host.
+  private func canEdit(_ item: Value) -> Bool {
+    item["visibility"].text == "shared" || store.isHost || item["createdBy"].text == store.viewer["id"].text
+  }
+}
+
+private struct EditingShoppingItem: Identifiable {
+  let item: Value
+  var id: String { item.id }
+}
+
+private struct ShoppingItemForm: View {
+  let store: KouchdStore
+  let item: Value
+  @Environment(\.dismiss) private var dismiss
+  @State private var title: String
+  @State private var quantity: String
+  @State private var note: String
+  @State private var personal: Bool
+  @State private var submitting = false
+
+  init(store: KouchdStore, item: Value) {
+    self.store = store
+    self.item = item
+    _title = State(initialValue: item.title)
+    _quantity = State(initialValue: item["quantity"].text)
+    _note = State(initialValue: item["note"].text)
+    _personal = State(initialValue: item["visibility"].text == "personal")
+  }
+
+  private var canSetPersonal: Bool { store.isHost || item["createdBy"].text == store.viewer["id"].text }
+  private var isValid: Bool {
+    !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !quantity.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+  }
+
+  var body: some View {
+    NavigationStack {
+      Form {
+        TextField("Item", text: $title)
+        TextField("Quantity", text: $quantity)
+        TextField("Note (optional)", text: $note)
+        if canSetPersonal {
+          Toggle("Personal item", isOn: $personal)
+          Text("Personal items are visible to you and your host.").font(.caption).foregroundStyle(Palette.muted)
+        }
+      }
+      .navigationTitle("Edit item")
+      .kouchdNavigationBar()
+      .toolbar {
+        ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
+        ToolbarItem(placement: .confirmationAction) {
+          Button(submitting ? "Saving…" : "Save") {
+            submitting = true
+            Task {
+              let saved = await store.mutate("shopping:update", ["itemId": item.id, "title": title, "quantity": quantity, "note": note, "visibility": personal ? "personal" : "shared"])
+              submitting = false
+              if saved { dismiss() }
+            }
+          }.disabled(submitting || !isValid)
+        }
+      }
+    }
   }
 }
 
