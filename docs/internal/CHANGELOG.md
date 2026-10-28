@@ -9,7 +9,8 @@ Internal engineering record. This file is excluded from Mintlify navigation and 
 - Page is `noindex` until approved for public launch; added `/simple` to the telemetry route allow-list.
 - Added roadmap entry under "Being explored" without an ETA.
 - Evidence: `tsc --noEmit`, targeted ESLint, `tests/telemetry-privacy.test.ts`, `git diff --check`, and local desktop/390px render checks (no horizontal overflow). No deployment.
-- Open: the requested 5-star "(100 reviews)" badge was left out because there is no verified review source. Check-ins appear in source (`components/household/check-in-board.tsx`), but the public roadmap lists them as "Being explored", so that needs to be reconciled before this page goes public.
+- Open: the requested 5-star "(100 reviews)" badge was left out because there is no verified review source.
+- Decision (2026-10-28, product owner): keep the Check-ins feature card. Check-ins are on `main` (`components/workspace/live-stay.tsx` renders `CheckInBoard`) behind the `CHECK_IN_BOARD` feature flag. The production flag state hasn't been verified, and the public roadmap still lists check-ins as "Being explored". Before `/simple` is made indexable, confirm the flag is on in production, then move check-ins to "Available" on the roadmap.
 
 ## 2026-10-26 — Polish landing and marketing pages, update Mintlify tokens and roadmap (WRE-240)
 
