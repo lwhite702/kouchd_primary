@@ -2,6 +2,15 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-10-28 — Simplified landing page, post-1.0 branch only (WRE-243)
+
+- Branch `codex/post-v1-WRE-243-simplified-landing` (isolated worktree, per 1.0 feature lock). Not on the RC launch line.
+- Added `/simple` (`app/simple/page.tsx`, `components/simplified-landing-page.tsx` + `.css`): app-icon hero, tabbed "See it in action" previews with synthetic sample data, six-feature grid, closing CTA, shared `MarketingFooter`.
+- Page is `noindex` until approved for public launch; added `/simple` to the telemetry route allow-list.
+- Added roadmap entry under "Being explored" without an ETA.
+- Evidence: `tsc --noEmit`, targeted ESLint, `tests/telemetry-privacy.test.ts`, `git diff --check`, and local desktop/390px render checks (no horizontal overflow). No deployment.
+- Open: the requested 5-star "(100 reviews)" badge was left out because there is no verified review source. Check-ins appear in source (`components/household/check-in-board.tsx`), but the public roadmap lists them as "Being explored", so that needs to be reconciled before this page goes public.
+
 ## 2026-10-26 — Polish landing and marketing pages, update Mintlify tokens and roadmap (WRE-240)
 
 - Polished public marketing and landing pages across accessibility, motion, visual hierarchy, and conversion:
