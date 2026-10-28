@@ -14,7 +14,7 @@
 
 ### Fixed
 
-- Fixed the help-center dark logo (`help/logo/dark.svg`) so it uses the iOS dark-mode palette (`ios/Kouchd/Design.swift`: forest `#D5F59A`, muted `#AEB8B0`, cream `#101713`) instead of repeating the light logo, and set the horizontal logo wordmark (`public/brand/kouchd-logo-horizontal.svg`) in Manrope with system fallbacks.
+- Fixed the help-center dark logo (`help/logo/dark.svg`) so it uses the iOS dark-mode palette (`ios/Kouchd/Design.swift`: forest `#D5F59A`, muted `#AEB8B0`, cream `#101713`) instead of repeating the light logo, and outlined the horizontal logo wordmark (`public/brand/kouchd-logo-horizontal.svg`) from Manrope ExtraBold so it renders in Manrope everywhere, including where the font is not installed.
 - Fixed the iOS `AppConfig` declaration so the merged launch candidate compiles cleanly in the release workflow.
 - Fixed an iOS SwiftUI compiler timeout in `RootView` by splitting screen composition and lifecycle callbacks into focused helpers.
 - Patch Next.js to 16.4.3 and DOMPurify to 3.4.17, align the framework lint configuration, and refresh compatible dependencies. Local full and runtime audits report zero advisories; release requires its own promotion approval.
