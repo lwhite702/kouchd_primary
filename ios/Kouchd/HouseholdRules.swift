@@ -6,14 +6,14 @@ enum HouseholdRules {
   static let choreRepeatOptions = ["none", "daily", "weekly"]
 
   /// Mirrors `requireItemEditor` in convex/shopping.ts: shared items are editable by any member,
-  /// personal items only by their creator or the host.
-  static func canEditShoppingItem(_ item: Value, viewerID: String, isHost: Bool) -> Bool {
-    item["visibility"].text == "shared" || isHost || isCreator(item, viewerID: viewerID)
+  /// personal items only by their creator. Hosts get no exception.
+  static func canEditShoppingItem(_ item: Value, viewerID: String) -> Bool {
+    item["visibility"].text == "shared" || isCreator(item, viewerID: viewerID)
   }
 
-  /// Mirrors `shopping:update`: only the creator or host may mark an item personal.
-  static func canSetShoppingItemPersonal(_ item: Value, viewerID: String, isHost: Bool) -> Bool {
-    isHost || isCreator(item, viewerID: viewerID)
+  /// Mirrors `shopping:update`: only the creator may mark an item personal.
+  static func canSetShoppingItemPersonal(_ item: Value, viewerID: String) -> Bool {
+    isCreator(item, viewerID: viewerID)
   }
 
   /// The `repeatCadence` value `chores:create` accepts, or nil when the chore does not repeat.

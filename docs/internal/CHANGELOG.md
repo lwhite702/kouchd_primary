@@ -4,11 +4,16 @@ Internal engineering record. This file is excluded from Mintlify navigation and 
 
 ## 2026-10-28 — iOS parity: edit shopping items and set chore repeats (WRE-244)
 
-- `ios/Kouchd/CoordinationScreens.swift`: added an **Edit item** sheet that calls `shopping:update`. Its permission check matches `requireItemEditor` (shared items can be edited by any member; personal items by their creator or the host). Only the creator or host sees the personal toggle.
+- Privacy change (requested 2026-10-28): personal shopping items are visible only to their creator. Hosts lose the exception they had before.
+  - `convex/shopping.ts`: `list` returns shared items plus the viewer's own personal items. `requireItemEditor` throws "Shopping item not found" for anyone else's personal item. `update` lets only the creator set `personal`.
+  - `convex/activity.ts`: `canSee` hides shopping rows that carry `guestUserId` (the personal-item marker) from everyone except that user, hosts included, in both `list` and `page`. This also hides older rows.
+  - Web `components/household/shopping-list.tsx` drops the `isHost` prop and shows the List select only to the creator. iOS `HouseholdRules` drops `isHost`.
+  - `tests/shopping-privacy.test.ts` rewritten (5 tests): host and other guest can't list, toggle, remove, or update a personal item; only the creator can make an item personal; personal activity is hidden from host and guest; shared activity is still visible; host paging has no duplicate rows.
+- `ios/Kouchd/CoordinationScreens.swift`: added an **Edit item** sheet that calls `shopping:update`. Its permission check matches `requireItemEditor` (shared items can be edited by any member; personal items only by their creator). Only the creator sees the personal toggle.
 - `ios/Kouchd/MainScreens.swift`: added a **Repeat** picker to `ChoreForm` that sends `repeatCadence` when it is daily or weekly, and shows "Repeats <cadence>" on chore cards.
 - `ios/Kouchd/HouseholdRules.swift`: the client-side permission and cadence rules, kept in one place and covered by `ios/KouchdTests/HouseholdRulesTests.swift` (6 tests).
 - Version prepared as `1.0.0-rc.15` (rc.14 is taken by WRE-242).
-- Evidence: Debug simulator build succeeded (iPhone 18 Pro Max, iOS 27.0), `KouchdTests` passed (17 tests, 0 failures), and `npm run release:check` passed. Not exercised against a signed-in account; no UI test covers the new sheet or picker.
+- Evidence: Debug simulator build succeeded (iPhone 18 Pro Max, iOS 27.0), `KouchdTests` passed (17 tests, 0 failures), and `npm run release:check` passed, and the full Vitest suite passed (178 tests). Not exercised against a signed-in account; no UI test covers the new sheet or picker.
 - Not done: public iOS help (`help/ios/chores-and-stay.mdx`) and the public changelog are waiting for release verification. Tracked in WRE-244.
 
 ## 2026-10-26 — Polish landing and marketing pages, update Mintlify tokens and roadmap (WRE-240)

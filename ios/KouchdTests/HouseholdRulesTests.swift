@@ -7,25 +7,26 @@ final class HouseholdRulesTests: XCTestCase {
   }
 
   func testAnyMemberCanEditSharedShoppingItems() {
-    XCTAssertTrue(HouseholdRules.canEditShoppingItem(item(visibility: "shared", createdBy: "guest-a"), viewerID: "guest-b", isHost: false))
+    XCTAssertTrue(HouseholdRules.canEditShoppingItem(item(visibility: "shared", createdBy: "guest-a"), viewerID: "guest-b"))
+    XCTAssertTrue(HouseholdRules.canEditShoppingItem(item(visibility: "shared", createdBy: "guest-a"), viewerID: "host"))
   }
 
-  func testPersonalShoppingItemsAreEditableOnlyByCreatorOrHost() {
+  func testPersonalShoppingItemsAreEditableOnlyByTheirCreator() {
     let personal = item(visibility: "personal", createdBy: "guest-a")
-    XCTAssertTrue(HouseholdRules.canEditShoppingItem(personal, viewerID: "guest-a", isHost: false))
-    XCTAssertTrue(HouseholdRules.canEditShoppingItem(personal, viewerID: "host", isHost: true))
-    XCTAssertFalse(HouseholdRules.canEditShoppingItem(personal, viewerID: "guest-b", isHost: false))
+    XCTAssertTrue(HouseholdRules.canEditShoppingItem(personal, viewerID: "guest-a"))
+    XCTAssertFalse(HouseholdRules.canEditShoppingItem(personal, viewerID: "host"), "Hosts get no access to a guest's personal item")
+    XCTAssertFalse(HouseholdRules.canEditShoppingItem(personal, viewerID: "guest-b"))
   }
 
   func testMissingViewerIsNotTreatedAsCreator() {
-    XCTAssertFalse(HouseholdRules.canEditShoppingItem(item(visibility: "personal", createdBy: ""), viewerID: "", isHost: false))
+    XCTAssertFalse(HouseholdRules.canEditShoppingItem(item(visibility: "personal", createdBy: ""), viewerID: ""))
   }
 
-  func testOnlyCreatorOrHostCanMakeAnItemPersonal() {
+  func testOnlyTheCreatorCanMakeAnItemPersonal() {
     let shared = item(visibility: "shared", createdBy: "guest-a")
-    XCTAssertTrue(HouseholdRules.canSetShoppingItemPersonal(shared, viewerID: "guest-a", isHost: false))
-    XCTAssertTrue(HouseholdRules.canSetShoppingItemPersonal(shared, viewerID: "host", isHost: true))
-    XCTAssertFalse(HouseholdRules.canSetShoppingItemPersonal(shared, viewerID: "guest-b", isHost: false))
+    XCTAssertTrue(HouseholdRules.canSetShoppingItemPersonal(shared, viewerID: "guest-a"))
+    XCTAssertFalse(HouseholdRules.canSetShoppingItemPersonal(shared, viewerID: "host"))
+    XCTAssertFalse(HouseholdRules.canSetShoppingItemPersonal(shared, viewerID: "guest-b"))
   }
 
   func testChoreRepeatCadenceSendsOnlyServerAcceptedValues() {

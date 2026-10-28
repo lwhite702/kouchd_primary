@@ -19,7 +19,7 @@ struct ShoppingScreen: View {
           TextField("Quantity", text: $quantity).textFieldStyle(.roundedBorder)
           TextField("Note (optional)", text: $note).textFieldStyle(.roundedBorder)
           Toggle("Personal item", isOn: $personal)
-          Text("Personal items are visible only to the person who added them and the host.").font(.caption).foregroundStyle(Palette.muted)
+          Text("Personal items are visible only to you.").font(.caption).foregroundStyle(Palette.muted)
           PrimaryButton(title: submitting ? "Adding…" : "Add item") {
             guard !submitting else { return }
             submitting = true
@@ -64,7 +64,7 @@ struct ShoppingScreen: View {
   }
 
   private func canEdit(_ item: Value) -> Bool {
-    HouseholdRules.canEditShoppingItem(item, viewerID: store.viewer["id"].text, isHost: store.isHost)
+    HouseholdRules.canEditShoppingItem(item, viewerID: store.viewer["id"].text)
   }
 }
 
@@ -93,7 +93,7 @@ private struct ShoppingItemForm: View {
   }
 
   private var canSetPersonal: Bool {
-    HouseholdRules.canSetShoppingItemPersonal(item, viewerID: store.viewer["id"].text, isHost: store.isHost)
+    HouseholdRules.canSetShoppingItemPersonal(item, viewerID: store.viewer["id"].text)
   }
   private var isValid: Bool {
     !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && !quantity.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -107,7 +107,7 @@ private struct ShoppingItemForm: View {
         TextField("Note (optional)", text: $note)
         if canSetPersonal {
           Toggle("Personal item", isOn: $personal)
-          Text("Personal items are visible only to the person who added them and the host.").font(.caption).foregroundStyle(Palette.muted)
+          Text("Personal items are visible only to you.").font(.caption).foregroundStyle(Palette.muted)
         }
       }
       .navigationTitle("Edit item")
