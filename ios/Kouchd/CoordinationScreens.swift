@@ -19,7 +19,7 @@ struct ShoppingScreen: View {
           TextField("Quantity", text: $quantity).textFieldStyle(.roundedBorder)
           TextField("Note (optional)", text: $note).textFieldStyle(.roundedBorder)
           Toggle("Personal item", isOn: $personal)
-          Text("Personal items are visible to you and your host.").font(.caption).foregroundStyle(Palette.muted)
+          Text("Personal items are visible only to the person who added them and the host.").font(.caption).foregroundStyle(Palette.muted)
           PrimaryButton(title: submitting ? "Adding…" : "Add item") {
             guard !submitting else { return }
             submitting = true
@@ -107,7 +107,7 @@ private struct ShoppingItemForm: View {
         TextField("Note (optional)", text: $note)
         if canSetPersonal {
           Toggle("Personal item", isOn: $personal)
-          Text("Personal items are visible to you and your host.").font(.caption).foregroundStyle(Palette.muted)
+          Text("Personal items are visible only to the person who added them and the host.").font(.caption).foregroundStyle(Palette.muted)
         }
       }
       .navigationTitle("Edit item")
