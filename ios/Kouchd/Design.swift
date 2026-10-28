@@ -90,6 +90,19 @@ struct Pill: View {
   }
 }
 
+/// Small marker for anything that needs Kouchd Plus.
+struct PlusBadge: View {
+  var text = "Plus"
+  var body: some View {
+    Text(text.uppercased())
+      .font(.caption2.weight(.bold))
+      .tracking(0.8)
+      .foregroundStyle(Color.black.opacity(0.82))
+      .padding(.horizontal, 8).padding(.vertical, 4)
+      .background(Palette.lime, in: Capsule())
+  }
+}
+
 struct PrimaryButton: View {
   @Environment(\.isEnabled) private var isEnabled
   let title: String
@@ -142,17 +155,20 @@ struct NavigationRow<Destination: View>: View {
   let title: String
   let subtitle: String?
   let symbol: String
+  let badge: String?
   @ViewBuilder let destination: Destination
 
   init(
     _ title: String,
     subtitle: String? = nil,
     symbol: String,
+    badge: String? = nil,
     @ViewBuilder destination: () -> Destination
   ) {
     self.title = title
     self.subtitle = subtitle
     self.symbol = symbol
+    self.badge = badge
     self.destination = destination()
   }
 
@@ -177,6 +193,7 @@ struct NavigationRow<Destination: View>: View {
           }
         }
         Spacer(minLength: 12)
+        if let badge { PlusBadge(text: badge) }
         Image(systemName: "chevron.right")
           .font(.caption.weight(.bold))
           .foregroundStyle(Palette.link)

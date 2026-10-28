@@ -21,6 +21,7 @@ import SwiftUI
       Group {
         if AppConfig.isConfigured {
           RootView()
+            .task { await PlusAccess.shared.start() }
             .prefetchClerkImages()
             .environment(Clerk.shared)
         } else {
