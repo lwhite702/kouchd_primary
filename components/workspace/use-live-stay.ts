@@ -807,7 +807,7 @@ export function useLiveStay(stayId: Id<"stays">, onBackToHub: () => void) {
       await updateHouseholdTerms({ stayId, terms: updatedTerms });
       setPanel(null);
       notify(
-        "Household defaults updated. Guests on the default agreement need to review and accept it.",
+        "Household defaults updated. Each active guest needs to review and accept the new version.",
       );
     } catch (reason) {
       setActionError(

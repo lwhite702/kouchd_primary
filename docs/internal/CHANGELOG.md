@@ -14,8 +14,12 @@ Internal engineering record. This file is excluded from Mintlify navigation and 
 - Each button appears only where the server allows the action, matching iOS: the host or the record's creator (or claimant), and dispute only for pending entries someone else added. Hidden on ended stays.
 - `DestructiveAction` and `destructiveActionCopy` moved to `components/workspace/types.ts` so all confirmations share copy.
 - The invite panel closes before the new-code confirmation, because the confirmation isn't a top-layer dialog.
+- Review fixes:
+  - `contributions:voidContribution` rejects a credit that came from a reward redemption, and `rewards:voidClaim` rejects a confirmed claim whose points are already redeemed. Before this, either void could leave points spent with no credit, or credit with no points. This affected iOS too.
+  - The household-defaults text now says every active guest gets a new version to review and that per-guest settings carry forward, matching `terms:updateCurrent`.
+  - **New code** shows only for hosts.
 - Version prepared as `1.0.0-rc.16` (rc.14 is WRE-242, rc.15 is WRE-244).
-- Evidence: `tsc --noEmit` clean, ESLint has no new findings, Vitest passed (33 files, 177 tests, including new `tests/destructive-actions.test.ts`), and `npm run release:check` passed. Not exercised in a browser against a live Convex deployment.
+- Evidence: `tsc --noEmit` clean, ESLint has no new findings, Vitest passed (33 files, 177 tests, including new `tests/destructive-actions.test.ts` and redemption-void cases in `tests/rewards.test.ts`), and `npm run release:check` passed. Not exercised in a browser against a live Convex deployment.
 - Not done: no push notifications or overdue payment plan screens (post-1.0). Public help pages wait for release verification.
 
 ## 2026-10-26 — Polish landing and marketing pages, update Mintlify tokens and roadmap (WRE-240)

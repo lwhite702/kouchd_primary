@@ -454,7 +454,7 @@ export function WorkspacePanels({ state }: { state: WorkspaceState }) {
           <GuestAgreementForm
             terms={terms}
             guestName="Household defaults"
-            intro="Update the household default agreement. Guests on the default agreement will be asked to review and accept this version. Guests with their own agreement keep it."
+            intro="Update the household default agreement. Every active guest gets a new version to review and accept. Anything you set for an individual guest, like their own rate or dates, carries forward."
             onSubmit={saveHouseholdTerms}
             onCancel={() => setPanel(null)}
           />
@@ -532,17 +532,19 @@ export function WorkspacePanels({ state }: { state: WorkspaceState }) {
               >
                 <Copy size={15} /> Copy Code
               </button>
-              <button
-                className="button soft compact"
-                type="button"
-                onClick={() => {
-                  // The confirmation is not a top-layer dialog, so close this one first.
-                  setPanel(null);
-                  setDestructiveAction({ type: "regenerateCode" });
-                }}
-              >
-                New code
-              </button>
+              {isHost && (
+                <button
+                  className="button soft compact"
+                  type="button"
+                  onClick={() => {
+                    // The confirmation is not a top-layer dialog, so close this one first.
+                    setPanel(null);
+                    setDestructiveAction({ type: "regenerateCode" });
+                  }}
+                >
+                  New code
+                </button>
+              )}
             </div>
           </div>
           {inviteUrl ? (

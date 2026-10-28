@@ -301,6 +301,22 @@ export const voidClaim = mutation({
       throw new Error("Only the claimant or host can void this claim");
     }
     if (claim.status === "voided") return null;
+    // Keep redeemed points backed by confirmed claims; otherwise the ledger credit has no points behind it.
+    if (claim.status === "confirmed") {
+      const [claims, redemptions] = await Promise.all([
+        ctx.db.query("pointClaims")
+          .withIndex("by_stay_and_guest", (q) => q.eq("stayId", claim.stayId).eq("guestUserId", claim.guestUserId))
+          .collect(),
+        ctx.db.query("pointRedemptions")
+          .withIndex("by_stay_and_guest", (q) => q.eq("stayId", claim.stayId).eq("guestUserId", claim.guestUserId))
+          .collect(),
+      ]);
+      const earned = claims.filter((c) => c.status === "confirmed").reduce((sum, c) => sum + c.points, 0);
+      const redeemed = redemptions.reduce((sum, r) => sum + r.pointsRedeemed, 0);
+      if (earned - claim.points < redeemed) {
+        throw new Error("These points have already been redeemed for stay credit, so this claim can't be voided.");
+      }
+    }
 
     const now = Date.now();
     await ctx.db.patch(claimId, {
