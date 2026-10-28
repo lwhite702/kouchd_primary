@@ -246,6 +246,7 @@ struct IntroductionScreen: View {
 struct KouchdPlusScreen: View {
   private let placement = "kouchd_plus_paywall"
   private var variant: String { KouchdFunnel.variant(placement) }
+  @Environment(\.dismiss) private var dismiss
 
   var body: some View {
     Group {
@@ -271,6 +272,14 @@ struct KouchdPlusScreen: View {
             .foregroundStyle(Palette.muted)
         }
       }
+    }
+    // Hosts can always carry on without paying: Kouchd stays free to use.
+    .safeAreaInset(edge: .bottom, spacing: 0) {
+      Button("Continue with Kouchd free") { dismiss() }
+        .font(.headline)
+        .foregroundStyle(Palette.forest)
+        .frame(maxWidth: .infinity, minHeight: 48)
+        .background(Palette.canvas)
     }
     .navigationTitle("Kouchd Plus")
     .navigationBarTitleDisplayMode(.inline)
