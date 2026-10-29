@@ -8,6 +8,12 @@
 
 ### Changed
 
+- **Web CI gate (WRE-241)**: Added a `web` job on `ubuntu-latest` in `.github/workflows/release-integrity.yml` that runs the environment check, TypeScript typecheck, ESLint, the Vitest suite, and the production `next build` on every PR to `main`.
+- **Newsletter rate limiting and errors (WRE-241)**: Hardened `app/api/newsletter/route.ts` and extracted `lib/newsletter-limiter.ts`:
+  - Capped the in-memory limiter at 5,000 entries and pruned expired entries so memory stays bounded.
+  - Client IP now comes from `x-real-ip`, then the first `x-forwarded-for` entry.
+  - Network timeouts and provider outages return 502; internal errors return 500. Details are logged server-side and not sent to clients.
+  - Covered in `tests/newsletter.test.ts` (12 tests).
 - **Prerelease numbering resumed and 1.0 feature lock paused (WRE-248)**: Renamed the releases recorded as `1.0.0-rc.1`–`1.0.0-rc.13` to `0.7.0`–`0.7.12` (none were tagged or released) and set `VERSION`, `package.json`, the lockfile, and the iOS marketing version to `0.7.12`. `release/version-history.json` holds the mapping, and `scripts/release-gate.mjs` compares recorded versions by their current number, so the next prerelease is `0.7.13`. `release/feature-lock.json` is now `enabled: false` (phase `prerelease`) until the team approves the App Store submission; `release-version.mjs` and `lock:bump-rc` refuse `-rc.N` versions while it is off. Updated `AGENTS.md`, the public roadmap and changelog, and internal records.
 - **Landing and Marketing Pages Polish & Accessibility (WRE-240)**: Polished public marketing and landing pages across accessibility, motion, visual hierarchy, and conversion. Added comprehensive `prefers-reduced-motion` CSS controls and focus-visible indicators, built interactive multi-view preview tabs (Overview, House Guide, Ledger, Chores) on the landing page, implemented a structured footer keeping `/brand` exclusively in the footer for media/staff, and injected Schema.org JSON-LD structured data (`Organization`) on `/about`.
 

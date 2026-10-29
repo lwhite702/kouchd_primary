@@ -2,6 +2,17 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-10-29 — Harden web CI workflow, newsletter rate limiter, and error handling (WRE-241)
+
+- Added a `web` job on `ubuntu-latest` in `.github/workflows/release-integrity.yml` that gates pull requests with the environment check, `tsc --noEmit`, ESLint, Vitest, and the Next.js production build.
+- Kept the existing `verify` job on `macos-latest` for iOS release integrity, fastlane validation, and the simulator build.
+- Hardened the newsletter rate limiter in `app/api/newsletter/route.ts` and `lib/newsletter-limiter.ts`:
+  - A 5,000-entry cap and expired-entry pruning bound memory growth.
+  - Client IP comes from `x-real-ip`, then the first `x-forwarded-for` entry.
+  - Timeouts and provider outages return 502 and internal errors return 500, logged server-side without sending error objects or stack traces to clients.
+- `tests/newsletter.test.ts`: 12 tests covering rate limiting, IP extraction, Loops submission, the honeypot, timeouts, and internal errors.
+- Originally prepared against `1.0.0-rc.13` on 2026-10-26; renumbered to `0.7.17` on the 0.7.x prerelease line after merging `main`.
+
 ## 2026-10-28 — Fix web sign-in button guard and native stay creation (WRE-242)
 
 - Fixed `SignInFormGuard` in `components/sign-in-form-guard.tsx` to prevent disabling the submit button on password, OTP, and MFA verification steps when the identifier input is no longer rendered.

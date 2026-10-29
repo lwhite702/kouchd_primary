@@ -1,5 +1,5 @@
 {
   "type": "patch",
-  "version": "0.7.16",
-  "reason": "Keep the web sign-in submit button usable on password, code, and two-factor steps (WRE-242)."
+  "version": "0.7.17",
+  "reason": "Gate web pull requests on typecheck, lint, tests, and build, and bound the newsletter rate limiter's memory and error responses (WRE-241)."
 }
