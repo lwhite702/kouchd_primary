@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- Web sign-in keeps the submit button usable on the password, code, and two-factor steps, where the email field is no longer shown. Before this, those steps could not be submitted (WRE-242, 0.7.16).
+
 ### Changed
 
 - **Web CI gate (WRE-241)**: Added a `web` job on `ubuntu-latest` in `.github/workflows/release-integrity.yml` that runs the environment check, TypeScript typecheck, ESLint, the Vitest suite, and the production `next build` on every PR to `main`.

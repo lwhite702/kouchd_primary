@@ -13,6 +13,12 @@ Internal engineering record. This file is excluded from Mintlify navigation and 
 - `tests/newsletter.test.ts`: 12 tests covering rate limiting, IP extraction, Loops submission, the honeypot, timeouts, and internal errors.
 - Originally prepared against `1.0.0-rc.13` on 2026-10-26; renumbered to `0.7.17` on the 0.7.x prerelease line after merging `main`.
 
+## 2026-10-28 — Fix web sign-in button guard and native stay creation (WRE-242)
+
+- Fixed `SignInFormGuard` in `components/sign-in-form-guard.tsx` to prevent disabling the submit button on password, OTP, and MFA verification steps when the identifier input is no longer rendered.
+- No code change for stay creation: checked that all numeric terms (`rateCents`, `earlyDiscountPercentage`, `earlyDiscountDays`, `lateFeeCents`, `graceDays`, `paymentDayOfWeek`) are already sent as `Double`, which Convex's `v.number()` validator expects.
+- Version `0.7.16`. The earlier draft of this entry also listed `/sign-in` and `/sign-up` redirects; those are not part of this change.
+
 ## 2026-10-28 — iOS settings and ledger summary parity (WRE-247)
 
 - `ios/Kouchd/MoreScreens.swift`: **Host controls** gets two new cards:
