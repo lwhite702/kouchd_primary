@@ -8,6 +8,7 @@ import { FormEvent, useEffect, useState } from "react";
 
 import { api } from "@/convex/_generated/api";
 import { InviteSkeleton } from "@/components/skeleton-loader";
+import { planLimitError, STAY_FULL_MESSAGE } from "@/lib/planLimitError";
 
 const nameKey = (tokenHash: string) => `kouchd:invite-display-name:${tokenHash}`;
 
@@ -135,6 +136,7 @@ function Accept({ tokenHash }: { tokenHash: string }) {
   const { user } = useUser();
   const sync = useMutation(api.users.syncCurrent);
   const accept = useMutation(api.invites.accept);
+  const recordBlockedJoin = useMutation(api.subscriptions.recordBlockedJoin);
   const [displayName, setDisplayName] = useState("");
   const [status, setStatus] = useState("");
   const [joining, setJoining] = useState(false);
@@ -179,6 +181,11 @@ function Accept({ tokenHash }: { tokenHash: string }) {
       setDone(true);
       setStatus("You joined the household. Your host can now see your name.");
     } catch (reason) {
+      if (planLimitError(reason)) {
+        setStatus(STAY_FULL_MESSAGE);
+        void recordBlockedJoin({ tokenHash }).catch(() => undefined);
+        return;
+      }
       const message = reason instanceof Error ? reason.message : "This invitation could not be accepted.";
       setStatus(message.includes("Already a member") ? "This account is already part of the household. Open Kouchd to continue." : message);
     } finally {

@@ -272,6 +272,69 @@ struct AccountSubscriptionSummary: Decodable {
   let plan: String
   let status: String
   let currentPeriodEndsAt: Double?
+  var willRenew: Bool?
+  /// Public plan name ("free", "plus", "pro"); the UI never shows internal plan names.
+  var planName: String?
+  var isTrial: Bool?
+  var productId: String?
+  /// "app_store", "web", or "other".
+  var store: String?
+  var trialReminderEnabled: Bool?
+  var introOfferEligible: Bool?
+
+  /// Plus (or legacy Pro) as verified by the backend, never by the store alone.
+  var hasPlus: Bool { plan != "starter" }
+  var periodEnd: Date? {
+    guard let currentPeriodEndsAt, currentPeriodEndsAt > 0 else { return nil }
+    return Date(timeIntervalSince1970: currentPeriodEndsAt / 1000)
+  }
+}
+
+/// Host-only guest spots across every active stay (`subscriptions:planUsage`).
+struct PlanUsage: Decodable, Equatable {
+  struct Count: Decodable, Equatable {
+    let used: Int
+    let limit: Int?
+    var left: Int? { limit.map { max(0, $0 - used) } }
+    var isFull: Bool { limit.map { used >= $0 } ?? false }
+  }
+  struct GuestSpot: Decodable, Equatable, Identifiable {
+    let stayId: String
+    let stayName: String
+    let guestUserId: String
+    let guestName: String
+    let pendingAgreement: Bool
+    var id: String { stayId + guestUserId }
+  }
+  struct BlockedJoin: Decodable, Equatable, Identifiable {
+    let id: String
+    let stayId: String
+    let stayName: String
+    let guestName: String
+    let attemptedAt: Double
+  }
+  let plan: String
+  let planConfigured: Bool
+  let stays: Count
+  let guests: Count
+  let guestSpots: [GuestSpot]
+  let blockedJoins: [BlockedJoin]
+
+  var isFree: Bool { plan == "free" }
+  var isPlus: Bool { plan == "plus" }
+  var planLabel: String { plan == "plus" ? "Plus" : plan == "pro" ? "Pro" : "Free" }
+}
+
+/// `ConvexError` data for a refused stay or guest (convex/lib/planCapacity.ts).
+struct PlanLimitError: Decodable, Equatable {
+  let code: String
+  let dimension: String
+  let plan: String
+  let limit: Int
+  let atHighestPlan: Bool
+  let message: String
+
+  var isGuest: Bool { dimension == "guest" }
 }
 
 struct AgreementRecord: Decodable, Identifiable {

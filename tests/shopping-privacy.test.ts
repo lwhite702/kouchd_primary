@@ -2,6 +2,7 @@ import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
 import { api } from "../convex/_generated/api";
 import schema from "../convex/schema";
+import { grantPlus } from "./helpers/plans";
 const modules = import.meta.glob([
   "../convex/**/*.ts",
   "!../convex/lib/**",
@@ -33,6 +34,7 @@ async function household() {
     timezone: "UTC",
     terms,
   });
+  await grantPlus(t, stayId);
   const referralCode = (await host.query(api.stays.getBundle, { stayId }))
     .stay.referralCode!;
   await owner.mutation(api.referral.joinWithCode, { referralCode });

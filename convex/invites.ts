@@ -8,6 +8,7 @@ import { recordActivity } from "./lib/activity";
 import { assertInvite, assertInviteHash } from "./lib/validation";
 import { ensureGuestTerms, offerGuestAgreement } from "./lib/stayTerms";
 import { scheduleSubscriptionLimitShadow } from "./subscriptionShadow";
+import { clearBlockedJoins } from "./subscriptions";
 
 export const preview = query({
   args: { tokenHash: v.string() },
@@ -106,6 +107,7 @@ export const accept = mutation({
     await assertPlanCapacity(ctx, joiningStay.hostUserId, "guest", joiningStay.householdAccountId);
     const now = Date.now();
     await ctx.db.insert("memberships", { stayId: invite.stayId, userId: user._id, role: "guest", status: "active", joinedAt: now });
+    await clearBlockedJoins(ctx, invite.stayId, user._id);
     const stay = await ctx.db.get(invite.stayId);
     if (!stay) throw new Error("Stay not found");
     const guestTerms = await ensureGuestTerms(ctx, invite.stayId, user._id, stay.hostUserId);

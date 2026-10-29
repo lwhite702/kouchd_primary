@@ -19,6 +19,7 @@ import type * as flags from "../flags.js";
 import type * as householdMigrations from "../householdMigrations.js";
 import type * as householdOwnership from "../householdOwnership.js";
 import type * as http from "../http.js";
+import type * as introOffer from "../introOffer.js";
 import type * as invites from "../invites.js";
 import type * as knock from "../knock.js";
 import type * as lib_activity from "../lib/activity.js";
@@ -63,6 +64,7 @@ declare const fullApi: ApiFromModules<{
   householdMigrations: typeof householdMigrations;
   householdOwnership: typeof householdOwnership;
   http: typeof http;
+  introOffer: typeof introOffer;
   invites: typeof invites;
   knock: typeof knock;
   "lib/activity": typeof lib_activity;

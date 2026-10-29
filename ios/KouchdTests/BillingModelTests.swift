@@ -1,3 +1,4 @@
+import ConvexMobile
 import XCTest
 @testable import Kouchd
 
@@ -116,6 +117,147 @@ import XCTest
   }
 }
 
+@MainActor final class PlusPurchaseTests: XCTestCase {
+  private let monthly = BillingPackage(id: "$rc_monthly", title: "Plus Monthly", detail: "", price: "$4.99", period: "month",
+                                       productID: BillingProduct.monthly, priceAmount: 4.99, freeTrialDays: 14)
+  private let annual = BillingPackage(id: "$rc_annual", title: "Plus Yearly", detail: "", price: "$39.99", period: "year",
+                                      productID: BillingProduct.annual, priceAmount: 39.99, freeTrialDays: 14)
+
+  func testYearlyIsDefaultAndSavingsAreComputedFromStorePrices() async {
+    let client = BillingClientMock()
+    client.availablePackages = [monthly, annual]
+    let model = BillingModel(client: client)
+    await model.load()
+    XCTAssertEqual(model.selectedPackage?.id, annual.id)
+    XCTAssertEqual(model.annualSavingsPercent, 33)
+  }
+
+  func testSignedKouchdAnswerDecidesTrialWording() async {
+    let client = BillingClientMock()
+    client.availablePackages = [monthly, annual]
+    let model = BillingModel(client: client) { productID, _ in
+      (productID == BillingProduct.annual, "jws-\(productID)")
+    }
+    await model.load(kouchdTrialEligible: true)
+    XCTAssertEqual(model.trialDays(for: annual), 14)
+    XCTAssertNil(model.trialDays(for: monthly))
+  }
+
+  func testUsedTrialOnWebHidesTrialEvenWhenAppleWouldOfferIt() async {
+    let client = BillingClientMock()
+    client.availablePackages = [annual]
+    client.appleEligibleIDs = [annual.id]
+    let model = BillingModel(client: client) { _, _ in (nil, nil) }
+    await model.load(kouchdTrialEligible: false)
+    XCTAssertNil(model.trialDays(for: annual))
+  }
+
+  func testWithoutSignatureBothKouchdAndAppleMustAgree() async {
+    let client = BillingClientMock()
+    client.availablePackages = [monthly, annual]
+    client.appleEligibleIDs = [annual.id]
+    let model = BillingModel(client: client) { _, _ in (nil, nil) }
+    await model.load(kouchdTrialEligible: true)
+    XCTAssertEqual(model.trialDays(for: annual), 14)
+    XCTAssertNil(model.trialDays(for: monthly))
+  }
+
+  func testPurchasePassesFreshSignedEligibility() async {
+    let client = BillingClientMock()
+    var askedTransactionIDs: [String?] = []
+    let model = BillingModel(client: client) { productID, transactionID in
+      askedTransactionIDs.append(transactionID)
+      return (false, "signed-\(productID)")
+    }
+    await model.purchase(annual)
+    XCTAssertEqual(client.purchasedJWS, ["signed-\(BillingProduct.annual)"])
+    XCTAssertEqual(askedTransactionIDs, ["2000000123456789"])
+  }
+
+  func testUsedTrialWithoutSignatureStopsBeforeApple() async {
+    let client = BillingClientMock()
+    client.availablePackages = [annual]
+    client.appleEligibleIDs = [annual.id]
+    let model = BillingModel(client: client) { _, _ in (nil, nil) }
+    await model.load(kouchdTrialEligible: false)
+    await model.purchase(annual)
+    XCTAssertTrue(client.purchasedIDs.isEmpty)
+    XCTAssertTrue(model.error.contains("nothing was charged"))
+  }
+
+  func testShownTrialWithoutSignatureStopsWhenAppleWouldCharge() async {
+    let client = BillingClientMock()
+    client.availablePackages = [annual]
+    var signing = true
+    let model = BillingModel(client: client) { _, _ in signing ? (true, "jws") : (nil, nil) }
+    await model.load(kouchdTrialEligible: true)
+    XCTAssertEqual(model.trialDays(for: annual), 14)
+    signing = false
+    await model.purchase(annual)
+    XCTAssertTrue(client.purchasedIDs.isEmpty)
+    XCTAssertFalse(model.error.isEmpty)
+  }
+
+  func testUnsignedPurchaseProceedsWhenKouchdAndAppleAgree() async {
+    let client = BillingClientMock()
+    client.availablePackages = [annual]
+    client.appleEligibleIDs = [annual.id]
+    let model = BillingModel(client: client) { _, _ in (nil, nil) }
+    await model.load(kouchdTrialEligible: true)
+    await model.purchase(annual)
+    XCTAssertEqual(client.purchasedIDs, [annual.id])
+    XCTAssertEqual(client.purchasedJWS, [nil])
+  }
+
+  func testSuccessWaitsForBackendToRecordPlus() async {
+    let client = BillingClientMock()
+    var backendHasPlus = false
+    let model = BillingModel(client: client, isPlanConfirmed: { backendHasPlus }, confirmationTimeout: .seconds(5))
+    let purchase = Task { await model.purchase(annual) }
+    try? await Task.sleep(for: .milliseconds(200))
+    XCTAssertTrue(model.isConfirming)
+    XCTAssertTrue(model.message.isEmpty)
+    backendHasPlus = true
+    await purchase.value
+    XCTAssertFalse(model.isConfirming)
+    XCTAssertTrue(model.message.hasPrefix("You're on Plus"))
+    XCTAssertNil(model.activeOperation)
+  }
+
+  func testUnconfirmedPurchaseFallsBackWithoutClaimingPlus() async {
+    let client = BillingClientMock()
+    let model = BillingModel(client: client, isPlanConfirmed: { false }, confirmationTimeout: .milliseconds(100))
+    await model.purchase(annual)
+    XCTAssertFalse(model.isConfirming)
+    XCTAssertFalse(model.message.contains("You're on Plus"))
+    XCTAssertTrue(model.message.contains("still confirming"))
+  }
+
+  func testPendingPurchaseSaysNothingWasCharged() async {
+    let client = BillingClientMock()
+    client.purchaseResult = .pending
+    let model = BillingModel(client: client)
+    await model.purchase(annual)
+    XCTAssertTrue(model.message.contains("Nothing has been charged"))
+    XCTAssertTrue(model.error.isEmpty)
+  }
+
+  func testPlanLimitErrorIsReadFromConvexErrorData() {
+    let data = #"{"code":"plan_limit","dimension":"stay","plan":"free","limit":1,"atHighestPlan":false,"message":"Free includes 1 active stay."}"#
+    let limit = KouchdStore.planLimit(from: ClientError.ConvexError(data: data))
+    XCTAssertEqual(limit?.dimension, "stay")
+    XCTAssertEqual(limit?.isGuest, false)
+    XCTAssertNil(KouchdStore.planLimit(from: ClientError.ConvexError(data: #""Something else""#)))
+    XCTAssertEqual(KouchdStore.message(for: ClientError.ConvexError(data: #"{"message":"Readable"}"#)), "Readable")
+  }
+
+  func testUsageCountsReadPlainly() {
+    XCTAssertEqual(PlanCopy.count(.init(used: 1, limit: 5)), "1 of 5")
+    XCTAssertEqual(PlanCopy.count(.init(used: 7, limit: nil)), "7 · no limit")
+    XCTAssertTrue(PlanUsage.Count(used: 1, limit: 1).isFull)
+  }
+}
+
 @MainActor private final class BillingClientMock: BillingClient {
   var availablePackages: [BillingPackage] = []
   var purchaseResult: BillingPurchaseResult = .purchased
@@ -123,14 +265,20 @@ import XCTest
   var identities: [String?] = []
   var purchasedIDs: [String] = []
   var restoreCount = 0
+  var purchasedJWS: [String?] = []
+  var appleEligibleIDs: Set<String> = []
+  var transactionID: String? = "2000000123456789"
 
   func updateIdentity(_ userID: String?) async throws { identities.append(userID) }
   func packages() async throws -> [BillingPackage] { availablePackages }
-  func purchase(packageID: String) async throws -> BillingPurchaseResult {
+  func purchase(packageID: String, introductoryOfferEligibilityJWS: String?) async throws -> BillingPurchaseResult {
     purchasedIDs.append(packageID)
+    purchasedJWS.append(introductoryOfferEligibilityJWS)
     if let failure { throw failure }
     return purchaseResult
   }
+  func appleTrialEligible(packageID: String) async -> Bool { appleEligibleIDs.contains(packageID) }
+  func appTransactionID() async -> String? { transactionID }
   func restore() async throws { restoreCount += 1 }
   func managementURL() async throws -> URL? { URL(string: "https://apps.apple.com/account/subscriptions") }
 }

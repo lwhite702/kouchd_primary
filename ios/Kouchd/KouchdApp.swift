@@ -14,6 +14,10 @@ import SwiftUI
     if AppConfig.isConfigured {
       Clerk.configure(publishableKey: AppConfig.clerkKey)
     }
+    #if DEBUG
+    // The plan host builds a signed-out store, which reads Clerk, but skips analytics and purchases.
+    if PlanScreensTestHost.scenario != nil { return }
+    #endif
     KouchdAnalytics.configure()
     if AppConfig.purchasesEnabled {
       #if DEBUG
@@ -27,6 +31,8 @@ import SwiftUI
       #if DEBUG
       if IntroductionTestHost.isEnabled {
         IntroductionTestHost()
+      } else if let scenario = PlanScreensTestHost.scenario {
+        PlanScreensTestHost(scenario: scenario)
       } else {
         configuredContent
       }
@@ -141,6 +147,7 @@ struct RootView: View {
     )) {
       Button("OK") { store.error = "" }
     } message: { Text(store.error) }
+    .planLimitPresentation(store: store)
     .onOpenURL(perform: handleOpenURL)
     .onChange(of: clerk.user?.id, initial: true) { _, userID in handleSessionUserChange(userID) }
     .onChange(of: store.stays.count) { _, count in handleStayCountChange(count) }
