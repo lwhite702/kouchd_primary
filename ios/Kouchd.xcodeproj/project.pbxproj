@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		14A6C410797E2C9FA069C732 /* PlusAccess.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03D8DDE9F3E6E254441DFB7C /* PlusAccess.swift */; };
 		2FF47254E3CA13D7C4C05DC0 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F456BBBC4E5A79C83B94DD4 /* Models.swift */; };
+		3BCF583E258C62C2091588A1 /* KouchdVariantCaptureTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1205FDA489C26F2182333C7C /* KouchdVariantCaptureTests.swift */; };
 		4E6EBFAE13DA5C841793ED4C /* RevenueCatUI in Frameworks */ = {isa = PBXBuildFile; productRef = 28B6FE74CDB0CD60015DEF44 /* RevenueCatUI */; };
 		50DD2C11C824695D4C0B9F3F /* MainScreens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28FB67FA8ACEEF88028EB12D /* MainScreens.swift */; };
 		69A55372E4F1B37912C6F675 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D2113646E0AF990592F43C78 /* Assets.xcassets */; };
@@ -44,6 +45,7 @@
 
 /* Begin PBXFileReference section */
 		03D8DDE9F3E6E254441DFB7C /* PlusAccess.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlusAccess.swift; sourceTree = "<group>"; };
+		1205FDA489C26F2182333C7C /* KouchdVariantCaptureTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KouchdVariantCaptureTests.swift; sourceTree = "<group>"; };
 		1766C340A67ABE6A0702B99A /* FunnelRuntime.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FunnelRuntime.swift; sourceTree = "<group>"; };
 		1BFE92274E81D4153B7707BC /* Service.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Service.swift; sourceTree = "<group>"; };
 		1F456BBBC4E5A79C83B94DD4 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
@@ -124,6 +126,7 @@
 			isa = PBXGroup;
 			children = (
 				7E41F415E7848FD71128F1AC /* KouchdUITests.swift */,
+				1205FDA489C26F2182333C7C /* KouchdVariantCaptureTests.swift */,
 			);
 			path = KouchdUITests;
 			sourceTree = "<group>";
@@ -298,6 +301,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				D048A9690664171DDFC93F1E /* KouchdUITests.swift in Sources */,
+				3BCF583E258C62C2091588A1 /* KouchdVariantCaptureTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
