@@ -161,6 +161,12 @@ private enum KouchdAuthError: LocalizedError {
   var checkins: [Value] = []
   var subscriptionSummary: Value = .null
   var typedSubscriptionSummary: AccountSubscriptionSummary?
+  private var planUsageValue: Value = .null
+  /// Host-only guest spots; nil for guests and while loading.
+  var planUsage: PlanUsage?
+  /// Set when the backend refused a stay or guest for plan limits. Screens
+  /// show their own copy for it instead of the generic error alert.
+  var planLimit: PlanLimitError?
   var typedLedger: [LedgerRecord] = []
   var isSubscriptionSummaryLoading = true
   var subscriptionSummaryError = ""
@@ -280,6 +286,7 @@ private enum KouchdAuthError: LocalizedError {
     watch("stays:listMine", into: \.stays, account: true)
     watch("admin:canAccess", into: \.adminAccess, account: true)
     watch("subscriptions:currentAccountSummary", into: \.subscriptionSummary, account: true)
+    watch("subscriptions:planUsage", into: \.planUsageValue, account: true)
   }
 
   func reset() {
@@ -319,6 +326,9 @@ private enum KouchdAuthError: LocalizedError {
     checkins = []
     subscriptionSummary = .null
     typedSubscriptionSummary = nil
+    planUsageValue = .null
+    planUsage = nil
+    planLimit = nil
     isSubscriptionSummaryLoading = true
     subscriptionSummaryError = ""
     clearAdmin()
@@ -564,6 +574,9 @@ private enum KouchdAuthError: LocalizedError {
         if name == "subscriptions:currentAccountSummary", let summary = value as? Value {
           self.typedSubscriptionSummary = summary.decoded(AccountSubscriptionSummary.self)
         }
+        if name == "subscriptions:planUsage", let usage = value as? Value {
+          self.planUsage = usage.decoded(PlanUsage.self)
+        }
         if name == "obligations:ledgerWithTotals", let record = value as? Value {
           let rows = record["rows"].items
           self.ledger = rows
@@ -611,6 +624,7 @@ private enum KouchdAuthError: LocalizedError {
     let guestEpoch = financialGeneration
     let scoped = !name.hasPrefix("users:") && !name.hasPrefix("admin:") &&
       !["stays:create", "referral:joinWithCode", "invites:accept"].contains(name)
+    planLimit = nil
     do {
       let result: Value = try await client.mutation(name, with: args)
       guard accountEpoch == accountGeneration, !scoped || (stayEpoch == stayGeneration && guestEpoch == financialGeneration) else { return nil }
@@ -618,8 +632,50 @@ private enum KouchdAuthError: LocalizedError {
       return result
     } catch {
       guard accountEpoch == accountGeneration, !scoped || (stayEpoch == stayGeneration && guestEpoch == financialGeneration) else { return nil }
-      self.error = error.localizedDescription
+      if let limit = Self.planLimit(from: error) {
+        planLimit = limit
+      } else {
+        self.error = Self.message(for: error)
+      }
       return nil
+    }
+  }
+
+  /// Reads the stable `plan_limit` code the backend attaches to limit refusals.
+  nonisolated static func planLimit(from error: Error) -> PlanLimitError? {
+    guard case ClientError.ConvexError(let data) = error,
+          let limit = try? JSONDecoder().decode(PlanLimitError.self, from: Data(data.utf8)),
+          limit.code == "plan_limit" else { return nil }
+    return limit
+  }
+
+  /// Prefers the readable message inside `ConvexError` data over its raw JSON.
+  nonisolated static func message(for error: Error) -> String {
+    if case ClientError.ConvexError(let data) = error {
+      if let object = try? JSONSerialization.jsonObject(with: Data(data.utf8)) as? [String: Any],
+         let message = object["message"] as? String { return message }
+      if let text = try? JSONDecoder().decode(String.self, from: Data(data.utf8)) { return text }
+    }
+    return error.localizedDescription
+  }
+
+  /// Notes a refused join so the host can see it. Errors are ignored: it is not the guest's problem.
+  func recordBlockedJoin(_ args: [String: ConvexEncodable?]) async {
+    _ = try? await client.mutation("subscriptions:recordBlockedJoin", with: args) as Value
+  }
+
+  /// Kouchd's cross-platform trial answer plus Apple's signed JWS for it.
+  /// `eligible == nil` means the backend could not answer.
+  func introOfferEligibility(productID: String, appTransactionID: String?) async -> (eligible: Bool?, jws: String?) {
+    var args: [String: ConvexEncodable?] = ["productId": productID]
+    if let appTransactionID { args["appTransactionId"] = appTransactionID }
+    guard let result: Value = try? await client.action("introOffer:signEligibility", with: args) else {
+      return (nil, nil)
+    }
+    let jws = result["jws"].text
+    switch result["eligible"] {
+    case .bool(let eligible): return (eligible, jws.isEmpty ? nil : jws)
+    default: return (nil, nil)
     }
   }
 

@@ -1,30 +1,57 @@
 import Foundation
 import Observation
 import RevenueCat
+import StoreKit
 import SwiftUI
 
 struct BillingPackage: Identifiable, Equatable, Sendable {
   let id: String
   let title: String
   let detail: String
+  /// The store's localized price string. Never hard-code amounts.
   let price: String
   /// Renewal period in words, such as "month" or "year". Empty when unknown.
   var period = ""
+  var productID = ""
+  /// Raw store price, used only to compare plans (for example annual savings).
+  var priceAmount: Decimal = 0
+  /// Length of the product's free-trial introductory offer, in days; nil when it has none.
+  var freeTrialDays: Int?
 
   var priceWithPeriod: String { period.isEmpty ? price : "\(price) / \(period)" }
+  var isAnnual: Bool { productID == BillingProduct.annual }
+}
+
+enum BillingProduct {
+  static let monthly = "kouchd_plus_monthly"
+  static let annual = "kouchd_plus_yearly"
 }
 
 enum BillingPurchaseResult: Equatable, Sendable {
   case purchased
   case cancelled
+  /// Ask to Buy or another approval is pending; nothing was charged yet.
+  case pending
 }
 
 @MainActor protocol BillingClient: AnyObject {
   func updateIdentity(_ userID: String?) async throws
   func packages() async throws -> [BillingPackage]
-  func purchase(packageID: String) async throws -> BillingPurchaseResult
+  func purchase(packageID: String, introductoryOfferEligibilityJWS: String?) async throws -> BillingPurchaseResult
+  /// Apple's own trial eligibility for this App Store account (no web history).
+  func appleTrialEligible(packageID: String) async -> Bool
+  /// Any transaction ID of this App Store account, for Kouchd's trial signature.
+  func appTransactionID() async -> String?
   func restore() async throws
   func managementURL() async throws -> URL?
+}
+
+extension BillingClient {
+  func purchase(packageID: String) async throws -> BillingPurchaseResult {
+    try await purchase(packageID: packageID, introductoryOfferEligibilityJWS: nil)
+  }
+  func appleTrialEligible(packageID: String) async -> Bool { false }
+  func appTransactionID() async -> String? { nil }
 }
 
 @MainActor final class RevenueCatBillingClient: BillingClient {
@@ -59,7 +86,7 @@ enum BillingPurchaseResult: Equatable, Sendable {
     let (purchases, userID, generation) = try await readyPurchases()
     let available = (try await purchases.offerings().current?.availablePackages ?? []).filter {
       let productID = $0.storeProduct.productIdentifier
-      return ["kouchd_plus_monthly", "kouchd_plus_yearly"].contains(productID)
+      return [BillingProduct.monthly, BillingProduct.annual].contains(productID)
     }
     try verifyIdentity(userID, generation: generation)
     packagesByID = Dictionary(uniqueKeysWithValues: available.map { ($0.identifier, $0) })
@@ -69,12 +96,29 @@ enum BillingPurchaseResult: Equatable, Sendable {
         title: $0.storeProduct.localizedTitle,
         detail: $0.storeProduct.localizedDescription,
         price: $0.localizedPriceString,
-        period: Self.periodText($0.storeProduct.subscriptionPeriod)
+        period: Self.periodText($0.storeProduct.subscriptionPeriod),
+        productID: $0.storeProduct.productIdentifier,
+        priceAmount: $0.storeProduct.price,
+        freeTrialDays: Self.freeTrialDays($0.storeProduct.introductoryDiscount)
       )
     }
   }
 
-  private static func periodText(_ period: SubscriptionPeriod?) -> String {
+  private static func freeTrialDays(_ discount: RevenueCat.StoreProductDiscount?) -> Int? {
+    guard let discount, discount.paymentMode == .freeTrial else { return nil }
+    let period = discount.subscriptionPeriod
+    let perUnit = switch period.unit {
+    case .day: 1
+    case .week: 7
+    case .month: 30
+    case .year: 365
+    @unknown default: 0
+    }
+    let days = perUnit * period.value * max(1, discount.numberOfPeriods)
+    return days > 0 ? days : nil
+  }
+
+  private static func periodText(_ period: RevenueCat.SubscriptionPeriod?) -> String {
     guard let period else { return "" }
     let unit = switch period.unit {
     case .day: "day"
@@ -87,14 +131,41 @@ enum BillingPurchaseResult: Equatable, Sendable {
     return period.value == 1 ? unit : "\(period.value) \(unit)s"
   }
 
-  func purchase(packageID: String) async throws -> BillingPurchaseResult {
+  func purchase(packageID: String, introductoryOfferEligibilityJWS: String?) async throws -> BillingPurchaseResult {
     let (purchases, userID, generation) = try await readyPurchases()
     guard let package = packagesByID[packageID] else {
       throw BillingError.packageUnavailable
     }
     try verifyIdentity(userID, generation: generation)
-    let result = try await purchases.purchase(package: package)
-    return result.userCancelled ? .cancelled : .purchased
+    // Kouchd's signed answer makes Apple's sheet honor one trial per host
+    // billing account across web and iPhone, not just this App Store account.
+    let builder = PurchaseParams.Builder(package: package)
+    if let introductoryOfferEligibilityJWS {
+      _ = builder.with(introductoryOfferEligibilityJWS: introductoryOfferEligibilityJWS)
+    }
+    do {
+      let result = try await purchases.purchase(builder.build())
+      return result.userCancelled ? .cancelled : .purchased
+    } catch let error as RevenueCat.ErrorCode where error == .paymentPendingError {
+      return .pending
+    } catch let error as NSError where error.domain == RevenueCat.ErrorCode.errorDomain
+      && error.code == RevenueCat.ErrorCode.paymentPendingError.rawValue {
+      return .pending
+    }
+  }
+
+  func appleTrialEligible(packageID: String) async -> Bool {
+    guard let package = packagesByID[packageID] else { return false }
+    let status = await Purchases.shared.checkTrialOrIntroDiscountEligibility(product: package.storeProduct)
+    return status == .eligible
+  }
+
+  func appTransactionID() async -> String? {
+    guard let result = try? await StoreKit.AppTransaction.shared else { return nil }
+    switch result {
+    case .verified(let transaction): return transaction.appTransactionID
+    case .unverified: return nil
+    }
   }
 
   func restore() async throws {
@@ -209,6 +280,8 @@ enum BillingError: LocalizedError {
       let result = try await client.purchase(packageID: package.id)
       if result == .purchased {
         message = "Purchase received. Your household plan will update after Kouchd verifies it."
+      } else if result == .pending {
+        message = "Your purchase is waiting for approval. Nothing has been charged yet."
       }
       error = ""
     } catch {

@@ -126,7 +126,7 @@ import XCTest
 
   func updateIdentity(_ userID: String?) async throws { identities.append(userID) }
   func packages() async throws -> [BillingPackage] { availablePackages }
-  func purchase(packageID: String) async throws -> BillingPurchaseResult {
+  func purchase(packageID: String, introductoryOfferEligibilityJWS: String?) async throws -> BillingPurchaseResult {
     purchasedIDs.append(packageID)
     if let failure { throw failure }
     return purchaseResult
