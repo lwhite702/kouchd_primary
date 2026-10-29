@@ -211,6 +211,11 @@ describe("one trial per host billing account", () => {
 });
 
 describe("trial-ending reminder email", () => {
+  // Knock must be unconfigured so delivery is deterministic, even on CI hosts
+  // (like Vercel) that have a real KNOCK_API_KEY in their environment.
+  beforeEach(() => { vi.stubEnv("KNOCK_API_KEY", ""); });
+  afterEach(() => { vi.unstubAllEnvs(); });
+
   async function reminderEvents(t: ReturnType<typeof convexTest>) {
     return t.run(async ({ db }) =>
       (await db.query("notificationEvents").collect()).filter((row) => row.workflow === "plus-trial-ending"));
