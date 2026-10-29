@@ -403,10 +403,12 @@ struct SubscriptionScreen: View {
   @State private var billing: BillingModel
   @State private var reminderBusy = false
   @Environment(\.openURL) private var openURL
+  private let purchasesEnabled: Bool
 
-  init(store: KouchdStore) {
+  init(store: KouchdStore, billing: BillingModel? = nil, purchasesEnabled: Bool = AppConfig.purchasesEnabled) {
     self.store = store
-    _billing = State(initialValue: BillingModel(
+    self.purchasesEnabled = purchasesEnabled
+    _billing = State(initialValue: billing ?? BillingModel(
       client: RevenueCatBillingClient.shared,
       eligibility: { [weak store] productID, transactionID in
         guard let store else { return (nil, nil) }
@@ -423,14 +425,14 @@ struct SubscriptionScreen: View {
         EmptyCard(title: "Guests stay free", message: "Only the household host manages a Kouchd subscription. Your agreements, records, ledger, chores, and participation remain available.")
       } else {
         currentPlanCard
-        if let usage = store.planUsage { PlanUsageCard(store: store, usage: usage) }
-        if !AppConfig.purchasesEnabled {
+        // On Free, the offer comes before usage; on Plus, usage comes first.
+        if !purchasesEnabled {
           EmptyCard(title: "Subscriptions are coming soon", message: "Purchase options will appear after Kouchd finishes App Store and plan verification.")
-        } else if summary?.hasPlus == true {
-          manageCard
-        } else {
+        } else if summary?.hasPlus != true {
           offerCard
         }
+        if let usage = store.planUsage { PlanUsageCard(store: store, usage: usage) }
+        if purchasesEnabled, summary?.hasPlus == true { manageCard }
       }
 
       if !billing.message.isEmpty {
@@ -440,8 +442,9 @@ struct SubscriptionScreen: View {
         Text(billing.error).font(.footnote).foregroundStyle(.red)
       }
     }
+    .tint(Palette.forest)
     .task(id: summary?.introOfferEligible) {
-      if AppConfig.purchasesEnabled, summary?.hasPlus != true {
+      if purchasesEnabled, summary?.hasPlus != true {
         await billing.load(kouchdTrialEligible: summary?.introOfferEligible)
       }
     }
@@ -563,6 +566,7 @@ struct SubscriptionScreen: View {
       Text(text).font(.subheadline).foregroundStyle(Palette.ink)
     } icon: {
       Image(systemName: symbol).foregroundStyle(Palette.forest)
+        .frame(width: 28)
     }
   }
 
@@ -697,6 +701,7 @@ struct PlanUsageCard: View {
 /// for a host the reason plus a way to Plus when there is a higher plan.
 struct PlanLimitPresentation: ViewModifier {
   let store: KouchdStore
+  var purchasesEnabled = AppConfig.purchasesEnabled
 
   func body(content: Content) -> some View {
     content
@@ -710,20 +715,21 @@ struct PlanLimitPresentation: ViewModifier {
         get: { store.planLimit?.isGuest == false ? store.planLimit : nil },
         set: { if $0 == nil { store.planLimit = nil } }
       )) { limit in
-        PlanLimitSheet(store: store, limit: limit)
+        PlanLimitSheet(store: store, limit: limit, purchasesEnabled: purchasesEnabled)
       }
   }
 }
 
 extension View {
-  func planLimitPresentation(store: KouchdStore) -> some View {
-    modifier(PlanLimitPresentation(store: store))
+  func planLimitPresentation(store: KouchdStore, purchasesEnabled: Bool = AppConfig.purchasesEnabled) -> some View {
+    modifier(PlanLimitPresentation(store: store, purchasesEnabled: purchasesEnabled))
   }
 }
 
 struct PlanLimitSheet: View {
   let store: KouchdStore
   let limit: PlanLimitError
+  var purchasesEnabled = AppConfig.purchasesEnabled
   @Environment(\.dismiss) private var dismiss
 
   var body: some View {
@@ -732,7 +738,7 @@ struct PlanLimitSheet: View {
         Card {
           Image(systemName: "house.lodge").font(.title2).foregroundStyle(Palette.forest)
           Text(limit.message).font(.body).foregroundStyle(Palette.ink)
-          if !limit.atHighestPlan && AppConfig.purchasesEnabled {
+          if !limit.atHighestPlan && purchasesEnabled {
             NavigationLink(value: KouchdRoute.subscription) {
               Text("See Kouchd Plus").font(.headline).foregroundStyle(.white)
                 .frame(maxWidth: .infinity).padding(.vertical, 15)
@@ -742,8 +748,9 @@ struct PlanLimitSheet: View {
         }
       }
       .navigationDestination(for: KouchdRoute.self) { route in
-        if route == .subscription { SubscriptionScreen(store: store) }
+        if route == .subscription { SubscriptionScreen(store: store, purchasesEnabled: purchasesEnabled) }
       }
+      .tint(Palette.forest)
       .toolbar {
         ToolbarItem(placement: .cancellationAction) {
           Button("Not now") { dismiss() }
@@ -753,3 +760,98 @@ struct PlanLimitSheet: View {
     .presentationDetents([.medium, .large])
   }
 }
+
+#if DEBUG
+/// Shows the plan screens with synthetic data and a fake store, without Clerk,
+/// Convex data, or RevenueCat. Launch with `--ui-test-plan=<scenario>`; absent from Release.
+struct PlanScreensTestHost: View {
+  static var scenario: String? {
+    ProcessInfo.processInfo.arguments.first { $0.hasPrefix("--ui-test-plan=") }?
+      .replacingOccurrences(of: "--ui-test-plan=", with: "")
+  }
+  let scenario: String
+  @State private var store = KouchdStore()
+  @State private var ready = false
+  private var arguments: [String] { ProcessInfo.processInfo.arguments }
+
+  var body: some View {
+    NavigationStack {
+      if ready {
+        switch scenario {
+        case "limit-host", "limit-host-plus", "limit-guest":
+          Page(title: "Create stay") { Text("Behind the plan-limit message.").foregroundStyle(Palette.muted) }
+        default:
+          SubscriptionScreen(store: store, billing: BillingModel(client: FakeBillingClient()) { productID, _ in
+            (scenario != "free-used-trial", "fake-jws-\(productID)")
+          }, purchasesEnabled: true)
+        }
+      }
+    }
+    .planLimitPresentation(store: store, purchasesEnabled: true)
+    .task {
+      // The signed-out store resets once Convex reports its auth state; seed after that.
+      try? await Task.sleep(for: .milliseconds(600))
+      seed()
+      ready = true
+    }
+    .preferredColorScheme(arguments.contains("--ui-test-dark") ? .dark : .light)
+    .dynamicTypeSize(arguments.contains("--ui-test-accessibility-text") ? .accessibility3 : .large)
+  }
+
+  private func seed() {
+    let day = 86_400_000.0
+    let now = Date().timeIntervalSince1970 * 1000
+    let plus = scenario.hasPrefix("plus") || scenario == "web-plus" || scenario == "limit-host-plus"
+    var summary = AccountSubscriptionSummary(canManageSubscription: true, plan: plus ? "hostPlus" : "starter",
+                                             status: plus ? "active" : "starter",
+                                             currentPeriodEndsAt: plus ? now + 9 * day : nil)
+    summary.planName = plus ? "plus" : "free"
+    summary.isTrial = scenario == "plus-trial"
+    summary.willRenew = true
+    summary.store = scenario == "web-plus" ? "web" : "app_store"
+    summary.trialReminderEnabled = true
+    summary.introOfferEligible = scenario != "free-used-trial"
+    store.typedSubscriptionSummary = summary
+    store.planUsage = PlanUsage(
+      plan: plus ? "plus" : "free", planConfigured: true,
+      stays: .init(used: plus ? 2 : 1, limit: plus ? 3 : 1),
+      guests: .init(used: plus ? 3 : 1, limit: plus ? 5 : 1),
+      guestSpots: plus
+        ? [.init(stayId: "s1", stayName: "Maple Street room", guestUserId: "g1", guestName: "Jordan", pendingAgreement: false),
+           .init(stayId: "s1", stayName: "Maple Street room", guestUserId: "g2", guestName: "Riley", pendingAgreement: true),
+           .init(stayId: "s2", stayName: "Garden flat", guestUserId: "g3", guestName: "Sam", pendingAgreement: false)]
+        : [.init(stayId: "s1", stayName: "Maple Street room", guestUserId: "g1", guestName: "Jordan", pendingAgreement: false)],
+      blockedJoins: plus ? [] : [.init(id: "b1", stayId: "s1", stayName: "Maple Street room", guestName: "Avery", attemptedAt: now - 2 * day)]
+    )
+    switch scenario {
+    case "limit-host":
+      store.planLimit = PlanLimitError(code: "plan_limit", dimension: "stay", plan: "free", limit: 1, atHighestPlan: false,
+                                       message: "Free includes 1 active stay. End your current stay or move to Plus to host up to 3 at once.")
+    case "limit-host-plus":
+      store.planLimit = PlanLimitError(code: "plan_limit", dimension: "stay", plan: "plus", limit: 3, atHighestPlan: true,
+                                       message: "Plus covers up to 3 active stays. End a stay to start a new one.")
+    case "limit-guest":
+      store.planLimit = PlanLimitError(code: "plan_limit", dimension: "guest", plan: "free", limit: 1, atHighestPlan: false,
+                                       message: "Host-facing text the guest must not see.")
+    default: break
+    }
+  }
+}
+
+@MainActor private final class FakeBillingClient: BillingClient {
+  func updateIdentity(_ userID: String?) async throws {}
+  func packages() async throws -> [BillingPackage] {
+    [
+      BillingPackage(id: "$rc_monthly", title: "Kouchd Plus Monthly", detail: "", price: "$4.99", period: "month",
+                     productID: BillingProduct.monthly, priceAmount: 4.99, freeTrialDays: 14),
+      BillingPackage(id: "$rc_annual", title: "Kouchd Plus Yearly", detail: "", price: "$39.99", period: "year",
+                     productID: BillingProduct.annual, priceAmount: 39.99, freeTrialDays: 14),
+    ]
+  }
+  func purchase(packageID: String, introductoryOfferEligibilityJWS: String?) async throws -> BillingPurchaseResult { .pending }
+  func appleTrialEligible(packageID: String) async -> Bool { true }
+  func appTransactionID() async -> String? { "2000000123456789" }
+  func restore() async throws {}
+  func managementURL() async throws -> URL? { nil }
+}
+#endif
