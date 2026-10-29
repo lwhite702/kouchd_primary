@@ -72,6 +72,20 @@ final class IntroductionFlowTests: XCTestCase {
     tap(label)
   }
 
+  func testSwipingMovesBetweenStepsAndKeepsTheFooterInStep() {
+    launch()
+    assertTitle("A shared stay.\nOn the same page.")
+    app.swipeLeft()
+    assertTitle("Good stays start\nwith clarity.")
+    XCTAssertTrue(app.buttons["Continue"].waitForExistence(timeout: 5))
+    XCTAssertTrue(app.buttons["Back"].exists)
+    app.swipeLeft()
+    assertTitle("Clear records.\nFewer awkward asks.")
+    app.swipeRight()
+    assertTitle("Good stays start\nwith clarity.")
+    snapshot("swipe-back")
+  }
+
   // At accessibility sizes the footer scrolls with the content instead of being pinned.
   func testAccessibilityTextFooterScrollsIntoReachThroughRoleSelection() {
     launch(accessibilityText: true)
@@ -137,6 +151,14 @@ final class IntroductionFlowTests: XCTestCase {
       app.staticTexts["Welcome! Sign in to continue"].waitForExistence(timeout: 10),
       "Authentication screen did not appear"
     )
+  }
+
+  func testReplaySwipeStopsAtTheLastPreview() {
+    launch(replay: true)
+    for _ in 0..<4 { app.swipeLeft() }
+    assertTitle("Make the everyday\nfeel more shared.")
+    XCTAssertFalse(app.staticTexts["How are you\nmaking room?"].exists)
+    XCTAssertTrue(app.buttons["Done"].exists)
   }
 
   func testReplayCompletesWithoutRoleSelection() {

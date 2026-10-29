@@ -409,7 +409,7 @@ struct SettingsScreen: View {
       email = store.viewer["notifyEmail"].flag
       sms = store.viewer["notifySms"].flag
     }
-    .sheet(isPresented: $showAccount) { UserProfileView() }
+    .sheet(isPresented: $showAccount) { UserProfileView().environment(\.clerkTheme, .kouchd) }
   }
 
   private func savePreferences() {

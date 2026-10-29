@@ -1,3 +1,4 @@
+import ClerkKitUI
 import SwiftUI
 
 enum Palette {
@@ -13,7 +14,7 @@ enum Palette {
   static let heading = Font.custom("Manrope", size: 33, relativeTo: .largeTitle).weight(.bold)
   static let section = Font.custom("Manrope", size: 23, relativeTo: .title2).weight(.bold)
 
-  private static func adaptive(light: UInt32, dark: UInt32) -> Color {
+  static func adaptive(light: UInt32, dark: UInt32) -> Color {
     Color(uiColor: UIColor { traits in
       let value = traits.userInterfaceStyle == .dark ? dark : light
       return UIColor(
@@ -24,6 +25,36 @@ enum Palette {
       )
     })
   }
+}
+
+extension ClerkTheme {
+  /// Clerk's sign-in, sign-up and account screens in Kouchd's colors, type and shapes:
+  /// cream surfaces, forest buttons (lime in dark mode), Manrope headings, rounded fields.
+  static let kouchd: ClerkTheme = {
+    var fonts = ClerkTheme.Fonts.default
+    fonts.largeTitle = Font.custom("Manrope", size: 33, relativeTo: .largeTitle).weight(.bold)
+    fonts.title = Font.custom("Manrope", size: 28, relativeTo: .title).weight(.bold)
+    fonts.title2 = Font.custom("Manrope", size: 23, relativeTo: .title2).weight(.bold)
+    fonts.title3 = Font.custom("Manrope", size: 20, relativeTo: .title3).weight(.bold)
+    return ClerkTheme(
+      colors: .init(
+        primary: Palette.forest,
+        background: Palette.cream,
+        input: Palette.surface,
+        foreground: Palette.ink,
+        mutedForeground: Palette.muted,
+        primaryForeground: Palette.adaptive(light: 0xFFFFFF, dark: 0x16241E),
+        inputForeground: Palette.ink,
+        neutral: Palette.muted,
+        ring: Palette.forest,
+        muted: Palette.adaptive(light: 0xEFEADF, dark: 0x1B2721),
+        secondaryButtonBackground: Palette.surface,
+        border: Palette.line
+      ),
+      fonts: fonts,
+      design: .init(borderRadius: 16)
+    )
+  }()
 }
 
 struct Page<Content: View>: View {

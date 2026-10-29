@@ -59,3 +59,9 @@
   .about-values-grid li, .about-people-grid article { padding: 26px; border-radius: 20px; }
   .about-value-number { margin-bottom: 18px; }
 }
+
+/* Display values, labels, and initials keep Manrope; body copy inherits Inter. */
+.about-jump-links a,
+.about-value-number {
+  font-family: var(--font-manrope), "Manrope", sans-serif;
+}

@@ -2,6 +2,20 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-10-29 — Web body copy in Inter
+
+- Decision (Lee, 2026-10-29): body copy is Inter; titles and display text stay Manrope. `docs/internal/BRAND_DESIGN_SYSTEM.md` and `app/brand-system.css` already said so; the web app and `AGENTS.md` did not.
+- The base font moved from Manrope to Inter in four places: `:root` in `styles.css`, `.production-shell` in `app/production.css`, the dashboard root in `components/dashboard-v21.css`, and the marketing root in `components/landing-v21.css`.
+- `styles.css` now pins Manrope on `h1`–`h6`, `button`, `.button`, `.v21-button`, eyebrows and overlines (`[class*="eyebrow"]`), pills (`[class*="-pill"]`), `.metric`, `.badge`, the `.v21-brand` wordmark, and footer column titles.
+- Review feedback: dashboard and marketing controls that set `font-family: inherit` (sidebar nav items, summary tiles, pill and attention buttons, invite pill, sign-in, preview tabs) would have picked up Inter. They now set Manrope, and `components/dashboard-v21.css` pins Manrope on the dashboard's titles, tile labels, and tile metrics.
+- Controls that reset the font with the `font: inherit` shorthand also set Manrope after it: the host workspace text, icon, and secondary actions, check-in card buttons, the newsletter button, and mobile menu items. Activity rows and inputs keep inheriting Inter.
+- Swept `landing-v21.css`, `dashboard-v21.css`, and `about-kouchd-page.css` for heavy (750+) text with no font family and pinned Manrope on the display ones: proof-card and summary metrics, contribution amounts, kickers and overlines, avatars and initials, step and feature numbers, status labels, FAQ questions, and the sidebar wordmark. Bold inline phrases inside sentences stay Inter.
+- `AGENTS.md` "Brand and product design" now names Manrope for titles and display text and Inter for web body copy.
+- Checked computed fonts on `/about` in a local dev server. The signed-in dashboard was not checked. The old `.landing-*` rules in `styles.css` are not used by any page and were left as they were.
+- Version `0.7.21` (re-prepared after the zod patch and the iOS review fixes took `0.7.19` and `0.7.20` on `main`).
+- Review fix: `.v21-host-heading` dropped from the Manrope rule; it wraps the stay subhead, which now stays Inter. The title keeps Manrope through `.v21-stay-title`.
+- Review fix: the Ledger summary amounts and labels (`.summary-item strong`, `.summary-item span`) keep Manrope. A sweep of `styles.css` for heavy text with no font family also pinned `.brand`, `.avatar`, `.list-value`, `.details-card p:last-child`, and `.stay-hub-card > strong`.
+
 ## 2026-10-29 — iOS review fixes: analytics privacy, paywall disclosures, introduction (WRE-249)
 
 - `ios/Kouchd/KouchdApp.swift`:
