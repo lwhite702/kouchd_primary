@@ -1,5 +1,5 @@
 {
-  "type": "rc",
-  "version": "1.0.0-rc.17",
-  "reason": "Add iOS guest display names, the agreement automatic-acceptance setting, and the ledger summary that web already has (WRE-247)."
+  "type": "patch",
+  "version": "0.7.15",
+  "reason": "Add iOS guest display names, the agreement automatic-acceptance setting, and the ledger summary that web already has, from one ledger computation (WRE-247)."
 }

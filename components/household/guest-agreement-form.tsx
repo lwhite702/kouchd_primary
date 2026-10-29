@@ -11,11 +11,14 @@ export type GuestTerms = Pick<Doc<"terms">,
 export function GuestAgreementForm({
   terms,
   guestName,
+  intro,
   onSubmit,
   onCancel,
 }: {
   terms: Doc<"terms">;
   guestName: string;
+  /** Replaces the default guest-specific explanation, e.g. for household defaults. */
+  intro?: string;
   onSubmit: (terms: GuestTerms) => Promise<void>;
   onCancel: () => void;
 }) {
@@ -59,7 +62,7 @@ export function GuestAgreementForm({
 
   return (
     <form onSubmit={submit}>
-      <p className="muted">Update {guestName}&apos;s agreement. The guest will be asked to review and accept this version. Household rules remain shared.</p>
+      <p className="muted">{intro ?? <>Update {guestName}&apos;s agreement. The guest will be asked to review and accept this version. Household rules remain shared.</>}</p>
       <div className="form-grid">
         <label><span>Start date</span><input name="startDate" type="date" defaultValue={terms.startDate} required /></label>
         <label><span>End date</span><input name="endDate" type="date" defaultValue={terms.endDate} required /></label>

@@ -118,6 +118,35 @@ describe("Contribution Points & Rewards System", () => {
     });
     expect(ledger[0].creditedCents).toBe(2_000);
     expect(ledger[0].balanceCents).toBe(18_000);
+
+    // Voids must not split a redemption from its points: the credit and the
+    // claim that funded it stay in place, and nothing changes.
+    await expect(
+      guest.mutation(api.contributions.voidContribution, { contributionId: redemptionResult.contributionId }),
+    ).rejects.toThrow("came from redeemed reward points");
+    await expect(
+      host.mutation(api.contributions.voidContribution, { contributionId: redemptionResult.contributionId }),
+    ).rejects.toThrow("came from redeemed reward points");
+    await expect(host.mutation(api.rewards.voidClaim, { claimId })).rejects.toThrow("already been redeemed");
+    wallet = await guest.query(api.rewards.getWallet, { stayId });
+    expect(wallet.availablePoints).toBe(5);
+    expect(wallet.redeemedPoints).toBe(20);
+    ledger = await guest.query(api.obligations.list, { stayId, asOfDate: "2026-09-07" });
+    expect(ledger[0].creditedCents).toBe(2_000);
+
+    // A confirmed claim whose points are still unredeemed can be voided.
+    const spareClaimId = await guest.mutation(api.rewards.submitClaim, {
+      stayId,
+      ruleId: kitchenRule._id,
+      title: kitchenRule.title,
+      points: 10,
+      note: "Wiped the fridge",
+      date: "2026-09-04",
+    });
+    await host.mutation(api.rewards.confirmClaim, { claimId: spareClaimId });
+    await host.mutation(api.rewards.voidClaim, { claimId: spareClaimId });
+    wallet = await guest.query(api.rewards.getWallet, { stayId });
+    expect(wallet.availablePoints).toBe(5);
   });
 
   it("enforces outstanding balance limits and cumulative period credit caps", async () => {

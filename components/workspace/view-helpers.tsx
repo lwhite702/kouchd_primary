@@ -68,5 +68,7 @@ export function panelTitle(panel: Exclude<Panel, null>) {
     houseInfo: "Household Guide & Essentials",
     paymentOptions: "Payment options",
     guestTerms: "Edit guest agreement",
+    householdTerms: "Edit household defaults",
+    stayName: "Rename stay",
   }[panel];
 }

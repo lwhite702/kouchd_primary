@@ -985,7 +985,7 @@ struct ChoresScreen: View {
             }.disabled(store.isEnded || !chore["voidedAt"].text.isEmpty).accessibilityLabel(chore["completed"].flag ? "Mark incomplete" : "Mark complete")
             VStack(alignment: .leading, spacing: 4) {
               Text(chore.title).font(.headline)
-              Text(chore["assignee"].text.capitalized + " · " + chore["dueDate"].text)
+              Text(HouseholdRules.choreScheduleLabel(chore))
                 .font(.caption).foregroundStyle(Palette.muted)
             }
             Spacer()
@@ -1022,6 +1022,7 @@ struct ChoreForm: View {
   @State private var assignee = "shared"
   @State private var assigneeID = ""
   @State private var due = Date.now
+  @State private var repeatCadence = "none"
   var body: some View {
     NavigationStack {
       Form {
@@ -1041,6 +1042,11 @@ struct ChoreForm: View {
           }
         }
         DatePicker("Due", selection: $due, displayedComponents: .date)
+        Picker("Repeat", selection: $repeatCadence) {
+          Text("Does not repeat").tag("none")
+          Text("Daily").tag("daily")
+          Text("Weekly").tag("weekly")
+        }
       }
       .navigationTitle("New chore")
       .kouchdNavigationBar()
@@ -1054,6 +1060,7 @@ struct ChoreForm: View {
                 "assignee": assignee, "dueDate": Display.date(due)
               ]
               if assignee == "guest" && !assigneeID.isEmpty { args["assigneeUserId"] = assigneeID }
+              if let cadence = HouseholdRules.choreRepeatCadence(repeatCadence) { args["repeatCadence"] = cadence }
               if await store.mutate("chores:create", args) { dismiss() }
             }
           }.disabled(title.trimmingCharacters(in: .whitespaces).isEmpty)
