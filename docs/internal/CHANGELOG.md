@@ -12,7 +12,14 @@ Internal engineering record. This file is excluded from Mintlify navigation and 
 - Swept `landing-v21.css`, `dashboard-v21.css`, and `about-kouchd-page.css` for heavy (750+) text with no font family and pinned Manrope on the display ones: proof-card and summary metrics, contribution amounts, kickers and overlines, avatars and initials, step and feature numbers, status labels, FAQ questions, and the sidebar wordmark. Bold inline phrases inside sentences stay Inter.
 - `AGENTS.md` "Brand and product design" now names Manrope for titles and display text and Inter for web body copy.
 - Checked computed fonts on `/about` in a local dev server. The signed-in dashboard was not checked. The old `.landing-*` rules in `styles.css` are not used by any page and were left as they were.
-- Version `0.7.19`.
+- Version `0.7.20` (re-prepared after the zod patch took `0.7.19` on `main`).
+
+## 2026-10-29 — Patch zod for CVE-2023-54404
+
+- `package.json`: added `"overrides": { "zod": "^4.6.6" }`. `npm ls zod` showed `zod` only as a dev dependency of `eslint-plugin-react-hooks@7.1.1` (through `eslint-config-next@16.4.3`), whose range `^3.25.0 || ^4.0.0` had locked 4.5.4. `zod-validation-error@4.0.2` now dedupes to the same copy.
+- `package-lock.json`: `node_modules/zod` moves from 4.5.4 to 4.6.7; no other entries changed.
+- This is the only open Dependabot alert on `main` (#45, high, `zod < 4.6.6`, first patched 4.6.6). It should close once this merges to `main`; that is not yet observed.
+- Version `0.7.19`. Open PR #88 (web body font) also uses `0.7.19`; whichever merges second must re-prepare the next patch, because the release gate requires a patch to be exactly one above `main`.
 
 ## 2026-10-29 — Readable text on lime in iOS dark mode
 

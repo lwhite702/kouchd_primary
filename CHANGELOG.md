@@ -2,9 +2,13 @@
 
 ## [Unreleased]
 
+### Security
+
+- Upgraded `zod` from 4.5.4 to 4.6.7 through an npm `overrides` entry (`"zod": "^4.6.6"`) to fix CVE-2023-54404 (high, Dependabot alert #45): Zod could exhaust memory while validating oversized constrained collections. `zod` is not a direct dependency; it comes in only as a dev dependency of `eslint-plugin-react-hooks` (via `eslint-config-next`), so the shipped web bundle and the iOS app do not include it (0.7.19).
+
 ### Fixed
 
-- Web body copy is now set in Inter, as the brand design system specifies. Headings, eyebrows, metrics, buttons, pills, and the wordmark stay in Manrope (0.7.19).
+- Web body copy is now set in Inter, as the brand design system specifies. Headings, eyebrows, metrics, buttons, pills, and the wordmark stay in Manrope (0.7.20).
 - iOS status pills and the account initials button now stay readable in dark mode. Their text used the adaptive `Palette.ink`, which turns near-white in dark mode and sat on the fixed lime fill at 1.1:1. A new fixed `Palette.onLime` (#16241E) gives 13.0:1 in both appearances (0.7.18).
 - Web sign-in keeps the submit button usable on the password, code, and two-factor steps, where the email field is no longer shown. Before this, those steps could not be submitted (WRE-242, 0.7.16).
 
