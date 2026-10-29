@@ -74,6 +74,7 @@ final class IntroductionFlowTests: XCTestCase {
     tap("Skip")
     XCTAssertTrue(app.buttons["Create a stay"].waitForExistence(timeout: 5))
     XCTAssertTrue(app.buttons["Join a stay"].exists)
+    XCTAssertFalse(app.buttons["Skip"].exists)
   }
 
   func testSignInReturnsNoRole() {

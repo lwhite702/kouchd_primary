@@ -12,6 +12,7 @@ struct BrandSplash: View {
       Image("CouchMark").resizable().scaledToFit().frame(width: 96, height: 96)
         .accessibilityHidden(true)
       Text("kouchd").font(.custom("Manrope", size: 72, relativeTo: .largeTitle).bold())
+        .lineLimit(1).minimumScaleFactor(0.5)
       Text("A little room, well shared.").font(.body)
       Spacer()
       Text("SHARED STAYS. CLEAR EXPECTATIONS.").font(.caption)
@@ -26,6 +27,7 @@ struct IntroductionScreen: View {
   var replay = false
   let finish: (EntryRoute?) -> Void
   @Environment(\.accessibilityReduceMotion) private var reduceMotion
+  @Environment(\.dynamicTypeSize) private var typeSize
   @State private var step = 0
   private let titles = ["A shared stay.\nOn the same page.", "Good stays start\nwith clarity.",
                         "Clear records.\nFewer awkward asks.", "Make the everyday\nfeel more shared."]
@@ -41,14 +43,18 @@ struct IntroductionScreen: View {
         if step > 0 { Button("Back") { move(to: step - 1) } }
         else { Text("kouchd").font(.custom("Manrope", size: 20, relativeTo: .title3).bold()) }
         Spacer()
-        Button(replay ? "Done" : "Skip") {
-          if replay { finish(nil) } else { move(to: 4) }
+        // The role choice is the last step, so Skip has nowhere to go there.
+        if replay || step < 4 {
+          Button(replay ? "Done" : "Skip") {
+            if replay { finish(nil) } else { move(to: 4) }
+          }
         }
-      }.frame(minHeight: 44).padding(.horizontal, 24)
+      }.frame(minHeight: 44).padding(.horizontal, 24).foregroundStyle(Palette.forest)
       ScrollView {
         VStack(alignment: .leading, spacing: 20) {
           if step < 4 {
-            Image("CouchMark").resizable().scaledToFit().frame(width: 64, height: 64)
+            Image("CouchMark").renderingMode(.template).resizable().scaledToFit().frame(width: 64, height: 64)
+              .foregroundStyle(Palette.forest)
               .accessibilityHidden(true)
             if step > 0 { Pill(text: ["", "01 / Your stay", "02 / Contributions", "03 / Everyday living"][step]) }
             Text(titles[step]).font(Palette.heading).accessibilityAddTraits(.isHeader)
@@ -68,11 +74,13 @@ struct IntroductionScreen: View {
               PrimaryButton(title: "Create a stay") { finish(.host) }
             }
             Card {
-              Text("I’m staying with someone").font(.title3.bold())
+              Text("I’m staying with someone").font(Palette.section)
               Text("Join using the invitation your host shared.")
               PrimaryButton(title: "Join a stay") { finish(.guest) }
             }
           }
+          // At accessibility sizes a pinned footer would cover most of the screen.
+          if typeSize.isAccessibilitySize { footer.frame(maxWidth: .infinity) }
         }
         .id(step)
         .transition(reduceMotion ? .opacity : .opacity.combined(with: .offset(y: 12)))
@@ -80,9 +88,12 @@ struct IntroductionScreen: View {
       }
     }
     .safeAreaInset(edge: .bottom, spacing: 0) {
-      footer
+      if !typeSize.isAccessibilitySize {
+        footer.padding(.horizontal, 24).padding(.bottom, 16).background(Palette.cream)
+      }
     }
-    .foregroundStyle(Palette.forest)
+    .foregroundStyle(Palette.ink)
+    .tint(Palette.forest)
     .background(Palette.cream.ignoresSafeArea())
   }
   private var footer: some View {
@@ -97,10 +108,11 @@ struct IntroductionScreen: View {
             if replay && step == 3 { finish(nil) } else { move(to: step + 1) }
           }
         }
-        if !replay { Button("Already have an account? Sign in") { finish(nil) }.frame(minHeight: 44) }
+        if !replay {
+          Button("Already have an account? Sign in") { finish(nil) }
+            .frame(minHeight: 44).foregroundStyle(Palette.forest)
+        }
       }
-      .padding(.horizontal, 24).padding(.bottom, 16)
-      .background(Palette.cream)
   }
   @ViewBuilder private var preview: some View {
     switch step {
@@ -155,7 +167,8 @@ struct AboutKouchdScreen: View {
   @State private var previewPresented = false
   var body: some View {
     Page(title: "Make room\nfor clarity.", navigationTitle: "About Kouchd") {
-      Image("CouchMark").resizable().scaledToFit().frame(width: 64, height: 64).accessibilityHidden(true)
+      Image("CouchMark").renderingMode(.template).resizable().scaledToFit().frame(width: 64, height: 64)
+        .foregroundStyle(Palette.forest).accessibilityHidden(true)
       Text("Kouchd helps hosts and guests manage a shared stay with clearer expectations and fewer scattered conversations.")
         .foregroundStyle(Palette.muted)
       Text("Built by Wrelik Brands, Kouchd brings stay details, house expectations, chores, and contribution records together so people can share a home with more clarity.")

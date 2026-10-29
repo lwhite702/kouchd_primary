@@ -1,5 +1,5 @@
 {
   "type": "patch",
-  "version": "0.7.18",
-  "reason": "Keep iOS text on lime readable in dark mode with a fixed Palette.onLime for status pills and the account initials button."
+  "version": "0.7.19",
+  "reason": "Fix iOS review findings: stop sending names, email and session replay to analytics, add paywall renewal disclosures, and fix introduction layout, contrast and controls."
 }

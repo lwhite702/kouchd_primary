@@ -2,7 +2,6 @@ import ClerkKit
 import ClerkKitUI
 import ConvexMobile
 import CryptoKit
-import PostHog
 import RevenueCat
 import SwiftUI
 
@@ -15,16 +14,7 @@ import SwiftUI
     if AppConfig.isConfigured {
       Clerk.configure(publishableKey: AppConfig.clerkKey)
     }
-    if AppConfig.posthogEnabled {
-      let phConfig = PostHogConfig(
-        projectToken: AppConfig.posthogKey,
-        host: AppConfig.posthogHost
-      )
-      phConfig.captureScreenViews = true
-      phConfig.sessionReplay = true
-      phConfig.sessionReplayConfig.maskAllTextInputs = true
-      PostHogSDK.shared.setup(phConfig)
-    }
+    KouchdAnalytics.configure()
     if AppConfig.purchasesEnabled {
       #if DEBUG
       Purchases.logLevel = .debug
@@ -132,7 +122,7 @@ struct RootView: View {
     .task { await hideSplashScreen() }
     .onChange(of: store.isLoading) { _, loading in handleLoadingChange(loading) }
     .onChange(of: clerk.user?.id) { _, userID in handleAnalyticsUserChange(userID) }
-    .onChange(of: store.selectedStayID) { _, stayID in handleSelectedStayChange(stayID) }
+    .onChange(of: phase, initial: true) { _, screen in KouchdAnalytics.screenViewed(screen) }
     .onChange(of: activeSheet?.id) { _, sheetID in handleActiveSheetChange(sheetID) }
     .sheet(item: $activeSheet) { sheet in
       switch sheet {
@@ -245,22 +235,8 @@ struct RootView: View {
   }
 
   private func handleAnalyticsUserChange(_ userID: String?) {
-    guard let userID else {
-      PostHogSDK.shared.reset()
-      return
-    }
-
-    var properties: [String: Any] = [:]
-    if let email = clerk.user?.primaryEmailAddress?.emailAddress {
-      properties["email"] = email
-    }
-    let firstName = clerk.user?.firstName ?? ""
-    let lastName = clerk.user?.lastName ?? ""
-    let name = "\(firstName) \(lastName)".trimmingCharacters(in: .whitespaces)
-    if !name.isEmpty {
-      properties["name"] = name
-    }
-    PostHogSDK.shared.identify(userID, userProperties: properties)
+    // Only the pseudonymous Clerk ID; never names, email, or household details.
+    KouchdAnalytics.identify(userID)
   }
 
   private func handleSessionUserChange(_ userID: String?) {
@@ -285,15 +261,6 @@ struct RootView: View {
     } else {
       Task { await loadInvitation() }
     }
-  }
-
-  private func handleSelectedStayChange(_ stayID: String) {
-    guard !stayID.isEmpty else { return }
-    PostHogSDK.shared.group(type: "stay", key: stayID, groupProperties: [
-      "name": store.stayName,
-      "isHost": store.isHost,
-      "isEnded": store.isEnded,
-    ])
   }
 
   private func handleActiveSheetChange(_ sheetID: String?) {

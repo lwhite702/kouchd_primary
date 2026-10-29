@@ -2,6 +2,28 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-10-29 — iOS review fixes: analytics privacy, paywall disclosures, introduction (WRE-249)
+
+- `ios/Kouchd/KouchdApp.swift`:
+  - PostHog is set up through the existing `KouchdAnalytics` helper (replay, screen, lifecycle and element capture all off), instead of a second setup that turned on session replay and automatic screen capture.
+  - `identify` sends only the Clerk user ID; email and full name are no longer sent.
+  - Removed the `stay` group call, which sent the stay name.
+  - The curated `screen_viewed` event, which was never called before, now fires on root phase changes.
+- `ios/Kouchd/Billing.swift`:
+  - `BillingPackage` gains `period` (from `SubscriptionPeriod`) and `priceWithPeriod`.
+  - The subscription screen adds an auto-renewal and cancellation note, plus Terms and Privacy links (App Store guideline 3.1.2).
+- `ios/Kouchd/Introduction.swift`:
+  - At accessibility text sizes the footer scrolls with the content instead of staying pinned.
+  - The couch mark is a template image tinted with `Palette.forest` on the intro and About.
+  - Intro text uses `Palette.ink`; only controls use forest/lime.
+  - Skip is hidden on the role step.
+  - Both role headings use `Palette.section`.
+  - The splash wordmark stays on one line at large text sizes.
+- Tests: new `testPriceIncludesRenewalPeriodWhenKnown`, and `testSkipShowsRoleSelection` now asserts that Skip is gone. Local simulator run on iPhone 18 Pro Max: 22 unit and 7 UI tests passed.
+- Checked visually in the simulator: introduction light and dark, role step, and largest accessibility size. Not checked: the paywall on screen (needs a signed-in host with RevenueCat offerings), and a 375-point iPhone (no small simulator installed).
+- Open: there is no in-app account deletion. It exists only in Clerk's `UserProfileView`, if self-deletion is enabled in Clerk, which the Clerk config API doesn't expose. There is no Convex deletion path for stays and records. Apple requires in-app deletion; this needs a product decision on what happens to shared records.
+- Version `0.7.19`.
+
 ## 2026-10-29 — Readable text on lime in iOS dark mode
 
 - `ios/Kouchd/Design.swift`: added a fixed `Palette.onLime` (#16241E, the light-mode ink). `Pill` now uses it instead of the adaptive `Palette.ink`, which is #F1F5F0 in dark mode and sat on the fixed lime fill at 1.1:1. Now 13.0:1 in both appearances.
