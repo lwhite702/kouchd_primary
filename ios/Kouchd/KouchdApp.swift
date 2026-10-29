@@ -127,7 +127,7 @@ struct RootView: View {
     .sheet(item: $activeSheet) { sheet in
       switch sheet {
       case .auth:
-        AuthView()
+        AuthView().environment(\.clerkTheme, .kouchd)
       case .invitation(let token, let preview):
         InvitationScreen(store: store, token: token, preview: preview) {
           inviteToken = ""
