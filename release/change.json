@@ -1,5 +1,5 @@
 {
   "type": "patch",
-  "version": "0.7.14",
-  "reason": "Add host corrections to web that iOS already has: void and dispute contributions, void chores and reward claims, rename a stay, new join code, and household default terms; keep reward voids consistent (WRE-246)."
+  "version": "0.7.15",
+  "reason": "Add iOS guest display names, the agreement automatic-acceptance setting, and the ledger summary that web already has, from one ledger computation (WRE-247)."
 }

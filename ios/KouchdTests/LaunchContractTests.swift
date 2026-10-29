@@ -32,3 +32,32 @@ final class LaunchContractTests: XCTestCase {
     XCTAssertEqual(try JSONDecoder().decode(AccountSubscriptionSummary.self, from: data).plan, "hostPlus")
   }
 }
+
+final class HouseholdSettingsTests: XCTestCase {
+  func testAutoAcceptDefaultsToOnForStaysWithoutTheSetting() {
+    XCTAssertTrue(HouseholdSettings.autoAcceptEnabled(.null))
+    XCTAssertTrue(HouseholdSettings.autoAcceptEnabled(.bool(true)))
+    XCTAssertFalse(HouseholdSettings.autoAcceptEnabled(.bool(false)))
+  }
+
+  func testAutoAcceptHoursStayWithinTheServerRange() {
+    XCTAssertEqual(HouseholdSettings.autoAcceptHours(0), 24)
+    XCTAssertEqual(HouseholdSettings.autoAcceptHours(721), 24)
+    XCTAssertEqual(HouseholdSettings.autoAcceptHours(1), 1)
+    XCTAssertEqual(HouseholdSettings.autoAcceptHours(720), 720)
+  }
+
+  func testPreferredNamesMatchTheServerLimits() {
+    XCTAssertFalse(HouseholdSettings.isValidPreferredName("   "))
+    XCTAssertTrue(HouseholdSettings.isValidPreferredName(" Sam "))
+    XCTAssertTrue(HouseholdSettings.isValidPreferredName(String(repeating: "a", count: 80)))
+    XCTAssertFalse(HouseholdSettings.isValidPreferredName(String(repeating: "a", count: 81)))
+  }
+
+  func testLedgerSummaryRowsMatchWebLabelsAndShowPendingOnlyWhenPresent() {
+    let summary: Value = .object(["chargesCents": .number(12050), "creditCents": .number(8400), "balanceCents": .number(3650), "pendingCount": .number(0)])
+    XCTAssertEqual(LedgerSummaryCard.rows(summary).map(\.title), ["Total charges", "Confirmed credit", "Remaining scheduled"])
+    let pending: Value = .object(["chargesCents": .number(0), "creditCents": .number(0), "balanceCents": .number(0), "pendingCount": .number(2)])
+    XCTAssertEqual(LedgerSummaryCard.rows(pending).last?.detail, "2 entries")
+  }
+}

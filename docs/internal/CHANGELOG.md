@@ -2,6 +2,21 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-10-28 — iOS settings and ledger summary parity (WRE-247)
+
+- `ios/Kouchd/MoreScreens.swift`: **Host controls** gets two new cards:
+  - **Automatic acceptance** calls `stays:updateAgreementAutoAccept` (1–720 hours, or off).
+  - **Guest display names** calls `stays:updateGuestPreferredName`.
+  - Both are hidden on ended stays.
+- `convex/obligations.ts`: new `ledgerWithTotals` query returns `{ rows, totals }` from a single `buildFinancialRecord` call. `summary` now shares the `summarize` helper, and `list` and `summary` are unchanged for web and older iOS builds. Covered in `tests/backend.test.ts` (matches `list` and `summary`; rejects outsiders).
+- `ios/Kouchd/Service.swift`: the store subscribes once to `obligations:ledgerWithTotals` instead of `obligations:list`, and fills `ledger`, `typedLedger`, and `ledgerSummary` from it. Review feedback: the earlier version subscribed to `list` and `summary` together, so the full ledger was computed twice on every update.
+- The display-name card lists only active guests, because `stays:updateGuestPreferredName` rejects inactive ones.
+- `ios/Kouchd/MainScreens.swift`: `LedgerSummaryCard` uses web's labels.
+- `ios/Kouchd/Models.swift`: the `HouseholdSettings` rules (default on, 24 hours, hour range, name length) mirror the server.
+- Numbers are sent as `Double`, matching the WRE-242 encoding fix.
+- Evidence: the simulator build succeeded, `KouchdTests` passed (15 tests, including 4 new `HouseholdSettingsTests`), and `npm run release:check` passed for `0.7.15` (earlier prepared as `1.0.0-rc.17`; stacked on WRE-246 at `0.7.14`), and Vitest passed (174 tests). Not exercised while signed in.
+- Not done: no in-app notification feed (needs the Knock iOS SDK) and no push notifications (post-1.0).
+
 ## 2026-10-28 — Web host corrections parity (WRE-246)
 
 - Wired existing backend functions into the web workspace:
