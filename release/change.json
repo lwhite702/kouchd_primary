@@ -1,5 +1,5 @@
 {
-  "type": "rc",
-  "version": "1.0.0-rc.13",
-  "reason": "Polish landing and marketing pages across accessibility, motion, and navigation."
+  "type": "none",
+  "version": "0.7.12",
+  "reason": "Rename 1.0.0-rc.13 to 0.7.12, return to prerelease numbering, and turn off the 1.0 feature lock until the App Store submission is approved (WRE-248). No new release."
 }

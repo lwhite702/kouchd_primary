@@ -14,4 +14,4 @@ The analytics name property uses Clerk's public `firstName` and `lastName` prope
 
 ## Release metadata
 
-Prepared `1.0.0-rc.9`; no deployment or store submission was performed.
+Prepared `0.7.8` (recorded as `1.0.0-rc.9`); no deployment or store submission was performed.
