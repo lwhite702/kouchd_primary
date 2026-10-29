@@ -35,7 +35,7 @@ afterEach(() => {
 describe("subscription policy", () => {
   it("keeps shadow limits aligned with the proposed Starter and Plus capacity", () => {
     expect(getPlanLimits("starter")).toEqual({ maxActiveStays: 1, maxActiveGuests: 1 });
-    expect(getPlanLimits("hostPlus")).toEqual({ maxActiveStays: 3, maxActiveGuests: 3 });
+    expect(getPlanLimits("hostPlus")).toEqual({ maxActiveStays: 3, maxActiveGuests: 5 });
     expect(getPlanLimits("householdPro")).toEqual({ maxActiveStays: null, maxActiveGuests: null });
   });
 

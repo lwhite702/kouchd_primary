@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import { api, internal } from "../convex/_generated/api";
 import schema from "../convex/schema";
+import { grantPlus } from "./helpers/plans";
 
 const modules = import.meta.glob([
   "../convex/**/*.ts",
@@ -43,6 +44,7 @@ describe("agreement-pending reminders and cancellation contract (WRE-176)", () =
       timezone: "America/New_York",
       terms: testTerms,
     });
+    await grantPlus(t, stayId);
 
     // Invite & accept for guest 1
     const token1 = "1".repeat(64);

@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import { api, internal } from "../convex/_generated/api";
 import schema from "../convex/schema";
+import { grantPlus } from "./helpers/plans";
 
 const modules = import.meta.glob([
   "../convex/**/*.ts",
@@ -39,6 +40,7 @@ describe("progressive payment reminder system with urgent language and consequen
     const paidGuest = await createUser(t, "guest-paid", "Guest Riley");
 
     const stayId = await host.mutation(api.stays.create, { timezone: "America/New_York", terms: testTerms });
+    await grantPlus(t, stayId);
 
     const inviteTokenGuest = "a".repeat(64);
     await host.mutation(api.invites.create, { stayId, tokenHash: inviteTokenGuest, expiresAt: Date.now() + 86_400_000 });

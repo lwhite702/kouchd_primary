@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import { api } from "../convex/_generated/api";
 import schema from "../convex/schema";
+import { grantPlus } from "./helpers/plans";
 
 const modules = import.meta.glob([
   "../convex/**/*.ts",
@@ -120,6 +121,7 @@ describe("shared stay authorization and audit rules", () => {
       ],
       terms: { ...firstTerms, startDate, endDate },
     });
+    await grantPlus(t, stayId);
     const firstInviteHash = "1".repeat(64);
     const secondInviteHash = "2".repeat(64);
     await host.mutation(api.invites.create, { stayId, tokenHash: firstInviteHash, expiresAt: Date.now() + 86_400_000 });
@@ -487,6 +489,7 @@ describe("shared stay authorization and audit rules", () => {
     const guestA = await createUser(t, "guest-private-a", "Marcus");
     const guestB = await createUser(t, "guest-private-b", "Avery");
     const stayId = await host.mutation(api.stays.create, { timezone: "America/New_York", terms: firstTerms });
+    await grantPlus(t, stayId);
 
     await host.mutation(api.invites.create, { stayId, tokenHash: "d".repeat(64), expiresAt: Date.now() + 86_400_000 });
     await guestA.mutation(api.invites.accept, { tokenHash: "d".repeat(64) });

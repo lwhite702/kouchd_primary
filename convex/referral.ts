@@ -9,6 +9,7 @@ import { assertReferralCode } from "./lib/validation";
 import { generateReferralCode, normalizeReferralCode } from "../lib/referral";
 import { ensureGuestTerms, offerGuestAgreement } from "./lib/stayTerms";
 import { scheduleSubscriptionLimitShadow } from "./subscriptionShadow";
+import { clearBlockedJoins } from "./subscriptions";
 
 export const preview = query({
   args: { referralCode: v.string() },
@@ -88,6 +89,7 @@ export const joinWithCode = mutation({
       await assertPlanCapacity(ctx, stay.hostUserId, "guest", stay.householdAccountId);
       // Re-activate if left
       await ctx.db.patch(existingMembership._id, { status: "active", joinedAt: Date.now() });
+      await clearBlockedJoins(ctx, stay._id, user._id);
       const guestTerms = await ensureGuestTerms(ctx, stay._id, user._id, stay.hostUserId);
       await offerGuestAgreement(ctx, { stayId: stay._id, termsId: guestTerms._id, guestUserId: user._id, offeredBy: stay.hostUserId });
       if (stay.status === "active") {
@@ -123,6 +125,7 @@ export const joinWithCode = mutation({
       status: "active",
       joinedAt: now,
     });
+    await clearBlockedJoins(ctx, stay._id, user._id);
     const guestTerms = await ensureGuestTerms(ctx, stay._id, user._id, stay.hostUserId);
     await offerGuestAgreement(ctx, { stayId: stay._id, termsId: guestTerms._id, guestUserId: user._id, offeredBy: stay.hostUserId });
     if (stay.status === "active") {

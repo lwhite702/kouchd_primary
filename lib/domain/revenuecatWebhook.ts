@@ -18,7 +18,27 @@ export interface NormalizedRevenueCatEvent {
   startedAt?: number;
   currentPeriodEndsAt?: number;
   willRenew?: boolean;
+  periodType?: RevenueCatPeriodType;
+  store?: RevenueCatStore;
   occurredAt: number;
+}
+
+export type RevenueCatPeriodType = "trial" | "intro" | "normal";
+/** Simplified purchase origin: Apple, Kouchd's website checkout, or anything else. */
+export type RevenueCatStore = "app_store" | "web" | "other";
+
+function periodTypeOf(value: unknown): RevenueCatPeriodType | undefined {
+  if (value === "TRIAL") return "trial";
+  if (value === "INTRO") return "intro";
+  if (value === "NORMAL" || value === "PROMOTIONAL" || value === "PREPAID") return "normal";
+  return undefined;
+}
+
+function storeOf(value: unknown): RevenueCatStore | undefined {
+  if (typeof value !== "string" || value.length === 0) return undefined;
+  if (value === "APP_STORE" || value === "MAC_APP_STORE") return "app_store";
+  if (value === "STRIPE" || value === "RC_BILLING" || value === "PADDLE") return "web";
+  return "other";
 }
 
 export type RevenueCatEventParseResult =
@@ -150,6 +170,8 @@ export function normalizeRevenueCatEvent(
       startedAt: validTimestamp(event.purchased_at_ms) ? event.purchased_at_ms : undefined,
       currentPeriodEndsAt,
       willRenew: typeof event.will_renew === "boolean" ? event.will_renew : undefined,
+      periodType: periodTypeOf(event.period_type),
+      store: storeOf(event.store),
       occurredAt,
     },
   };
