@@ -174,6 +174,30 @@ import XCTest
     XCTAssertEqual(askedTransactionIDs, ["2000000123456789"])
   }
 
+  func testSuccessWaitsForBackendToRecordPlus() async {
+    let client = BillingClientMock()
+    var backendHasPlus = false
+    let model = BillingModel(client: client, isPlanConfirmed: { backendHasPlus }, confirmationTimeout: .seconds(5))
+    let purchase = Task { await model.purchase(annual) }
+    try? await Task.sleep(for: .milliseconds(200))
+    XCTAssertTrue(model.isConfirming)
+    XCTAssertTrue(model.message.isEmpty)
+    backendHasPlus = true
+    await purchase.value
+    XCTAssertFalse(model.isConfirming)
+    XCTAssertTrue(model.message.hasPrefix("You're on Plus"))
+    XCTAssertNil(model.activeOperation)
+  }
+
+  func testUnconfirmedPurchaseFallsBackWithoutClaimingPlus() async {
+    let client = BillingClientMock()
+    let model = BillingModel(client: client, isPlanConfirmed: { false }, confirmationTimeout: .milliseconds(100))
+    await model.purchase(annual)
+    XCTAssertFalse(model.isConfirming)
+    XCTAssertFalse(model.message.contains("You're on Plus"))
+    XCTAssertTrue(model.message.contains("still confirming"))
+  }
+
   func testPendingPurchaseSaysNothingWasCharged() async {
     let client = BillingClientMock()
     client.purchaseResult = .pending

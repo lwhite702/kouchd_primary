@@ -245,7 +245,12 @@ typealias TrialEligibilityLookup = @MainActor (_ productID: String, _ appTransac
 @MainActor @Observable final class BillingModel {
   private let client: BillingClient
   private let eligibility: TrialEligibilityLookup?
+  /// True once Kouchd's backend reports Plus. A store receipt alone is not confirmation.
+  private let isPlanConfirmed: (@MainActor () -> Bool)?
+  private let confirmationTimeout: Duration
   var packages: [BillingPackage] = []
+  /// Waiting for the backend to record a completed purchase.
+  var isConfirming = false
   /// Product IDs whose free trial this host can start. Trial wording shows only for these.
   var trialProductIDs: Set<String> = []
   var selectedPackageID: String?
@@ -254,9 +259,12 @@ typealias TrialEligibilityLookup = @MainActor (_ productID: String, _ appTransac
   var message = ""
   var error = ""
 
-  init(client: BillingClient, eligibility: TrialEligibilityLookup? = nil) {
+  init(client: BillingClient, eligibility: TrialEligibilityLookup? = nil,
+       isPlanConfirmed: (@MainActor () -> Bool)? = nil, confirmationTimeout: Duration = .seconds(60)) {
     self.client = client
     self.eligibility = eligibility
+    self.isPlanConfirmed = isPlanConfirmed
+    self.confirmationTimeout = confirmationTimeout
   }
 
   /// Yearly first, so the plan with the better price is the default.
@@ -338,7 +346,15 @@ typealias TrialEligibilityLookup = @MainActor (_ productID: String, _ appTransac
         jws = await eligibility(package.productID, await client.appTransactionID()).jws
       }
       let result = try await client.purchase(packageID: package.id, introductoryOfferEligibilityJWS: jws)
-      if result == .purchased {
+      if result == .purchased, let isPlanConfirmed {
+        message = ""
+        isConfirming = true
+        let confirmed = await waitUntil(isPlanConfirmed)
+        isConfirming = false
+        message = confirmed
+          ? "You're on Plus. You can now host up to \(PlanCopy.plusStays) stays and \(PlanCopy.plusGuests) guests at once."
+          : "Purchase received. Kouchd is still confirming it, and your plan will update here when it does."
+      } else if result == .purchased {
         message = "Purchase received. Your household plan will update after Kouchd verifies it."
       } else if result == .pending {
         message = "Your purchase is waiting for approval. Nothing has been charged yet."
@@ -347,6 +363,17 @@ typealias TrialEligibilityLookup = @MainActor (_ productID: String, _ appTransac
     } catch {
       self.error = error.localizedDescription
     }
+  }
+
+  /// Checks twice a second; the store's live Convex subscription updates the answer.
+  private func waitUntil(_ check: @MainActor () -> Bool) async -> Bool {
+    let clock = ContinuousClock()
+    let deadline = clock.now + confirmationTimeout
+    while clock.now < deadline {
+      if check() { return true }
+      try? await Task.sleep(for: .milliseconds(500))
+    }
+    return check()
   }
 
   func restore() async {
@@ -413,7 +440,8 @@ struct SubscriptionScreen: View {
       eligibility: { [weak store] productID, transactionID in
         guard let store else { return (nil, nil) }
         return await store.introOfferEligibility(productID: productID, appTransactionID: transactionID)
-      }
+      },
+      isPlanConfirmed: { [weak store] in store?.typedSubscriptionSummary?.hasPlus == true }
     ))
   }
 
@@ -435,6 +463,9 @@ struct SubscriptionScreen: View {
         if purchasesEnabled, summary?.hasPlus == true { manageCard }
       }
 
+      if billing.isConfirming {
+        ProgressView("Confirming your plan with Kouchd…").font(.footnote)
+      }
       if !billing.message.isEmpty {
         Text(billing.message).font(.footnote).foregroundStyle(Palette.forest)
       }
@@ -571,6 +602,7 @@ struct SubscriptionScreen: View {
   }
 
   private func ctaTitle(_ package: BillingPackage, trialDays: Int?) -> String {
+    if billing.isConfirming { return "Confirming your plan…" }
     if billing.activeOperation == package.id { return "Starting purchase…" }
     if let trialDays { return "Start \(trialDays)-day free trial" }
     return "Subscribe for \(package.priceWithPeriod)"
