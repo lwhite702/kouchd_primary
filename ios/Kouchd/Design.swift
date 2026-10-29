@@ -8,6 +8,7 @@ enum Palette {
   static let ink = adaptive(light: 0x16241E, dark: 0xF1F5F0)
   static let muted = adaptive(light: 0x697169, dark: 0xAEB8B0)
   static let lime = Color(red: 0.870, green: 0.950, blue: 0.370)
+  static let onLime = Color(red: 0.086, green: 0.141, blue: 0.118)
   static let line = adaptive(light: 0xDFDED3, dark: 0x34443B)
   static let heading = Font.custom("Manrope", size: 33, relativeTo: .largeTitle).weight(.bold)
   static let section = Font.custom("Manrope", size: 23, relativeTo: .title2).weight(.bold)
@@ -70,7 +71,7 @@ struct Pill: View {
     Text(text.uppercased())
       .font(.caption2.weight(.bold))
       .tracking(1)
-      .foregroundStyle(Palette.ink)
+      .foregroundStyle(Palette.onLime)
       .padding(.horizontal, 12).padding(.vertical, 7)
       .background(Palette.lime, in: Capsule())
   }
