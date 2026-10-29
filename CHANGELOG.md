@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- Web sign-in keeps the submit button usable on the password, code, and two-factor steps, where the email field is no longer shown. Before this, those steps could not be submitted (WRE-242, 0.7.16).
+
 ### Changed
 
 - **Prerelease numbering resumed and 1.0 feature lock paused (WRE-248)**: Renamed the releases recorded as `1.0.0-rc.1`–`1.0.0-rc.13` to `0.7.0`–`0.7.12` (none were tagged or released) and set `VERSION`, `package.json`, the lockfile, and the iOS marketing version to `0.7.12`. `release/version-history.json` holds the mapping, and `scripts/release-gate.mjs` compares recorded versions by their current number, so the next prerelease is `0.7.13`. `release/feature-lock.json` is now `enabled: false` (phase `prerelease`) until the team approves the App Store submission; `release-version.mjs` and `lock:bump-rc` refuse `-rc.N` versions while it is off. Updated `AGENTS.md`, the public roadmap and changelog, and internal records.
