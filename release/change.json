@@ -1,5 +1,5 @@
 {
   "type": "patch",
-  "version": "0.7.17",
-  "reason": "Gate web pull requests on typecheck, lint, tests, and build, and bound the newsletter rate limiter's memory and error responses (WRE-241)."
+  "version": "0.7.18",
+  "reason": "Keep iOS text on lime readable in dark mode with a fixed Palette.onLime for status pills and the account initials button."
 }

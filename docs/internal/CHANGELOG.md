@@ -2,6 +2,14 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-10-29 — Readable text on lime in iOS dark mode
+
+- `ios/Kouchd/Design.swift`: added a fixed `Palette.onLime` (#16241E, the light-mode ink). `Pill` now uses it instead of the adaptive `Palette.ink`, which is #F1F5F0 in dark mode and sat on the fixed lime fill at 1.1:1. Now 13.0:1 in both appearances.
+- `ios/Kouchd/MainScreens.swift`: the account initials button in the toolbar uses `Palette.onLime` on its lime circle for the same reason.
+- Left unchanged: other lime fills already use `brandForest` text, and the payment channel row (ink on 35% lime over cream) measures 5.8:1 in dark and 13.8:1 in light.
+- Checked with a local `xcodebuild` simulator build; not yet viewed in dark mode on a simulator or device.
+- Version `0.7.18`.
+
 ## 2026-10-29 — Harden web CI workflow, newsletter rate limiter, and error handling (WRE-241)
 
 - Added a `web` job on `ubuntu-latest` in `.github/workflows/release-integrity.yml` that gates pull requests with the environment check, `tsc --noEmit`, ESLint, Vitest, and the Next.js production build.
