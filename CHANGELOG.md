@@ -2,6 +2,13 @@
 
 ## [Unreleased]
 
+### Changed
+
+- **iOS introduction and sign-in look (branch only, not released)**:
+  - The introduction steps can be swiped left and right as well as moved with Continue, Back, and Skip. A tapped move ignores the pager's in-between page reports, so the footer never jumps back to the previous step.
+  - Clerk's sign-in, sign-up, and account screens use a Kouchd `ClerkTheme`: cream background, white rounded fields, forest buttons (lime with dark text in dark mode), Manrope headings, and 16-point corners.
+  - New `testSwipingMovesBetweenStepsAndKeepsTheFooterInStep` UI test; the introduction UI tests pass in the simulator.
+
 ### Security
 
 - Upgraded `zod` from 4.5.4 to 4.6.7 through an npm `overrides` entry (`"zod": "^4.6.6"`) to fix CVE-2023-54404 (high, Dependabot alert #45): Zod could exhaust memory while validating oversized constrained collections. `zod` is not a direct dependency; it comes in only as a dev dependency of `eslint-plugin-react-hooks` (via `eslint-config-next`), so the shipped web bundle and the iOS app do not include it (0.7.19).

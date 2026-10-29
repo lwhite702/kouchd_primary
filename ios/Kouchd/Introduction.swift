@@ -29,6 +29,9 @@ struct IntroductionScreen: View {
   @Environment(\.accessibilityReduceMotion) private var reduceMotion
   @Environment(\.dynamicTypeSize) private var typeSize
   @State private var step = 0
+  /// Set while a tapped button moves the pager. The pager reports the page it is
+  /// leaving during that slide, which must not pull `step` back.
+  @State private var pendingStep: Int?
   private let titles = ["A shared stay.\nOn the same page.", "Good stays start\nwith clarity.",
                         "Clear records.\nFewer awkward asks.", "Make the everyday\nfeel more shared."]
   private let descriptions = [
@@ -50,42 +53,22 @@ struct IntroductionScreen: View {
           }
         }
       }.frame(minHeight: 44).padding(.horizontal, 24).foregroundStyle(Palette.forest)
-      ScrollView {
-        VStack(alignment: .leading, spacing: 20) {
-          if step < 4 {
-            Image("CouchMark").renderingMode(.template).resizable().scaledToFit().frame(width: 64, height: 64)
-              .foregroundStyle(Palette.forest)
-              .accessibilityHidden(true)
-            if step > 0 { Pill(text: ["", "01 / Your stay", "02 / Contributions", "03 / Everyday living"][step]) }
-            Text(titles[step]).font(Palette.heading).accessibilityAddTraits(.isHeader)
-            Text(descriptions[step]).foregroundStyle(Palette.muted)
-            preview
-            if step == 2 {
-              Text("Kouchd records contributions. It does not move money.")
-                .font(.footnote).foregroundStyle(Palette.muted)
+      // A paged TabView, so people can swipe between steps as well as tap Continue.
+      TabView(selection: Binding(get: { step }, set: { swiped(to: $0) })) {
+        ForEach(0..<5) { page in
+          ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+              pageContent(page)
+              // At accessibility sizes a pinned footer would cover most of the screen.
+              // Only the visible page carries it, so its buttons appear once.
+              if typeSize.isAccessibilitySize && page == step { footer.frame(maxWidth: .infinity) }
             }
-          } else {
-            Text("How are you\nmaking room?").font(Palette.heading).accessibilityAddTraits(.isHeader)
-            Text("Start with your role in this stay. You can host and be a guest in different stays.")
-              .foregroundStyle(Palette.muted)
-            Card {
-              Text("I’m hosting").font(Palette.section)
-              Text("Create a stay, set expectations and invite your guests.")
-              PrimaryButton(title: "Create a stay") { finish(.host) }
-            }
-            Card {
-              Text("I’m staying with someone").font(Palette.section)
-              Text("Join using the invitation your host shared.")
-              PrimaryButton(title: "Join a stay") { finish(.guest) }
-            }
+            .padding(24).frame(maxWidth: 600, alignment: .leading).frame(maxWidth: .infinity)
           }
-          // At accessibility sizes a pinned footer would cover most of the screen.
-          if typeSize.isAccessibilitySize { footer.frame(maxWidth: .infinity) }
+          .tag(page)
         }
-        .id(step)
-        .transition(reduceMotion ? .opacity : .opacity.combined(with: .offset(y: 12)))
-        .padding(24).frame(maxWidth: 600, alignment: .leading).frame(maxWidth: .infinity)
       }
+      .tabViewStyle(.page(indexDisplayMode: .never))
     }
     .safeAreaInset(edge: .bottom, spacing: 0) {
       if !typeSize.isAccessibilitySize {
@@ -95,6 +78,35 @@ struct IntroductionScreen: View {
     .foregroundStyle(Palette.ink)
     .tint(Palette.forest)
     .background(Palette.cream.ignoresSafeArea())
+  }
+  @ViewBuilder private func pageContent(_ page: Int) -> some View {
+    if page < 4 {
+      Image("CouchMark").renderingMode(.template).resizable().scaledToFit().frame(width: 64, height: 64)
+        .foregroundStyle(Palette.forest)
+        .accessibilityHidden(true)
+      if page > 0 { Pill(text: ["", "01 / Your stay", "02 / Contributions", "03 / Everyday living"][page]) }
+      Text(titles[page]).font(Palette.heading).accessibilityAddTraits(.isHeader)
+      Text(descriptions[page]).foregroundStyle(Palette.muted)
+      preview(page)
+      if page == 2 {
+        Text("Kouchd records contributions. It does not move money.")
+          .font(.footnote).foregroundStyle(Palette.muted)
+      }
+    } else {
+      Text("How are you\nmaking room?").font(Palette.heading).accessibilityAddTraits(.isHeader)
+      Text("Start with your role in this stay. You can host and be a guest in different stays.")
+        .foregroundStyle(Palette.muted)
+      Card {
+        Text("I’m hosting").font(Palette.section)
+        Text("Create a stay, set expectations and invite your guests.")
+        PrimaryButton(title: "Create a stay") { finish(.host) }
+      }
+      Card {
+        Text("I’m staying with someone").font(Palette.section)
+        Text("Join using the invitation your host shared.")
+        PrimaryButton(title: "Join a stay") { finish(.guest) }
+      }
+    }
   }
   private var footer: some View {
     VStack(spacing: 12) {
@@ -114,8 +126,8 @@ struct IntroductionScreen: View {
         }
       }
   }
-  @ViewBuilder private var preview: some View {
-    switch step {
+  @ViewBuilder private func preview(_ page: Int) -> some View {
+    switch page {
     case 0:
       VStack(alignment: .leading, spacing: 12) {
         Text("A LITTLE LESS GUESSWORK").font(.caption.bold()).foregroundStyle(Palette.lime)
@@ -159,7 +171,22 @@ struct IntroductionScreen: View {
     }
   }
   private func move(to value: Int) {
+    guard value != step else { return }
+    pendingStep = value
     withAnimation(KouchdMotion.animation(reduceMotion)) { step = value }
+    Task {
+      // Never leave swiping blocked if the pager does not report the target.
+      try? await Task.sleep(for: .milliseconds(700))
+      if pendingStep == value { pendingStep = nil }
+    }
+  }
+
+  private func swiped(to value: Int) {
+    if let pendingStep {
+      if value == pendingStep { self.pendingStep = nil }
+      return
+    }
+    step = value
   }
 }
 
