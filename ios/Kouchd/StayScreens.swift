@@ -9,7 +9,10 @@ struct StayScreen: View {
   @State private var showingInvite = false
   @State private var showingGuestLimit = false
   private let plus = PlusAccess.shared
-  private static let stayLimitMessage = "Kouchd is free for one active stay. Kouchd Plus lets you host up to three stays and three guests."
+  private static let stayUpsellMessage = "Host up to 3 stays at once with Plus. Kouchd is free for one active stay."
+  private static let stayCapMessage = "Plus covers up to 3 active stays. End a stay to start a new one."
+  private static let guestUpsellMessage = "Invite up to 5 guests with Plus. Kouchd is free for one active guest across your stays."
+  private static let guestCapMessage = "Plus covers up to 5 guests across your stays. Remove a guest from any stay to make room."
   @State private var showingEdit = false
   var body: some View {
     Page(title: "Your stay") {
@@ -80,7 +83,10 @@ struct StayScreen: View {
         Text("Household").font(.headline)
         if store.isHost && !store.isEnded {
           PrimaryButton(title: "Invite a guest") {
-            if plus.reachedGuestLimit(store) { showingGuestLimit = true } else { showingInvite = true }
+            if plus.guestLimit(store) != .none { showingGuestLimit = true } else { showingInvite = true }
+          }
+          if let line = plus.guestSpotsLine(store) {
+            Text(line).font(.footnote).foregroundStyle(Palette.ink.opacity(0.7))
           }
           NavigationRow("Edit house notes", subtitle: "Update the shared stay agreement", symbol: "note.text") {
             TermsEditScreen(store: store)
@@ -102,12 +108,21 @@ struct StayScreen: View {
             .buttonStyle(.bordered)
         }
         NavigationRow("Settings and reminders", symbol: "bell") { SettingsScreen(store: store) }
-        if plus.reachedStayLimit(store) {
-          NavigationRow("Create another stay", symbol: "plus.circle", badge: "Plus") {
-            PlusLimitContent(title: "Add more stays", message: Self.stayLimitMessage)
+        if plus.stayLimit(store) != .none {
+          let capped = plus.stayLimit(store) == .cap
+          NavigationRow("Create another stay", symbol: "plus.circle", badge: capped ? nil : "Plus") {
+            PlusLimitContent(
+              title: capped ? "Stay limit reached" : "Host more stays",
+              message: capped ? Self.stayCapMessage : Self.stayUpsellMessage,
+              showsUpsell: !capped
+            )
           }
-          NavigationRow("Join another stay", symbol: "person.badge.plus", badge: "Plus") {
-            PlusLimitContent(title: "Add more stays", message: Self.stayLimitMessage)
+          NavigationRow("Join another stay", symbol: "person.badge.plus", badge: capped ? nil : "Plus") {
+            PlusLimitContent(
+              title: capped ? "Stay limit reached" : "Host more stays",
+              message: capped ? Self.stayCapMessage : Self.stayUpsellMessage,
+              showsUpsell: !capped
+            )
           }
         } else {
           NavigationRow("Create another stay", symbol: "plus.circle") { CreateStayScreen(store: store) }
@@ -120,9 +135,11 @@ struct StayScreen: View {
     }
     .sheet(isPresented: $showingInvite) { InviteForm(store: store) }
     .sheet(isPresented: $showingGuestLimit) {
+      let capped = plus.guestLimit(store) == .cap
       PlusLimitSheet(
-        title: "Invite more guests",
-        message: "Kouchd is free for one active stay and one active guest. Kouchd Plus lets you host up to three stays and three guests."
+        title: capped ? "Guest limit reached" : "Invite more guests",
+        message: capped ? Self.guestCapMessage : Self.guestUpsellMessage,
+        showsUpsell: !capped
       )
     }
     .sheet(isPresented: $showingEdit) { RenameStayForm(store: store) }
