@@ -8,6 +8,10 @@ struct BillingPackage: Identifiable, Equatable, Sendable {
   let title: String
   let detail: String
   let price: String
+  /// Renewal period in words, such as "month" or "year". Empty when unknown.
+  var period = ""
+
+  var priceWithPeriod: String { period.isEmpty ? price : "\(price) / \(period)" }
 }
 
 enum BillingPurchaseResult: Equatable, Sendable {
@@ -64,9 +68,23 @@ enum BillingPurchaseResult: Equatable, Sendable {
         id: $0.identifier,
         title: $0.storeProduct.localizedTitle,
         detail: $0.storeProduct.localizedDescription,
-        price: $0.localizedPriceString
+        price: $0.localizedPriceString,
+        period: Self.periodText($0.storeProduct.subscriptionPeriod)
       )
     }
+  }
+
+  private static func periodText(_ period: SubscriptionPeriod?) -> String {
+    guard let period else { return "" }
+    let unit = switch period.unit {
+    case .day: "day"
+    case .week: "week"
+    case .month: "month"
+    case .year: "year"
+    @unknown default: ""
+    }
+    guard !unit.isEmpty else { return "" }
+    return period.value == 1 ? unit : "\(period.value) \(unit)s"
   }
 
   func purchase(packageID: String) async throws -> BillingPurchaseResult {
@@ -252,13 +270,20 @@ struct SubscriptionScreen: View {
             Card {
               Text(package.title).font(.headline)
               Text(package.detail).foregroundStyle(Palette.muted)
-              Text(package.price).font(.title3.bold())
+              Text(package.priceWithPeriod).font(.title3.bold())
               PrimaryButton(title: billing.activeOperation == package.id ? "Starting purchase…" : "Choose \(package.title)") {
                 Task { await billing.purchase(package) }
               }
               .disabled(billing.activeOperation != nil)
             }
           }
+          Text("Subscriptions renew automatically at the price shown until you cancel. Payment is charged to your Apple account. Cancel at least 24 hours before the period ends in your Apple account settings or with Manage subscription below.")
+            .font(.footnote).foregroundStyle(Palette.muted)
+          HStack(spacing: 16) {
+            Link("Terms & Conditions", destination: URL(string: "https://kouchd.com/terms")!)
+            Link("Privacy Policy", destination: URL(string: "https://kouchd.com/privacy")!)
+          }
+          .font(.footnote.weight(.semibold))
         }
         Button("Restore purchases") { Task { await billing.restore() } }
           .disabled(billing.activeOperation != nil)

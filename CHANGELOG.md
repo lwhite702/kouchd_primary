@@ -8,6 +8,14 @@
 
 ### Fixed
 
+- **iOS review fixes (WRE-249, 0.7.20)**:
+  - **Analytics:** the app now sets up PostHog through the existing `KouchdAnalytics` helper. Session replay, automatic screen capture and element capture are off, `identify` sends only the Clerk user ID, and the `stay` group (which sent the stay name) is gone. The curated `screen_viewed` event now fires for the introduction, welcome, setup and home screens. Before this, `KouchdApp` turned on replay and sent email and full name, which contradicted `ios/README.md`.
+  - **Subscription screen:** prices show the renewal period (for example "$4.99 / month"). An auto-renewal and cancellation note, plus Terms and Privacy links, sit above Restore purchases.
+  - **Introduction, largest text sizes:** the footer now scrolls with the content instead of covering about 40% of the screen and overlapping the page dots and heading.
+  - **Introduction and About, couch mark:** it now uses `Palette.forest`, so it's forest green on cream and lime in dark mode, instead of pale lime in both.
+  - **Introduction, dark mode:** text uses `Palette.ink`, and only controls use the forest/lime accent.
+  - **Introduction, last step:** Skip no longer shows on the role choice.
+  - **Introduction, role cards:** both headings now use Manrope.
 - iOS status pills and the account initials button now stay readable in dark mode. Their text used the adaptive `Palette.ink`, which turns near-white in dark mode and sat on the fixed lime fill at 1.1:1. A new fixed `Palette.onLime` (#16241E) gives 13.0:1 in both appearances (0.7.18).
 - Web sign-in keeps the submit button usable on the password, code, and two-factor steps, where the email field is no longer shown. Before this, those steps could not be submitted (WRE-242, 0.7.16).
 

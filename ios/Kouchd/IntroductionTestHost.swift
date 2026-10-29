@@ -25,6 +25,7 @@ struct IntroductionTestHost: View {
       }
     }
     .preferredColorScheme(arguments.contains("--ui-test-dark") ? .dark : .light)
+    .dynamicTypeSize(arguments.contains("--ui-test-accessibility-text") ? .accessibility5 : .large)
   }
 }
 #endif
