@@ -47,7 +47,7 @@
   letter-spacing: 0.02em;
 }
 .v21-header-actions { display: flex; align-items: center; gap: 16px; }
-.v21-sign-in { border: 0; background: transparent; padding: 10px 0; cursor: pointer; font-family: inherit; }
+.v21-sign-in { border: 0; background: transparent; padding: 10px 0; cursor: pointer; font-family: var(--font-manrope), "Manrope", sans-serif; }
 .v21-button { display: inline-flex; justify-content: center; align-items: center; gap: 10px; min-height: 48px; padding: 0 21px; border-radius: 999px; font: 750 14px/1 var(--font-manrope), Manrope, sans-serif; text-decoration: none; cursor: pointer; transition: transform .18s ease, box-shadow .18s ease, background .18s ease; }
 .v21-button:hover { transform: translateY(-1px); }
 .v21-button-lime { background: var(--v21-lime); border: 1px solid var(--v21-lime); color: #203527; box-shadow: 0 5px 14px #1c3b2312; }
@@ -316,7 +316,7 @@
   color: var(--v21-muted);
   cursor: pointer;
   transition: all 0.15s ease;
-  font-family: inherit;
+  font-family: var(--font-manrope), "Manrope", sans-serif;
 }
 .v21-preview-tab-controls .v21-tab-btn:hover {
   color: var(--v21-forest);
@@ -330,7 +330,7 @@
   border: none;
   background: transparent;
   cursor: pointer;
-  font-family: inherit;
+  font-family: var(--font-manrope), "Manrope", sans-serif;
   font-size: 11px;
   font-weight: 600;
   color: #5d6d63;

@@ -7,6 +7,7 @@ Internal engineering record. This file is excluded from Mintlify navigation and 
 - Decision (Lee, 2026-10-29): body copy is Inter; titles and display text stay Manrope. `docs/internal/BRAND_DESIGN_SYSTEM.md` and `app/brand-system.css` already said so; the web app and `AGENTS.md` did not.
 - The base font moved from Manrope to Inter in four places: `:root` in `styles.css`, `.production-shell` in `app/production.css`, the dashboard root in `components/dashboard-v21.css`, and the marketing root in `components/landing-v21.css`.
 - `styles.css` now pins Manrope on `h1`–`h6`, `button`, `.button`, `.v21-button`, `.v21-cta`, eyebrows and overlines (`[class*="eyebrow"]`), pills (`[class*="-pill"]`), `.metric`, `.badge`, the `.v21-brand` wordmark, and footer column titles.
+- Review feedback: dashboard and marketing controls that set `font-family: inherit` (sidebar nav items, summary tiles, pill and attention buttons, invite pill, sign-in, preview tabs) would have picked up Inter. They now set Manrope, and `components/dashboard-v21.css` pins Manrope on the dashboard's titles, tile labels, and tile metrics.
 - `AGENTS.md` "Brand and product design" now names Manrope for titles and display text and Inter for web body copy.
 - Checked computed fonts on `/about` in a local dev server. The signed-in dashboard was not checked. The old `.landing-*` rules in `styles.css` are not used by any page and were left as they were.
 - Version `0.7.19`.
