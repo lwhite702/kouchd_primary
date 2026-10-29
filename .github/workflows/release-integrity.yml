@@ -8,6 +8,12 @@ jobs:
   web:
     name: Web verification and build
     runs-on: ubuntu-latest
+    # Placeholder values so the environment check and build run without real keys.
+    env:
+      NEXT_PUBLIC_CONVEX_URL: https://dummy-test.convex.cloud
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_dummy
+      CLERK_SECRET_KEY: sk_test_dummy
+      CLERK_JWT_ISSUER_DOMAIN: https://dummy.clerk.accounts.dev
     steps:
       - uses: actions/checkout@v4
         with:
@@ -22,11 +28,6 @@ jobs:
       - run: npm run lint
       - run: npm test
       - run: npm run build
-        env:
-          NEXT_PUBLIC_CONVEX_URL: https://dummy-test.convex.cloud
-          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_dummy
-          CLERK_SECRET_KEY: sk_test_dummy
-          CLERK_JWT_ISSUER_DOMAIN: https://dummy.clerk.accounts.dev
 
   verify:
     name: iOS release integrity and simulator build
