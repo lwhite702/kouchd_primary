@@ -610,3 +610,25 @@
   .v21-header-actions > .v21-button svg { display: none; }
   .v21-hero h1 { font-size: clamp(42px, 10.8vw, 60px); }
 }
+
+/* Display values, labels, and initials keep Manrope; body copy inherits Inter. */
+.v21-header-badge,
+.v21-text-link,
+.v21-proof-card strong,
+.v21-preview-avatar,
+.v21-preview-kicker,
+.v21-feature-index,
+.v21-scene-top,
+.scene-date,
+.scene-section-label,
+.scene-info-grid span,
+.scene-avatar,
+.scene-ledger-summary > span,
+.scene-task-count,
+.scene-due,
+.scene-done,
+.v21-step-number,
+.newsletter-email-label,
+.v21-faq-list summary {
+  font-family: var(--font-manrope), "Manrope", sans-serif;
+}

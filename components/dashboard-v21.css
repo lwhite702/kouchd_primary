@@ -1599,3 +1599,22 @@ button.host-workspace-activity-row:focus-visible {
   outline: 2px solid var(--green, #184f3a);
   outline-offset: 3px;
 }
+
+/* Display values, labels, and initials keep Manrope; body copy inherits Inter. */
+.v21-sidebar-mark,
+.v21-sidebar-wordmark,
+.v21-stay-switcher-name,
+.v21-sidebar-user-name,
+.v21-panel-overline,
+.v21-panel-headline,
+.v21-attention-kicker,
+.v21-activity-avatar,
+.v21-activity-status,
+.host-workspace-avatar,
+.host-workspace-summary-card > strong,
+.host-workspace-contribution-amount,
+.host-workspace-status,
+.host-workspace-mobile-summary > span,
+.host-workspace-mobile-summary > strong {
+  font-family: var(--font-manrope), "Manrope", sans-serif;
+}
