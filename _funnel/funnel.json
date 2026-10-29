@@ -261,7 +261,7 @@
   ],
   "checks": {
     "host_onboarding.current": {
-      "at": "2026-10-15T19:58:56-04:00",
+      "at": "2026-10-29T15:30:54-04:00",
       "by": "agent",
       "items": {
         "onboarding_each_launch": false,
@@ -269,58 +269,62 @@
         "questions_change_product": true,
         "result_before_purchase": false,
         "paywall_required_elements": false,
-        "no_trial_toggle": true,
         "visible_close_and_restore": false,
+        "no_empty_after_purchase": false,
+        "ui_test": true,
+        "screenshots": true,
+        "no_trial_toggle": true,
         "no_fake_timer_or_analysis": true,
         "no_custom_review_prompt": true,
-        "no_empty_after_purchase": false,
-        "passport_and_weights": true,
-        "ui_test": false,
-        "screenshots": false
+        "passport_and_weights": true
       }
     },
     "host_onboarding.compact": {
-      "at": "2026-10-15T19:58:56-04:00",
+      "at": "2026-10-29T15:30:54-04:00",
       "by": "agent",
       "items": {
         "mockup_390x844": true,
         "screens_in_order": true,
         "promise_screen": true,
         "questions_change_product": true,
-        "result_before_purchase": true,
+        "result_before_purchase": false,
         "verified_property_instead_of_fake_social_proof": true,
+        "build_matches_mockup": false,
+        "onboarding_each_launch": false,
         "paywall_required_elements": false,
+        "paywall_continues_same_flow": false,
+        "ui_test": true,
+        "screenshots": true,
         "no_trial_toggle": true,
         "no_fake_timer_or_analysis": true,
         "no_custom_review_prompt": true,
-        "paywall_continues_same_flow": false,
-        "passport_and_weights": true,
-        "ui_test": false,
-        "screenshots": false
+        "passport_and_weights": true
       }
     },
     "host_onboarding.guided": {
-      "at": "2026-10-15T19:58:56-04:00",
+      "at": "2026-10-29T15:30:54-04:00",
       "by": "agent",
       "items": {
         "mockup_390x844": true,
         "screens_in_order": true,
         "promise_screen": true,
-        "questions_change_product": true,
-        "result_before_purchase": true,
+        "questions_change_product": false,
+        "result_before_purchase": false,
         "verified_property_instead_of_fake_social_proof": true,
+        "build_matches_mockup": false,
+        "onboarding_each_launch": false,
         "paywall_required_elements": false,
+        "paywall_continues_same_flow": false,
+        "ui_test": true,
+        "screenshots": true,
         "no_trial_toggle": true,
         "no_fake_timer_or_analysis": true,
         "no_custom_review_prompt": true,
-        "paywall_continues_same_flow": false,
-        "passport_and_weights": true,
-        "ui_test": false,
-        "screenshots": false
+        "passport_and_weights": true
       }
     },
     "guest_onboarding.current": {
-      "at": "2026-10-15T19:58:56-04:00",
+      "at": "2026-10-29T15:30:54-04:00",
       "by": "agent",
       "items": {
         "onboarding_each_launch": false,
@@ -328,35 +332,63 @@
         "questions_change_product": true,
         "result_before_purchase": false,
         "paywall_required_elements": false,
-        "no_trial_toggle": true,
         "visible_close_and_restore": false,
+        "no_empty_after_purchase": false,
+        "placement_wired_in_app": false,
+        "ui_test": false,
+        "screenshots": false,
+        "no_trial_toggle": true,
         "no_fake_timer_or_analysis": true,
         "no_custom_review_prompt": true,
-        "no_empty_after_purchase": false,
-        "passport_and_weights": true,
-        "ui_test": false,
-        "screenshots": false
+        "passport_and_weights": true
       }
     },
     "kouchd_plus_paywall.current": {
-      "at": "2026-10-15T19:58:56-04:00",
+      "at": "2026-10-29T15:30:54-04:00",
       "by": "agent",
       "items": {
-        "mockup_or_screenshot": false,
-        "subscription_name_and_duration": false,
-        "included_features": false,
-        "renewal_price_prominent": false,
-        "trial_duration_and_after_price": false,
-        "auto_renewal_disclosure": false,
-        "terms_and_privacy_links": false,
-        "restore_purchases": false,
-        "visible_close_44pt": false,
+        "mockup_or_screenshot": true,
+        "single_header": false,
+        "subscription_name_and_duration": true,
+        "included_features": true,
+        "renewal_price_prominent": true,
+        "trial_duration_and_after_price": true,
+        "auto_renewal_disclosure": true,
+        "terms_and_privacy_links": true,
+        "restore_purchases": true,
+        "visible_close_44pt": true,
+        "continue_free_visible": true,
+        "paywall_continues_onboarding": false,
+        "ui_test": true,
+        "screenshots": true,
         "no_trial_toggle": true,
         "no_fake_timer_or_analysis": true,
         "no_custom_review_prompt": true,
+        "passport_and_weights": true
+      }
+    },
+    "kouchd_plus_paywall.annual_trial": {
+      "at": "2026-10-29T15:30:54-04:00",
+      "by": "agent",
+      "items": {
+        "mockup_or_screenshot": true,
+        "mockup_matches_build": false,
+        "subscription_name_and_duration": true,
+        "included_features": true,
+        "renewal_price_prominent": true,
+        "trial_duration_and_after_price": true,
+        "auto_renewal_disclosure": true,
+        "terms_and_privacy_links": true,
+        "restore_purchases": true,
+        "visible_close_44pt": true,
+        "continue_free_visible": true,
         "paywall_continues_onboarding": false,
-        "ui_test": false,
-        "screenshots": false
+        "ui_test": true,
+        "screenshots": true,
+        "no_trial_toggle": true,
+        "no_fake_timer_or_analysis": true,
+        "no_custom_review_prompt": true,
+        "passport_and_weights": true
       }
     }
   }
