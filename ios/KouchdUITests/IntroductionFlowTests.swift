@@ -153,6 +153,14 @@ final class IntroductionFlowTests: XCTestCase {
     )
   }
 
+  func testReplaySwipeStopsAtTheLastPreview() {
+    launch(replay: true)
+    for _ in 0..<4 { app.swipeLeft() }
+    assertTitle("Make the everyday\nfeel more shared.")
+    XCTAssertFalse(app.staticTexts["How are you\nmaking room?"].exists)
+    XCTAssertTrue(app.buttons["Done"].exists)
+  }
+
   func testReplayCompletesWithoutRoleSelection() {
     launch(replay: true)
     XCTAssertFalse(app.buttons["Already have an account? Sign in"].exists)

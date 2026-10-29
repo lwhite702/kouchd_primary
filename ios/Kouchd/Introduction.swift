@@ -32,6 +32,10 @@ struct IntroductionScreen: View {
   /// Set while a tapped button moves the pager. The pager reports the page it is
   /// leaving during that slide, which must not pull `step` back.
   @State private var pendingStep: Int?
+  /// Counts tapped moves, so only the latest move's timeout can clear `pendingStep`.
+  @State private var moveGeneration = 0
+  /// The replay ends on "Done", so it has only the four preview pages, no role choice.
+  private var pageCount: Int { replay ? 4 : 5 }
   private let titles = ["A shared stay.\nOn the same page.", "Good stays start\nwith clarity.",
                         "Clear records.\nFewer awkward asks.", "Make the everyday\nfeel more shared."]
   private let descriptions = [
@@ -55,7 +59,7 @@ struct IntroductionScreen: View {
       }.frame(minHeight: 44).padding(.horizontal, 24).foregroundStyle(Palette.forest)
       // A paged TabView, so people can swipe between steps as well as tap Continue.
       TabView(selection: Binding(get: { step }, set: { swiped(to: $0) })) {
-        ForEach(0..<5) { page in
+        ForEach(0..<pageCount, id: \.self) { page in
           ScrollView {
             VStack(alignment: .leading, spacing: 20) {
               pageContent(page)
@@ -173,11 +177,13 @@ struct IntroductionScreen: View {
   private func move(to value: Int) {
     guard value != step else { return }
     pendingStep = value
+    moveGeneration += 1
+    let generation = moveGeneration
     withAnimation(KouchdMotion.animation(reduceMotion)) { step = value }
     Task {
       // Never leave swiping blocked if the pager does not report the target.
       try? await Task.sleep(for: .milliseconds(700))
-      if pendingStep == value { pendingStep = nil }
+      if moveGeneration == generation { pendingStep = nil }
     }
   }
 
