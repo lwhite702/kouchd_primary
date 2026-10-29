@@ -9,12 +9,12 @@
   },
   "colors": {
     "primary": "#184F3A",
-    "light": "#22C55E",
-    "dark": "#103627"
+    "light": "#DFF25E",
+    "dark": "#123D2E"
   },
   "background": {
     "color": {
-      "light": "#FFFDF8",
+      "light": "#F5F0E8",
       "dark": "#FFFDF8"
     }
   },

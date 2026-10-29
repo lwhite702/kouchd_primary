@@ -1,5 +1,30 @@
 # Kouchd help center and repository-policy handoff
 
+**Issue:** [WRE-240](https://linear.app/wrelik/issue/WRE-240/kouchd-update-mintlify-and-help-center-to-match-brand-style-guide-and)
+**Task branch:** `codex/WRE-240-mintlify-brand-style-tokens`
+**Canonical repository:** `https://github.com/lwhite702/kouchd_primary`
+**State:** Local task branch ready for review.
+
+## Summary of changes
+
+- Updated Mintlify `docs.json` and `help/docs.json` configuration to align with Kouchd's Brand Building Design System:
+  - Colors: Set `primary` to `#184F3A` (Core Forest), `light` to `#DFF25E` (Electric Lime accent), and `dark` to `#123D2E` (Forest Dark contrast).
+  - Background: Configured `light` background canvas to `#F5F0E8` (Warm Paper) with gradient decoration, matching the brand surface hierarchy.
+  - Typography: Configured `fonts` with `Manrope` for headings and body text.
+- Aligned navigation, navbar, global anchors, and footer links:
+  - Pointed Web App links to `https://app.kouchd.com` and marketing site to `https://kouchd.com`.
+  - Added direct links to the official Brand Style Guide (`https://kouchd.com/brand`) in the global anchors, navbar, and footer.
+- Updated root `index.mdx` and `help/index.mdx` with direct navigation cards linking to the Brand Style Guide.
+- Added post-1.0 hardware roadmap capabilities to `help/product/roadmap.mdx` under "Being explored" (without promised dates):
+  - iPadOS native adaptation (multi-column split view, sidebar, keyboard shortcuts, Stage Manager).
+  - iPhone Duo dual-screen experience (foldable postures, hinge-aware safe regions, outer-to-inner display continuity).
+- Drafted comprehensive internal technical architecture plan in `docs/internal/POST_V1_APPLE_EXPANSION_PLAN.md`.
+- Excluded `ios/project.yml` in `.mintignore` and resolved duplicate mapping key in `ios/project.yml` so Mintlify CLI validation runs cleanly.
+- Validation: `mintlify validate` passed with 0 warnings/errors and `mintlify broken-links` found 0 broken links.
+
+---
+
+# Previous handoff (WRE-238)
 **Issue:** [WRE-238](https://linear.app/wrelik/issue/WRE-238/kouchd-update-help-docs-and-tooltips-for-10-rc-status-app-support)
 **Task branch:** `codex/wre-238-1-0-rc-help-and-tooltips`
 **Canonical repository:** `https://github.com/lwhite702/kouchd_primary`
@@ -10,7 +35,7 @@
 
 - Created dedicated app support guide `help/support/app-support.mdx` detailing support boundaries: `help@kouchd.com` provides technical app assistance, while Kouchd explicitly does not mediate roommate conflicts, stay disputes, or outside financial disagreements.
 - Registered `"help/support/app-support"` in `docs.json` navigation under `"Support"` and added `"App support"` to footer navigation.
-- Updated `help/product/roadmap.mdx` and `help/product/changelog.mdx` to reflect Version 1.0 Release Candidate (`1.0.0-rc.*`) state:
+- Updated `help/product/roadmap.mdx` and `help/product/changelog.mdx` to reflect the then-current Version 1.0 Release Candidate labels (since renamed `0.7.x`) state:
   - Documented merged capabilities: delayed guest agreement auto-acceptance, synced profile names, Loops newsletter, Liquid Glass motion polish, and streamlined entry.
   - Documented remaining pre-lock launch merges (dependency hardening, package maintenance, release readiness).
   - Outlined post-1.0 exploration (shared grocery receipt scanning, App Store distribution, recurring chore rotation) without promised ETAs.

@@ -147,6 +147,8 @@ private enum KouchdAuthError: LocalizedError {
   var bundle: Value = .null
   var typedAgreement: AgreementRecord?
   var ledger: [Value] = []
+  var ledgerSummary: Value = .null
+  private var ledgerRecord: Value = .null
   var contributions: [Value] = []
   var chores: [Value] = []
   var announcements: [Value] = []
@@ -303,6 +305,7 @@ private enum KouchdAuthError: LocalizedError {
     bundle = .null
     typedAgreement = nil
     ledger = []
+    ledgerSummary = .null
     typedLedger = []
     contributions = []
     chores = []
@@ -415,6 +418,7 @@ private enum KouchdAuthError: LocalizedError {
     bundle = .null
     typedAgreement = nil
     ledger = []
+    ledgerSummary = .null
     typedLedger = []
     contributions = []
     chores = []
@@ -442,12 +446,13 @@ private enum KouchdAuthError: LocalizedError {
   private func loadGuestData() {
     guard !selectedStayID.isEmpty else { return }
     financialGeneration += 1
-    pendingFinancialQueries = ["contributions:list", "rewards:getWallet", "obligations:list"]
+    pendingFinancialQueries = ["contributions:list", "rewards:getWallet", "obligations:ledgerWithTotals"]
     isFinancialLoading = true
     financialError = ""
     financialSubscriptions.removeAll()
     contributions = []
     ledger = []
+    ledgerSummary = .null
     typedLedger = []
     nights = []
     wallet = .null
@@ -456,7 +461,8 @@ private enum KouchdAuthError: LocalizedError {
     watch("contributions:list", args: args, into: \.contributions, financial: true)
     watch("rewards:getWallet", args: args, into: \.wallet, financial: true)
     args["asOfDate"] = Display.date(timezone: bundle["stay"]["timezone"].text)
-    watch("obligations:list", args: args, into: \.ledger, financial: true)
+    // One subscription computes the ledger once and returns its rows and totals together.
+    watch("obligations:ledgerWithTotals", args: args, into: \.ledgerRecord, financial: true)
     reloadFeatures()
   }
 
@@ -558,7 +564,10 @@ private enum KouchdAuthError: LocalizedError {
         if name == "subscriptions:currentAccountSummary", let summary = value as? Value {
           self.typedSubscriptionSummary = summary.decoded(AccountSubscriptionSummary.self)
         }
-        if name == "obligations:list", let rows = value as? [Value] {
+        if name == "obligations:ledgerWithTotals", let record = value as? Value {
+          let rows = record["rows"].items
+          self.ledger = rows
+          self.ledgerSummary = record["totals"]
           if let decoded = Value.array(rows).decoded([LedgerRecord].self) {
             self.typedLedger = decoded
           } else {

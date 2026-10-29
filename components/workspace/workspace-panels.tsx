@@ -43,6 +43,9 @@ export function WorkspacePanels({ state }: { state: WorkspaceState }) {
     savePaymentOptions,
     editingGuestId,
     saveGuestAgreement,
+    saveHouseholdTerms,
+    saveStayName,
+    setDestructiveAction,
     inviteUrl,
     inviteMode,
     makeInvite,
@@ -446,6 +449,39 @@ export function WorkspacePanels({ state }: { state: WorkspaceState }) {
             <p className="muted">This guest agreement is not available.</p>
           );
         })()}
+      {panel === "householdTerms" &&
+        (terms ? (
+          <GuestAgreementForm
+            terms={terms}
+            guestName="Household defaults"
+            intro="Update the household default agreement. Every active guest gets a new version to review and accept. Anything you set for an individual guest, like their own rate or dates, carries forward."
+            onSubmit={saveHouseholdTerms}
+            onCancel={() => setPanel(null)}
+          />
+        ) : (
+          <p className="muted">The household agreement is not available.</p>
+        ))}
+      {panel === "stayName" && (
+        <form onSubmit={saveStayName}>
+          <div className="form-grid">
+            <label className="full">
+              <span>Stay name</span>
+              <input
+                name="name"
+                defaultValue={bundle.stay.name ?? ""}
+                minLength={2}
+                maxLength={80}
+                required
+              />
+            </label>
+          </div>
+          <ModalActions
+            close={() => setPanel(null)}
+            action="Save name"
+            submitting={isSubmittingModal}
+          />
+        </form>
+      )}
       {panel === "invite" && (
         <>
           <div
@@ -496,6 +532,19 @@ export function WorkspacePanels({ state }: { state: WorkspaceState }) {
               >
                 <Copy size={15} /> Copy Code
               </button>
+              {isHost && (
+                <button
+                  className="button soft compact"
+                  type="button"
+                  onClick={() => {
+                    // The confirmation is not a top-layer dialog, so close this one first.
+                    setPanel(null);
+                    setDestructiveAction({ type: "regenerateCode" });
+                  }}
+                >
+                  New code
+                </button>
+              )}
             </div>
           </div>
           {inviteUrl ? (

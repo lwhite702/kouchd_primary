@@ -463,6 +463,20 @@ describe("shared stay authorization and audit rules", () => {
     const afterWaiver = await host.query(api.obligations.list, { stayId, asOfDate: "2026-09-30" });
     expect(afterWaiver[1]).toMatchObject({ lateFeeCents: 0, lateFeeWaived: true });
 
+    // The combined query used by iOS matches the separate list and summary queries.
+    const combined = await host.query(api.obligations.ledgerWithTotals, { stayId, asOfDate: "2026-09-30" });
+    const summary = await host.query(api.obligations.summary, { stayId, asOfDate: "2026-09-30" });
+    expect(combined.rows).toEqual(afterWaiver);
+    expect(combined.totals).toEqual({
+      chargesCents: summary.chargesCents,
+      creditCents: summary.creditCents,
+      balanceCents: summary.balanceCents,
+      pendingCount: summary.pendingCount,
+      dueCount: summary.dueCount,
+    });
+    expect(combined.totals.creditCents).toBe(19_000);
+    await expect(outsider.query(api.obligations.ledgerWithTotals, { stayId, asOfDate: "2026-09-30" })).rejects.toThrow("Not authorized");
+
     const activity = await host.query(api.activity.list, { stayId });
     expect(activity.filter((item: { action: string }) => item.action === "late_fee_waived")).toHaveLength(1);
   });

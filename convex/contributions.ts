@@ -94,6 +94,16 @@ export const voidContribution = mutation({
     if (!contribution.guestUserId && !access.includeLegacyUnscoped && membership.role !== "host") throw new Error("Not authorized for this financial record");
     if (membership.role !== "host" && contribution.createdBy !== user._id) throw new Error("Only the creator or host can void this contribution");
     if (contribution.status === "voided") return null;
+    // Voiding a redemption credit alone would leave its points spent with no credit behind them.
+    if (contribution.guestUserId) {
+      const guestUserId = contribution.guestUserId;
+      const redemptions = await ctx.db.query("pointRedemptions")
+        .withIndex("by_stay_and_guest", (q) => q.eq("stayId", contribution.stayId).eq("guestUserId", guestUserId))
+        .collect();
+      if (redemptions.some((redemption) => redemption.contributionId === contributionId)) {
+        throw new Error("This credit came from redeemed reward points, so it can't be voided.");
+      }
+    }
     const now = Date.now();
     await ctx.db.patch(contributionId, { status: "voided", voidedBy: user._id, voidedAt: now });
     await recordActivity(ctx, { stayId: contribution.stayId, actorUserId: user._id, guestUserId: contribution.guestUserId, kind: "contribution", action: "voided", detail: "Contribution voided; history retained", entityId: contributionId });
