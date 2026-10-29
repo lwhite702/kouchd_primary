@@ -154,7 +154,8 @@ h1 { max-width: 760px; margin-bottom: 10px; font-size: clamp(2rem, 5vw, 3.7rem);
 h2 { margin-bottom: 8px; font-size: 1.35rem; letter-spacing: -0.035em; }
 /* Body copy is Inter; titles and display labels stay in the Manrope brand face. */
 h1, h2, h3, h4, h5, h6, button, .button, .v21-button, .eyebrow, .overline, .metric, .status-pill, .badge,
-[class*="eyebrow"], [class*="-pill"], .v21-brand, .v21-footer-brand, .v21-footer-col-title {
+[class*="eyebrow"], [class*="-pill"], .v21-brand, .v21-footer-brand, .v21-footer-col-title,
+.brand, .avatar, .summary-item span, .summary-item strong, .list-value, .details-card p:last-child, .stay-hub-card > strong {
   font-family: var(--font-manrope), "Manrope", sans-serif;
 }
 .eyebrow, .overline { margin-bottom: 8px; color: #92582b; font-size: 0.74rem; font-weight: 850; letter-spacing: 0.11em; text-transform: uppercase; }

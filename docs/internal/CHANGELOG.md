@@ -14,6 +14,7 @@ Internal engineering record. This file is excluded from Mintlify navigation and 
 - Checked computed fonts on `/about` in a local dev server. The signed-in dashboard was not checked. The old `.landing-*` rules in `styles.css` are not used by any page and were left as they were.
 - Version `0.7.21` (re-prepared after the zod patch and the iOS review fixes took `0.7.19` and `0.7.20` on `main`).
 - Review fix: `.v21-host-heading` dropped from the Manrope rule; it wraps the stay subhead, which now stays Inter. The title keeps Manrope through `.v21-stay-title`.
+- Review fix: the Ledger summary amounts and labels (`.summary-item strong`, `.summary-item span`) keep Manrope. A sweep of `styles.css` for heavy text with no font family also pinned `.brand`, `.avatar`, `.list-value`, `.details-card p:last-child`, and `.stay-hub-card > strong`.
 
 ## 2026-10-29 — iOS review fixes: analytics privacy, paywall disclosures, introduction (WRE-249)
 
