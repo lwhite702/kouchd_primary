@@ -254,6 +254,8 @@ typealias TrialEligibilityLookup = @MainActor (_ productID: String, _ appTransac
   /// Product IDs whose free trial this host can start. Trial wording shows only for these.
   var trialProductIDs: Set<String> = []
   var selectedPackageID: String?
+  /// The summary's cross-platform trial answer from the last load; nil while unknown.
+  private var kouchdTrialEligible: Bool?
   var isLoading = false
   var activeOperation: String?
   var message = ""
@@ -322,6 +324,7 @@ typealias TrialEligibilityLookup = @MainActor (_ productID: String, _ appTransac
   /// Shows trial wording only when Kouchd and the Apple sheet will agree. Kouchd's signed
   /// answer wins because it is passed to Apple; without it, both must say yes.
   func refreshTrialEligibility(kouchdTrialEligible: Bool?) async {
+    self.kouchdTrialEligible = kouchdTrialEligible
     var eligibleIDs: Set<String> = []
     let transactionID = eligibility == nil ? nil : await client.appTransactionID()
     for package in packages where package.freeTrialDays != nil && kouchdTrialEligible != false {
@@ -344,6 +347,11 @@ typealias TrialEligibilityLookup = @MainActor (_ productID: String, _ appTransac
       var jws: String?
       if let eligibility, !package.productID.isEmpty {
         jws = await eligibility(package.productID, await client.appTransactionID()).jws
+        if jws == nil, !(await canPurchaseWithoutSignature(package)) {
+          error = "Kouchd couldn't confirm your free-trial eligibility, so nothing was charged. Try again in a moment."
+          await refreshTrialEligibility(kouchdTrialEligible: kouchdTrialEligible)
+          return
+        }
       }
       let result = try await client.purchase(packageID: package.id, introductoryOfferEligibilityJWS: jws)
       if result == .purchased, let isPlanConfirmed {
@@ -363,6 +371,15 @@ typealias TrialEligibilityLookup = @MainActor (_ productID: String, _ appTransac
     } catch {
       self.error = error.localizedDescription
     }
+  }
+
+  /// Without Kouchd's signature, Apple decides the trial alone. That is safe only when
+  /// Kouchd allows a trial and Apple's answer matches the terms the paywall showed.
+  private func canPurchaseWithoutSignature(_ package: BillingPackage) async -> Bool {
+    guard package.freeTrialDays != nil else { return true }
+    guard kouchdTrialEligible == true else { return false }
+    let shownTrial = trialProductIDs.contains(package.productID)
+    return await client.appleTrialEligible(packageID: package.id) == shownTrial
   }
 
   /// Checks twice a second; the store's live Convex subscription updates the answer.
@@ -494,7 +511,6 @@ struct SubscriptionScreen: View {
         if let periodEnd = summary?.periodEnd {
           DataRow(title: periodEndTitle, detail: periodEnd.formatted(date: .abbreviated, time: .omitted))
         }
-        if let status = statusNote { Text(status).font(.subheadline).foregroundStyle(Palette.muted) }
         if summary?.isTrial == true {
           Toggle("Email me 2 days before my trial ends", isOn: Binding(
             get: { summary?.trialReminderEnabled ?? true },
@@ -513,6 +529,8 @@ struct SubscriptionScreen: View {
         Text("Host \(PlanCopy.freeStays) stay with \(PlanCopy.freeGuests) guest at a time.")
           .font(.subheadline).foregroundStyle(Palette.muted)
       }
+      // Shown whatever the plan: a failed payment can already have moved the host to Free.
+      if let status = statusNote { Text(status).font(.subheadline).foregroundStyle(Palette.muted) }
       Text("Kouchd checks your plan on its own servers. A store purchase alone never changes what your household can do.")
         .font(.footnote).foregroundStyle(Palette.muted)
     }
@@ -520,12 +538,15 @@ struct SubscriptionScreen: View {
 
   private var periodEndTitle: String {
     if summary?.isTrial == true { return "Trial ends" }
-    return summary?.willRenew == false ? "Plus ends" : "Renews"
+    return summary?.willRenew == false || summary?.status == "canceled" ? "Plus ends" : "Renews"
   }
 
   private var statusNote: String? {
     switch summary?.status {
-    case "grace_period", "billing_retry": "There's a problem with your payment. Update it in your store account to keep Plus."
+    case "grace_period": "There's a problem with your payment. Update it in your store account to keep Plus."
+    case "billing_retry": summary?.hasPlus == true
+      ? "There's a problem with your payment. Update it in your store account to keep Plus."
+      : "Plus is paused because a payment didn't go through. Update your payment in your store account to turn it back on."
     case "canceled": "Your plan won't renew. Plus stays on until the date above."
     case "refunded": "This purchase was refunded."
     default: nil

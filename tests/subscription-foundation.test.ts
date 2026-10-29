@@ -73,6 +73,41 @@ describe("subscription policy", () => {
     expect((await guest.query(api.stays.getBundle, { stayId })).stay._id).toBe(stayId);
   });
 
+  it("lets verified Pro hosts add capacity even when the usage scan is truncated", async () => {
+    process.env.SUBSCRIPTION_EXPECTED_ENVIRONMENT = "production";
+    const t = convexTest(schema, modules);
+    const host = t.withIdentity({ subject: "pro-host", name: "Host", email: "pro-host@example.com" });
+    await host.mutation(api.users.syncCurrent, {});
+    const stayId = await host.mutation(api.stays.create, { timezone: "UTC", terms });
+    await t.run(async ({ db }) => {
+      const stay = (await db.get(stayId))!;
+      const now = Date.now();
+      await db.insert("subscriptionSnapshots", {
+        householdAccountId: stay.householdAccountId!,
+        provider: "revenuecat",
+        entitlement: "pro",
+        status: "active",
+        environment: "production",
+        currentPeriodEndsAt: now + 365 * 86_400_000,
+        latestProviderEventAt: now,
+        updatedAt: now,
+      });
+      // More active stays than the usage scan reads in one status group.
+      for (let index = 0; index < 51; index += 1) {
+        await db.insert("stays", {
+          hostUserId: stay.hostUserId,
+          householdAccountId: stay.householdAccountId,
+          status: "active",
+          timezone: "UTC",
+          createdAt: now,
+          updatedAt: now,
+        });
+      }
+    });
+
+    await expect(host.mutation(api.stays.create, { timezone: "UTC", terms })).resolves.toBeDefined();
+  });
+
   it("backfills legacy stay ownership idempotently without changing the stay", async () => {
     const t = convexTest(schema, modules);
     const { userId, stayId } = await t.run(async (ctx) => {

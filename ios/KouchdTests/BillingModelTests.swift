@@ -174,6 +174,41 @@ import XCTest
     XCTAssertEqual(askedTransactionIDs, ["2000000123456789"])
   }
 
+  func testUsedTrialWithoutSignatureStopsBeforeApple() async {
+    let client = BillingClientMock()
+    client.availablePackages = [annual]
+    client.appleEligibleIDs = [annual.id]
+    let model = BillingModel(client: client) { _, _ in (nil, nil) }
+    await model.load(kouchdTrialEligible: false)
+    await model.purchase(annual)
+    XCTAssertTrue(client.purchasedIDs.isEmpty)
+    XCTAssertTrue(model.error.contains("nothing was charged"))
+  }
+
+  func testShownTrialWithoutSignatureStopsWhenAppleWouldCharge() async {
+    let client = BillingClientMock()
+    client.availablePackages = [annual]
+    var signing = true
+    let model = BillingModel(client: client) { _, _ in signing ? (true, "jws") : (nil, nil) }
+    await model.load(kouchdTrialEligible: true)
+    XCTAssertEqual(model.trialDays(for: annual), 14)
+    signing = false
+    await model.purchase(annual)
+    XCTAssertTrue(client.purchasedIDs.isEmpty)
+    XCTAssertFalse(model.error.isEmpty)
+  }
+
+  func testUnsignedPurchaseProceedsWhenKouchdAndAppleAgree() async {
+    let client = BillingClientMock()
+    client.availablePackages = [annual]
+    client.appleEligibleIDs = [annual.id]
+    let model = BillingModel(client: client) { _, _ in (nil, nil) }
+    await model.load(kouchdTrialEligible: true)
+    await model.purchase(annual)
+    XCTAssertEqual(client.purchasedIDs, [annual.id])
+    XCTAssertEqual(client.purchasedJWS, [nil])
+  }
+
   func testSuccessWaitsForBackendToRecordPlus() async {
     let client = BillingClientMock()
     var backendHasPlus = false
