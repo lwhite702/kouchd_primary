@@ -56,7 +56,9 @@ function printStatus() {
   );
 
   let branchPolicy = "LOCKED (1.0 RC Launch Line — patches & bug fixes only)";
-  if (isExempt) {
+  if (!config.enabled) {
+    branchPolicy = "OPEN (prerelease — the lock is off until App Store submission is approved)";
+  } else if (isExempt) {
     branchPolicy = "EXEMPT PRE-LOCK IN-FLIGHT BRANCH (allowed to complete merge)";
   } else if (isPostV1WorktreeBranch) {
     branchPolicy = "ISOLATED POST-1.0 FEATURE WORKTREE BRANCH (new feature development allowed)";
@@ -66,7 +68,7 @@ function printStatus() {
   console.log(`Enabled:            ${config.enabled}`);
   console.log(`Release Phase:      ${config.phase} (Target: ${config.targetMajorVersion})`);
   console.log(`Current VERSION:    ${version}`);
-  console.log(`Current Candidate:  ${config.currentCandidate}`);
+  console.log(`Activation:         ${config.activation?.status ?? (config.enabled ? "active" : "inactive")} — ${config.activation?.activatesWhen ?? "n/a"}`);
   console.log(`Active Branch:      ${branch}`);
   console.log(`Branch Policy:      ${branchPolicy}`);
   console.log(`Allowed Launch Ops: ${(config.allowedChangeTypes ?? []).join(", ")}, rc`);
@@ -155,6 +157,12 @@ function deferFeature(flags) {
 }
 
 function bumpRc() {
+  if (!loadLockConfig().enabled) {
+    throw new Error(
+      "The 1.0 feature lock is off, so Kouchd uses prerelease numbers (0.7.x). " +
+        "Use `npm run version:prepare 0.7.N` instead. Turn the lock on when the App Store submission is approved.",
+    );
+  }
   const current = readFileSync(versionPath, "utf8").trim();
   const rcMatch = current.match(/^(\d+\.\d+\.\d+)-rc\.(\d+)$/);
   let nextVersion = "1.0.0-rc.1";

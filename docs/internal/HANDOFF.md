@@ -35,7 +35,7 @@
 
 - Created dedicated app support guide `help/support/app-support.mdx` detailing support boundaries: `help@kouchd.com` provides technical app assistance, while Kouchd explicitly does not mediate roommate conflicts, stay disputes, or outside financial disagreements.
 - Registered `"help/support/app-support"` in `docs.json` navigation under `"Support"` and added `"App support"` to footer navigation.
-- Updated `help/product/roadmap.mdx` and `help/product/changelog.mdx` to reflect Version 1.0 Release Candidate (`1.0.0-rc.*`) state:
+- Updated `help/product/roadmap.mdx` and `help/product/changelog.mdx` to reflect the then-current Version 1.0 Release Candidate labels (since renamed `0.7.x`) state:
   - Documented merged capabilities: delayed guest agreement auto-acceptance, synced profile names, Loops newsletter, Liquid Glass motion polish, and streamlined entry.
   - Documented remaining pre-lock launch merges (dependency hardening, package maintenance, release readiness).
   - Outlined post-1.0 exploration (shared grocery receipt scanning, App Store distribution, recurring chore rotation) without promised ETAs.
