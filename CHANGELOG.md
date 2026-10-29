@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Security
+
+- Upgraded `zod` from 4.5.4 to 4.6.7 through an npm `overrides` entry (`"zod": "^4.6.6"`) to fix CVE-2023-54404 (high, Dependabot alert #45): Zod could exhaust memory while validating oversized constrained collections. `zod` is not a direct dependency; it comes in only as a dev dependency of `eslint-plugin-react-hooks` (via `eslint-config-next`), so the shipped web bundle and the iOS app do not include it (0.7.19).
+
 ### Fixed
 
 - **iOS review fixes (WRE-249, 0.7.20)**:

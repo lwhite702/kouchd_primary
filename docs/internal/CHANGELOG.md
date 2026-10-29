@@ -19,10 +19,17 @@ Internal engineering record. This file is excluded from Mintlify navigation and 
   - Skip is hidden on the role step.
   - Both role headings use `Palette.section`.
   - The splash wordmark stays on one line at large text sizes.
-- Tests: new `testPriceIncludesRenewalPeriodWhenKnown`, and `testSkipShowsRoleSelection` now asserts that Skip is gone. Local simulator run on iPhone 18 Pro Max: 22 unit and 7 UI tests passed.
+- Tests: new `testPriceIncludesRenewalPeriodWhenKnown`, and `testSkipShowsRoleSelection` now asserts that Skip is gone. Added two UI journeys at `.accessibility5` (launch flag `--ui-test-accessibility-text`) that check the footer isn't pinned and stays reachable. Local simulator run on iPhone 18 Pro Max: 22 unit and 9 UI tests passed.
 - Checked visually in the simulator: introduction light and dark, role step, and largest accessibility size. Not checked: the paywall on screen (needs a signed-in host with RevenueCat offerings), and a 375-point iPhone (no small simulator installed).
 - Open: there is no in-app account deletion. It exists only in Clerk's `UserProfileView`, if self-deletion is enabled in Clerk, which the Clerk config API doesn't expose. There is no Convex deletion path for stays and records. Apple requires in-app deletion; this needs a product decision on what happens to shared records.
 - Version `0.7.20` (renumbered from `0.7.19`, which PR #89 uses for the zod override).
+
+## 2026-10-29 — Patch zod for CVE-2023-54404
+
+- `package.json`: added `"overrides": { "zod": "^4.6.6" }`. `npm ls zod` showed `zod` only as a dev dependency of `eslint-plugin-react-hooks@7.1.1` (through `eslint-config-next@16.4.3`), whose range `^3.25.0 || ^4.0.0` had locked 4.5.4. `zod-validation-error@4.0.2` now dedupes to the same copy.
+- `package-lock.json`: `node_modules/zod` moves from 4.5.4 to 4.6.7; no other entries changed.
+- This is the only open Dependabot alert on `main` (#45, high, `zod < 4.6.6`, first patched 4.6.6). It should close once this merges to `main`; that is not yet observed.
+- Version `0.7.19`. Open PR #88 (web body font) also uses `0.7.19`; whichever merges second must re-prepare the next patch, because the release gate requires a patch to be exactly one above `main`.
 
 ## 2026-10-29 — Readable text on lime in iOS dark mode
 
