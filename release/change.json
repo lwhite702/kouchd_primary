@@ -1,5 +1,5 @@
 {
-  "type": "rc",
-  "version": "1.0.0-rc.13",
-  "reason": "Polish landing and marketing pages across accessibility, motion, and navigation."
+  "type": "patch",
+  "version": "0.7.13",
+  "reason": "Keep personal shopping items private to their creator, and bring iOS shopping item editing and chore repeat scheduling in line with web (WRE-244)."
 }
