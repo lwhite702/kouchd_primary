@@ -15,6 +15,8 @@
 
 ### Fixed
 
+- **Personal shopping items are private to their creator (WRE-244)**: Hosts no longer see, edit, check off, or remove a guest's personal shopping items, and personal-item activity no longer appears in the host's activity feed (including rows recorded before this change). `shopping:list`, `requireItemEditor`, and `shopping:update` now allow only the creator; others get "Shopping item not found". Only the creator can make an item personal. Web and iOS hide the edit, remove, and personal controls to match, and the copy now says personal items are visible only to you.
+- **iOS household coordination parity (WRE-244)**: Brought the iOS app in line with web for household coordination. You can now edit a shopping item's name, quantity, note, and shared/personal setting from the iOS shopping list. Edit appears only when the server would allow it, and only the person who added an item sees the personal toggle. The iOS **New chore** form now has a **Repeat** picker (does not repeat, daily, weekly) that sends `repeatCadence` to `chores:create`, and repeating chores show their cadence in the chore list. No backend changes.
 - Fixed the iOS `AppConfig` declaration so the merged launch candidate compiles cleanly in the release workflow.
 - Fixed an iOS SwiftUI compiler timeout in `RootView` by splitting screen composition and lifecycle callbacks into focused helpers.
 - Patch Next.js to 16.4.3 and DOMPurify to 3.4.17, align the framework lint configuration, and refresh compatible dependencies. Local full and runtime audits report zero advisories; release requires its own promotion approval.
