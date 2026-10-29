@@ -1,5 +1,5 @@
 {
-  "type": "rc",
-  "version": "1.0.0-rc.13",
-  "reason": "Polish landing and marketing pages across accessibility, motion, and navigation."
+  "type": "patch",
+  "version": "0.7.16",
+  "reason": "Keep the web sign-in submit button usable on password, code, and two-factor steps (WRE-242)."
 }

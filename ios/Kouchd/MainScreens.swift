@@ -224,6 +224,31 @@ struct GuestPicker: View {
   }
 }
 
+/// Totals from `obligations:summary`, matching the web Ledger's summary strip.
+struct LedgerSummaryCard: View {
+  let summary: Value
+
+  static func rows(_ summary: Value) -> [(title: String, detail: String)] {
+    var rows: [(title: String, detail: String)] = [
+      ("Total charges", Display.money(summary["chargesCents"].int)),
+      ("Confirmed credit", Display.money(summary["creditCents"].int)),
+      ("Remaining scheduled", Display.money(summary["balanceCents"].int)),
+    ]
+    let pending = summary["pendingCount"].int
+    if pending > 0 { rows.append(("Awaiting confirmation", "\(pending) \(pending == 1 ? "entry" : "entries")")) }
+    return rows
+  }
+
+  var body: some View {
+    Card {
+      Text("Summary").font(.headline)
+      ForEach(Self.rows(summary), id: \.title) { row in DataRow(title: row.title, detail: row.detail) }
+      Text("Scheduled totals include upcoming periods. Each row below shows when its contribution is due.")
+        .font(.caption).foregroundStyle(Palette.muted)
+    }
+  }
+}
+
 struct LedgerScreen: View {
   let store: KouchdStore
   @State private var showingContribution = false
@@ -237,6 +262,9 @@ struct LedgerScreen: View {
         if !store.isEnded {
           PrimaryButton(title: "Record a contribution") { showingContribution = true }
         }
+      }
+      if case .object = store.ledgerSummary {
+        LedgerSummaryCard(summary: store.ledgerSummary)
       }
       if store.ledger.isEmpty {
         EmptyCard(title: "Nothing due yet", message: "Agreed charges will appear here.")
@@ -957,7 +985,7 @@ struct ChoresScreen: View {
             }.disabled(store.isEnded || !chore["voidedAt"].text.isEmpty).accessibilityLabel(chore["completed"].flag ? "Mark incomplete" : "Mark complete")
             VStack(alignment: .leading, spacing: 4) {
               Text(chore.title).font(.headline)
-              Text(chore["assignee"].text.capitalized + " · " + chore["dueDate"].text)
+              Text(HouseholdRules.choreScheduleLabel(chore))
                 .font(.caption).foregroundStyle(Palette.muted)
             }
             Spacer()
@@ -994,6 +1022,7 @@ struct ChoreForm: View {
   @State private var assignee = "shared"
   @State private var assigneeID = ""
   @State private var due = Date.now
+  @State private var repeatCadence = "none"
   var body: some View {
     NavigationStack {
       Form {
@@ -1013,6 +1042,11 @@ struct ChoreForm: View {
           }
         }
         DatePicker("Due", selection: $due, displayedComponents: .date)
+        Picker("Repeat", selection: $repeatCadence) {
+          Text("Does not repeat").tag("none")
+          Text("Daily").tag("daily")
+          Text("Weekly").tag("weekly")
+        }
       }
       .navigationTitle("New chore")
       .kouchdNavigationBar()
@@ -1026,6 +1060,7 @@ struct ChoreForm: View {
                 "assignee": assignee, "dueDate": Display.date(due)
               ]
               if assignee == "guest" && !assigneeID.isEmpty { args["assigneeUserId"] = assigneeID }
+              if let cadence = HouseholdRules.choreRepeatCadence(repeatCadence) { args["repeatCadence"] = cadence }
               if await store.mutate("chores:create", args) { dismiss() }
             }
           }.disabled(title.trimmingCharacters(in: .whitespaces).isEmpty)

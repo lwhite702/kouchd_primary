@@ -73,4 +73,27 @@ describe("Wrelik release gate", () => {
     f.write("CHANGELOG.md", "## [Unreleased]\n");
     expect(f.run()).toContain("runtime changes: false");
   });
+  describe("renumbered releases", () => {
+    // A base recorded as 1.0.0-rc.13 that release/version-history.json renames to 0.7.12.
+    const renumberedBase = () => {
+      const f = fixture();
+      f.write("VERSION", "1.0.0-rc.13\n");
+      f.write("release/change.json", JSON.stringify({ version: "1.0.0-rc.13", type: "rc", reason: "Old candidate" }));
+      f.git("add", "."); f.git("commit", "-m", "rc baseline");
+      f.write("release/version-history.json", JSON.stringify({ renamed: { "1.0.0-rc.13": "0.7.12" } }));
+      return f;
+    };
+    it("accepts renaming the base release to its current number without a new release", () => {
+      const f = renumberedBase(); f.runtime("0.7.12", "none");
+      expect(f.run()).toContain("checked for 0.7.12");
+    });
+    it("compares the next patch against the renamed base", () => {
+      const f = renumberedBase(); f.runtime("0.7.13", "patch");
+      expect(f.run()).toContain("checked for 0.7.13");
+    });
+    it("still rejects an unmapped step down from the base", () => {
+      const f = renumberedBase(); f.runtime("0.7.11", "none");
+      expect(f.run).toThrow(/classification requires/);
+    });
+  });
 });
