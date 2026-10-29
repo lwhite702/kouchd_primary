@@ -1349,6 +1349,7 @@
   color: var(--v21-forest);
   cursor: pointer;
   font: inherit;
+  font-family: var(--font-manrope), "Manrope", sans-serif;
   font-size: 12px;
   font-weight: 750;
   line-height: 1.4;
@@ -1493,7 +1494,7 @@
 }
 
 .host-workspace-checkin-card p { margin: 2px 0 8px; color: var(--v21-ink); font-size: 13px; line-height: 1.55; overflow-wrap: anywhere; }
-.host-workspace-checkin-card button { display: inline-flex; align-items: center; gap: 7px; padding: 0; border: 0; background: transparent; color: var(--v21-forest); font: inherit; font-size: 12px; font-weight: 800; cursor: pointer; }
+.host-workspace-checkin-card button { display: inline-flex; align-items: center; gap: 7px; padding: 0; border: 0; background: transparent; color: var(--v21-forest); font: inherit; font-family: var(--font-manrope), "Manrope", sans-serif; font-size: 12px; font-weight: 800; cursor: pointer; }
 .host-workspace-empty { margin: 0; padding: 14px; border-radius: 14px; background: rgba(255, 253, 248, 0.65); color: var(--v21-muted); font-size: 13px; line-height: 1.55; overflow-wrap: anywhere; }
 
 @media (max-width: 1180px) {

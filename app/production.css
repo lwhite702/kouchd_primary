@@ -2163,6 +2163,7 @@ body {
   width: 100%;
   color: inherit;
   font: inherit;
+  font-family: var(--font-manrope), "Manrope", sans-serif;
 }
 
 .mobile-menu-item:hover,

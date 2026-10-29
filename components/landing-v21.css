@@ -252,7 +252,7 @@
 .newsletter-input-row { display: flex; gap: 8px; }
 .newsletter-input-row input { min-width: 0; flex: 1; padding: 11px 12px; border: 1px solid #cbd6c9; border-radius: 10px; color: #26372d; background: #fffefa; font: inherit; font-size: 12px; }
 .newsletter-input-row input:focus-visible, .newsletter-consent input:focus-visible, .newsletter-input-row button:focus-visible { outline: 3px solid #98b65a; outline-offset: 2px; }
-.newsletter-input-row button { flex: 0 0 auto; padding: 0 13px; border: 0; border-radius: 10px; color: #173c2d; background: #dff26b; font: inherit; font-size: 11px; font-weight: 800; cursor: pointer; }
+.newsletter-input-row button { flex: 0 0 auto; padding: 0 13px; border: 0; border-radius: 10px; color: #173c2d; background: #dff26b; font: inherit; font-family: var(--font-manrope), "Manrope", sans-serif; font-size: 11px; font-weight: 800; cursor: pointer; }
 .newsletter-input-row button:disabled { opacity: .65; cursor: wait; }
 .newsletter-consent { display: flex; align-items: flex-start; gap: 8px; color: #55645a; font-size: 10px; line-height: 1.5; cursor: pointer; }
 .newsletter-consent input { width: 14px; height: 14px; flex: 0 0 auto; margin: 1px 0 0; accent-color: #174b37; }
