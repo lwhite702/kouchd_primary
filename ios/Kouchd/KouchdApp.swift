@@ -141,6 +141,7 @@ struct RootView: View {
     )) {
       Button("OK") { store.error = "" }
     } message: { Text(store.error) }
+    .planLimitPresentation(store: store)
     .onOpenURL(perform: handleOpenURL)
     .onChange(of: clerk.user?.id, initial: true) { _, userID in handleSessionUserChange(userID) }
     .onChange(of: store.stays.count) { _, count in handleStayCountChange(count) }

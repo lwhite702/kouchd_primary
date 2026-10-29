@@ -239,28 +239,65 @@ enum BillingError: LocalizedError {
   }
 }
 
+/// Kouchd's signed trial answer for a product: `eligible == nil` when Kouchd could not answer.
+typealias TrialEligibilityLookup = @MainActor (_ productID: String, _ appTransactionID: String?) async -> (eligible: Bool?, jws: String?)
+
 @MainActor @Observable final class BillingModel {
   private let client: BillingClient
+  private let eligibility: TrialEligibilityLookup?
   var packages: [BillingPackage] = []
+  /// Product IDs whose free trial this host can start. Trial wording shows only for these.
+  var trialProductIDs: Set<String> = []
+  var selectedPackageID: String?
   var isLoading = false
   var activeOperation: String?
   var message = ""
   var error = ""
 
-  init(client: BillingClient) {
+  init(client: BillingClient, eligibility: TrialEligibilityLookup? = nil) {
     self.client = client
+    self.eligibility = eligibility
+  }
+
+  /// Yearly first, so the plan with the better price is the default.
+  var sortedPackages: [BillingPackage] {
+    packages.sorted { $0.isAnnual && !$1.isAnnual }
+  }
+
+  var selectedPackage: BillingPackage? {
+    packages.first { $0.id == selectedPackageID } ?? sortedPackages.first
+  }
+
+  /// Whole-percent saving of the yearly plan over twelve monthly payments; nil when there is none.
+  var annualSavingsPercent: Int? {
+    guard let annual = packages.first(where: \.isAnnual),
+          let monthly = packages.first(where: { $0.productID == BillingProduct.monthly }),
+          monthly.priceAmount > 0 else { return nil }
+    let yearOfMonthly = monthly.priceAmount * 12
+    var saving = (yearOfMonthly - annual.priceAmount) / yearOfMonthly * 100
+    var whole = Decimal()
+    // Round first: NSNumber's intValue is unreliable for long decimal mantissas.
+    NSDecimalRound(&whole, &saving, 0, .down)
+    let percent = NSDecimalNumber(decimal: whole).intValue
+    return percent > 0 ? percent : nil
+  }
+
+  func trialDays(for package: BillingPackage) -> Int? {
+    trialProductIDs.contains(package.productID) ? package.freeTrialDays : nil
   }
 
   func updateIdentity(_ userID: String?) async {
     do {
       try await client.updateIdentity(userID)
       packages = []
+      trialProductIDs = []
     } catch {
       self.error = error.localizedDescription
     }
   }
 
-  func load() async {
+  /// `kouchdTrialEligible` is the summary's cross-platform answer; nil while unknown.
+  func load(kouchdTrialEligible: Bool? = nil) async {
     guard activeOperation == nil else { return }
     isLoading = true
     defer { isLoading = false }
@@ -269,7 +306,24 @@ enum BillingError: LocalizedError {
       error = ""
     } catch {
       self.error = error.localizedDescription
+      return
     }
+    await refreshTrialEligibility(kouchdTrialEligible: kouchdTrialEligible)
+  }
+
+  /// Shows trial wording only when Kouchd and the Apple sheet will agree. Kouchd's signed
+  /// answer wins because it is passed to Apple; without it, both must say yes.
+  func refreshTrialEligibility(kouchdTrialEligible: Bool?) async {
+    var eligibleIDs: Set<String> = []
+    let transactionID = eligibility == nil ? nil : await client.appTransactionID()
+    for package in packages where package.freeTrialDays != nil && kouchdTrialEligible != false {
+      if let eligibility, let signed = await eligibility(package.productID, transactionID).eligible {
+        if signed { eligibleIDs.insert(package.productID) }
+      } else if kouchdTrialEligible == true, await client.appleTrialEligible(packageID: package.id) {
+        eligibleIDs.insert(package.productID)
+      }
+    }
+    trialProductIDs = eligibleIDs
   }
 
   func purchase(_ package: BillingPackage) async {
@@ -277,7 +331,13 @@ enum BillingError: LocalizedError {
     activeOperation = package.id
     defer { activeOperation = nil }
     do {
-      let result = try await client.purchase(packageID: package.id)
+      // A fresh signature for every purchase, so the Apple sheet follows Kouchd's
+      // one-trial-per-host rule even when this App Store account never had a trial.
+      var jws: String?
+      if let eligibility, !package.productID.isEmpty {
+        jws = await eligibility(package.productID, await client.appTransactionID()).jws
+      }
+      let result = try await client.purchase(packageID: package.id, introductoryOfferEligibilityJWS: jws)
       if result == .purchased {
         message = "Purchase received. Your household plan will update after Kouchd verifies it."
       } else if result == .pending {
@@ -311,60 +371,66 @@ enum BillingError: LocalizedError {
   }
 }
 
+/// Host-facing plan wording. Guests never see plan names, prices, or Plus.
+enum PlanCopy {
+  static let stayFull = "This stay is full right now. Ask your host to make room."
+  static let freeStays = 1, freeGuests = 1, plusStays = 3, plusGuests = 5
+
+  static func planName(_ summary: AccountSubscriptionSummary?) -> String {
+    switch summary?.planName {
+    case "plus": "Plus"
+    case "pro": "Pro"
+    default: summary?.hasPlus == true ? "Plus" : "Free"
+    }
+  }
+
+  static func count(_ count: PlanUsage.Count) -> String {
+    guard let limit = count.limit else { return "\(count.used) · no limit" }
+    return "\(count.used) of \(limit)"
+  }
+
+  static func trialEnd(days: Int, from start: Date = .now) -> Date {
+    Calendar.current.date(byAdding: .day, value: days, to: start) ?? start
+  }
+}
+
+extension PlanLimitError: Identifiable {
+  var id: String { "\(dimension)-\(plan)-\(limit)" }
+}
+
 struct SubscriptionScreen: View {
   let store: KouchdStore
-  @State private var billing = BillingModel(client: RevenueCatBillingClient.shared)
+  @State private var billing: BillingModel
+  @State private var reminderBusy = false
   @Environment(\.openURL) private var openURL
 
-  var body: some View {
-    Page(title: "Your subscription") {
-      Card {
-        Text("Household plan").font(.headline)
-        DataRow(title: "Plan", detail: planName)
-        DataRow(title: "Status", detail: statusName)
-        if let periodEnd = periodEnd {
-          DataRow(title: "Current period ends", detail: periodEnd.formatted(date: .abbreviated, time: .omitted))
-        }
-        Text("Kouchd verifies household access on the server. Store purchase status never unlocks features by itself.")
-          .font(.footnote).foregroundStyle(Palette.muted)
+  init(store: KouchdStore) {
+    self.store = store
+    _billing = State(initialValue: BillingModel(
+      client: RevenueCatBillingClient.shared,
+      eligibility: { [weak store] productID, transactionID in
+        guard let store else { return (nil, nil) }
+        return await store.introOfferEligibility(productID: productID, appTransactionID: transactionID)
       }
+    ))
+  }
 
-      if store.typedSubscriptionSummary?.canManageSubscription != true {
+  private var summary: AccountSubscriptionSummary? { store.typedSubscriptionSummary }
+
+  var body: some View {
+    Page(title: "Your plan", navigationTitle: "Subscription") {
+      if summary?.canManageSubscription != true {
         EmptyCard(title: "Guests stay free", message: "Only the household host manages a Kouchd subscription. Your agreements, records, ledger, chores, and participation remain available.")
-      } else if !AppConfig.purchasesEnabled {
-        EmptyCard(title: "Subscriptions are coming soon", message: "Purchase options will appear after Kouchd finishes App Store and plan verification.")
       } else {
-        if billing.isLoading {
-          ProgressView("Loading current prices")
-        } else if billing.packages.isEmpty {
-          EmptyCard(title: "No purchase options available", message: "Try again later or manage an existing subscription.")
+        currentPlanCard
+        if let usage = store.planUsage { PlanUsageCard(store: store, usage: usage) }
+        if !AppConfig.purchasesEnabled {
+          EmptyCard(title: "Subscriptions are coming soon", message: "Purchase options will appear after Kouchd finishes App Store and plan verification.")
+        } else if summary?.hasPlus == true {
+          manageCard
         } else {
-          ForEach(billing.packages) { package in
-            Card {
-              Text(package.title).font(.headline)
-              Text(package.detail).foregroundStyle(Palette.muted)
-              Text(package.priceWithPeriod).font(.title3.bold())
-              PrimaryButton(title: billing.activeOperation == package.id ? "Starting purchase…" : "Choose \(package.title)") {
-                Task { await billing.purchase(package) }
-              }
-              .disabled(billing.activeOperation != nil)
-            }
-          }
-          Text("Subscriptions renew automatically at the price shown until you cancel. Payment is charged to your Apple account. Cancel at least 24 hours before the period ends in your Apple account settings or with Manage subscription below.")
-            .font(.footnote).foregroundStyle(Palette.muted)
-          HStack(spacing: 16) {
-            Link("Terms & Conditions", destination: URL(string: "https://kouchd.com/terms")!)
-            Link("Privacy Policy", destination: URL(string: "https://kouchd.com/privacy")!)
-          }
-          .font(.footnote.weight(.semibold))
+          offerCard
         }
-        Button("Restore purchases") { Task { await billing.restore() } }
-          .disabled(billing.activeOperation != nil)
-        Button("Manage subscription") {
-          Task { if let url = await billing.managementURL() { openURL(url) } }
-        }
-        Button("Refresh options") { Task { await billing.load() } }
-          .disabled(billing.activeOperation != nil)
       }
 
       if !billing.message.isEmpty {
@@ -374,23 +440,316 @@ struct SubscriptionScreen: View {
         Text(billing.error).font(.footnote).foregroundStyle(.red)
       }
     }
-    .task { if AppConfig.purchasesEnabled { await billing.load() } }
-  }
-
-  private var planName: String {
-    switch store.typedSubscriptionSummary?.plan ?? "starter" {
-    case "hostPlus": "Host Plus"
-    case "householdPro": "Household Pro"
-    default: "Starter"
+    .task(id: summary?.introOfferEligible) {
+      if AppConfig.purchasesEnabled, summary?.hasPlus != true {
+        await billing.load(kouchdTrialEligible: summary?.introOfferEligible)
+      }
     }
   }
 
-  private var statusName: String {
-    (store.typedSubscriptionSummary?.status ?? "unknown").replacingOccurrences(of: "_", with: " ").capitalized
+  // MARK: Current plan
+
+  private var currentPlanCard: some View {
+    Card {
+      HStack {
+        Text(PlanCopy.planName(summary)).font(Palette.section).foregroundStyle(Palette.ink)
+        Spacer()
+        if summary?.isTrial == true { Pill(text: "Free trial") }
+      }
+      if summary?.hasPlus == true {
+        if let periodEnd = summary?.periodEnd {
+          DataRow(title: periodEndTitle, detail: periodEnd.formatted(date: .abbreviated, time: .omitted))
+        }
+        if let status = statusNote { Text(status).font(.subheadline).foregroundStyle(Palette.muted) }
+        if summary?.isTrial == true {
+          Toggle("Email me 2 days before my trial ends", isOn: Binding(
+            get: { summary?.trialReminderEnabled ?? true },
+            set: { enabled in
+              reminderBusy = true
+              Task {
+                _ = await store.mutate("subscriptions:setTrialReminder", ["enabled": enabled])
+                reminderBusy = false
+              }
+            }
+          ))
+          .font(.subheadline)
+          .disabled(reminderBusy)
+        }
+      } else {
+        Text("Host \(PlanCopy.freeStays) stay with \(PlanCopy.freeGuests) guest at a time.")
+          .font(.subheadline).foregroundStyle(Palette.muted)
+      }
+      Text("Kouchd checks your plan on its own servers. A store purchase alone never changes what your household can do.")
+        .font(.footnote).foregroundStyle(Palette.muted)
+    }
   }
 
-  private var periodEnd: Date? {
-    let value = store.typedSubscriptionSummary?.currentPeriodEndsAt ?? 0
-    return value > 0 ? Date(timeIntervalSince1970: value / 1000) : nil
+  private var periodEndTitle: String {
+    if summary?.isTrial == true { return "Trial ends" }
+    return summary?.willRenew == false ? "Plus ends" : "Renews"
+  }
+
+  private var statusNote: String? {
+    switch summary?.status {
+    case "grace_period", "billing_retry": "There's a problem with your payment. Update it in your store account to keep Plus."
+    case "canceled": "Your plan won't renew. Plus stays on until the date above."
+    case "refunded": "This purchase was refunded."
+    default: nil
+    }
+  }
+
+  // MARK: Plus offer
+
+  @ViewBuilder private var offerCard: some View {
+    Card {
+      Pill(text: "Kouchd Plus")
+      Text("Room for more of the people you host").font(Palette.section).foregroundStyle(Palette.ink)
+      VStack(alignment: .leading, spacing: 10) {
+        benefit("house", "Up to \(PlanCopy.plusStays) active stays at once")
+        benefit("person.2", "Up to \(PlanCopy.plusGuests) guests across your stays")
+        benefit("checkmark.seal", "Everything you use on Free stays the same")
+      }
+
+      if billing.isLoading && billing.packages.isEmpty {
+        ProgressView("Loading current prices")
+      } else if billing.packages.isEmpty {
+        Text("No purchase options are available right now. Try again later.")
+          .font(.subheadline).foregroundStyle(Palette.muted)
+        Button("Refresh options") {
+          Task { await billing.load(kouchdTrialEligible: summary?.introOfferEligible) }
+        }.disabled(billing.activeOperation != nil)
+      } else {
+        VStack(spacing: 10) {
+          ForEach(billing.sortedPackages) { package in
+            PlanOptionRow(
+              package: package,
+              trialDays: billing.trialDays(for: package),
+              savingsPercent: package.isAnnual ? billing.annualSavingsPercent : nil,
+              selected: billing.selectedPackage?.id == package.id
+            ) { billing.selectedPackageID = package.id }
+          }
+        }
+        if let package = billing.selectedPackage {
+          let trialDays = billing.trialDays(for: package)
+          PrimaryButton(title: ctaTitle(package, trialDays: trialDays)) {
+            Task { await billing.purchase(package) }
+          }
+          .disabled(billing.activeOperation != nil)
+          Text(termsLine(package, trialDays: trialDays))
+            .font(.footnote).foregroundStyle(Palette.muted)
+        }
+      }
+    }
+
+    VStack(alignment: .leading, spacing: 12) {
+      Text("Subscriptions renew automatically at the price shown until you cancel. Payment is charged to your Apple account. Cancel at least 24 hours before the period ends in your Apple account settings or with Manage subscription.")
+        .font(.footnote).foregroundStyle(Palette.muted)
+      HStack(spacing: 16) {
+        Link("Terms & Conditions", destination: URL(string: "https://kouchd.com/terms")!)
+        Link("Privacy Policy", destination: URL(string: "https://kouchd.com/privacy")!)
+      }
+      .font(.footnote.weight(.semibold))
+      HStack(spacing: 16) {
+        Button("Restore purchases") { Task { await billing.restore() } }
+        Button("Manage subscription") { openManagement() }
+      }
+      .font(.footnote.weight(.semibold))
+      .disabled(billing.activeOperation != nil)
+    }
+  }
+
+  private func benefit(_ symbol: String, _ text: String) -> some View {
+    Label {
+      Text(text).font(.subheadline).foregroundStyle(Palette.ink)
+    } icon: {
+      Image(systemName: symbol).foregroundStyle(Palette.forest)
+    }
+  }
+
+  private func ctaTitle(_ package: BillingPackage, trialDays: Int?) -> String {
+    if billing.activeOperation == package.id { return "Starting purchase…" }
+    if let trialDays { return "Start \(trialDays)-day free trial" }
+    return "Subscribe for \(package.priceWithPeriod)"
+  }
+
+  private func termsLine(_ package: BillingPackage, trialDays: Int?) -> String {
+    guard let trialDays else {
+      return "Billed \(package.priceWithPeriod) and renews automatically. Cancel anytime."
+    }
+    let end = PlanCopy.trialEnd(days: trialDays).formatted(date: .abbreviated, time: .omitted)
+    return "Free until \(end), then \(package.priceWithPeriod), renewing automatically. Cancel before then and you won't be charged."
+  }
+
+  // MARK: Manage
+
+  private var manageCard: some View {
+    Card {
+      Text("Manage Plus").font(.headline)
+      if summary?.store == "web" {
+        Text("You started Plus on the Kouchd website, so change or cancel it there.")
+          .font(.subheadline).foregroundStyle(Palette.muted)
+        Link("Open kouchd.com", destination: URL(string: "https://kouchd.com")!)
+          .font(.subheadline.weight(.semibold))
+      } else {
+        Text("Change plans or cancel in your Apple account.")
+          .font(.subheadline).foregroundStyle(Palette.muted)
+        Button("Manage subscription") { openManagement() }
+          .font(.subheadline.weight(.semibold))
+        Button("Restore purchases") { Task { await billing.restore() } }
+          .font(.subheadline.weight(.semibold))
+      }
+    }
+    .disabled(billing.activeOperation != nil)
+  }
+
+  private func openManagement() {
+    Task {
+      if let url = await billing.managementURL() {
+        openURL(url)
+      } else if let fallback = URL(string: "https://apps.apple.com/account/subscriptions") {
+        openURL(fallback)
+      }
+    }
+  }
+}
+
+private struct PlanOptionRow: View {
+  let package: BillingPackage
+  let trialDays: Int?
+  let savingsPercent: Int?
+  let selected: Bool
+  let select: () -> Void
+
+  var body: some View {
+    Button(action: select) {
+      HStack(alignment: .center, spacing: 14) {
+        Image(systemName: selected ? "checkmark.circle.fill" : "circle")
+          .font(.title3)
+          .foregroundStyle(selected ? Palette.forest : Palette.muted)
+        VStack(alignment: .leading, spacing: 4) {
+          HStack(spacing: 8) {
+            Text(package.isAnnual ? "Yearly" : "Monthly").font(.headline).foregroundStyle(Palette.ink)
+            if let savingsPercent { Pill(text: "Save \(savingsPercent)%") }
+          }
+          Text(package.priceWithPeriod).font(.subheadline).foregroundStyle(Palette.ink)
+          if let trialDays {
+            Text("\(trialDays)-day free trial").font(.footnote).foregroundStyle(Palette.muted)
+          }
+        }
+        Spacer(minLength: 0)
+      }
+      .padding(16)
+      .frame(maxWidth: .infinity, alignment: .leading)
+      .background(Palette.cream, in: RoundedRectangle(cornerRadius: 18))
+      .overlay(
+        RoundedRectangle(cornerRadius: 18)
+          .strokeBorder(selected ? Palette.forest : Palette.line, lineWidth: selected ? 2 : 1)
+      )
+      .contentShape(RoundedRectangle(cornerRadius: 18))
+    }
+    .buttonStyle(.plain)
+    .accessibilityElement(children: .combine)
+    .accessibilityAddTraits(selected ? [.isButton, .isSelected] : .isButton)
+  }
+}
+
+/// Host-only: who holds each guest spot, and who could not join while spots were full.
+struct PlanUsageCard: View {
+  let store: KouchdStore
+  let usage: PlanUsage
+
+  var body: some View {
+    Card {
+      Text("What you're using").font(.headline)
+      DataRow(title: "Active stays", detail: PlanCopy.count(usage.stays))
+      DataRow(title: "Guests across your stays", detail: PlanCopy.count(usage.guests))
+      if !usage.guestSpots.isEmpty {
+        Divider()
+        ForEach(usage.guestSpots) { spot in
+          VStack(alignment: .leading, spacing: 2) {
+            Text(spot.guestName).font(.subheadline.weight(.semibold)).foregroundStyle(Palette.ink)
+            Text(spot.pendingAgreement ? "\(spot.stayName) · agreement pending" : spot.stayName)
+              .font(.footnote).foregroundStyle(Palette.muted)
+          }
+          .accessibilityElement(children: .combine)
+        }
+      }
+      Text("A guest with a pending agreement holds a spot. Ended stays and removed guests don't count.")
+        .font(.footnote).foregroundStyle(Palette.muted)
+      ForEach(usage.blockedJoins) { blocked in
+        VStack(alignment: .leading, spacing: 8) {
+          Text("\(blocked.guestName) tried to join \(blocked.stayName) on \(Date(timeIntervalSince1970: blocked.attemptedAt / 1000).formatted(date: .abbreviated, time: .omitted)), but every guest spot was taken.")
+            .font(.subheadline).foregroundStyle(Palette.ink)
+          Button("Dismiss") {
+            Task { _ = await store.mutate("subscriptions:dismissBlockedJoin", ["blockedJoinId": blocked.id]) }
+          }
+          .font(.footnote.weight(.semibold))
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Palette.lime.opacity(0.22), in: RoundedRectangle(cornerRadius: 16))
+      }
+    }
+  }
+}
+
+/// Shows plan-limit refusals: a calm "stay is full" note for a joining guest, and
+/// for a host the reason plus a way to Plus when there is a higher plan.
+struct PlanLimitPresentation: ViewModifier {
+  let store: KouchdStore
+
+  func body(content: Content) -> some View {
+    content
+      .alert("This stay is full", isPresented: Binding(
+        get: { store.planLimit?.isGuest == true },
+        set: { if !$0 { store.planLimit = nil } }
+      )) {
+        Button("OK") { store.planLimit = nil }
+      } message: { Text(PlanCopy.stayFull) }
+      .sheet(item: Binding(
+        get: { store.planLimit?.isGuest == false ? store.planLimit : nil },
+        set: { if $0 == nil { store.planLimit = nil } }
+      )) { limit in
+        PlanLimitSheet(store: store, limit: limit)
+      }
+  }
+}
+
+extension View {
+  func planLimitPresentation(store: KouchdStore) -> some View {
+    modifier(PlanLimitPresentation(store: store))
+  }
+}
+
+struct PlanLimitSheet: View {
+  let store: KouchdStore
+  let limit: PlanLimitError
+  @Environment(\.dismiss) private var dismiss
+
+  var body: some View {
+    NavigationStack {
+      Page(title: limit.atHighestPlan ? "You're using every stay on Plus" : "Your Free plan is full", navigationTitle: "") {
+        Card {
+          Image(systemName: "house.lodge").font(.title2).foregroundStyle(Palette.forest)
+          Text(limit.message).font(.body).foregroundStyle(Palette.ink)
+          if !limit.atHighestPlan && AppConfig.purchasesEnabled {
+            NavigationLink(value: KouchdRoute.subscription) {
+              Text("See Kouchd Plus").font(.headline).foregroundStyle(.white)
+                .frame(maxWidth: .infinity).padding(.vertical, 15)
+            }
+            .kouchdPrimaryButtonStyle()
+          }
+        }
+      }
+      .navigationDestination(for: KouchdRoute.self) { route in
+        if route == .subscription { SubscriptionScreen(store: store) }
+      }
+      .toolbar {
+        ToolbarItem(placement: .cancellationAction) {
+          Button("Not now") { dismiss() }
+        }
+      }
+    }
+    .presentationDetents([.medium, .large])
   }
 }

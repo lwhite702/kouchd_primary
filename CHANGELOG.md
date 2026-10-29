@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Added
+
+- **iOS Plus purchase flow (WRE-250, branch only, not released)**:
+  - **Subscription screen:** shows the current plan as Free, Plus, or Pro (never internal plan names), with the trial end, renewal, or end date, payment-problem notes, and a trial-reminder email toggle. Hosts who started Plus on the web are sent to kouchd.com to manage it.
+  - **Plus offer:** a yearly/monthly picker (yearly is the default) with a "Save N%" badge worked out from store prices, a "Start N-day free trial" button only when Kouchd and the Apple sheet will agree, and a plain line saying when the trial ends and the renewal price. Each purchase passes Kouchd's signed intro-offer eligibility to StoreKit, so one trial per host billing account holds across web and iPhone. Ask to Buy shows "waiting for approval" instead of an error.
+  - **What you're using:** active stays and guests against the plan limit, who holds each guest spot (pending agreements included), and guests who couldn't join while spots were full, with Dismiss.
+  - **Plan limits:** a refused stay opens a sheet with the backend's explanation and, on Free, a link to Plus. A guest whose join is refused sees "This stay is full right now. Ask your host to make room." with no prices or plan wording, and the attempt is recorded for the host.
+  - Covered by 8 new `PlusPurchaseTests` (30 KouchdTests pass). Not yet checked in the simulator against StoreKit or RevenueCat sandbox.
+
 ### Security
 
 - Upgraded `zod` from 4.5.4 to 4.6.7 through an npm `overrides` entry (`"zod": "^4.6.6"`) to fix CVE-2023-54404 (high, Dependabot alert #45): Zod could exhaust memory while validating oversized constrained collections. `zod` is not a direct dependency; it comes in only as a dev dependency of `eslint-plugin-react-hooks` (via `eslint-config-next`), so the shipped web bundle and the iOS app do not include it (0.7.19).

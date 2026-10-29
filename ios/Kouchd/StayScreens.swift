@@ -178,6 +178,7 @@ struct InvitationScreen: View {
         }
       }
     }
+    .planLimitPresentation(store: store)
   }
 }
 

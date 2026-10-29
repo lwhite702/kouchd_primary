@@ -686,7 +686,16 @@ private enum KouchdAuthError: LocalizedError {
 
   func joinOrCreateStay(_ name: String, _ args: [String: ConvexEncodable?]) async -> Bool {
     let stayEpoch = stayGeneration
-    guard let result = await mutateValue(name, args) else { return false }
+    guard let result = await mutateValue(name, args) else {
+      // A guest's refused join rolls back, so note it for the host separately.
+      if planLimit?.isGuest == true, name != "stays:create" {
+        var attempt: [String: ConvexEncodable?] = [:]
+        if let code = args["referralCode"] { attempt["referralCode"] = code }
+        if let hash = args["tokenHash"] { attempt["tokenHash"] = hash }
+        await recordBlockedJoin(attempt)
+      }
+      return false
+    }
     let id = result.text.isEmpty ? result["stayId"].text : result.text
     guard stayEpoch == stayGeneration || selectedStayID == id else { return false }
     if !id.isEmpty { selectStay(id) }
