@@ -4,7 +4,7 @@
 
 ### Fixed
 
-- **iOS review fixes (WRE-249, 0.7.19)**:
+- **iOS review fixes (WRE-249, 0.7.20)**:
   - **Analytics:** the app now sets up PostHog through the existing `KouchdAnalytics` helper. Session replay, automatic screen capture and element capture are off, `identify` sends only the Clerk user ID, and the `stay` group (which sent the stay name) is gone. The curated `screen_viewed` event now fires for the introduction, welcome, setup and home screens. Before this, `KouchdApp` turned on replay and sent email and full name, which contradicted `ios/README.md`.
   - **Subscription screen:** prices show the renewal period (for example "$4.99 / month"). An auto-renewal and cancellation note, plus Terms and Privacy links, sit above Restore purchases.
   - **Introduction, largest text sizes:** the footer now scrolls with the content instead of covering about 40% of the screen and overlapping the page dots and heading.

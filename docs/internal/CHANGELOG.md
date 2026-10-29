@@ -22,7 +22,7 @@ Internal engineering record. This file is excluded from Mintlify navigation and 
 - Tests: new `testPriceIncludesRenewalPeriodWhenKnown`, and `testSkipShowsRoleSelection` now asserts that Skip is gone. Local simulator run on iPhone 18 Pro Max: 22 unit and 7 UI tests passed.
 - Checked visually in the simulator: introduction light and dark, role step, and largest accessibility size. Not checked: the paywall on screen (needs a signed-in host with RevenueCat offerings), and a 375-point iPhone (no small simulator installed).
 - Open: there is no in-app account deletion. It exists only in Clerk's `UserProfileView`, if self-deletion is enabled in Clerk, which the Clerk config API doesn't expose. There is no Convex deletion path for stays and records. Apple requires in-app deletion; this needs a product decision on what happens to shared records.
-- Version `0.7.19`.
+- Version `0.7.20` (renumbered from `0.7.19`, which PR #89 uses for the zod override).
 
 ## 2026-10-29 — Readable text on lime in iOS dark mode
 

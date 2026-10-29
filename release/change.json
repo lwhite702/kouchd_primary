@@ -1,5 +1,5 @@
 {
   "type": "patch",
-  "version": "0.7.19",
+  "version": "0.7.20",
   "reason": "Fix iOS review findings: stop sending names, email and session replay to analytics, add paywall renewal disclosures, and fix introduction layout, contrast and controls."
 }
