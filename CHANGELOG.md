@@ -4,6 +4,7 @@
 
 ### Fixed
 
+- iOS status pills and the account initials button now stay readable in dark mode. Their text used the adaptive `Palette.ink`, which turns near-white in dark mode and sat on the fixed lime fill at 1.1:1. A new fixed `Palette.onLime` (#16241E) gives 13.0:1 in both appearances.
 - Web sign-in keeps the submit button usable on the password, code, and two-factor steps, where the email field is no longer shown. Before this, those steps could not be submitted (WRE-242, 0.7.16).
 
 ### Changed

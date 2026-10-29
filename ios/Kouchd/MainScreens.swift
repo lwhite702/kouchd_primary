@@ -182,7 +182,7 @@ struct HomeScreen: View {
         Button { openMore(.settings) } label: {
           Text(String(store.viewer["name"].text.prefix(2)).uppercased())
             .font(.caption2.bold())
-            .foregroundStyle(Palette.ink)
+            .foregroundStyle(Palette.onLime)
             .frame(width: 32, height: 32)
             .background(Palette.lime, in: Circle())
         }
