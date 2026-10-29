@@ -12,7 +12,30 @@ Internal engineering record. This file is excluded from Mintlify navigation and 
 - Swept `landing-v21.css`, `dashboard-v21.css`, and `about-kouchd-page.css` for heavy (750+) text with no font family and pinned Manrope on the display ones: proof-card and summary metrics, contribution amounts, kickers and overlines, avatars and initials, step and feature numbers, status labels, FAQ questions, and the sidebar wordmark. Bold inline phrases inside sentences stay Inter.
 - `AGENTS.md` "Brand and product design" now names Manrope for titles and display text and Inter for web body copy.
 - Checked computed fonts on `/about` in a local dev server. The signed-in dashboard was not checked. The old `.landing-*` rules in `styles.css` are not used by any page and were left as they were.
-- Version `0.7.20` (re-prepared after the zod patch took `0.7.19` on `main`).
+- Version `0.7.21` (re-prepared after the zod patch and the iOS review fixes took `0.7.19` and `0.7.20` on `main`).
+- Review fix: `.v21-host-heading` dropped from the Manrope rule; it wraps the stay subhead, which now stays Inter. The title keeps Manrope through `.v21-stay-title`.
+
+## 2026-10-29 — iOS review fixes: analytics privacy, paywall disclosures, introduction (WRE-249)
+
+- `ios/Kouchd/KouchdApp.swift`:
+  - PostHog is set up through the existing `KouchdAnalytics` helper (replay, screen, lifecycle and element capture all off), instead of a second setup that turned on session replay and automatic screen capture.
+  - `identify` sends only the Clerk user ID; email and full name are no longer sent.
+  - Removed the `stay` group call, which sent the stay name.
+  - The curated `screen_viewed` event, which was never called before, now fires on root phase changes.
+- `ios/Kouchd/Billing.swift`:
+  - `BillingPackage` gains `period` (from `SubscriptionPeriod`) and `priceWithPeriod`.
+  - The subscription screen adds an auto-renewal and cancellation note, plus Terms and Privacy links (App Store guideline 3.1.2).
+- `ios/Kouchd/Introduction.swift`:
+  - At accessibility text sizes the footer scrolls with the content instead of staying pinned.
+  - The couch mark is a template image tinted with `Palette.forest` on the intro and About.
+  - Intro text uses `Palette.ink`; only controls use forest/lime.
+  - Skip is hidden on the role step.
+  - Both role headings use `Palette.section`.
+  - The splash wordmark stays on one line at large text sizes.
+- Tests: new `testPriceIncludesRenewalPeriodWhenKnown`, and `testSkipShowsRoleSelection` now asserts that Skip is gone. Added two UI journeys at `.accessibility5` (launch flag `--ui-test-accessibility-text`) that check the footer isn't pinned and stays reachable. Local simulator run on iPhone 18 Pro Max: 22 unit and 9 UI tests passed.
+- Checked visually in the simulator: introduction light and dark, role step, and largest accessibility size. Not checked: the paywall on screen (needs a signed-in host with RevenueCat offerings), and a 375-point iPhone (no small simulator installed).
+- Open: there is no in-app account deletion. It exists only in Clerk's `UserProfileView`, if self-deletion is enabled in Clerk, which the Clerk config API doesn't expose. There is no Convex deletion path for stays and records. Apple requires in-app deletion; this needs a product decision on what happens to shared records.
+- Version `0.7.20` (renumbered from `0.7.19`, which PR #89 uses for the zod override).
 
 ## 2026-10-29 — Patch zod for CVE-2023-54404
 

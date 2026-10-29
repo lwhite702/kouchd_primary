@@ -10,6 +10,13 @@ import XCTest
     XCTAssertEqual(model.packages, client.availablePackages)
   }
 
+  func testPriceIncludesRenewalPeriodWhenKnown() {
+    let monthly = BillingPackage(id: "m", title: "Monthly", detail: "", price: "$4.99", period: "month")
+    XCTAssertEqual(monthly.priceWithPeriod, "$4.99 / month")
+    let unknown = BillingPackage(id: "u", title: "Plan", detail: "", price: "$4.99")
+    XCTAssertEqual(unknown.priceWithPeriod, "$4.99")
+  }
+
   func testPurchaseSuccessWaitsForServerVerification() async {
     let client = BillingClientMock()
     let package = BillingPackage(id: "plus", title: "Host Plus", detail: "", price: "$4.99")

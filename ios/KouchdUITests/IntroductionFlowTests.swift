@@ -9,10 +9,11 @@ final class IntroductionFlowTests: XCTestCase {
     app = XCUIApplication()
   }
 
-  private func launch(dark: Bool = false, replay: Bool = false) {
+  private func launch(dark: Bool = false, replay: Bool = false, accessibilityText: Bool = false) {
     app.launchArguments = ["--ui-test-introduction"]
     if dark { app.launchArguments.append("--ui-test-dark") }
     if replay { app.launchArguments.append("--ui-test-replay") }
+    if accessibilityText { app.launchArguments.append("--ui-test-accessibility-text") }
     app.launch()
     XCTAssertTrue(app.buttons["See how Kouchd works"].waitForExistence(timeout: 10))
   }
@@ -59,6 +60,45 @@ final class IntroductionFlowTests: XCTestCase {
     XCTAssertTrue(app.staticTexts["Introduction completed: " + role].waitForExistence(timeout: 5))
   }
 
+  /// Scrolls until a control at the end of the page is on screen and tappable.
+  private func scrollTo(_ label: String) {
+    let button = app.buttons[label].firstMatch
+    XCTAssertTrue(button.waitForExistence(timeout: 5), "Missing button: \(label)")
+    var swipes = 0
+    while !button.isHittable && swipes < 8 {
+      app.swipeUp()
+      swipes += 1
+    }
+    tap(label)
+  }
+
+  // At accessibility sizes the footer scrolls with the content instead of being pinned.
+  func testAccessibilityTextFooterScrollsIntoReachThroughRoleSelection() {
+    launch(accessibilityText: true)
+    // A pinned footer would be on screen at launch and cover the content.
+    XCTAssertFalse(app.buttons["See how Kouchd works"].isHittable)
+    scrollTo("See how Kouchd works")
+    assertTitle("Good stays start\nwith clarity.")
+    scrollTo("Continue")
+    assertTitle("Clear records.\nFewer awkward asks.")
+    scrollTo("Continue")
+    assertTitle("Make the everyday\nfeel more shared.")
+    snapshot("04-chores-accessibility")
+    scrollTo("Let’s get started")
+    assertTitle("How are you\nmaking room?")
+    XCTAssertFalse(app.buttons["Skip"].exists)
+    scrollTo("Already have an account? Sign in")
+    XCTAssertTrue(app.staticTexts["Introduction completed: none"].waitForExistence(timeout: 5))
+  }
+
+  func testAccessibilityTextRoleSelectionIsReachable() {
+    launch(accessibilityText: true)
+    tap("Skip")
+    assertTitle("How are you\nmaking room?")
+    scrollTo("Join a stay")
+    XCTAssertTrue(app.staticTexts["Introduction completed: guest"].waitForExistence(timeout: 5))
+  }
+
   func testLightIntroductionAndHostSelection() { journey(dark: false, role: "host") }
   func testDarkIntroductionAndGuestSelection() { journey(dark: true, role: "guest") }
 
@@ -74,6 +114,7 @@ final class IntroductionFlowTests: XCTestCase {
     tap("Skip")
     XCTAssertTrue(app.buttons["Create a stay"].waitForExistence(timeout: 5))
     XCTAssertTrue(app.buttons["Join a stay"].exists)
+    XCTAssertFalse(app.buttons["Skip"].exists)
   }
 
   func testSignInReturnsNoRole() {
