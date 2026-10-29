@@ -46,7 +46,7 @@ This file governs agent activity in the Kouchd repository. Read it before planni
 ## Brand and product design
 
 - Kouchd should feel warm, homey, calm, and capable: private shared living made easier to coordinate. Favor rounded organic shapes, soft curves, welcoming illustration, cream surfaces, forest-green anchors, and restrained lime accents. Keep product explanations as clear as the visual tone is inviting.
-- Use Manrope for Kouchd brand and web product typography. For future native concepts, Manrope may carry the brand while navigation, sheets, and controls follow the platform conventions.
+- Use Manrope for Kouchd titles and display text (headings, eyebrows, metrics, buttons, and pills) and Inter for web body copy. For future native concepts, Manrope may carry the brand while navigation, sheets, and controls follow the platform conventions.
 - Write in a plainspoken, respectful voice. Prefer everyday words, short active sentences, and practical reassurance. Avoid corporate jargon, hype, pressure, shame, or treating a guest like a debtor.
 - Use “host”, “guest”, “stay”, and “contribution” consistently. Explain that a contribution is a shared record; never imply the record itself moves money.
 - Keep visual examples inclusive, lived-in, and privacy-conscious. Use synthetic names and amounts. Avoid staged luxury imagery, public listing cues, fabricated social proof, or claims of guaranteed outcomes.

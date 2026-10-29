@@ -10,7 +10,7 @@
   --v21-sky: #dcece4;
   color: var(--v21-ink);
   background: var(--v21-paper);
-  font-family: var(--font-manrope), Manrope, sans-serif;
+  font-family: var(--font-inter), "Inter", sans-serif;
   overflow: hidden;
   width: 100%;
   max-width: none;

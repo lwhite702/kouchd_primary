@@ -2,6 +2,15 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-10-29 — Web body copy in Inter
+
+- Decision (Lee, 2026-10-29): body copy is Inter; titles and display text stay Manrope. `docs/internal/BRAND_DESIGN_SYSTEM.md` and `app/brand-system.css` already said so; the web app and `AGENTS.md` did not.
+- The base font moved from Manrope to Inter in four places: `:root` in `styles.css`, `.production-shell` in `app/production.css`, the dashboard root in `components/dashboard-v21.css`, and the marketing root in `components/landing-v21.css`.
+- `styles.css` now pins Manrope on `h1`–`h6`, `button`, `.button`, `.v21-button`, `.v21-cta`, eyebrows and overlines (`[class*="eyebrow"]`), pills (`[class*="-pill"]`), `.metric`, `.badge`, the `.v21-brand` wordmark, and footer column titles.
+- `AGENTS.md` "Brand and product design" now names Manrope for titles and display text and Inter for web body copy.
+- Checked computed fonts on `/about` in a local dev server. The signed-in dashboard was not checked. The old `.landing-*` rules in `styles.css` are not used by any page and were left as they were.
+- Version `0.7.19`.
+
 ## 2026-10-29 — Readable text on lime in iOS dark mode
 
 - `ios/Kouchd/Design.swift`: added a fixed `Palette.onLime` (#16241E, the light-mode ink). `Pill` now uses it instead of the adaptive `Palette.ink`, which is #F1F5F0 in dark mode and sat on the fixed lime fill at 1.1:1. Now 13.0:1 in both appearances.

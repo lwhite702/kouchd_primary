@@ -1,5 +1,5 @@
 .production-shell {
-  font-family: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-inter), "Inter", ui-sans-serif, system-ui, sans-serif;
 }
 
 .invite-registration-card { width: min(100%, 560px); margin: 12px auto; border: 1px solid var(--line); border-radius: 24px; background: var(--card); padding: clamp(20px, 4vw, 32px); box-shadow: var(--shadow); text-align: left; }
