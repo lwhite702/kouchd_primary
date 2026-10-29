@@ -17,6 +17,8 @@ export function RewardsHub({
   currentBalanceCents = 0,
   readOnly = false,
   onNotify,
+  viewerId,
+  onVoidClaim,
 }: {
   stayId: Id<"stays">;
   isHost: boolean;
@@ -24,6 +26,9 @@ export function RewardsHub({
   currentBalanceCents?: number;
   readOnly?: boolean;
   onNotify: (msg: string) => void;
+  viewerId?: Id<"users">;
+  /** Opens the shared confirmation dialog; the server allows the claimant or host. */
+  onVoidClaim?: (claim: Doc<"pointClaims">) => void;
 }) {
   const wallet = useQuery(api.rewards.getWallet, { stayId, guestUserId: selectedGuestId });
   const rules = useQuery(api.rewards.listRules, { stayId }) as Array<Doc<"contributionRules">> | undefined;
@@ -265,6 +270,12 @@ export function RewardsHub({
                       Dispute
                     </button>
                   </div>
+                )}
+                {onVoidClaim && !readOnly && claim.status !== "voided" &&
+                  (isHost || claim.guestUserId === viewerId) && (
+                  <button className="mini-button" type="button" onClick={() => onVoidClaim(claim)}>
+                    Void
+                  </button>
                 )}
               </article>
             ))}

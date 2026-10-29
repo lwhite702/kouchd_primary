@@ -2,6 +2,26 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-10-28 — Web host corrections parity (WRE-246)
+
+- Wired existing backend functions into the web workspace:
+  - `contributions:dispute` and `contributions:voidContribution` in the Ledger.
+  - `chores:voidChore` on the chore board.
+  - `rewards:voidClaim` in the rewards hub.
+  - `stays:updateName` behind **Rename stay**.
+  - `referral:regenerateCode` behind **New code** in the invite panel.
+  - `terms:updateCurrent` behind **Edit household defaults**, reusing `GuestAgreementForm` with a new `intro` prop.
+- Each button appears only where the server allows the action, matching iOS: the host or the record's creator (or claimant), and dispute only for pending entries someone else added. Hidden on ended stays.
+- `DestructiveAction` and `destructiveActionCopy` moved to `components/workspace/types.ts` so all confirmations share copy.
+- The invite panel closes before the new-code confirmation, because the confirmation isn't a top-layer dialog.
+- Review fixes:
+  - `contributions:voidContribution` rejects a credit that came from a reward redemption, and `rewards:voidClaim` rejects a confirmed claim whose points are already redeemed. Before this, either void could leave points spent with no credit, or credit with no points. This affected iOS too.
+  - The household-defaults text now says every active guest gets a new version to review and that per-guest settings carry forward, matching `terms:updateCurrent`.
+  - **New code** shows only for hosts.
+- Version `0.7.14`, stacked on WRE-244 (`0.7.13`); earlier prepared as `1.0.0-rc.16`.
+- Evidence: `tsc --noEmit` clean, ESLint has no new findings, Vitest passed (33 files, 177 tests, including new `tests/destructive-actions.test.ts` and redemption-void cases in `tests/rewards.test.ts`), and `npm run release:check` passed. Not exercised in a browser against a live Convex deployment.
+- Not done: no push notifications or overdue payment plan screens (post-1.0). Public help pages wait for release verification.
+
 ## 2026-10-28 — iOS parity: edit shopping items and set chore repeats (WRE-244)
 
 - Privacy change (requested 2026-10-28): personal shopping items are visible only to their creator. Hosts lose the exception they had before.
