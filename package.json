@@ -1,6 +1,6 @@
 {
   "name": "kouchd",
-  "version": "0.7.18",
+  "version": "0.7.19",
   "private": true,
   "type": "module",
   "scripts": {
@@ -43,5 +43,8 @@
     "eslint-config-next": "16.4.3",
     "typescript": "6.0.3",
     "vitest": "^5.0.5"
+  },
+  "overrides": {
+    "zod": "^4.6.6"
   }
 }
