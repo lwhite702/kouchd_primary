@@ -2,6 +2,19 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-10-30 — Analytics foundations, phase 1 (WRE-252)
+
+- `/ingest` proxy: rewrites in `next.config.ts` (`/ingest/static/*` to `us-assets.i.posthog.com`, `/ingest/*` to `us.i.posthog.com`), plus `skipTrailingSlashRedirect`. `proxy.ts` matcher skips `ingest`. `posthog.init` uses `api_host: "/ingest"`. `NEXT_PUBLIC_POSTHOG_HOST` is now read only by `convex/posthog.ts` (`.env.example` says so).
+- CSP: `lib/security/csp.ts` is the one source. It exports the directives (for Clerk), the header string, and the `<meta>` string without `frame-ancestors`. Directive content is unchanged.
+- `cross_subdomain_cookie: true` on PostHog.
+- `lib/analytics/attribution.ts`: shared `kouchd_attr` cookie on `.kouchd.com` (host-only on previews and localhost). `captureAttribution()` runs after `posthog.init`; `PostHogAuthSync` passes `initial_*` properties as `$set_once` on identify.
+- Marketing site (`kouchd_marketing`, same branch): `src/components/common/ConsentBridge.astro` mirrors the banner choice into a `kouchd_consent` cookie (`analytics`, `ads` always false for now, `gpc` from Global Privacy Control). With analytics consent it records `kouchd_attr`; choosing "Only necessary" clears it.
+- Evidence:
+  - `next build` passes. Built routes manifest shows both rewrites and a CSP header with `frame-ancestors`.
+  - Locally, `/ingest/*` reached the rewrite without Clerk. The upstream fetch failed only because this sandbox can't resolve PostHog's hosts.
+  - Marketing preview in Chromium: no cookies before a choice; consent and attribution cookies after "Allow analytics"; attribution cleared after "Only necessary".
+  - `vitest run` passes. Not yet checked: production delivery through `/ingest`.
+
 ## 2026-10-30 — Analytics and flags review, phase 0 (WRE-252)
 
 - Full PostHog, flag, observability and conversion review; the phased plan is in WRE-252.

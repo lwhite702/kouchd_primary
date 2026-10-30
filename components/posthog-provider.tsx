@@ -1,5 +1,6 @@
 "use client";
 
+import { captureAttribution, initialTouchProperties, parseAttribution } from "@/lib/analytics/attribution";
 import { scrubTelemetryProperties } from "@/lib/telemetry-privacy";
 import posthog from "posthog-js";
 import { PostHogProvider as PHProvider } from "posthog-js/react";
@@ -38,7 +39,7 @@ function PostHogAuthSync() {
         name: user.fullName ?? undefined,
         username: user.username ?? undefined,
         created_at: user.createdAt ? new Date(user.createdAt).toISOString() : undefined,
-      });
+      }, initialTouchProperties(parseAttribution(document.cookie)));
 
       // Synchronize PostHog session replay with Sentry error monitoring
       try {
@@ -65,8 +66,11 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
     if (!posthogKey || posthog.__loaded) return;
 
     posthog.init(posthogKey, {
-      api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://us.i.posthog.com",
+      // Same-origin proxy (next.config.ts rewrites) so ad blockers don't drop events.
+      api_host: "/ingest",
       ui_host: "https://us.posthog.com",
+      // Shares the visitor ID with kouchd.com through a .kouchd.com cookie.
+      cross_subdomain_cookie: true,
       person_profiles: "identified_only",
       capture_pageview: false,
       capture_pageleave: true,
@@ -92,6 +96,7 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
       rageclick: true,
       persistence: "localStorage+cookie",
     });
+    captureAttribution();
   }, []);
 
   return (

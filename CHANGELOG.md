@@ -26,6 +26,11 @@
 
 ### Fixed
 
+- **Analytics foundations (WRE-252 phase 1, branch only, not released)**:
+  - PostHog traffic goes through the app's own `/ingest` route (`next.config.ts` rewrites to PostHog US), so ad blockers no longer drop it. Clerk's middleware skips `/ingest`.
+  - The Content-Security-Policy is defined once in `lib/security/csp.ts` and used by `next.config.ts`, `proxy.ts` and the `<meta>` tag in `app/layout.tsx`, instead of three hand-kept copies.
+  - PostHog shares its visitor cookie across `kouchd.com` and `app.kouchd.com` (`cross_subdomain_cookie`).
+  - New `lib/analytics/attribution.ts` records UTM parameters, `gclid` and `fbclid` in a shared first- and last-touch cookie (`kouchd_attr`, 90 days). At sign-in the first touch is added to the PostHog person as `initial_*` properties. Tested in `tests/attribution.test.ts`.
 - **Analytics and flag safety (WRE-252, branch only, not released)**:
   - The hard-coded analytics paragraph on the in-app privacy page (`app/privacy/page.tsx`) still said names and emails were not sent to analytics. It now matches `lib/legal.ts`.
   - Feature-flag overrides from the address bar (`?flag:<key>=true`) or localStorage now work only in development and Vercel previews. In production anyone could use them to open the Plus paywall before launch.
