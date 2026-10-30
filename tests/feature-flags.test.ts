@@ -336,3 +336,44 @@ describe("Backend Mutation Gating via Feature Flags", () => {
     ).rejects.toThrow(/disabled by platform policy/i);
   });
 });
+
+describe("Server kill switches cover every write", () => {
+  const originalEnv = { ...process.env };
+  afterEach(() => {
+    process.env = { ...originalEnv };
+  });
+
+  it("refuses rewards writes when the rewards flag is switched off", async () => {
+    process.env = { ...originalEnv, PLATFORM_ADMIN_EMAILS: "operator@kouchd.com" };
+    const t = convexTest(schema, modules);
+    const admin = t.withIdentity({ subject: "flag-admin", name: "Operator", email: "operator@kouchd.com" });
+    await admin.mutation(api.users.syncCurrent, {});
+    const host = t.withIdentity({ subject: "flag-host", name: "Host", email: "host@example.com" });
+    await host.mutation(api.users.syncCurrent, {});
+    const stayId = await host.mutation(api.stays.create, {
+      timezone: "America/New_York",
+      terms: {
+        startDate: "2026-09-01",
+        endDate: "2026-09-21",
+        cadence: "weekly",
+        paymentDayOfWeek: 1,
+        rateCents: 20_000,
+        earlyDiscountEnabled: false,
+        earlyDiscountPercentage: 0,
+        earlyDiscountDays: 0,
+        lateFeeEnabled: false,
+        lateFeeCents: 0,
+        graceDays: 0,
+        houseNotes: "",
+      },
+    });
+    await admin.mutation(api.flags.setOverride, {
+      key: FEATURE_FLAGS.REWARDS_SYSTEM,
+      override: "disabled",
+      reason: "Pausing rewards for a data fix",
+    });
+    await expect(
+      host.mutation(api.rewards.createRule, { stayId, title: "Dishes", category: "cleaning", pointsAwarded: 5, description: "" })
+    ).rejects.toThrow("Contribution rewards are currently disabled");
+  });
+});

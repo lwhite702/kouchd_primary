@@ -9,6 +9,8 @@ import { getAcceptedGuestTerms } from "./lib/stayTerms";
 import { listActiveGuestObligations } from "./lib/obligations";
 import { ANALYTICS_EVENTS } from "../lib/analytics/events";
 import { trackServerEvent } from "./lib/posthog";
+import { requireFeature } from "./flags";
+import { FEATURE_FLAGS } from "../lib/flags/config";
 
 export const getSettings = query({
   args: { stayId: v.id("stays") },
@@ -54,6 +56,7 @@ export const createRule = mutation({
   },
   returns: v.id("contributionRules"),
   handler: async (ctx, args) => {
+    await requireFeature(ctx, FEATURE_FLAGS.REWARDS_SYSTEM, "Contribution rewards are currently disabled by platform policy.");
     const { user } = await requireHost(ctx, args.stayId);
     assertContributionRuleInput(args.title, args.pointsAwarded, args.description);
 
@@ -86,6 +89,7 @@ export const toggleRule = mutation({
   args: { ruleId: v.id("contributionRules") },
   returns: v.boolean(),
   handler: async (ctx, { ruleId }) => {
+    await requireFeature(ctx, FEATURE_FLAGS.REWARDS_SYSTEM, "Contribution rewards are currently disabled by platform policy.");
     const rule = await ctx.db.get(ruleId);
     if (!rule) throw new Error("Contribution rule not found");
     const { user } = await requireHost(ctx, rule.stayId);
@@ -191,6 +195,7 @@ export const submitClaim = mutation({
   },
   returns: v.id("pointClaims"),
   handler: async (ctx, args) => {
+    await requireFeature(ctx, FEATURE_FLAGS.REWARDS_SYSTEM, "Contribution rewards are currently disabled by platform policy.");
     const { user, membership } = await requireMembership(ctx, args.stayId);
     if (membership.role !== "guest") {
       throw new Error("Only guests can submit contribution claims");
@@ -233,6 +238,7 @@ export const confirmClaim = mutation({
   args: { claimId: v.id("pointClaims") },
   returns: v.null(),
   handler: async (ctx, { claimId }) => {
+    await requireFeature(ctx, FEATURE_FLAGS.REWARDS_SYSTEM, "Contribution rewards are currently disabled by platform policy.");
     const claim = await ctx.db.get(claimId);
     if (!claim) throw new Error("Contribution claim not found");
 
@@ -267,6 +273,7 @@ export const disputeClaim = mutation({
   args: { claimId: v.id("pointClaims") },
   returns: v.null(),
   handler: async (ctx, { claimId }) => {
+    await requireFeature(ctx, FEATURE_FLAGS.REWARDS_SYSTEM, "Contribution rewards are currently disabled by platform policy.");
     const claim = await ctx.db.get(claimId);
     if (!claim) throw new Error("Contribution claim not found");
 
@@ -296,6 +303,7 @@ export const voidClaim = mutation({
   args: { claimId: v.id("pointClaims") },
   returns: v.null(),
   handler: async (ctx, { claimId }) => {
+    await requireFeature(ctx, FEATURE_FLAGS.REWARDS_SYSTEM, "Contribution rewards are currently disabled by platform policy.");
     const claim = await ctx.db.get(claimId);
     if (!claim) throw new Error("Contribution claim not found");
 
@@ -354,6 +362,7 @@ export const redeem = mutation({
     contributionId: v.id("contributions"),
   }),
   handler: async (ctx, args) => {
+    await requireFeature(ctx, FEATURE_FLAGS.REWARDS_SYSTEM, "Contribution rewards are currently disabled by platform policy.");
     const user = await requireCurrentUser(ctx);
     const membership = await ctx.db
       .query("memberships")
