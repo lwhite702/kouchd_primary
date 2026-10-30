@@ -46,6 +46,62 @@ async function createUser(t: ReturnType<typeof convexTest>, subject: string, nam
   return actor;
 }
 
+describe("Ending a guest's agreement", () => {
+  async function setup() {
+    const t = convexTest(schema, modules);
+    const host = await createUser(t, "end_host", "Jordan Host");
+    const guest = await createUser(t, "end_guest", "Taylor Guest");
+    const stayId = await host.mutation(api.stays.create, { timezone: "America/New_York", terms: sampleTerms });
+    const bundle = await host.query(api.stays.getBundle, { stayId });
+    const referralCode = bundle.stay.referralCode!;
+    await guest.mutation(api.referral.joinWithCode, { referralCode });
+    const after = await host.query(api.stays.getBundle, { stayId });
+    const guestUserId = after.members.find((member) => member.membership.role === "guest")!.person.id;
+    return { t, host, guest, stayId, guestUserId, referralCode };
+  }
+
+  it("removes the guest, frees the spot, and reassigns open chores", async () => {
+    const { host, guest, stayId, guestUserId } = await setup();
+    await host.mutation(api.chores.create, {
+      stayId, title: "Bins", note: "", assignee: "guest", assigneeUserId: guestUserId, dueDate: "2026-11-02",
+    });
+
+    await host.mutation(api.stays.endGuestAgreement, { stayId, guestUserId });
+
+    expect(await guest.query(api.stays.listMine, {})).toHaveLength(0);
+    await expect(guest.query(api.stays.getBundle, { stayId })).rejects.toThrow("Not authorized");
+    const [chore] = await host.query(api.chores.list, { stayId });
+    expect(chore.assignee).toBe("shared");
+    expect(chore.assigneeUserId).toBeUndefined();
+    const usage = await host.query(api.subscriptions.planUsage, {});
+    expect(JSON.stringify(usage)).not.toContain(guestUserId);
+  });
+
+  it("only lets the host end an agreement, and only for an active guest", async () => {
+    const { host, guest, stayId, guestUserId } = await setup();
+    await expect(guest.mutation(api.stays.endGuestAgreement, { stayId, guestUserId })).rejects.toThrow("Host access required");
+    await host.mutation(api.stays.endGuestAgreement, { stayId, guestUserId });
+    await expect(host.mutation(api.stays.endGuestAgreement, { stayId, guestUserId })).rejects.toThrow("active guest");
+  });
+
+  it("lets the guest come back with the join code", async () => {
+    const { host, guest, stayId, guestUserId, referralCode } = await setup();
+    await host.mutation(api.stays.endGuestAgreement, { stayId, guestUserId });
+    const result = await guest.mutation(api.referral.joinWithCode, { referralCode });
+    expect(result.alreadyMember).toBe(false);
+    expect(await guest.query(api.stays.listMine, {})).toHaveLength(1);
+  });
+
+  it("lets the guest come back with a new invite link", async () => {
+    const { host, guest, stayId, guestUserId } = await setup();
+    await host.mutation(api.stays.endGuestAgreement, { stayId, guestUserId });
+    const tokenHash = "a".repeat(64);
+    await host.mutation(api.invites.create, { stayId, tokenHash, expiresAt: Date.now() + 86_400_000 });
+    await guest.mutation(api.invites.accept, { tokenHash });
+    expect(await guest.query(api.stays.listMine, {})).toHaveLength(1);
+  });
+});
+
 describe("Household Referral Codes", () => {
   it("generates a referral code on stay creation and allows guests to preview and join", async () => {
     const t = convexTest(schema, modules);

@@ -140,6 +140,7 @@ export function useLiveStay(stayId: Id<"stays">, onBackToHub: () => void) {
   const confirmContribution = useMutation(api.contributions.confirm);
   const disputeContribution = useMutation(api.contributions.dispute);
   const voidContribution = useMutation(api.contributions.voidContribution);
+  const endGuestAgreement = useMutation(api.stays.endGuestAgreement);
   const createChore = useMutation(api.chores.create);
   const toggleChore = useMutation(api.chores.toggle);
   const voidChore = useMutation(api.chores.voidChore);
@@ -883,6 +884,9 @@ export function useLiveStay(stayId: Id<"stays">, onBackToHub: () => void) {
     } else if (destructiveAction?.type === "regenerateCode") {
       await regenerateCode({ stayId });
       notify("New join code created. The old code no longer works.");
+    } else if (destructiveAction?.type === "endGuestAgreement") {
+      await endGuestAgreement({ stayId, guestUserId: destructiveAction.guestUserId });
+      notify(`${destructiveAction.name} has been removed from this stay.`);
     }
   }
 

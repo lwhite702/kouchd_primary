@@ -89,7 +89,8 @@ export type DestructiveAction =
     }
   | { type: "voidChore"; choreId: Id<"chores">; title: string }
   | { type: "voidClaim"; claimId: Id<"pointClaims">; title: string }
-  | { type: "regenerateCode" };
+  | { type: "regenerateCode" }
+  | { type: "endGuestAgreement"; guestUserId: Id<"users">; name: string };
 
 const VOID_DESCRIPTION =
   "The record stays in the history but no longer counts toward the balance or current activity.";
@@ -127,6 +128,12 @@ export function destructiveActionCopy(action: DestructiveAction): {
         description:
           "The current code stops working right away. Anyone who hasn’t joined yet will need the new code. People already in the stay aren’t affected.",
         confirmLabel: "Create new code",
+      };
+    case "endGuestAgreement":
+      return {
+        title: `End ${action.name}’s agreement?`,
+        description: `${action.name} will be removed from this stay and lose access to it, and their guest spot opens up. Their records are kept and come back if you invite them again. Their open chores move to everyone.`,
+        confirmLabel: "End agreement",
       };
   }
 }

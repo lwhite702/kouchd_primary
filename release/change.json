@@ -1,5 +1,5 @@
 {
   "type": "patch",
-  "version": "0.7.21",
+  "version": "0.7.22",
   "reason": "Set web body copy in Inter while titles and display labels stay Manrope, matching the brand design system."
 }

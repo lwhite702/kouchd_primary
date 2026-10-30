@@ -22,6 +22,14 @@ describe("destructive action confirmations", () => {
     expect(copy.description).toContain("stops working");
   });
 
+  it("explain what ending a guest's agreement does", () => {
+    const copy = destructiveActionCopy({ type: "endGuestAgreement", guestUserId: "g" as Id<"users">, name: "Sam" });
+    expect(copy.title).toBe("End Sam’s agreement?");
+    expect(copy.confirmLabel).toBe("End agreement");
+    expect(copy.description).toContain("removed from this stay");
+    expect(copy.description).toContain("records are kept");
+  });
+
   it("keep the existing end-stay and cancel-charge wording", () => {
     expect(destructiveActionCopy({ type: "end" }).confirmLabel).toBe("End stay");
     expect(

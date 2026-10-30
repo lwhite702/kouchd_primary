@@ -317,6 +317,56 @@ export const updateGuestPreferredName = mutation({
   },
 });
 
+/**
+ * End one guest's agreement and remove them from the stay, which frees their
+ * plan spot. Their agreement and Ledger records are kept and come back if they
+ * rejoin. Nothing in the Ledger is voided.
+ */
+export const endGuestAgreement = mutation({
+  args: { stayId: v.id("stays"), guestUserId: v.id("users") },
+  returns: v.null(),
+  handler: async (ctx, { stayId, guestUserId }) => {
+    const { user } = await requireHost(ctx, stayId);
+    const stay = await ctx.db.get(stayId);
+    if (!stay) throw new Error("Stay not found");
+    if (stay.status === "ended") throw new Error("Ended stays cannot be edited");
+    const membership = await ctx.db.query("memberships")
+      .withIndex("by_stay_user", (query) => query.eq("stayId", stayId).eq("userId", guestUserId))
+      .unique();
+    if (!membership || membership.role !== "guest" || membership.status !== "active") {
+      throw new Error("Choose an active guest in this household");
+    }
+    await ctx.db.patch(membership._id, { status: "left" });
+
+    // A pending offer must not auto-accept for someone no longer in the stay.
+    const pendingOffers = await ctx.db.query("agreementOffers")
+      .withIndex("by_stay_guest_status", (query) => query.eq("stayId", stayId).eq("guestUserId", guestUserId).eq("status", "pending"))
+      .take(500);
+    for (const offer of pendingOffers) {
+      await ctx.db.patch(offer._id, { status: "replaced" });
+    }
+
+    // Open chores assigned only to this guest go back to the whole house.
+    const chores = await ctx.db.query("chores").withIndex("by_stay", (query) => query.eq("stayId", stayId)).take(500);
+    for (const chore of chores) {
+      if (chore.assigneeUserId === guestUserId && !chore.completedAt && !chore.voidedAt) {
+        await ctx.db.patch(chore._id, { assignee: "shared", assigneeUserId: undefined, updatedAt: Date.now() });
+      }
+    }
+
+    await recordActivity(ctx, {
+      stayId,
+      actorUserId: user._id,
+      guestUserId,
+      kind: "stay",
+      action: "guest_agreement_ended",
+      detail: "Guest agreement ended and guest removed from the stay",
+      entityId: guestUserId,
+    });
+    return null;
+  },
+});
+
 export const end = mutation({
   args: { stayId: v.id("stays") },
   returns: v.null(),
