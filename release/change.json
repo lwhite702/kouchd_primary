@@ -1,5 +1,5 @@
 {
   "type": "patch",
-  "version": "0.7.22",
-  "reason": "Remove the meta Content-Security-Policy tag that was rewritten into a malformed policy for browsers and left the web app blank (WRE-253)."
+  "version": "0.7.23",
+  "reason": "Stop SignInFormGuard's MutationObserver from re-triggering itself and freezing the sign-in page (WRE-253)."
 }
