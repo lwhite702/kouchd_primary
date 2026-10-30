@@ -20,7 +20,7 @@ export type LegalDocumentData = {
 
 export const legalMeta = {
   provider: "Wrelik Brands LLC",
-  effectiveDate: "October 23, 2026",
+  effectiveDate: "October 30, 2026",
   lastUpdated: "October 30, 2026",
   email: "legal@wrelik.com",
   privacyEmail: "privacy@wrelik.com",
@@ -142,7 +142,7 @@ export const privacyPolicy: LegalDocumentData = {
       bullets: [
         {
           label: "To infrastructure and service providers",
-          text: "that provide cloud hosting, databases, authentication, error monitoring, and communications. Depending on configured features, these include Vercel (web hosting), Convex (reactive real-time database), Clerk (identity and authentication), Twilio and Knock (transactional SMS and notification routing), Loops (email updates for people who subscribe to the Kouchd website newsletter), Sentry (error diagnostics), and PostHog (privacy-conscious product telemetry).",
+          text: "that provide cloud hosting, databases, authentication, error monitoring, subscription management, and communications. Depending on configured features, these include Vercel (web hosting), Convex (reactive real-time database), Clerk (identity and authentication), Twilio and Knock (transactional SMS and notification routing), Loops (email updates for people who subscribe to the Kouchd website newsletter), Sentry (error diagnostics), PostHog (product analytics), and RevenueCat (Kouchd Plus subscriptions bought on the web or through the Apple App Store).",
         },
         {
           label: "Between stay participants per role permissions",
@@ -559,7 +559,7 @@ export const cookiePolicy: LegalDocumentData = {
     {
       title: "3. Third-party technologies",
       paragraphs: [
-        "We do not allow third-party advertising networks to place tracking cookies on Kouchd for targeted advertising or cross-context behavioral profiling. Third-party technologies deployed on Kouchd are strictly service providers acting on our behalf, including Clerk (authentication), Convex (real-time data sync), Sentry (error diagnostics), and PostHog (product telemetry).",
+        "We do not allow third-party advertising networks to place tracking cookies on Kouchd for targeted advertising or cross-context behavioral profiling. Third-party technologies deployed on Kouchd are strictly service providers acting on our behalf, including Clerk (authentication), Convex (real-time data sync), Sentry (error diagnostics), PostHog (product analytics), and RevenueCat (Kouchd Plus subscriptions).",
       ],
     },
     {

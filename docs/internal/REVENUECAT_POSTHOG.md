@@ -71,15 +71,14 @@ Evidence so far: source and tests only. RevenueCat delivery and person matching 
 
 ## Privacy copy
 
-**Needs approval. Not changed in this branch.**
+Items 1 and 3 are done. Item 2 waits until the integration is turned on.
 
-1. **RevenueCat is not named anywhere.** Neither privacy policy (`lib/legal.ts` here, `src/lib/legal.ts` in `kouchd_marketing`) lists RevenueCat, the App Store or Stripe as a service provider, though web Billing and App Store purchases already run through RevenueCat. This is true with or without the integration.
-2. **Plan data would reach PostHog.** Once the integration is on, PostHog receives plan, store, price and renewal details tied to the account ID. The in-app Cookie Policy says PostHog receives only "manually captured page and screen categories and a pseudonymous account identifier", and the Privacy Policy (section 6) says the same and that names and email addresses are not sent to product analytics.
-3. **Web autocapture and replay: resolved 2026-10-30.** Decision (Lee): keep web autocapture and session replay on, and make the policy match. `lib/legal.ts` Privacy Policy section 6 and the Cookie Policy "Performance and diagnostics" item now say the web app records page views and interactions, makes session replays with typed input hidden (other on-screen text such as names, household details and contribution amounts can appear), and links signed-in web sessions to the account ID, name and email (what `PostHogAuthSync` sends). The iPhone app wording stays as before. `lastUpdated` moved to October 30, 2026; `effectiveDate` was left for whoever decides on user notice, since Privacy Policy section 14 promises advance notice for material changes.
+1. **RevenueCat named: resolved 2026-10-30.** Both privacy policies (`lib/legal.ts` here, `src/lib/legal.ts` in `kouchd_marketing`) list RevenueCat as a service provider for Kouchd Plus subscriptions; the in-app Cookie Policy's third-party list names it too.
+2. **Plan data would reach PostHog.** Once the integration is on, PostHog receives plan, store, price and renewal details tied to the account ID. The updated policies describe web analytics but do not yet say RevenueCat shares this with PostHog. Add the sentence below before turning it on.
+3. **Web autocapture and replay: resolved 2026-10-30.** Decision (Lee): keep web autocapture and session replay on, and make the policy match. `lib/legal.ts` Privacy Policy section 6 and the Cookie Policy "Performance and diagnostics" item now say the web app records page views and interactions, makes session replays with typed input hidden (other on-screen text such as names, household details and contribution amounts can appear), and links signed-in web sessions to the account ID, name and email (what `PostHogAuthSync` sends). The iPhone app wording stays as before. Effective and last-updated dates moved to October 30, 2026. Decision (Lee): no separate user notice; keep sending name and email with the web `identify`.
 
-The marketing site's wording ("PostHog for product telemetry ... may be used") does not contradict items 2 and 3, but does not cover item 1.
+The marketing site's wording ("PostHog for product telemetry ... may be used") does not contradict items 2 and 3.
 
-Proposed wording, for review:
+Wording for item 2:
 
-- Service provider lists (both repos), add: "RevenueCat (subscription management for Kouchd Plus purchases made on the web or through the Apple App Store)".
 - In-app Privacy and Cookie Policies, when the integration is turned on, add: "If you subscribe, RevenueCat also shares your plan, store, price, and renewal status with PostHog under your account identifier." Add the Kouchd Plus offer to the list of recorded interactions only if `paywall_viewed` is sent.
