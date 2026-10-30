@@ -1,5 +1,5 @@
 {
   "type": "patch",
-  "version": "0.7.21",
-  "reason": "Set web body copy in Inter while titles and display labels stay Manrope, matching the brand design system."
+  "version": "0.7.22",
+  "reason": "Fade and tighten the iOS introduction preview cards so they are no longer cut off mid-line above the page dots on tall phones; iOS build number moves to 7 (App Store Connect already has builds up to 6)."
 }

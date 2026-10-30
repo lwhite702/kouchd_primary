@@ -61,14 +61,23 @@ struct IntroductionScreen: View {
       TabView(selection: Binding(get: { step }, set: { swiped(to: $0) })) {
         ForEach(0..<pageCount, id: \.self) { page in
           ScrollView {
-            VStack(alignment: .leading, spacing: 20) {
+            VStack(alignment: .leading, spacing: 14) {
               pageContent(page)
               // At accessibility sizes a pinned footer would cover most of the screen.
               // Only the visible page carries it, so its buttons appear once.
               if typeSize.isAccessibilitySize && page == step { footer.frame(maxWidth: .infinity) }
             }
-            .padding(24).frame(maxWidth: 600, alignment: .leading).frame(maxWidth: .infinity)
+            .padding(.horizontal, 24).padding(.vertical, 12)
+            .frame(maxWidth: 600, alignment: .leading).frame(maxWidth: .infinity)
           }
+          // Preview cards can run past the footer on shorter phones. Fade the bottom edge
+          // so they read as scrollable instead of cut off mid-line.
+          .mask(
+            VStack(spacing: 0) {
+              Rectangle()
+              LinearGradient(colors: [.black, .clear], startPoint: .top, endPoint: .bottom).frame(height: 28)
+            }
+          )
           .tag(page)
         }
       }
@@ -85,16 +94,19 @@ struct IntroductionScreen: View {
   }
   @ViewBuilder private func pageContent(_ page: Int) -> some View {
     if page < 4 {
-      Image("CouchMark").renderingMode(.template).resizable().scaledToFit().frame(width: 64, height: 64)
-        .foregroundStyle(Palette.forest)
-        .accessibilityHidden(true)
+      // The mark sits on the first page only; later pages need the room for their cards.
+      if page == 0 {
+        Image("CouchMark").renderingMode(.template).resizable().scaledToFit().frame(width: 52, height: 52)
+          .foregroundStyle(Palette.forest)
+          .accessibilityHidden(true)
+      }
       if page > 0 { Pill(text: ["", "01 / Your stay", "02 / Contributions", "03 / Everyday living"][page]) }
       Text(titles[page]).font(Palette.heading).accessibilityAddTraits(.isHeader)
       Text(descriptions[page]).foregroundStyle(Palette.muted)
       preview(page)
       if page == 2 {
         Text("Kouchd records contributions. It does not move money.")
-          .font(.footnote).foregroundStyle(Palette.muted)
+          .font(.caption).foregroundStyle(Palette.muted)
       }
     } else {
       Text("How are you\nmaking room?").font(Palette.heading).accessibilityAddTraits(.isHeader)
@@ -148,7 +160,8 @@ struct IntroductionScreen: View {
       }
       Card {
         Text("One place for the details").font(.headline)
-        Text("Stay dates · House guide\nAgreements · Schedule changes")
+        Text("Stay dates · House guide · Agreements · Schedule changes")
+          .font(.subheadline)
       }
     case 2:
       Card {
@@ -170,7 +183,7 @@ struct IntroductionScreen: View {
       }
       Card {
         Text("Small contributions count.").font(.headline)
-        Text("Earn points for approved chores and claim rewards your host offers.")
+        Text("Earn points for approved chores and claim host rewards.").font(.subheadline)
       }
     }
   }

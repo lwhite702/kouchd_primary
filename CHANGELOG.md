@@ -24,6 +24,7 @@
 
 ### Fixed
 
+- **iOS introduction preview cards (0.7.22)**: the cards on introduction pages 2–4 were cut off mid-line above the page dots. The page mark now shows on the first page only, spacing and card copy are tighter, and the bottom edge of each page fades so scrollable content reads as scrollable. iOS build number is now 7.
 - Web body copy is now set in Inter, as the brand design system specifies. Headings, eyebrows, metrics, buttons, pills, and the wordmark stay in Manrope (0.7.21).
 - **iOS review fixes (WRE-249, 0.7.20)**:
   - **Analytics:** the app now sets up PostHog through the existing `KouchdAnalytics` helper. Session replay, automatic screen capture and element capture are off, `identify` sends only the Clerk user ID, and the `stay` group (which sent the stay name) is gone. The curated `screen_viewed` event now fires for the introduction, welcome, setup and home screens. Before this, `KouchdApp` turned on replay and sent email and full name, which contradicted `ios/README.md`.

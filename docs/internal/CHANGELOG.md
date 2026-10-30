@@ -2,6 +2,13 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-10-30 — iOS introduction preview cards no longer cut off
+
+- Found in the 2026-10-29 simulator self-check (iPhone 18 Pro, iOS 27): on introduction pages 2–4 the second preview card was cut off mid-line above the page dots (for example "Oct 11 · Pending confirmation").
+- `ios/Kouchd/Introduction.swift`: the couch mark shows on the first page only (52 pt), page spacing is 14 pt with 12 pt vertical padding, the card copy on pages 2 and 4 is shorter, the contributions footnote uses `.caption`, and each page's scroll view fades its bottom 28 pt so scrollable content reads as scrollable.
+- No flow or copy meaning changed. Intro UI tests pass after the change; screenshots are in `apps/kouchd/checks/` of the Appto folder, not in this repo.
+- Version `0.7.22` (patch). iOS build number is now 7, because App Store Connect already holds builds up to 6 (the 1.0.0 builds from the closed WRE-188 branch). `1.0.0-rc.1` stays reserved for the approved App Store submission (WRE-248).
+
 ## 2026-10-29 — Web body copy in Inter
 
 - Decision (Lee, 2026-10-29): body copy is Inter; titles and display text stay Manrope. `docs/internal/BRAND_DESIGN_SYSTEM.md` and `app/brand-system.css` already said so; the web app and `AGENTS.md` did not.
