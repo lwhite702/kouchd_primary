@@ -12,6 +12,8 @@ import { resolveMemberName } from "./lib/names";
 import { assertInviteHash, assertReferralCode } from "./lib/validation";
 import { normalizeReferralCode } from "../lib/referral";
 import { getPlanCapabilities, getPlanLimits, type SubscriptionPlan } from "../lib/domain/subscriptionPlans";
+import { ANALYTICS_EVENTS } from "../lib/analytics/events";
+import { trackServerEvent } from "./lib/posthog";
 
 const planValidator = v.union(v.literal("starter"), v.literal("hostPlus"), v.literal("householdPro"));
 const summaryStatusValidator = v.union(
@@ -528,6 +530,7 @@ export const recordBlockedJoin = mutation({
     const now = Date.now();
     if (existing) await ctx.db.patch(existing._id, { attemptedAt: now });
     else await ctx.db.insert("blockedJoins", { stayId, hostUserId: usage.billingOwnerId, guestUserId: user._id, attemptedAt: now });
+    trackServerEvent(ctx, user, ANALYTICS_EVENTS.PLAN_LIMIT_HIT, { stayId, limit: "guest" }, stayId);
     return null;
   },
 });

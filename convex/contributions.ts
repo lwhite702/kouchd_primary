@@ -4,6 +4,8 @@ import { mutation, query } from "./_generated/server";
 import { resolveFinancialGuest } from "./lib/auth";
 import { recordActivity } from "./lib/activity";
 import { assertContributionInput } from "./lib/validation";
+import { ANALYTICS_EVENTS } from "../lib/analytics/events";
+import { trackServerEvent } from "./lib/posthog";
 
 export const list = query({
   args: { stayId: v.id("stays"), guestUserId: v.optional(v.id("users")) },
@@ -44,6 +46,7 @@ export const create = mutation({
     assertContributionInput(args.amountCents, args.date, args.note);
     const contributionId = await ctx.db.insert("contributions", { ...args, guestUserId, createdBy: user._id, status: "pending", createdAt: Date.now() });
     await recordActivity(ctx, { stayId: args.stayId, actorUserId: user._id, guestUserId, kind: "contribution", action: "created", detail: `${args.type} added for confirmation`, entityId: contributionId });
+    trackServerEvent(ctx, user, ANALYTICS_EVENTS.CONTRIBUTION_RECORDED, { stayId: args.stayId, type: args.type, recordedBy: user._id === guestUserId ? "guest" : "host" }, args.stayId);
     return contributionId;
   },
 });

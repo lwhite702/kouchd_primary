@@ -7,6 +7,8 @@ import { assertCalendarDate, assertContributionRuleInput, assertPointClaimInput 
 import { pointsToCents } from "../lib/domain/rewards";
 import { getAcceptedGuestTerms } from "./lib/stayTerms";
 import { listActiveGuestObligations } from "./lib/obligations";
+import { ANALYTICS_EVENTS } from "../lib/analytics/events";
+import { trackServerEvent } from "./lib/posthog";
 
 export const getSettings = query({
   args: { stayId: v.id("stays") },
@@ -221,6 +223,7 @@ export const submitClaim = mutation({
       detail: `${user.name} submitted a claim for ${args.points} points: ${args.title.trim()}`,
       entityId: claimId,
     });
+    trackServerEvent(ctx, user, ANALYTICS_EVENTS.REWARD_CLAIMED, { stayId: args.stayId, points: args.points }, args.stayId);
 
     return claimId;
   },

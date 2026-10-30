@@ -97,6 +97,7 @@ function SyncedWorkspace() {
     ? stays?.find((item) => item.stay._id === selectedStayId)
     : undefined;
 
+  const trackedStayId = useRef<string | null>(null);
   useEffect(() => {
     if (selectedStay) {
       setStayGroup(selectedStay.stay._id, {
@@ -104,12 +105,16 @@ function SyncedWorkspace() {
         status: selectedStay.stay.status,
         role: selectedStay.membership.role,
       });
-      trackEvent(ANALYTICS_EVENTS.STAY_SWITCHED, {
-        stayId: selectedStay.stay._id,
-        stayName: selectedStay.stay.name ?? "",
-        role: selectedStay.membership.role,
-      });
+      // Convex re-sends the same stay on every update; count only real switches.
+      if (trackedStayId.current !== selectedStay.stay._id) {
+        trackedStayId.current = selectedStay.stay._id;
+        trackEvent(ANALYTICS_EVENTS.STAY_SWITCHED, {
+          stayId: selectedStay.stay._id,
+          role: selectedStay.membership.role,
+        });
+      }
     } else {
+      trackedStayId.current = null;
       resetStayGroup();
     }
   }, [selectedStay]);

@@ -1,5 +1,7 @@
 import { internal } from "../_generated/api";
+import type { Doc } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
+import type { AnalyticsEventName, AnalyticsEventPayloads } from "../../lib/analytics/events";
 
 export interface SchedulePostHogEventArgs {
   distinctId: string;
@@ -17,4 +19,19 @@ export function schedulePostHogEvent(
   } catch {
     // Fail-open: telemetry never blocks database mutations
   }
+}
+
+/**
+ * Sends a typed funnel event for the signed-in user once the mutation commits.
+ * The distinct ID is the Clerk user ID, the same one the web and iOS clients
+ * identify with, so server events join the right PostHog person.
+ */
+export function trackServerEvent<E extends AnalyticsEventName>(
+  ctx: MutationCtx,
+  user: Pick<Doc<"users">, "clerkUserId">,
+  event: E,
+  properties: AnalyticsEventPayloads[E],
+  stayId?: string
+): void {
+  schedulePostHogEvent(ctx, { distinctId: user.clerkUserId, event, properties, stayId });
 }

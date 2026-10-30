@@ -13,6 +13,8 @@ import {
   offerGuestAgreement,
 } from "./lib/stayTerms";
 import { calendarDateInTimezone } from "../lib/domain/dates";
+import { ANALYTICS_EVENTS } from "../lib/analytics/events";
+import { trackServerEvent } from "./lib/posthog";
 
 const termsInput = {
   startDate: v.string(),
@@ -123,6 +125,7 @@ export const acceptCurrent = mutation({
           : {}),
       };
     }
+    trackServerEvent(ctx, user, ANALYTICS_EVENTS.TERMS_ACCEPTED, { stayId, version: terms.version, role: membership.role }, stayId);
     if (membership.role === "guest") {
       const active = await acceptGuestAgreement(ctx, {
         membership,

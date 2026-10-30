@@ -13,6 +13,8 @@ import { getCurrentGuestTerms } from "./lib/stayTerms";
 import { internal } from "./_generated/api";
 import { resolveMemberName } from "./lib/names";
 import { getOrCreateHouseholdAccount } from "./householdOwnership";
+import { ANALYTICS_EVENTS } from "../lib/analytics/events";
+import { trackServerEvent } from "./lib/posthog";
 
 const houseInfoInput = {
   wifiNetwork: v.optional(v.string()),
@@ -134,6 +136,7 @@ export const create = mutation({
     await ctx.db.insert("termsAcceptances", { stayId, termsId, userId: user._id, acceptedAt: now, method: "host" });
     const membership = await ctx.db.query("memberships").withIndex("by_stay_user", (query) => query.eq("stayId", stayId).eq("userId", user._id)).unique();
     if (membership) await ctx.db.patch(membership._id, { acceptedTermsId: termsId });
+    trackServerEvent(ctx, user, ANALYTICS_EVENTS.STAY_CREATED, { stayId, cadence: args.terms.cadence, rateCents: args.terms.rateCents }, stayId);
 
     // Seed default suggested contribution tasks if rewards are enabled
     if (args.terms.rewards?.enabled) {
