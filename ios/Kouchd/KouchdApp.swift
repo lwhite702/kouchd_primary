@@ -91,6 +91,7 @@ struct RootView: View {
   @State private var pendingRoute: EntryRoute?
   @State private var destination: EntryRoute?
   @State private var activeSheet: ActiveSheet?
+  @State private var aboutPresented = false
   @State private var inviteToken = ""
   @State private var invitePreview: Value = .null
   @State private var tab: Tab = .home
@@ -171,7 +172,7 @@ struct RootView: View {
     } else if screenshotDemoRole == nil && introductionRevision < 1 && clerk.user == nil {
       IntroductionScreen(finish: handleIntroductionCompletion)
     } else if screenshotDemoRole == nil && clerk.user == nil {
-      NavigationStack { welcome }
+      welcome
     } else if !store.connectionError.isEmpty {
       connectionIssue
     } else if store.isLoading {
@@ -325,7 +326,9 @@ struct RootView: View {
           activeSheet = .auth
         }
       }
-      NavigationLink(value: KouchdRoute.about) {
+      // A sheet, not a pushed screen: a navigation stack around this page puts an empty
+      // full-screen toolbar over the sign-in button for assistive technology.
+      Button { aboutPresented = true } label: {
         HStack {
           Text("About Kouchd")
             .font(.body.weight(.medium))
@@ -334,16 +337,30 @@ struct RootView: View {
           Image(systemName: "chevron.right")
             .font(.footnote.weight(.semibold))
             .foregroundStyle(Palette.muted)
+            .accessibilityHidden(true)
         }
         .padding(.vertical, 8)
+        .frame(minHeight: 44)
         .contentShape(Rectangle())
       }
+      .buttonStyle(.plain)
+      .accessibilityHint("Opens a new screen")
       if !inviteToken.isEmpty {
         Text("Your invitation will be ready after sign-in.")
           .font(.subheadline).foregroundStyle(Palette.forest)
       }
     }
-    .kouchdDestinations(store: store)
+    .sheet(isPresented: $aboutPresented) {
+      NavigationStack {
+        AboutKouchdScreen()
+          .kouchdDestinations(store: store)
+          .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+              Button("Close") { aboutPresented = false }
+            }
+          }
+      }
+    }
   }
 
   private var onboarding: some View {

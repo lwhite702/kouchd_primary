@@ -1,5 +1,5 @@
 {
   "type": "patch",
   "version": "0.7.22",
-  "reason": "Fade and tighten the iOS introduction preview cards so they are no longer cut off above the page dots, say \"1 stay\" instead of \"1 stays\" on the home card, add a debug-only screenshot demo mode, and move the iOS build number to 7 (App Store Connect already has builds up to 6)."
+  "reason": "Fade and tighten the iOS introduction preview cards so they are no longer cut off above the page dots, say \"1 stay\" instead of \"1 stays\" on the home card, add a debug-only screenshot demo mode, redraw the app icon from the brand couch (dashes visible, dark variant), open About from the signed-out screen as a sheet so the sign-in button is reachable, and move the iOS build number to 7 (App Store Connect already has builds up to 6)."
 }
