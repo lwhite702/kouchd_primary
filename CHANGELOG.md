@@ -14,6 +14,7 @@
 
 ### Changed
 
+- **Privacy and Cookie Policy wording for web analytics (WRE-251, branch only, not released)**: the in-app Privacy Policy (section 6) and Cookie Policy now match what the web app does. PostHog automatically records page views and interactions, makes session replays with typed form input hidden, and links signed-in web sessions to the account identifier, name and email. They used to say autocapture and replay were off and that names and emails were not sent. The iPhone wording is unchanged. "Last updated" is now October 30, 2026; the effective date is unchanged (0.7.22).
 - **iOS introduction and sign-in look (branch only, not released)**:
   - The introduction steps can be swiped left and right as well as moved with Continue, Back, and Skip. A tapped move ignores the pager's in-between page reports, so the footer never jumps back to the previous step.
   - Clerk's sign-in, sign-up, and account screens use a Kouchd `ClerkTheme`: cream background, white rounded fields, forest buttons (lime with dark text in dark mode), Manrope headings, and 16-point corners.

@@ -21,7 +21,7 @@ export type LegalDocumentData = {
 export const legalMeta = {
   provider: "Wrelik Brands LLC",
   effectiveDate: "October 23, 2026",
-  lastUpdated: "October 23, 2026",
+  lastUpdated: "October 30, 2026",
   email: "legal@wrelik.com",
   privacyEmail: "privacy@wrelik.com",
   supportEmail: "support@kouchd.com",
@@ -174,7 +174,7 @@ export const privacyPolicy: LegalDocumentData = {
       title: "6. Cookies, local storage, analytics, and preferences",
       paragraphs: [
         "Our websites and web applications use essential cookies, secure local storage, and similar technologies to maintain authenticated sessions, secure CSRF tokens, remember user interface preferences, and monitor system performance.",
-        "Required technologies are strictly necessary to deliver the Services. Optional product telemetry is limited to manually captured screen and page categories and a pseudonymous account identifier for signed-in sessions. Autocapture and session replay are disabled. We do not send household text, invite tokens, names, email addresses, or contribution amounts to product analytics. We do not use advertising beacons or cross-site behavioral tracking. You can manage or disable cookies via your browser settings, though disabling essential session cookies may prevent you from logging into Kouchd.",
+        "Required technologies are strictly necessary to deliver the Services. In the Kouchd web app, we use PostHog for product analytics. PostHog automatically records page views, clicks, and similar interactions, along with performance data, and makes session replays that show how pages looked and changed while you used them. Session replays hide what you type into form fields, but other information shown on screen, such as names, household details, and contribution amounts, can appear in them. Signed-in web sessions are linked to your account identifier, name, and email address. The Kouchd iPhone app sends PostHog only the screens you open and a pseudonymous account identifier, with no automatic capture or session replay. We do not use advertising beacons or cross-site behavioral tracking. You can manage or disable cookies via your browser settings, though disabling essential session cookies may prevent you from logging into Kouchd.",
         "We honor legally recognized opt-out preference signals (such as Global Privacy Control) where required by applicable law. Because Wrelik does not sell personal data or engage in targeted behavioral advertising, no sale-related opt-out is applicable.",
       ],
     },
@@ -552,7 +552,7 @@ export const cookiePolicy: LegalDocumentData = {
         },
         {
           label: "Performance and diagnostics",
-          text: "We use Sentry for crash diagnostics and PostHog for limited product telemetry. PostHog receives manually captured page and screen categories and a pseudonymous account identifier for signed-in sessions; autocapture and session replay are disabled. These tools do not track you across third-party websites.",
+          text: "We use Sentry for crash diagnostics and PostHog for product analytics. In the Kouchd web app, PostHog uses cookies and local storage to recognize your browser, automatically records page views and interactions, and makes session replays with typed form input hidden. In the Kouchd iPhone app, PostHog receives only the screens you open and a pseudonymous account identifier. These tools do not track you across third-party websites.",
         },
       ],
     },
