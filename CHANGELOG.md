@@ -26,6 +26,11 @@
 
 ### Fixed
 
+- **Google Tag Manager in the web app (WRE-252, branch only, not released)**:
+  - Loads container `GTM-P39F6XRN` on every page (`components/google-tag-manager.tsx`). kouchd.com uses the same container.
+  - Google Consent Mode grants analytics storage; advertising signals stay denied unless the visitor allowed ads on kouchd.com, and always under Global Privacy Control.
+  - Each route change pushes a `kouchd_page_view` event with a token-free `page_path`.
+  - The CSP allows the Google hosts. The Privacy Policy, Cookie Policy and privacy page name Tag Manager.
 - **Server funnel events, enforced flags, Meta groundwork and monitoring (WRE-252 phases 2–6, branch only, not released)**:
   - **Server events:** Convex sends the funnel events from the mutations that own them, keyed by the Clerk user ID and grouped by stay, with IDs and categories only.
     - Account and stay: `user_signed_up`, `stay_created`, `invite_created`, `invite_accepted`, `stay_joined`, `terms_accepted`.
