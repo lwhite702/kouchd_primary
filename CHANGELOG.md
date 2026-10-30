@@ -24,6 +24,7 @@
 
 ### Fixed
 
+- **Sign-in page freeze (WRE-253, 0.7.23)**: `SignInFormGuard` now changes the submit button only when its state actually differs. It used to rewrite the same attributes on every change its own `MutationObserver` reported, which re-triggered the observer forever and froze `/sign-in` as soon as Clerk showed the form.
 - **Blank web app (WRE-253, 0.7.22)**: removed the `<meta>` Content-Security-Policy fallback from `app/layout.tsx`. For browser requests, a layer in front of the app rewrote the tag and split it at the semicolons in React's `&#x27;` escapes. The malformed policy blocked Next.js and Clerk scripts, so pages stayed blank. The response header CSP from `next.config.ts` and `proxy.ts` is unchanged and is now the only policy. A test keeps the tag out of the layout.
 - Web body copy is now set in Inter, as the brand design system specifies. Headings, eyebrows, metrics, buttons, pills, and the wordmark stay in Manrope (0.7.21).
 - **iOS review fixes (WRE-249, 0.7.20)**:

@@ -2,6 +2,13 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-10-30 — Sign-in freeze from guard observer loop (WRE-253)
+
+- After 0.7.22 (`0436bcf`) removed the meta CSP, scripts ran on `/sign-in` but the tab stopped responding. `/terms` stayed responsive.
+- Cause: `SignInFormGuard` wrote `disabled` and `class` on every observer callback even when nothing changed, and each write queued another callback.
+- Evidence: in Chromium on the live site, a bounded copy of the old writes on a detached button looped until stopped at 500 callbacks on both branches; change-only writes settled after 1.
+- Change: `syncSubmitState` writes only on a real change. Version 0.7.23. Not yet verified in production.
+
 ## 2026-10-30 — Blank web app from rewritten meta CSP (WRE-253)
 
 - Symptom: `app.kouchd.com` `/sign-in` and `/` stayed blank in a browser on `dpl_8jk3szKbMtjx8WSqhxoyTArH3z8S` (`26a3576`).
