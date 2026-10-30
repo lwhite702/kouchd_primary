@@ -26,6 +26,11 @@
 
 ### Fixed
 
+- **Analytics and flag safety (WRE-252, branch only, not released)**:
+  - The hard-coded analytics paragraph on the in-app privacy page (`app/privacy/page.tsx`) still said names and emails were not sent to analytics. It now matches `lib/legal.ts`.
+  - Feature-flag overrides from the address bar (`?flag:<key>=true`) or localStorage now work only in development and Vercel previews. In production anyone could use them to open the Plus paywall before launch.
+  - PostHog no longer resets an anonymous visitor's ID while Clerk is still loading. It resets only after a real sign-out, so visits before sign-up stay linked to the new account.
+  - `ios/README.md` no longer says the web client turns off autocapture and replay, and notes that the tracked PostHog token is real.
 - Web body copy is now set in Inter, as the brand design system specifies. Headings, eyebrows, metrics, buttons, pills, and the wordmark stay in Manrope (0.7.21).
 - **iOS review fixes (WRE-249, 0.7.20)**:
   - **Analytics:** the app now sets up PostHog through the existing `KouchdAnalytics` helper. Session replay, automatic screen capture and element capture are off, `identify` sends only the Clerk user ID, and the `stay` group (which sent the stay name) is gone. The curated `screen_viewed` event now fires for the introduction, welcome, setup and home screens. Before this, `KouchdApp` turned on replay and sent email and full name, which contradicted `ios/README.md`.

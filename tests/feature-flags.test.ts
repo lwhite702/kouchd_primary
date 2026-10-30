@@ -1,5 +1,5 @@
 import { convexTest } from "convex-test";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { api } from "../convex/_generated/api";
 import schema from "../convex/schema";
@@ -106,6 +106,7 @@ describe("Client Developer / QA Overrides", () => {
   });
 
   afterEach(() => {
+    vi.unstubAllEnvs();
     delete (globalThis as unknown as { window?: unknown }).window;
   });
 
@@ -120,6 +121,23 @@ describe("Client Developer / QA Overrides", () => {
 
     win.location.search = `?flag:${FEATURE_FLAGS.SHOPPING_LIST}=true`;
     expect(getLocalDevOverride(FEATURE_FLAGS.SHOPPING_LIST)).toBe(true);
+  });
+
+  it("ignores URL and localStorage overrides in production", () => {
+    const win = (globalThis as unknown as { window: { location: { search: string } } }).window;
+    win.location.search = `?flag:${FEATURE_FLAGS.BILLING_PORTAL}=true`;
+    setLocalDevOverride(FEATURE_FLAGS.SHOPPING_LIST, false);
+
+    vi.stubEnv("NEXT_PUBLIC_VERCEL_ENV", "production");
+    expect(getLocalDevOverride(FEATURE_FLAGS.BILLING_PORTAL)).toBeNull();
+    expect(getLocalDevOverride(FEATURE_FLAGS.SHOPPING_LIST)).toBeNull();
+
+    vi.stubEnv("NEXT_PUBLIC_VERCEL_ENV", "preview");
+    expect(getLocalDevOverride(FEATURE_FLAGS.BILLING_PORTAL)).toBe(true);
+
+    vi.stubEnv("NEXT_PUBLIC_VERCEL_ENV", "");
+    vi.stubEnv("NODE_ENV", "production");
+    expect(getLocalDevOverride(FEATURE_FLAGS.BILLING_PORTAL)).toBeNull();
   });
 
   it("evaluates localStorage override when set", () => {

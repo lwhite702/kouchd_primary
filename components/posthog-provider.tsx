@@ -26,11 +26,11 @@ function PostHogPageView() {
 }
 
 function PostHogAuthSync() {
-  const { userId } = useAuth();
+  const { isLoaded, userId } = useAuth();
   const { user } = useUser();
 
   useEffect(() => {
-    if (typeof window === "undefined" || !posthog.__loaded) return;
+    if (typeof window === "undefined" || !posthog.__loaded || !isLoaded) return;
 
     if (userId && user) {
       posthog.identify(userId, {
@@ -49,10 +49,12 @@ function PostHogAuthSync() {
       } catch {
         // Safe no-op if session replay is disabled or initializing
       }
-    } else if (!userId) {
+    } else if (!userId && posthog.get_property("$user_state") === "identified") {
+      // Reset only after a real sign-out, so an anonymous visitor keeps one ID
+      // from their first visit through sign-up.
       posthog.reset();
     }
-  }, [userId, user]);
+  }, [isLoaded, userId, user]);
 
   return null;
 }

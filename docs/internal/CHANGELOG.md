@@ -2,6 +2,15 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-10-30 — Analytics and flags review, phase 0 (WRE-252)
+
+- Full PostHog, flag, observability and conversion review; the phased plan is in WRE-252.
+- `app/privacy/page.tsx`: the hard-coded telemetry bullet matched neither `lib/legal.ts` nor the code. Rewritten to match `lib/legal.ts` section 6.
+- `lib/flags/client.ts`: new `localOverridesAllowed()`. It returns false when `NEXT_PUBLIC_VERCEL_ENV` is `production`, or when that variable is unset and `NODE_ENV` is `production`. `getLocalDevOverride` returns null then. Test added in `tests/feature-flags.test.ts`.
+- `components/posthog-provider.tsx`: `PostHogAuthSync` waits for Clerk `isLoaded`, and calls `reset()` only when PostHog's `$user_state` is `identified`. Before this, every signed-out page load reset the anonymous ID.
+- `ios/README.md`: the web-client analytics description and the tracked PostHog token note corrected.
+- Checks: `vitest run` (36 files, 215 tests), `tsc --noEmit`, `eslint` on the changed files (no errors), release gate passes.
+
 ## 2026-10-29 — RevenueCat → PostHog preparation (WRE-251)
 
 - Context: RevenueCat's PostHog integration sends subscription lifecycle events to PostHog from RevenueCat's servers. It is not turned on; the `Kouchd` PostHog project (595950) had no RevenueCat, purchase, paywall or checkout events in the last 60 days.
