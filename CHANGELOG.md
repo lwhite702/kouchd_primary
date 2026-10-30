@@ -26,6 +26,19 @@
 
 ### Fixed
 
+- **Server funnel events, enforced flags, Meta groundwork and monitoring (WRE-252 phases 2–6, branch only, not released)**:
+  - **Server events:** Convex sends the funnel events from the mutations that own them, keyed by the Clerk user ID and grouped by stay, with IDs and categories only.
+    - Account and stay: `user_signed_up`, `stay_created`, `invite_created`, `invite_accepted`, `stay_joined`, `terms_accepted`.
+    - Household activity: `contribution_recorded`, `chore_created`, `chore_completed`, `reward_claimed`.
+    - Limits: `plan_limit_hit`.
+  - **Client event fixes:** `stay_switched` counts only real switches and no longer sends the stay name. `shopping_item_purchased` fires after the save succeeds. `checkout_started` and `subscription_activated` are removed, because RevenueCat supplies purchases. A test fails if a defined event has no call site.
+  - **Feature flags:** flags read as off until Convex and PostHog have answered (2.5-second fallback), so a switched-off feature no longer flashes on. Every shopping, check-in and rewards write now honours the platform kill switch on the server. Flag overrides reject unknown keys.
+  - **Meta Pixel:** loads only when `NEXT_PUBLIC_META_PIXEL_ID` is set and the visitor allowed ads on kouchd.com, with no Global Privacy Control. It sends `PageView` and, for new accounts, `CompleteRegistration`, with the same event ID as the server's `user_signed_up`. `identify` records `ads_consent`. The ID is unset, so nothing loads. The advertising policy text in `docs/internal/META_ADS.md` must be approved first.
+  - **Monitoring:**
+    - Sentry is the only error tracker; PostHog exception capture is off.
+    - Sentry replays only sessions with an error.
+    - `verify-env` warns when a production build has no `SENTRY_AUTH_TOKEN`.
+  - **Docs:** `docs/internal/ANALYTICS.md` covers the event taxonomy, identity, consent, flags and monitoring set-up.
 - **Analytics foundations (WRE-252 phase 1, branch only, not released)**:
   - PostHog traffic goes through the app's own `/ingest` route (`next.config.ts` rewrites to PostHog US), so ad blockers no longer drop it. Clerk's middleware skips `/ingest`.
   - The Content-Security-Policy is defined once in `lib/security/csp.ts` and used by `next.config.ts`, `proxy.ts` and the `<meta>` tag in `app/layout.tsx`, instead of three hand-kept copies.

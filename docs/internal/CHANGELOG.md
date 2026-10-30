@@ -2,6 +2,41 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-10-30 — Analytics phases 2–6 (WRE-252)
+
+- **Phase 2:** `trackServerEvent` (`convex/lib/posthog.ts`) is called from users, stays, invites, referral, terms, contributions, chores, rewards and subscriptions.
+  - `CONTRIBUTION_RECORDED` replaces `PAYMENT_RECORDED`, matching the "contribution" wording.
+  - New events: `USER_SIGNED_UP` and `PLAN_LIMIT_HIT`.
+  - Removed: `CHECKOUT_STARTED` and `SUBSCRIPTION_ACTIVATED`.
+  - Tests: `tests/server-analytics.test.ts`, and the coverage test in `tests/analytics.test.ts`.
+- **Phase 3:**
+  - `lib/flags/resolve.ts` and the rewritten `useFeatureFlag` (off while loading; 2.5-second PostHog fallback).
+  - `requireFeature` in every gated write.
+  - `setOverride` key validation. `tests/platform-admin.test.ts` used the misspelled key `enable_sms_reminders`; it now uses `feature_sms_reminders` and checks the refusal.
+  - Server-side bootstrapping was not added, because reading cookies in the root layout would make every page dynamic.
+- **Phase 4 (marketing):**
+  - PostHog loads after consent through the `vercel.json` `/ingest` rewrites.
+  - `cta_clicked` event; the last campaign touch is appended to sign-up links.
+  - "Cookie settings" link added to the legal footer.
+  - The marketing policies now describe PostHog and the shared cookies.
+  - Added the `/ingest/array` route to both proxies.
+- **Phase 5:**
+  - Meta Pixel on both sites behind the ads choice, Global Privacy Control and a Pixel ID that is unset.
+  - `meta_event_id` on `user_signed_up`; `ads_consent` person property.
+  - CSP allows the Meta hosts.
+  - Setup steps and draft policy text in `docs/internal/META_ADS.md`, not published.
+- **Phase 6:** PostHog `capture_exceptions` off; Sentry session replay 0 (errors only); `verify-env` warns on a missing `SENTRY_AUTH_TOKEN` in production. Convex→Sentry, iOS Sentry, uptime checks and alerts are listed in `docs/internal/ANALYTICS.md` as dashboard work.
+- **Phase 7 (dashboards):** deferred until the new events arrive in PostHog, so each insight can be checked against data.
+- **Evidence:**
+  - `vitest run`: 40 files, 231 tests.
+  - `tsc --noEmit`, `eslint` and `next build` pass.
+  - Marketing: `astro check`, `eslint`, `prettier` and `npm run build` pass.
+  - Chromium against `astro preview`:
+    - No PostHog traffic before consent; after consent it goes to `/ingest`.
+    - The sign-up link gained `utm_source` and `utm_campaign`.
+    - With a test Pixel ID, Meta loads only after "Allow analytics and ads" and never with GPC.
+  - Unverified: production delivery through `/ingest`, Convex server events reaching PostHog, and anything involving Meta.
+
 ## 2026-10-30 — Analytics foundations, phase 1 (WRE-252)
 
 - `/ingest` proxy: rewrites in `next.config.ts` (`/ingest/static/*` to `us-assets.i.posthog.com`, `/ingest/*` to `us.i.posthog.com`), plus `skipTrailingSlashRedirect`. `proxy.ts` matcher skips `ingest`. `posthog.init` uses `api_host: "/ingest"`. `NEXT_PUBLIC_POSTHOG_HOST` is now read only by `convex/posthog.ts` (`.env.example` says so).
