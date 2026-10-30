@@ -19,7 +19,7 @@ export async function buildFinancialRecord(
     guestUserId?: Id<"users">;
   },
 ) {
-  const access = await resolveFinancialGuest(ctx, stayId, requestedGuestUserId);
+  const access = await resolveFinancialGuest(ctx, stayId, requestedGuestUserId, { allowFormerGuest: true });
   assertCalendarDate(asOfDate, "Ledger date");
   if (!access.guestUserId) return { ledger: [], contributions: [] };
   const stay = await ctx.db.get(stayId);

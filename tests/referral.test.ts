@@ -92,6 +92,34 @@ describe("Ending a guest's agreement", () => {
     expect(await guest.query(api.stays.listMine, {})).toHaveLength(1);
   });
 
+  it("keeps a removed guest's ledger readable by the host but closed to changes", async () => {
+    const { host, guest, stayId, guestUserId, referralCode } = await setup();
+    await guest.mutation(api.contributions.create, {
+      stayId, type: "payment", amountCents: 5_000, date: "2026-09-02", note: "Cash", countsTowardBalance: true,
+    });
+    await host.mutation(api.obligations.createAdhocCharge, {
+      stayId, guestUserId, title: "Internet", amountCents: 2_000, effectiveDate: "2026-09-02", dueDate: "2026-09-09",
+    });
+    await host.mutation(api.stays.endGuestAgreement, { stayId, guestUserId });
+
+    const args = { stayId, guestUserId };
+    expect(await host.query(api.contributions.list, args)).toHaveLength(1);
+    const record = await host.query(api.obligations.ledgerWithTotals, { ...args, asOfDate: "2026-09-30" });
+    expect(record.rows.map((row) => row.title)).toContain("Internet");
+    await host.query(api.rewards.getWallet, args);
+
+    await expect(host.mutation(api.contributions.create, {
+      ...args, type: "payment", amountCents: 100, date: "2026-09-03", note: "", countsTowardBalance: true,
+    })).rejects.toThrow("not an active member");
+    await expect(host.mutation(api.obligations.createAdhocCharge, {
+      ...args, title: "Utilities", amountCents: 100, effectiveDate: "2026-09-03", dueDate: "2026-09-10",
+    })).rejects.toThrow("not an active member");
+    await expect(guest.query(api.contributions.list, { stayId })).rejects.toThrow("Not authorized");
+
+    await guest.mutation(api.referral.joinWithCode, { referralCode });
+    expect(await guest.query(api.contributions.list, { stayId })).toHaveLength(1);
+  });
+
   it("lets the guest come back with a new invite link", async () => {
     const { host, guest, stayId, guestUserId } = await setup();
     await host.mutation(api.stays.endGuestAgreement, { stayId, guestUserId });

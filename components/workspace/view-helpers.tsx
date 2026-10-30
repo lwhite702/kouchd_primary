@@ -25,6 +25,7 @@ export function GuestTabs({
           {guest.person.name && guest.person.name !== "Kouchd member"
             ? guest.person.name
             : "Guest"}
+          {guest.membership.status === "left" ? " (former)" : ""}
         </button>
       ))}
     </div>

@@ -21,12 +21,13 @@ export function ContributionsScreen({ state }: { state: WorkspaceState }) {
     isHost,
     isEnded,
     balance,
-    guestMembers,
     credits,
     activeContributions,
     bundle,
     obligations,
     financialGuestId,
+    ledgerGuestMembers,
+    isViewingFormerGuest,
     setSelectedGuestId,
     notify,
     ledgerLabel,
@@ -37,6 +38,7 @@ export function ContributionsScreen({ state }: { state: WorkspaceState }) {
     disputeContributionEntry,
     stayId,
   } = state;
+  const readOnly = isEnded || isViewingFormerGuest;
   return (
     <div key="contributions" className="screen-transition">
       <div className="page-heading">
@@ -61,7 +63,7 @@ export function ContributionsScreen({ state }: { state: WorkspaceState }) {
           </HelpTip>
         </div>
         <div className="heading-actions">
-          {!isEnded && (
+          {!readOnly && (
             <>
               <Tooltip content="Record a payment made or contribution credit">
                 <button
@@ -89,12 +91,18 @@ export function ContributionsScreen({ state }: { state: WorkspaceState }) {
           )}
         </div>
       </div>
-      {isHost && guestMembers.length > 0 && (
+      {isHost && ledgerGuestMembers.length > 0 && (
         <GuestTabs
-          guests={guestMembers}
+          guests={ledgerGuestMembers}
           selected={financialGuestId}
           onSelect={setSelectedGuestId}
         />
+      )}
+      {isViewingFormerGuest && (
+        <div className="external-payment-note">
+          <strong>This guest is no longer in the stay.</strong> Their ledger is
+          read-only. It opens for changes again if they rejoin.
+        </div>
       )}
       <div className="external-payment-note">
         <strong>Payments happen outside Kouchd.</strong> Use the host options in
@@ -189,7 +197,7 @@ export function ContributionsScreen({ state }: { state: WorkspaceState }) {
               </div>
               {isHost && (
                 <div className="row-actions">
-                  {!isEnded && item.lateFeeCents > 0 && !item.lateFeeWaived && (
+                  {!readOnly && item.lateFeeCents > 0 && !item.lateFeeWaived && (
                     <button
                       className="mini-button"
                       type="button"
@@ -202,7 +210,7 @@ export function ContributionsScreen({ state }: { state: WorkspaceState }) {
                       Waive fee
                     </button>
                   )}
-                  {!isEnded && item.type === "adhoc" && (
+                  {!readOnly && item.type === "adhoc" && (
                     <button
                       className="mini-button danger"
                       type="button"
@@ -231,8 +239,8 @@ export function ContributionsScreen({ state }: { state: WorkspaceState }) {
       <FeatureGate flag={FEATURE_FLAGS.REWARDS_SYSTEM}>
         <RewardsHub
           stayId={stayId}
-          isHost={Boolean(isHost && !isEnded)}
-          readOnly={isEnded}
+          isHost={Boolean(isHost && !readOnly)}
+          readOnly={readOnly}
           selectedGuestId={financialGuestId}
           currentBalanceCents={balance}
           onNotify={notify}
@@ -269,7 +277,7 @@ export function ContributionsScreen({ state }: { state: WorkspaceState }) {
                 {formatMoney(item.amountCents)}
                 <small>{formatDate(item.date)}</small>
               </div>
-              {!isEnded && (
+              {!readOnly && (
                 <div className="row-actions">
                   {item.status === "pending" &&
                     item.createdBy !== bundle.membership.userId && (
