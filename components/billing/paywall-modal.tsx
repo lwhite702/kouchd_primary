@@ -9,8 +9,6 @@ import {
 } from "@/lib/revenuecat";
 import { useFeatureFlag } from "@/components/flags/feature-gate";
 import { FEATURE_FLAGS } from "@/lib/flags/config";
-import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
-import { trackEvent } from "@/lib/analytics/track";
 import type { CustomerInfo } from "@revenuecat/purchases-js";
 
 interface PaywallModalProps {
@@ -45,9 +43,6 @@ export function PaywallModal({
       setError(null);
       try {
         if (!containerRef.current) return;
-        // Purchases, renewals and cancellations reach PostHog from RevenueCat's
-        // own integration under this appUserId, so only the view is captured here.
-        trackEvent(ANALYTICS_EVENTS.PAYWALL_VIEWED, {});
         const result = await presentRevenueCatPaywall({
           appUserId: userId,
           htmlTarget: containerRef.current,
@@ -57,9 +52,7 @@ export function PaywallModal({
             onClose();
           },
           onVisitCustomerCenter: async () => {
-            if (await openCustomerCenter(userId)) {
-              trackEvent(ANALYTICS_EVENTS.CUSTOMER_CENTER_OPENED, { source: "paywall" });
-            }
+            await openCustomerCenter(userId);
           },
         });
 
@@ -208,11 +201,7 @@ export function useKouchdPlus(userId?: string) {
       console.warn("Customer Center requires an authenticated user.");
       return null;
     }
-    const managementURL = await openCustomerCenter(userId);
-    if (managementURL) {
-      trackEvent(ANALYTICS_EVENTS.CUSTOMER_CENTER_OPENED, { source: "billing" });
-    }
-    return managementURL;
+    return await openCustomerCenter(userId);
   };
 
   const hasPlus = !isEntitlementEnforced || entitled;

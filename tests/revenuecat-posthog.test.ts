@@ -22,8 +22,6 @@ describe("RevenueCat and PostHog identity", () => {
 
   it("leaves purchase outcomes to RevenueCat so the web paywall does not double count them", () => {
     const paywall = read("components/billing/paywall-modal.tsx");
-    expect(paywall).toContain("ANALYTICS_EVENTS.PAYWALL_VIEWED");
-    expect(paywall).toContain("ANALYTICS_EVENTS.CUSTOMER_CENTER_OPENED");
     expect(paywall).not.toContain("ANALYTICS_EVENTS.SUBSCRIPTION_ACTIVATED");
     expect(paywall).not.toContain("ANALYTICS_EVENTS.CHECKOUT_STARTED");
   });
