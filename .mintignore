@@ -16,3 +16,10 @@ eslint.config.mjs
 next.config.ts
 vitest.config.ts
 styles.css
+README.md
+CHANGELOG.md
+CLAUDE.md
+/release/
+/ios/
+/types/
+help/LICENSE

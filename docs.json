@@ -1,11 +1,11 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "name": "Kouchd Help Center",
-  "description": "Guides, ledger management, house rules, and guest agreements for Kouchd.",
+  "description": "Plain, practical help for hosts and guests using Kouchd.",
   "theme": "mint",
   "appearance": {
-    "default": "light",
-    "strict": true
+    "default": "system",
+    "strict": false
   },
   "colors": {
     "primary": "#184F3A",
@@ -13,10 +13,9 @@
     "dark": "#123D2E"
   },
   "background": {
-    "decoration": "gradient",
     "color": {
       "light": "#F5F0E8",
-      "dark": "#FFFDF8"
+      "dark": "#0F1914"
     }
   },
   "fonts": {
@@ -32,7 +31,7 @@
   },
   "logo": {
     "light": "/help/logo/light.svg",
-    "dark": "/help/logo/light.svg",
+    "dark": "/help/logo/dark.svg",
     "href": "https://kouchd.com"
   },
   "favicon": {
@@ -43,27 +42,41 @@
     "pages": [
       {
         "group": "Overview",
+        "expanded": true,
         "pages": [
           "help/index",
-          "help/quickstart"
-        ],
-        "expanded": true
-      },
-      {
-        "group": "For Hosts",
-        "pages": [
-          "help/hosts/getting-started",
-          "help/hosts/pricing-and-terms",
-          "help/hosts/house-rules-and-chores",
-          "help/hosts/ledger-management"
+          "help/quickstart",
+          "help/faq"
         ]
       },
       {
-        "group": "For Guests",
+        "group": "For hosts",
+        "pages": [
+          "help/hosts/getting-started",
+          "help/hosts/inviting-guests",
+          "help/hosts/pricing-and-terms",
+          "help/hosts/schedules-and-overnights",
+          "help/hosts/ledger-management",
+          "help/hosts/house-rules-and-chores",
+          "help/hosts/managing-your-stay",
+          "help/hosts/plans-and-limits"
+        ]
+      },
+      {
+        "group": "For guests",
         "pages": [
           "help/guests/joining-a-stay",
           "help/guests/logging-contributions",
           "help/guests/kouchd-coins"
+        ]
+      },
+      {
+        "group": "Around the house",
+        "pages": [
+          "help/household/house-guide",
+          "help/household/shopping-list",
+          "help/household/check-ins",
+          "help/household/announcements-and-activity"
         ]
       },
       {
@@ -94,7 +107,7 @@
         ]
       },
       {
-        "group": "Trust & Legal",
+        "group": "Trust and legal",
         "pages": [
           "help/legal-trust/stay-agreements",
           "help/legal-trust/privacy-and-security",
@@ -105,14 +118,14 @@
     "global": {
       "anchors": [
         {
-          "anchor": "Open App",
+          "anchor": "Open Kouchd",
           "href": "https://app.kouchd.com",
           "icon": "house"
         },
         {
-          "anchor": "Brand Guide",
-          "href": "https://kouchd.com/brand",
-          "icon": "palette"
+          "anchor": "kouchd.com",
+          "href": "https://kouchd.com",
+          "icon": "globe"
         }
       ]
     }
@@ -121,17 +134,21 @@
     "drilldown": false
   },
   "search": {
-    "prompt": "Search guides, rules, or ledger help..."
+    "prompt": "Search stays, the Ledger, chores..."
   },
   "navbar": {
     "links": [
       {
-        "label": "Website",
+        "label": "kouchd.com",
         "href": "https://kouchd.com"
       },
       {
-        "label": "Brand Guide",
-        "href": "https://kouchd.com/brand"
+        "label": "Plans",
+        "href": "https://kouchd.com/pricing"
+      },
+      {
+        "label": "Room to Share",
+        "href": "https://kouchd.com/blog"
       }
     ],
     "primary": {
@@ -146,21 +163,58 @@
     },
     "links": [
       {
-        "header": "Product",
+        "header": "Kouchd",
         "items": [
-          { "label": "Open Kouchd", "href": "https://app.kouchd.com" },
-          { "label": "Brand Guide", "href": "https://kouchd.com/brand" },
-          { "label": "Roadmap", "href": "/help/product/roadmap" },
-          { "label": "Changelog", "href": "/help/product/changelog" }
+          {
+            "label": "Open Kouchd",
+            "href": "https://app.kouchd.com"
+          },
+          {
+            "label": "kouchd.com",
+            "href": "https://kouchd.com"
+          },
+          {
+            "label": "Plans",
+            "href": "https://kouchd.com/pricing"
+          },
+          {
+            "label": "Room to Share",
+            "href": "https://kouchd.com/blog"
+          }
         ]
       },
       {
-        "header": "Help & trust",
+        "header": "Help",
         "items": [
-          { "label": "Quickstart", "href": "/help/quickstart" },
-          { "label": "App support", "href": "/help/support/app-support" },
-          { "label": "Notification settings", "href": "/help/notifications/notification-preferences" },
-          { "label": "Privacy & security", "href": "/help/legal-trust/privacy-and-security" }
+          {
+            "label": "Quickstart",
+            "href": "/help/quickstart"
+          },
+          {
+            "label": "FAQ",
+            "href": "/help/faq"
+          },
+          {
+            "label": "App support",
+            "href": "/help/support/app-support"
+          },
+          {
+            "label": "Changelog",
+            "href": "/help/product/changelog"
+          }
+        ]
+      },
+      {
+        "header": "Legal",
+        "items": [
+          {
+            "label": "Privacy",
+            "href": "https://kouchd.com/privacy"
+          },
+          {
+            "label": "Terms",
+            "href": "https://kouchd.com/terms"
+          }
         ]
       }
     ]
@@ -176,7 +230,7 @@
     "codeblocks": {
       "theme": {
         "light": "github-light",
-        "dark": "github-light"
+        "dark": "github-dark"
       }
     },
     "latex": false
@@ -197,5 +251,15 @@
     "404": {
       "redirect": true
     }
-  }
+  },
+  "redirects": [
+    {
+      "source": "/help/using-notifications",
+      "destination": "/help/notifications/notification-preferences"
+    },
+    {
+      "source": "/quickstart",
+      "destination": "/help/quickstart"
+    }
+  ]
 }
