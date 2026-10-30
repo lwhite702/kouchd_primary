@@ -14,6 +14,9 @@ export default clerkMiddleware({
     "https://app.kouchd.com",
     ...(process.env.NODE_ENV === "development" ? ["http://localhost:3000"] : []),
     ...(vercelOrigin ? [vercelOrigin] : []),
+    // Previews use the production Clerk instance, which only serves kouchd.com
+    // hosts, so the preview branch domain is attached in Vercel as preview.kouchd.com.
+    ...(process.env.VERCEL_ENV === "preview" ? ["https://preview.kouchd.com"] : []),
   ],
   contentSecurityPolicy: { directives: cspDirectives },
 });

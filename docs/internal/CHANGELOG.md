@@ -2,6 +2,16 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-10-30 — Previews on production Clerk
+
+- Decision (Lee): Vercel previews keep the production Clerk instance. Its only domain is `kouchd.com` (Frontend API `clerk.kouchd.com`), so it refuses `*.vercel.app` origins; that was the blank `/sign-in` with a Clerk 400 on previews.
+- `proxy.ts` trusts `https://preview.kouchd.com` when `VERCEL_ENV` is `preview`.
+- **Still to do (needs approval, not done):**
+  1. Vercel app project → Domains → add `preview.kouchd.com`, assigned to a Git branch (currently `claude/inspiring-volta-fvyy1z`; change the branch as needed).
+  2. Cloudflare DNS (kouchd.com is on Cloudflare): CNAME `preview` → `cname.vercel-dns.com`, **DNS only** (grey cloud).
+  3. Open `https://preview.kouchd.com/sign-in`. Previews sign in with real production accounts; use a test account.
+- `*.vercel.app` preview URLs still won't sign in. Only the branch assigned to `preview.kouchd.com` can.
+
 ## 2026-10-30 — Analytics phases 2–6 (WRE-252)
 
 - **Phase 2:** `trackServerEvent` (`convex/lib/posthog.ts`) is called from users, stays, invites, referral, terms, contributions, chores, rewards and subscriptions.
