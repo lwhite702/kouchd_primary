@@ -1,10 +1,10 @@
 # Kouchd Help Center
 
-This is the Mintlify help center for Kouchd. Content is organized into `hosts/`, `guests/`, and `legal-trust/` guides and configured in `docs.json`.
+This is the Mintlify help center for Kouchd. Content is organized into `hosts/`, `guests/`, and `legal-trust/` guides and configured in the repository-root `docs.json`.
 
 ## Local preview
 
-Install the Mintlify CLI and run `mint dev` from this directory to preview documentation changes. Check article links and images before publishing.
+Install the Mintlify CLI and run `mint dev` from the repository root to preview documentation changes. Check article links and images before publishing.
 
 ## Writing style
 

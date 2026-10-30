@@ -1,81 +1,44 @@
 ---
-title: Logging contributions and checking progress
-description: Record payments made outside Kouchd and track confirmed credits in your private ledger.
+title: "Recording contributions"
+description: "Record what you've paid or covered, and follow it in your private Ledger."
 ---
 
-<Tip>
-  The ledger is a transparent mutual record. You record payments or expenses you cover, and once confirmed by your host, credits are applied to your balance.
-</Tip>
+A contribution is a record of something you paid or provided, like money sent to your host or groceries you agreed to cover. Kouchd keeps the record. It doesn't move the money.
 
-Kouchd records contributions; it does not process payments. You and your host use the ledger to keep a shared, accurate record of what was agreed and what has been confirmed.
+## Pay your host
 
-## Pay your host outside Kouchd
-
-<Info>
-  **Outside payment methods:** Open **Stay** to view the direct payment handles your host provided for PayPal, Cash App, Zelle, or Apple Pay. Always verify account handles before sending money.
-</Info>
-
-Kouchd does not collect or transfer money directly, so external payments are not automatically tracked until recorded in the ledger.
+Open **Stay** to see the payment options your host shared, like Venmo, Cash App, Chime, Zelle, PayPal, Apple Pay, or cash. Double-check the details before you send anything.
 
 ## Record a contribution
 
 ![Record a contribution in Kouchd](/help/images/add-contribution-modal.png)
 
 <Steps>
-  <Step title="Open Ledger and select Add contribution">
-    Navigate to **Ledger** in your app navigation and select the **+ Add contribution** button.
+  <Step title="Open Ledger">
+    Choose **Add contribution**.
   </Step>
-  <Step title="Choose contribution category">
-    Select the category that best describes your contribution:
-    - **Direct payment**: Money sent via PayPal, Cash App, Zelle, Apple Pay, or cash.
-    - **Groceries & pantry**: Shared food or kitchen restocks agreed with your host.
-    - **Household supplies**: Cleaning supplies, paper towels, or household staples.
-    - **Other agreed help**: Special shared costs discussed with your host.
+  <Step title="Choose a type">
+    **Payment**, **Groceries**, **Supplies**, **House work**, or **Other**.
   </Step>
-  <Step title="Enter amount and date">
-    Enter the exact dollar amount and select the date the payment was sent or the purchase was made.
+  <Step title="Add the amount and date">
+    Enter the value and transaction date. Earlier dates are fine.
   </Step>
-  <Step title="Add a note and submit">
-    Add an optional note (such as "Week 2 contribution sent via Zelle") to help your host quickly identify and verify the transaction. Select **Record contribution**.
+  <Step title="Add a note and save">
+    Something like "Week 2 via Zelle" helps your host recognize it. Leave **Count toward this guest's balance** on if it should reduce what you owe.
   </Step>
 </Steps>
 
+## What the statuses mean
+
+- **Pending:** Waiting for the other person. It doesn't count toward your confirmed progress yet.
+- **Confirmed:** Agreed. If it counts toward your balance, it goes to your oldest charge first.
+- **Disputed:** Something doesn't match. Talk it through, since Kouchd doesn't decide who's right.
+- **Voided:** Cancelled, usually so it can be recorded again correctly.
+
+## Read your progress
+
+**Ledger** shows total charges, confirmed credit, and what's left, along with each share's progress and due date.
+
 <Accordion title="On iPhone" icon="smartphone">
-  1. Tap **Ledger**, then tap **Record a contribution** (or **+**).
-  2. Choose a **Type**: Outside payment, Groceries, Supplies, House work, or Other.
-  3. Enter the amount in dollars and an optional note.
-  4. Leave **Count toward balance** on if it should reduce what's owed, then tap **Record**.
-
-  The record shows as **pending** until the other person confirms it.
-
-  See [Ledger and contributions on iPhone](/help/ios/ledger-and-contributions). The iPhone app is in development and not yet on the App Store.
+  Tap **Ledger**, then record a contribution. See [Ledger and contributions on iPhone](/help/ios/ledger-and-contributions).
 </Accordion>
-
-## Understanding status transitions
-
-- **Pending confirmation**: The entry is logged on your ledger and is visible to your host. Pending entries do not count toward confirmed progress until your host reviews them.
-- **Confirmed**: Your host has verified the outside payment or purchase receipt. The credit is immediately applied to your oldest outstanding obligation.
-- **Unconfirmed or mismatched entries**: If an entry's details require adjustment, leave it unconfirmed and coordinate with your host to re-record the contribution with the agreed amount and date. Kouchd does not mediate disputes or handle external payment problems between members.
-
-## Reading your progress display
-
-The progress bar on **Home** and **Ledger** shows the confirmed credit against scheduled charges, along with your remaining balance and upcoming due dates.
-
-<Note>
-  **Credit priority:** Once confirmed, contributions automatically apply to your oldest outstanding obligation first to keep payment accounting straightforward.
-</Note>
-
-<CardGroup cols={2}>
-  <Card title="Quickstart guide" icon="bolt" href="/help/quickstart">
-    Overview of household setup and contribution tracking.
-  </Card>
-  <Card title="Kouchd Coins and house rewards" icon="coins" href="/help/guests/kouchd-coins">
-    Earn ledger credits through approved chores and household tasks.
-  </Card>
-  <Card title="Pricing, payment timing, and terms" icon="circle-dollar-sign" href="/help/hosts/pricing-and-terms">
-    Understand rates, grace periods, and late fees.
-  </Card>
-  <Card title="Privacy, data, and security" icon="shield-check" href="/help/legal-trust/privacy-and-security">
-    Review visibility and bilateral ledger access boundaries.
-  </Card>
-</CardGroup>

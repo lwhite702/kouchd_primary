@@ -1,64 +1,40 @@
 ---
-title: Pricing, payment timing, and terms
-description: Understand guest-specific rates, contribution progress, payment records, and late-fee terms.
+title: "Rates, payment timing, and terms"
+description: "Set what each guest contributes, when it's due, and how discounts and late fees work."
 ---
 
-<Tip>
-  Kouchd keeps financial expectations clear without touching your money. Hosts configure rates, cadences, and terms that each guest explicitly reviews and accepts.
-</Tip>
+This page covers what guests contribute to you. For what Kouchd itself costs, see [Plans and limits](/help/hosts/plans-and-limits).
 
-## Household defaults and guest terms
+## What you can set for each guest
 
-When setting up a stay, the host establishes initial household defaults. Each invited guest receives a copy of those defaults as their starting agreement. Hosts can then customize individual agreements:
+- **Stay dates:** When this guest's stay starts and ends.
+- **Rate and schedule:** A daily or weekly amount. Weekly agreements have a payment day.
+- **Early-payment discount (optional):** A percentage off when someone pays a set number of days ahead.
+- **Late fee and grace period (optional):** A fee that applies only after the grace period ends.
+- **Billing basis:** Most stays bill continuously. Some can bill by [occupied nights](/help/hosts/schedules-and-overnights).
 
-- **Stay dates**: Set specific arrival and departure dates for each guest.
-- **Contribution rate**: Configure daily or weekly contribution amounts.
-- **Contribution cadence**: Select whether contributions are logged daily or on an agreed weekday for weekly agreements.
-- **Grace periods & late fees**: Define an optional grace period (such as 2 days) and a reasonable late fee (such as $5 daily or $25 weekly) if contributions are overdue.
-- **Early contribution discounts**: Optionally reward early payments with an agreed discount.
+When a guest first accepts, they can pick daily or weekly. The rate adjusts to keep about the same weekly total.
 
-House rules remain shared across the household by default, while each guest’s financial terms remain completely private between that guest and the host.
+## Reading progress
 
-## Review payment progress
+**Home** and **Ledger** show total charges, confirmed credit, and what's left.
 
-The **Home** and **Ledger** screens display confirmed contribution progress against scheduled obligations, the remaining balance, and upcoming due dates.
+- **Oldest first:** A confirmed contribution pays down the oldest share first.
+- **Partial contributions** count once they're confirmed.
+- **Pending entries** don't count until the other person confirms them.
 
-<Info>
-  **Oldest-due credit priority:** When a contribution is confirmed, Kouchd automatically applies the credit to the oldest outstanding obligation first.
-</Info>
+## Late fees
 
-- **Confirmed progress**: The progress bar shows the proportion of obligations covered by confirmed contributions.
-- **Partial contributions**: Partial payments count toward the ledger balance as soon as the host confirms them.
-- **Pending entries**: Contributions logged by guests remain pending until confirmed and do not count toward confirmed progress until approved.
-
-## Handling late fees and waivers
-
-Late fees reflect the terms stated in the guest’s accepted agreement.
-
-- **Grace periods**: If an agreement specifies a grace period, late fees will not trigger until the grace period has elapsed after the due date.
-- **Waiving fees**: Hosts can review any incurred fee directly in the guest’s ledger and choose **Waive fee** when appropriate (for example, if a delay was discussed and excused in advance).
-- **Communication first**: Always discuss payment delays directly with your guest before enforcing or updating agreement terms.
+Late fees follow the terms the guest accepted, and don't start until any grace period has passed. You can choose **Waive fee** on any charge, for example if you talked about a delay ahead of time.
 
 ## Payments happen outside Kouchd
 
 <Warning>
-  **Outside payment arrangements:** Kouchd does not collect, hold, transfer, process, or escrow money. It never connects to bank accounts or debits cards.
+  Kouchd doesn't collect, hold, or transfer money, and it never connects to a bank account.
 </Warning>
 
-Hosts can list their direct contact handles or links for PayPal, Cash App, Zelle, or Apple Pay in **Stay**. Guests use those handles to send payments directly, then record the transaction in Kouchd. The entry is a mutual bookkeeping record, not proof that external funds have cleared.
+Guests pay you using the [payment options you share](/help/hosts/managing-your-stay#share-how-guests-can-pay-you), then record it in Kouchd. The record isn't proof that the money arrived.
 
-## Rewards and ledger credits
+## Rewards
 
-If a host enables household rewards, guests can earn points for completing agreed chores or home projects.
-
-- **Points value**: Hosts define the name of the points and set the conversion rate (such as 100 points = $1.00 credit).
-- **Ledger credits**: Once a reward claim is submitted and approved by the host, the redeemed credit is recorded against the guest’s ledger according to their accepted terms.
-
-<CardGroup cols={2}>
-  <Card title="Managing the ledger" icon="receipt" href="/help/hosts/ledger-management">
-    Review charges, confirm guest contributions, and track balances.
-  </Card>
-  <Card title="Stay agreements" icon="file-text" href="/help/legal-trust/stay-agreements">
-    Learn how individual guest agreements and privacy boundaries work.
-  </Card>
-</CardGroup>
+If you turn on rewards, guests can earn coins for approved help and redeem them as credit toward their balance. See [Kouchd Coins](/help/guests/kouchd-coins).

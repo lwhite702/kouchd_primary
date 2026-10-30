@@ -9,13 +9,13 @@ description: Who can see household information, agreements, and financial record
 
 ## Sign-in and account access
 
-Kouchd uses its configured sign-in provider (Clerk) to authenticate accounts. Keep your account credentials private and use the account recovery options provided by that service.
+Kouchd uses a sign-in provider (Clerk) to authenticate accounts. Keep your account credentials private and use the account recovery options provided by that service.
 
 ## Household visibility
 
-Household members can see shared stay information, house rules, chores, and announcements. A guest’s agreement and financial ledger are visible to that guest and the host. Other guests do not see that guest’s private financial details.
+Household members can see shared stay information, house rules, shared chores, shared shopping items, the house guide (including Wi-Fi and door codes), and announcements. Personal shopping items are visible only to the person who added them, and check-ins only to that guest and the host. A guest’s agreement and financial ledger are visible to that guest and the host. Other guests do not see that guest’s private financial details.
 
-Private invite links use cryptographic SHA-256 tokens and may reveal the host’s name in link previews so recipients can recognize the invitation. Do not post private invite links publicly. Invite links expire automatically.
+Private invite links use hashed tokens and may reveal the host’s name in link previews so recipients can recognize the invitation. Do not post private invite links publicly. Invite links expire automatically.
 
 ## Payment details and records
 
@@ -23,7 +23,7 @@ Private invite links use cryptographic SHA-256 tokens and may reveal the host’
   **Zero bank access:** Kouchd does not connect to bank accounts or process financial transactions. Contribution entries are mutual records agreed upon and confirmed by stay participants.
 </Info>
 
-A host may share PayPal, Cash App, Zelle, or Apple Pay contact details with household members. Those details direct the guest to an outside payment service or contact method. Kouchd does not access bank accounts or collect, hold, transfer, or process funds. A contribution entry records what household members report and confirm; it does not independently verify an external transaction.
+A host may share Venmo, Cash App, Chime, Zelle, PayPal, or Apple Pay contact details with household members. Those details direct the guest to an outside payment service or contact method. Kouchd does not access bank accounts or collect, hold, transfer, or process funds. A contribution entry records what household members report and confirm; it does not independently verify an external transaction.
 
 ## SMS communications and privacy commitment
 
