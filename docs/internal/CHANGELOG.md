@@ -2,6 +2,16 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-10-29 — RevenueCat → PostHog preparation (WRE-251)
+
+- Context: RevenueCat's PostHog integration sends subscription lifecycle events to PostHog from RevenueCat's servers. It is not turned on; the `Kouchd` PostHog project (595950) had no RevenueCat, purchase, paywall or checkout events in the last 60 days.
+- `components/billing/paywall-modal.tsx`: sends `paywall_viewed` before presenting the RevenueCat paywall. Sends `customer_center_opened` with `source: "paywall"` or `"billing"` only when `openCustomerCenter` returns a management URL. Both events were already defined in `lib/analytics/events.ts` and never sent.
+- The calls live in the component, not `lib/revenuecat.ts`: importing `posthog-js` into the billing library broke the RevenueCat unit tests, which run in Node, and other `trackEvent` calls are in components too.
+- `tests/revenuecat-posthog.test.ts`: source checks that web and iOS identify PostHog and RevenueCat with the same Clerk user ID (so no `$posthogUserId` attribute is needed), and that the paywall does not send `checkout_started` or `subscription_activated`.
+- `docs/internal/REVENUECAT_POSTHOG.md`: identity table, event plan, dashboard checklist, verification query, privacy findings.
+- Privacy findings (open, need approval): neither privacy policy names RevenueCat; the in-app Cookie Policy's PostHog sentence would no longer be accurate once plan data arrives; and on web the policy already conflicts with `autocapture: true`, session replay, and `identify` sending email and name.
+- Checks: `vitest run` (36 files, 214 tests), `tsc --noEmit`, `eslint` on changed files. The RevenueCat docs page could not be fetched from this environment; the dashboard steps follow its PostHog integration and must be confirmed in the RevenueCat dashboard.
+
 ## 2026-10-29 — Web body copy in Inter
 
 - Decision (Lee, 2026-10-29): body copy is Inter; titles and display text stay Manrope. `docs/internal/BRAND_DESIGN_SYSTEM.md` and `app/brand-system.css` already said so; the web app and `AGENTS.md` did not.
