@@ -7,7 +7,7 @@ Read the repository-root `AGENTS.md` first. These instructions apply to the publ
 - Write public pages as MDX in `help/` with YAML frontmatter.
 - The Mintlify site is configured by the repository-root `docs.json`. Keep navigation identifiers aligned with the page paths under `help/`.
 - The root `.mintignore` keeps application code and `docs/` internal. Do not add internal notes, issue identifiers, commit hashes, provider setup instructions, private household data, or unverified operational details to public pages.
-- `help/docs.json` is a legacy ignored file; do not treat it as the live configuration.
+- Root `docs.json` is the only configuration. Theme overrides live in `help/kouchd-help.css`.
 - Use the Mintlify MCP for read/search or content edits when an authenticated write operation is available. If no write operation is available, edit the checked-in source and validate locally. Do not publish from the Mintlify dashboard as a substitute.
 
 ## Kouchd terms and voice

@@ -1,0 +1,53 @@
+/* Kouchd design language for the Mintlify help center. Colors match kouchd.com. */
+:root {
+  --kouchd-coral: #a64b32;
+}
+
+html.dark {
+  --kouchd-coral: #f2a084;
+}
+
+/* Section labels use coral, like kouchd.com */
+.eyebrow,
+.sidebar-title {
+  color: var(--kouchd-coral) !important;
+}
+
+/* Warm white cards and paper lines in light mode */
+html:not(.dark) .card {
+  background-color: #fffdf8;
+  border-color: #ded8ce;
+}
+
+/* Dark mode surfaces and text */
+html.dark body {
+  color: #d6ddd8;
+}
+
+html.dark h1,
+html.dark h2,
+html.dark h3,
+html.dark h4 {
+  color: #f4f1ea;
+}
+
+html.dark .card {
+  background-color: #1a2922;
+  border-color: #2a3a32;
+}
+
+html.dark table th,
+html.dark table td {
+  border-color: #2a3a32;
+}
+
+/* In dark mode lime is the action color, with deep forest text */
+html.dark #topbar-cta-button a > span:first-child {
+  background-color: #dff25e;
+}
+
+html.dark #topbar-cta-button a,
+html.dark #topbar-cta-button a span,
+html.dark #topbar-cta-button a svg {
+  color: #123d2e !important;
+}

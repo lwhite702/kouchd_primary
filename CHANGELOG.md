@@ -4,6 +4,7 @@
 
 ### Added
 
+- **Help center refresh (docs only):** New pages for plans, inviting, schedule changes and occupied nights, stay management, house guide, shopping list, check-ins, announcements, and an FAQ. Corrected stale labels and claims across existing pages. Turned on dark mode with brand colors and a dark logo, and removed the unused `help/docs.json`.
 - **iOS Plus purchase flow (WRE-250, branch only, not released)**:
   - **Subscription screen:** shows the current plan as Free, Plus, or Pro (never internal plan names), with the trial end, renewal, or end date, payment-problem notes, and a trial-reminder email toggle. Hosts who started Plus on the web are sent to kouchd.com to manage it.
   - **Plus offer:** a yearly/monthly picker (yearly is the default) with a "Save N%" badge worked out from store prices, a "Start N-day free trial" button only when Kouchd and the Apple sheet will agree, and a plain line saying when the trial ends and the renewal price. Each purchase passes Kouchd's signed intro-offer eligibility to StoreKit, so one trial per host billing account holds across web and iPhone. Ask to Buy shows "waiting for approval" instead of an error. After Apple's sheet finishes, the app shows "Confirming your plan" until Kouchd's backend records Plus, and only then says "You're on Plus"; after 60 seconds without confirmation it says the purchase was received and is still being confirmed.

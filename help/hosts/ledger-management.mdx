@@ -1,66 +1,40 @@
 ---
-title: Managing the ledger
-description: Review guest-specific charges, confirm contributions, and keep payment progress accurate.
+title: "Managing the Ledger"
+description: "Review a guest's charges, confirm or dispute contributions, and correct mistakes."
 ---
 
-<Tip>
-  The ledger is a mutual, transparent record between host and guest. Each guest has an independent financial ledger that is strictly private between that guest and the host.
-</Tip>
-
-## Review a guest’s ledger
-
-Open **Ledger** from the main navigation. If your stay has multiple guests, select the guest whose records you want to review.
-
-The ledger shows scheduled charges, due dates, confirmed credits, pending entries, and remaining balances, along with a visual progress bar indicating overall payment health.
+Each guest has their own Ledger, private between that guest and you. If you host more than one, choose the guest first.
 
 ![Stay ledger and contributions](/help/images/ledger-management.png)
 
-## Confirm a contribution
+## Review a contribution
 
-When a guest sends a payment outside Kouchd or covers an agreed shared expense (such as groceries or home supplies), they record it by choosing **Add contribution**. A new entry stays pending until you review and confirm it.
+When a guest records a payment or something they covered, it waits for you under **Contribution entries**.
 
 <Steps>
-  <Step title="Review the pending contribution">
-    Open **Ledger** and locate the entry tagged with **Pending confirmation**. Check the contribution category, reported dollar amount, date, and any attached note.
+  <Step title="Check the details">
+    Look at the type, amount, date, and note.
   </Step>
-  <Step title="Verify outside receipt">
-    Confirm that the funds arrived in your external payment account (PayPal, Cash App, Zelle, Apple Pay, or direct bank transfer) or verify the grocery receipt.
+  <Step title="Check it against what you received">
+    Look at your own payment app, or the receipt for shared groceries.
   </Step>
-  <Step title="Confirm in Kouchd">
-    Select **Confirm**. The status updates to **Confirmed**, and the credit is immediately applied to the guest’s oldest outstanding charge.
+  <Step title="Respond">
+    Choose **Confirm** if it matches. If it counts toward the balance, it's credited to the oldest charge first. Choose **Dispute** if it doesn't, then talk it through.
   </Step>
 </Steps>
 
-<Info>
-  **What if details do not match?** If the amount, date, or category does not match what you received or agreed, do not confirm the entry. Leave it unconfirmed and discuss the transaction directly with your guest so they can record a corrected contribution. Kouchd does not collect payments or mediate financial disagreements between household members.
-</Info>
+Entered wrong? Choose **Void** and record it again.
 
-<Accordion title="On iPhone" icon="smartphone">
-  - Tap **Ledger**. If you host more than one guest, pick the guest at the top.
-  - Under **Contribution records**, a guest's pending entry shows **Confirm** and **Dispute** buttons. Tap **Confirm** when it matches what you received, or **Dispute** if it doesn't, then talk it through.
-  - If a record was entered wrong, tap **Void record** and have it recorded again correctly.
-  - On a charge with a late fee, tap **Waive late fee**.
+## Add or change charges
 
-  See [Ledger and contributions on iPhone](/help/ios/ledger-and-contributions). The iPhone app is in development and not yet on the App Store.
-</Accordion>
-
-## Add or adjust a charge
-
-Hosts can also add or adjust charges directly on the ledger to reflect mutual agreements made during the stay:
-
-- **One-time household charges**: If you agreed to split a utility bill, an unexpected repair, or bulk household supplies, select **Add charge**, enter the amount, and include an explanatory note.
-- **Cancel a one-time charge**: If a charge was entered by mistake or resolved outside the ledger, you can cancel it with a note.
-- **Waive a late fee**: If a guest was delayed in paying due to agreed circumstances, locate the fee on the ledger and select **Waive fee**.
+- **Add a one-off charge:** Choose **Add charge** for something like a split electric bill. Add a title, amount, effective date, and due date. The guest is notified.
+- **Cancel a charge:** Choose **Cancel charge** on a one-off charge that was a mistake.
+- **Waive a late fee:** Choose **Waive fee** on the charge.
 
 <Warning>
-  **Outside payments only:** Kouchd records reported agreements and contributions. It does not process monetary transactions or verify that money moved in external bank accounts.
+  Kouchd can't verify that money moved. A confirmed entry only means you both agree on the record, and we can't step in on payment disagreements.
 </Warning>
 
-<CardGroup cols={2}>
-  <Card title="Pricing, payment timing, and terms" icon="circle-dollar-sign" href="/help/hosts/pricing-and-terms">
-    Configure guest rates, late fees, and grace periods.
-  </Card>
-  <Card title="Logging contributions" icon="receipt" href="/help/guests/logging-contributions">
-    See how guests record outside payments and track status.
-  </Card>
-</CardGroup>
+<Accordion title="On iPhone" icon="smartphone">
+  The same actions are in the **Ledger** tab. See [Ledger and contributions on iPhone](/help/ios/ledger-and-contributions).
+</Accordion>
