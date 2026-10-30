@@ -12,6 +12,8 @@ export type LegalSection = {
 
 export type LegalDocumentData = {
   eyebrow: string;
+  effectiveDate: string;
+  lastUpdated: string;
   title: string;
   summary: string;
   sections: LegalSection[];
@@ -20,8 +22,6 @@ export type LegalDocumentData = {
 
 export const legalMeta = {
   provider: "Wrelik Brands LLC",
-  effectiveDate: "October 30, 2026",
-  lastUpdated: "October 30, 2026",
   email: "legal@wrelik.com",
   privacyEmail: "privacy@wrelik.com",
   supportEmail: "support@kouchd.com",
@@ -37,6 +37,8 @@ export const legalMeta = {
 };
 
 export const privacyPolicy: LegalDocumentData = {
+  effectiveDate: "October 30, 2026",
+  lastUpdated: "October 30, 2026",
   eyebrow: "Wrelik legal",
   title: "Privacy Policy",
   summary:
@@ -301,6 +303,8 @@ export const privacyPolicy: LegalDocumentData = {
 };
 
 export const termsOfUse: LegalDocumentData = {
+  effectiveDate: "October 23, 2026",
+  lastUpdated: "October 23, 2026",
   eyebrow: "Wrelik legal",
   title: "Terms & Conditions",
   summary:
@@ -526,6 +530,8 @@ export const termsOfUse: LegalDocumentData = {
 };
 
 export const cookiePolicy: LegalDocumentData = {
+  effectiveDate: "October 30, 2026",
+  lastUpdated: "October 30, 2026",
   eyebrow: "Wrelik legal",
   title: "Cookie & Tracking Policy",
   summary:
@@ -580,6 +586,8 @@ export const cookiePolicy: LegalDocumentData = {
 };
 
 export const acceptableUsePolicy: LegalDocumentData = {
+  effectiveDate: "October 23, 2026",
+  lastUpdated: "October 23, 2026",
   eyebrow: "Wrelik legal",
   title: "Acceptable Use Policy",
   summary:
