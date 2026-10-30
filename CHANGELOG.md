@@ -24,6 +24,7 @@
 
 ### Fixed
 
+- **Blank web app (WRE-253, 0.7.22)**: removed the `<meta>` Content-Security-Policy fallback from `app/layout.tsx`. For browser requests, a layer in front of the app rewrote the tag and split it at the semicolons in React's `&#x27;` escapes. The malformed policy blocked Next.js and Clerk scripts, so pages stayed blank. The response header CSP from `next.config.ts` and `proxy.ts` is unchanged and is now the only policy. A test keeps the tag out of the layout.
 - Web body copy is now set in Inter, as the brand design system specifies. Headings, eyebrows, metrics, buttons, pills, and the wordmark stay in Manrope (0.7.21).
 - **iOS review fixes (WRE-249, 0.7.20)**:
   - **Analytics:** the app now sets up PostHog through the existing `KouchdAnalytics` helper. Session replay, automatic screen capture and element capture are off, `identify` sends only the Clerk user ID, and the `stay` group (which sent the stay name) is gone. The curated `screen_viewed` event now fires for the introduction, welcome, setup and home screens. Before this, `KouchdApp` turned on replay and sent email and full name, which contradicted `ios/README.md`.

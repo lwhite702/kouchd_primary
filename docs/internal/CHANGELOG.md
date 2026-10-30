@@ -2,6 +2,13 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-10-30 — Blank web app from rewritten meta CSP (WRE-253)
+
+- Symptom: `app.kouchd.com` `/sign-in` and `/` stayed blank in a browser on `dpl_8jk3szKbMtjx8WSqhxoyTArH3z8S` (`26a3576`).
+- Evidence: a plain curl got the clean meta tag; a curl with browser navigation headers got `script-src &#x27 'nonce-…'`. The browser reported CSP blocks on Next.js chunks, inline scripts, and Clerk. The header CSP was valid.
+- Change: removed the meta tag from `app/layout.tsx`; the header CSP is unchanged. Added a regression test. Version 0.7.22.
+- Not established: which edge layer rewrites the tag (Cloudflare is suspected) or when that started. The fix has not been verified in production.
+
 ## 2026-10-29 — Web body copy in Inter
 
 - Decision (Lee, 2026-10-29): body copy is Inter; titles and display text stay Manrope. `docs/internal/BRAND_DESIGN_SYSTEM.md` and `app/brand-system.css` already said so; the web app and `AGENTS.md` did not.

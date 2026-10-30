@@ -1,5 +1,5 @@
 {
   "type": "patch",
-  "version": "0.7.21",
-  "reason": "Set web body copy in Inter while titles and display labels stay Manrope, matching the brand design system."
+  "version": "0.7.22",
+  "reason": "Remove the meta Content-Security-Policy tag that was rewritten into a malformed policy for browsers and left the web app blank (WRE-253)."
 }

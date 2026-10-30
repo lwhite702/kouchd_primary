@@ -62,10 +62,6 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="en" className={`${manrope.variable} ${inter.variable}`}>
       <head>
-        <meta
-          httpEquiv="Content-Security-Policy"
-          content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://clerk.kouchd.com https://*.clerk.accounts.dev https://challenges.cloudflare.com https://va.vercel-scripts.com https://us.i.posthog.com https://us-assets.i.posthog.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://img.clerk.com https://*.googleusercontent.com https://images.unsplash.com; connect-src 'self' https://clerk.kouchd.com https://*.clerk.accounts.dev https://*.convex.cloud wss://*.convex.cloud https://*.ingest.sentry.io https://*.ingest.us.sentry.io https://us.i.posthog.com https://vitals.vercel-insights.com https://api.knock.app wss://api.knock.app; frame-src 'self' https://challenges.cloudflare.com; object-src 'none'; base-uri 'self'; form-action 'self' https://clerk.kouchd.com https://*.clerk.accounts.dev; worker-src 'self' blob:;"
-        />
         <link
           rel="preload"
           as="script"
