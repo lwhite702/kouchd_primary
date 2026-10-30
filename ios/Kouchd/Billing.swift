@@ -832,7 +832,7 @@ struct PlanScreensTestHost: View {
       if ready {
         switch scenario {
         case "limit-host", "limit-host-plus", "limit-guest":
-          Page(title: "Create stay") { Text("Behind the plan-limit message.").foregroundStyle(Palette.muted) }
+          Page(title: "Create stay") { Text("Add the stay name, dates and the people joining.").foregroundStyle(Palette.muted) }
         default:
           SubscriptionScreen(store: store, billing: BillingModel(client: FakeBillingClient()) { productID, _ in
             (scenario != "free-used-trial", "fake-jws-\(productID)")

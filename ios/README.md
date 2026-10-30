@@ -190,6 +190,10 @@ swift ios/scripts/export-app-icon.swift /tmp/AppIcon.svg.png \
   ios/Kouchd/Assets.xcassets/AppIcon.appiconset/AppIconOpaque.png
 ```
 
+The dark appearance comes from `Artwork/AppIcon-Dark.svg` the same way, exported
+to `AppIconDark.png`. Both files draw the brand couch (`CouchSymbol` in
+`components/brand/kouchd-logo.tsx`) including the two accent dashes on its back.
+
 ## Introduction UI regression tests
 
 The Kouchd scheme includes KouchdUITests. Run with a specific simulator UDID:

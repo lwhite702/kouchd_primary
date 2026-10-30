@@ -24,6 +24,11 @@
 
 ### Fixed
 
+- **iOS introduction preview cards (0.7.22)**: the cards on introduction pages 2–4 were cut off mid-line above the page dots. The page mark now shows on the first page only, spacing and card copy are tighter, and the bottom edge of each page fades so scrollable content reads as scrollable. iOS build number is now 7.
+- **iOS signed-out screen (0.7.22)**: About Kouchd now opens as a sheet instead of a pushed screen. The navigation stack behind the old link put an empty full-screen toolbar over the page for assistive technology, so "Sign in or create an account" could not be reached by its label.
+- **iOS app icon (0.7.22)**: the icon is redrawn from the brand couch, so it shows the two dashes on the couch back like the logo and the in-app mark (they were lime on lime and invisible). A dark-appearance icon is added.
+- **iOS home card copy (0.7.22)**: the home card said "1 stays." for a single stay; it now says "1 stay."
+- **iOS screenshot demo mode (0.7.22, debug builds only)**: launching a debug build with `--screenshot-demo-host` or `--screenshot-demo-guest` opens the app on a fictional household (Maple Street House, Maya and Jordan) with no account or network. It is compiled out of release builds.
 - Web body copy is now set in Inter, as the brand design system specifies. Headings, eyebrows, metrics, buttons, pills, and the wordmark stay in Manrope (0.7.21).
 - **iOS review fixes (WRE-249, 0.7.20)**:
   - **Analytics:** the app now sets up PostHog through the existing `KouchdAnalytics` helper. Session replay, automatic screen capture and element capture are off, `identify` sends only the Clerk user ID, and the `stay` group (which sent the stay name) is gone. The curated `screen_viewed` event now fires for the introduction, welcome, setup and home screens. Before this, `KouchdApp` turned on replay and sent email and full name, which contradicted `ios/README.md`.

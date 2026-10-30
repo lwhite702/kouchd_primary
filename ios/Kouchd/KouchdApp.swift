@@ -91,11 +91,23 @@ struct RootView: View {
   @State private var pendingRoute: EntryRoute?
   @State private var destination: EntryRoute?
   @State private var activeSheet: ActiveSheet?
+  @State private var aboutPresented = false
   @State private var inviteToken = ""
   @State private var invitePreview: Value = .null
   @State private var tab: Tab = .home
   @State private var billing = BillingModel(client: RevenueCatBillingClient.shared)
   @State private var morePath = NavigationPath()
+
+  /// DEBUG only: `--screenshot-demo-host` or `--screenshot-demo-guest` fills the app with a
+  /// fictional household, so screenshots and self-checks need no account or network.
+  private var screenshotDemoRole: String? {
+#if DEBUG
+    let arguments = ProcessInfo.processInfo.arguments
+    if arguments.contains("--screenshot-demo-host") { return "host" }
+    if arguments.contains("--screenshot-demo-guest") { return "guest" }
+#endif
+    return nil
+  }
 
   private func openMore(_ route: KouchdRoute? = nil) {
     morePath = NavigationPath()
@@ -157,10 +169,10 @@ struct RootView: View {
   private var rootScreen: some View {
     if splashVisible {
       BrandSplash().transition(.opacity)
-    } else if introductionRevision < 1 && clerk.user == nil {
+    } else if screenshotDemoRole == nil && introductionRevision < 1 && clerk.user == nil {
       IntroductionScreen(finish: handleIntroductionCompletion)
-    } else if clerk.user == nil {
-      NavigationStack { welcome }
+    } else if screenshotDemoRole == nil && clerk.user == nil {
+      welcome
     } else if !store.connectionError.isEmpty {
       connectionIssue
     } else if store.isLoading {
@@ -223,6 +235,10 @@ struct RootView: View {
   private func hideSplashScreen() async {
     // Keep the brand entrance short; cancellation must not strand the splash.
     try? await Task.sleep(for: .milliseconds(450))
+#if DEBUG
+    // Load the fixtures after Clerk's first signed-out callback, which would otherwise reset them.
+    if let role = screenshotDemoRole { store.loadScreenshotDemo(role: role) }
+#endif
     splashVisible = false
   }
 
@@ -236,6 +252,7 @@ struct RootView: View {
   }
 
   private func handleLoadingChange(_ loading: Bool) {
+    guard screenshotDemoRole == nil else { return }
     guard !loading, clerk.user != nil, store.stays.isEmpty, activeSheet == nil else { return }
     destination = pendingRoute
     pendingRoute = nil
@@ -247,6 +264,7 @@ struct RootView: View {
   }
 
   private func handleSessionUserChange(_ userID: String?) {
+    guard screenshotDemoRole == nil else { return }
     guard let userID else {
       destination = nil
       Task { await store.disconnectAuthenticatedSession() }
@@ -308,7 +326,9 @@ struct RootView: View {
           activeSheet = .auth
         }
       }
-      NavigationLink(value: KouchdRoute.about) {
+      // A sheet, not a pushed screen: a navigation stack around this page puts an empty
+      // full-screen toolbar over the sign-in button for assistive technology.
+      Button { aboutPresented = true } label: {
         HStack {
           Text("About Kouchd")
             .font(.body.weight(.medium))
@@ -317,16 +337,30 @@ struct RootView: View {
           Image(systemName: "chevron.right")
             .font(.footnote.weight(.semibold))
             .foregroundStyle(Palette.muted)
+            .accessibilityHidden(true)
         }
         .padding(.vertical, 8)
+        .frame(minHeight: 44)
         .contentShape(Rectangle())
       }
+      .buttonStyle(.plain)
+      .accessibilityHint("Opens a new screen")
       if !inviteToken.isEmpty {
         Text("Your invitation will be ready after sign-in.")
           .font(.subheadline).foregroundStyle(Palette.forest)
       }
     }
-    .kouchdDestinations(store: store)
+    .sheet(isPresented: $aboutPresented) {
+      NavigationStack {
+        AboutKouchdScreen()
+          .kouchdDestinations(store: store)
+          .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+              Button("Close") { aboutPresented = false }
+            }
+          }
+      }
+    }
   }
 
   private var onboarding: some View {
