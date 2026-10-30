@@ -27,7 +27,7 @@ export const list = query({
     voidedAt: v.optional(v.number()),
   })),
   handler: async (ctx, { stayId, guestUserId }) => {
-    const access = await resolveFinancialGuest(ctx, stayId, guestUserId);
+    const access = await resolveFinancialGuest(ctx, stayId, guestUserId, { allowFormerGuest: true });
     if (!access.guestUserId) return [];
     const nights = await ctx.db.query("occupiedNights")
       .withIndex("by_stay_guest_night", (q) => q.eq("stayId", stayId).eq("guestUserId", access.guestUserId))

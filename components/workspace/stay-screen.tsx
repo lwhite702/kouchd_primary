@@ -416,6 +416,21 @@ export function StayScreen({ state }: { state: WorkspaceState }) {
                     >
                       Edit agreement
                     </button>
+                    {!isEnded && (
+                      <button
+                        className="mini-button danger"
+                        type="button"
+                        onClick={() =>
+                          setDestructiveAction({
+                            type: "endGuestAgreement",
+                            guestUserId: guest.person.id,
+                            name: currentGuestName,
+                          })
+                        }
+                      >
+                        End agreement
+                      </button>
+                    )}
                   </article>
                 );
               })}

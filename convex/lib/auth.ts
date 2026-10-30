@@ -35,6 +35,7 @@ export async function resolveFinancialGuest(
   ctx: AppCtx,
   stayId: Id<"stays">,
   requestedGuestUserId?: Id<"users">,
+  { allowFormerGuest = false }: { allowFormerGuest?: boolean } = {},
 ) {
   const result = await requireMembership(ctx, stayId);
   if (result.membership.role === "guest") {
@@ -61,8 +62,18 @@ export async function resolveFinancialGuest(
   }
   const targetMembership = await ctx.db.query("memberships")
     .withIndex("by_stay_user", query => query.eq("stayId", stayId).eq("userId", target)).unique();
-  if (!targetMembership || targetMembership.role !== "guest" || targetMembership.status !== "active") {
+  if (!targetMembership || targetMembership.role !== "guest") {
     throw new Error("Guest is not an active member of this stay");
+  }
+  if (targetMembership.status !== "active") {
+    // Hosts keep read access to a removed guest's records; writes stay active-only.
+    if (!allowFormerGuest) throw new Error("Guest is not an active member of this stay");
+    const everyMember = await ctx.db
+      .query("memberships")
+      .withIndex("by_stay", (query) => query.eq("stayId", stayId))
+      .take(50);
+    const guestCount = everyMember.filter((membership) => membership.role === "guest").length;
+    return { ...result, guestUserId: target, includeLegacyUnscoped: guestCount === 1 };
   }
   return { ...result, guestUserId: target, includeLegacyUnscoped: guests.length === 1 };
 }

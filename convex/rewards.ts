@@ -108,7 +108,7 @@ export const getWallet = query({
   args: { stayId: v.id("stays"), guestUserId: v.optional(v.id("users")) },
   returns: v.any(),
   handler: async (ctx, { stayId, guestUserId: requestedGuestUserId }) => {
-    const access = await resolveFinancialGuest(ctx, stayId, requestedGuestUserId);
+    const access = await resolveFinancialGuest(ctx, stayId, requestedGuestUserId, { allowFormerGuest: true });
     if (!access.guestUserId) {
       return {
         availablePoints: 0,

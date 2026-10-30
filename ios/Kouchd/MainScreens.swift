@@ -209,6 +209,7 @@ private struct StatCard: View {
 
 struct GuestPicker: View {
   let store: KouchdStore
+  var includeFormerGuests = false
   var body: some View {
     Picker("Guest", selection: Binding(
       get: { store.selectedGuestID },
@@ -218,6 +219,12 @@ struct GuestPicker: View {
       ForEach(store.guests.indices, id: \.self) { index in
         let guest = store.guests[index]
         Text(guest["person"]["name"].text).tag(guest["person"]["id"].text)
+      }
+      if includeFormerGuests {
+        ForEach(store.formerGuests.indices, id: \.self) { index in
+          let guest = store.formerGuests[index]
+          Text("\(guest["person"]["name"].text) (former)").tag(guest["person"]["id"].text)
+        }
       }
     }
     .pickerStyle(.menu)
@@ -252,14 +259,24 @@ struct LedgerSummaryCard: View {
 struct LedgerScreen: View {
   let store: KouchdStore
   @State private var showingContribution = false
+  private var readOnly: Bool { store.isEnded || store.isViewingFormerGuest }
   var body: some View {
     Page(title: "The ledger") {
-      if store.isHost && store.guests.count > 1 { GuestPicker(store: store) }
+      if store.isHost && (store.guests.count > 1 || !store.formerGuests.isEmpty) {
+        GuestPicker(store: store, includeFormerGuests: true)
+      }
+      if store.isViewingFormerGuest {
+        Card {
+          Text("This guest is no longer in the stay").font(.headline)
+          Text("Their ledger is read-only. It opens for changes again if they rejoin.")
+            .font(.subheadline).foregroundStyle(Palette.muted)
+        }
+      }
       Card {
         Text("Outside contributions").font(.headline)
         Text("Kouchd records contributions and asks the other person to confirm. Money moves outside the app.")
           .font(.subheadline).foregroundStyle(Palette.muted)
-        if !store.isEnded {
+        if !readOnly {
           PrimaryButton(title: "Record a contribution") { showingContribution = true }
         }
       }
@@ -281,11 +298,11 @@ struct LedgerScreen: View {
             DataRow(title: "Charge", detail: Display.money(item["effectiveChargeCents"].int))
             DataRow(title: "Confirmed credit", detail: Display.money(item["creditedCents"].int))
             DataRow(title: "Balance", detail: Display.money(item["balanceCents"].int))
-            if store.isHost && item["type"].text == "adhoc" && item["status"].text != "voided" {
+            if store.isHost && !store.isViewingFormerGuest && item["type"].text == "adhoc" && item["status"].text != "voided" {
               VoidRecordButton(store: store, function: "obligations:voidAdhocCharge",
                                recordKey: "obligationId", recordID: item.id)
             }
-            if store.isHost && !store.isEnded && item["lateFeeCents"].int > 0 && !item["lateFeeWaived"].flag {
+            if store.isHost && !readOnly && item["lateFeeCents"].int > 0 && !item["lateFeeWaived"].flag {
               Button("Waive late fee") {
                 Task { _ = await store.mutate("obligations:waiveLateFee", ["obligationId": item.id]) }
               }
@@ -307,7 +324,7 @@ struct LedgerScreen: View {
           DataRow(title: "Amount", detail: Display.money(item["amountCents"].int))
           DataRow(title: "Date", detail: item["date"].text)
           if !item["note"].text.isEmpty { Text(item["note"].text).font(.subheadline) }
-          if !store.isEnded && item["status"].text == "pending" && item["createdBy"].text != store.viewer["id"].text {
+          if !readOnly && item["status"].text == "pending" && item["createdBy"].text != store.viewer["id"].text {
             HStack {
               Button("Confirm") {
                 Task { _ = await store.mutate("contributions:confirm", ["contributionId": item.id]) }
@@ -317,7 +334,7 @@ struct LedgerScreen: View {
               }.tint(.red)
             }.buttonStyle(.bordered)
           }
-          if item["status"].text != "voided" &&
+          if !store.isViewingFormerGuest && item["status"].text != "voided" &&
              (store.isHost || item["createdBy"].text == store.viewer["id"].text) {
             VoidRecordButton(store: store, function: "contributions:voidContribution",
                              recordKey: "contributionId", recordID: item.id)
@@ -330,7 +347,7 @@ struct LedgerScreen: View {
       }
     }
     .toolbar {
-      if !store.isEnded {
+      if !readOnly {
         ToolbarItem(placement: .primaryAction) {
           Button {
             showingContribution = true
@@ -341,6 +358,9 @@ struct LedgerScreen: View {
       }
     }
     .sheet(isPresented: $showingContribution) { ContributionForm(store: store) }
+    .onDisappear {
+      if store.isViewingFormerGuest { store.selectGuest(store.guests.first?["person"]["id"].text ?? "") }
+    }
   }
 }
 

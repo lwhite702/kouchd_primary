@@ -669,6 +669,37 @@ private struct GuestNamesCard: View {
   }
 }
 
+struct EndGuestAgreementCard: View {
+  let store: KouchdStore
+  @State private var guestToEnd: Value?
+  private var activeGuests: [Value] { store.guests.filter { $0["membership"]["status"].text == "active" } }
+
+  var body: some View {
+    Card {
+      Text("End a guest's agreement").font(.headline)
+      Text("This removes the guest from the stay and opens up their spot. You can still view their Ledger, read-only, and it opens for changes again if you invite them back. Their open chores move to everyone.")
+        .font(.subheadline).foregroundStyle(Palette.muted)
+      ForEach(activeGuests, id: \.guestPersonID) { guest in
+        Button("End \(guest["person"]["name"].text)'s agreement", role: .destructive) { guestToEnd = guest }
+      }
+    }
+    .confirmationDialog(
+      "End this agreement?",
+      isPresented: Binding(get: { guestToEnd != nil }, set: { if !$0 { guestToEnd = nil } })
+    ) {
+      Button("End agreement", role: .destructive) {
+        guard let id = guestToEnd?.guestPersonID else { return }
+        Task {
+          let ended = await store.mutate("stays:endGuestAgreement", ["stayId": store.selectedStayID, "guestUserId": id])
+          if ended && store.selectedGuestID == id {
+            store.selectGuest(activeGuests.first { $0.guestPersonID != id }?["person"]["id"].text ?? "")
+          }
+        }
+      }
+    }
+  }
+}
+
 struct HostControlsScreen: View {
   let store: KouchdStore
   @State private var announcementTitle = ""
@@ -700,6 +731,7 @@ struct HostControlsScreen: View {
       if !store.isEnded {
         AgreementAutoAcceptCard(store: store)
           .id("\(store.bundle["stay"]["agreementAutoAcceptEnabled"].flag)-\(store.bundle["stay"]["agreementAutoAcceptHours"].int)")
+        if store.guests.contains(where: { $0["membership"]["status"].text == "active" }) { EndGuestAgreementCard(store: store) }
         if store.guests.contains(where: { $0["membership"]["status"].text == "active" }) { GuestNamesCard(store: store) }
       }
       Card {

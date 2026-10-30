@@ -118,12 +118,20 @@ export function useLiveStay(stayId: Id<"stays">, onBackToHub: () => void) {
     (item) =>
       item.membership.role === "guest" && item.membership.status === "active",
   );
+  const formerGuestMembers = members.filter(
+    (item) =>
+      item.membership.role === "guest" && item.membership.status === "left",
+  );
+  const ledgerGuestMembers = [...guestMembers, ...formerGuestMembers];
   const pendingAgreementGuests = guestMembers.filter(
     (member) => !member.membership.acceptedTermsId,
   );
   const isHost = bundle?.membership.role === "host";
   const financialGuestId = isHost
-    ? guestMembers.some((member) => member.person.id === selectedGuestId)
+    ? guestMembers.some((member) => member.person.id === selectedGuestId) ||
+      // A removed guest can only be chosen on the Ledger, which is read-only for them.
+      (screen === "contributions" &&
+        formerGuestMembers.some((member) => member.person.id === selectedGuestId))
       ? selectedGuestId
       : guestMembers[0]?.person.id
     : bundle?.membership.userId;
@@ -140,6 +148,7 @@ export function useLiveStay(stayId: Id<"stays">, onBackToHub: () => void) {
   const confirmContribution = useMutation(api.contributions.confirm);
   const disputeContribution = useMutation(api.contributions.dispute);
   const voidContribution = useMutation(api.contributions.voidContribution);
+  const endGuestAgreement = useMutation(api.stays.endGuestAgreement);
   const createChore = useMutation(api.chores.create);
   const toggleChore = useMutation(api.chores.toggle);
   const voidChore = useMutation(api.chores.voidChore);
@@ -178,9 +187,11 @@ export function useLiveStay(stayId: Id<"stays">, onBackToHub: () => void) {
     ? openChores.filter((item) => item.dueDate <= asOfDate)
     : openChores;
   const recent = useMemo(() => (activities ?? []).slice(0, 5), [activities]);
-  const selectedGuestMember = guestMembers.find(
+  const selectedGuestMember = ledgerGuestMembers.find(
     (item) => item.person.id === financialGuestId,
   );
+  const isViewingFormerGuest =
+    isHost && selectedGuestMember?.membership.status === "left";
   const selectedGuest = selectedGuestMember?.person;
   const terms = bundle?.terms;
   const selectedGuestTerms = selectedGuestMember?.terms ?? terms;
@@ -883,6 +894,9 @@ export function useLiveStay(stayId: Id<"stays">, onBackToHub: () => void) {
     } else if (destructiveAction?.type === "regenerateCode") {
       await regenerateCode({ stayId });
       notify("New join code created. The old code no longer works.");
+    } else if (destructiveAction?.type === "endGuestAgreement") {
+      await endGuestAgreement({ stayId, guestUserId: destructiveAction.guestUserId });
+      notify(`${destructiveAction.name} has been removed from this stay.`);
     }
   }
 
@@ -938,6 +952,8 @@ export function useLiveStay(stayId: Id<"stays">, onBackToHub: () => void) {
     obligations,
     pendingAgreementGuests,
     financialGuestId,
+    ledgerGuestMembers,
+    isViewingFormerGuest,
     setSelectedGuestId,
     notify,
     announcements,

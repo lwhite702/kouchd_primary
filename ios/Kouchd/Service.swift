@@ -705,7 +705,10 @@ private enum KouchdAuthError: LocalizedError {
   var isHost: Bool { bundle["membership"]["role"].text == "host" }
   var isEnded: Bool { bundle["stay"]["status"].text == "ended" }
   var members: [Value] { bundle["members"].items }
-  var guests: [Value] { members.filter { $0["membership"]["role"].text == "guest" } }
+  var guests: [Value] { members.filter { $0["membership"]["role"].text == "guest" && $0["membership"]["status"].text == "active" } }
+  var formerGuests: [Value] { members.filter { $0["membership"]["role"].text == "guest" && $0["membership"]["status"].text == "left" } }
+  /// A removed guest can only be chosen on the Ledger, which is read-only for them.
+  var isViewingFormerGuest: Bool { isHost && formerGuests.contains { $0["person"]["id"].text == selectedGuestID } }
   var stayName: String {
     let value = bundle["stay"]["name"].text
     return value.isEmpty ? "Shared stay" : value

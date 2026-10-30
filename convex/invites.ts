@@ -99,14 +99,19 @@ export const accept = mutation({
     const invite = await ctx.db.query("invites").withIndex("by_token_hash", (query) => query.eq("tokenHash", tokenHash)).unique();
     if (!invite || invite.usedAt || invite.expiresAt <= Date.now()) throw new Error("Invite is invalid or expired");
     const existing = await ctx.db.query("memberships").withIndex("by_stay_user", (query) => query.eq("stayId", invite.stayId).eq("userId", user._id)).unique();
-    if (existing) throw new Error("Already a member of this stay");
+    if (existing?.status === "active") throw new Error("Already a member of this stay");
     const memberCount = await ctx.db.query("memberships").withIndex("by_stay", (query) => query.eq("stayId", invite.stayId)).take(21);
     if (memberCount.filter((member) => member.status === "active").length >= 20) throw new Error("This stay has reached its member limit");
     const joiningStay = await ctx.db.get(invite.stayId);
     if (!joiningStay || joiningStay.status === "ended") throw new Error("Invite is invalid or expired");
     await assertPlanCapacity(ctx, joiningStay.hostUserId, "guest", joiningStay.householdAccountId);
     const now = Date.now();
-    await ctx.db.insert("memberships", { stayId: invite.stayId, userId: user._id, role: "guest", status: "active", joinedAt: now });
+    if (existing) {
+      // A guest whose agreement ended can come back with a new invite.
+      await ctx.db.patch(existing._id, { status: "active", joinedAt: now });
+    } else {
+      await ctx.db.insert("memberships", { stayId: invite.stayId, userId: user._id, role: "guest", status: "active", joinedAt: now });
+    }
     await clearBlockedJoins(ctx, invite.stayId, user._id);
     const stay = await ctx.db.get(invite.stayId);
     if (!stay) throw new Error("Stay not found");
