@@ -28,7 +28,7 @@ struct HomeScreen: View {
           VStack(alignment: .leading, spacing: 14) {
             Text(store.stayName.uppercased()).font(.caption.bold())
               .foregroundStyle(Palette.lime)
-            Text("\(store.stays.count) stays. One welcoming home.")
+            Text("\(store.stays.count) \(store.stays.count == 1 ? "stay" : "stays"). One welcoming home.")
               .font(Palette.section).foregroundStyle(.white)
             Text("Next shared check-in · \(store.bundle["stay"]["nextCheckInDate"].text.isEmpty ? "Set a date" : store.bundle["stay"]["nextCheckInDate"].text)")
               .font(.subheadline).foregroundStyle(.white.opacity(0.8))

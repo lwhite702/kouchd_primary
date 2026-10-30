@@ -7,6 +7,9 @@ Internal engineering record. This file is excluded from Mintlify navigation and 
 - Found in the 2026-10-29 simulator self-check (iPhone 18 Pro, iOS 27): on introduction pages 2–4 the second preview card was cut off mid-line above the page dots (for example "Oct 11 · Pending confirmation").
 - `ios/Kouchd/Introduction.swift`: the couch mark shows on the first page only (52 pt), page spacing is 14 pt with 12 pt vertical padding, the card copy on pages 2 and 4 is shorter, the contributions footnote uses `.caption`, and each page's scroll view fades its bottom 28 pt so scrollable content reads as scrollable.
 - No flow or copy meaning changed. Intro UI tests pass after the change; screenshots are in `apps/kouchd/checks/` of the Appto folder, not in this repo.
+- `ios/Kouchd/MainScreens.swift`: the home card pluralises correctly ("1 stay").
+- Debug-only demo mode (`ios/Kouchd/Service.swift`, `ios/Kouchd/KouchdApp.swift`): `--screenshot-demo-host` / `--screenshot-demo-guest` load a fictional household through `KouchdStore.loadScreenshotDemo(role:)` and skip the introduction, sign-in, session and loading handlers. Ported from the closed WRE-188 branch; everything sits behind `#if DEBUG`, so Release builds contain none of it. Reason: the review demo account's data has test-style names that must not appear in screenshots.
+- `Billing.swift` plan test host: the page behind the plan-limit sheets now reads like a real Create stay page instead of test text (DEBUG only).
 - Version `0.7.22` (patch). iOS build number is now 7, because App Store Connect already holds builds up to 6 (the 1.0.0 builds from the closed WRE-188 branch). `1.0.0-rc.1` stays reserved for the approved App Store submission (WRE-248).
 
 ## 2026-10-29 — Web body copy in Inter
