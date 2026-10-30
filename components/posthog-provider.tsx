@@ -83,11 +83,8 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
       capture_pageleave: true,
       autocapture: true,
       capture_performance: true,
-      capture_exceptions: {
-        capture_unhandled_errors: true,
-        capture_unhandled_rejections: true,
-        capture_console_errors: false,
-      },
+      // Sentry is the error tracker; capturing here too double-reported every error.
+      capture_exceptions: false,
       session_recording: {
         maskAllInputs: true,
         maskTextSelector: ".ph-no-capture, [data-sensitive='true']",
