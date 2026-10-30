@@ -1,6 +1,8 @@
 "use client";
 
 import { captureAttribution, initialTouchProperties, parseAttribution } from "@/lib/analytics/attribution";
+import { adsConsented } from "@/lib/analytics/consent";
+import { MetaPixel } from "@/components/meta-pixel";
 import { scrubTelemetryProperties } from "@/lib/telemetry-privacy";
 import posthog from "posthog-js";
 import { PostHogProvider as PHProvider } from "posthog-js/react";
@@ -39,6 +41,11 @@ function PostHogAuthSync() {
         name: user.fullName ?? undefined,
         username: user.username ?? undefined,
         created_at: user.createdAt ? new Date(user.createdAt).toISOString() : undefined,
+        // Lets the Meta Conversions API destination send only consented people.
+        ads_consent: adsConsented(
+          document.cookie,
+          (navigator as Navigator & { globalPrivacyControl?: boolean }).globalPrivacyControl === true,
+        ),
       }, initialTouchProperties(parseAttribution(document.cookie)));
 
       // Synchronize PostHog session replay with Sentry error monitoring
@@ -105,6 +112,9 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
         <PostHogPageView />
       </Suspense>
       <PostHogAuthSync />
+      <Suspense fallback={null}>
+        <MetaPixel />
+      </Suspense>
       {children}
     </PHProvider>
   );

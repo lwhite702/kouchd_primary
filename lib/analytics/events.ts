@@ -42,7 +42,7 @@ export type AnalyticsEventName = typeof ANALYTICS_EVENTS[keyof typeof ANALYTICS_
 // Server events (convex/lib/posthog.ts trackServerEvent) carry IDs and categories
 // only: no names, free text, contribution amounts or join codes.
 export interface AnalyticsEventPayloads {
-  [ANALYTICS_EVENTS.USER_SIGNED_UP]: Record<string, never>;
+  [ANALYTICS_EVENTS.USER_SIGNED_UP]: { meta_event_id: string };
   [ANALYTICS_EVENTS.STAY_CREATED]: { stayId: string; cadence: string; rateCents: number };
   [ANALYTICS_EVENTS.STAY_JOINED]: { stayId: string; via: "referral_code" };
   [ANALYTICS_EVENTS.STAY_SWITCHED]: { stayId: string; role: "host" | "guest" };

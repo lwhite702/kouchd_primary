@@ -43,7 +43,9 @@ describe("server funnel events", () => {
     await host.mutation(api.users.syncCurrent, {});
 
     const signUps = (await captures(t)).filter((c) => c.event === "user_signed_up");
-    expect(signUps).toEqual([{ distinctId: "user_host_1", event: "user_signed_up", properties: {} }]);
+    expect(signUps).toEqual([
+      { distinctId: "user_host_1", event: "user_signed_up", properties: { meta_event_id: "signup_user_host_1" } },
+    ]);
   });
 
   it("sends stay_created with IDs and terms only, grouped by stay", async () => {
