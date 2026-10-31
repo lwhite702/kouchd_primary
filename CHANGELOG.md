@@ -39,6 +39,7 @@
 
 ### Fixed
 
+- Web build failure from `6fcdae3`: the settings panel now wraps its form and `SubscriptionManagement` in a fragment, which fixes the parse error in `components/workspace/workspace-panels.tsx`, and `SubscriptionManagement` handles missing customer info as having no web subscription to manage (WRE-257, 0.8.1, branch only, not released).
 - **iOS contribution form trust fixes (WRE-257, 0.8.1, branch only, not released)**:
   - The form no longer falls back to made-up handles such as `johndoe`, which could have opened a payment app aimed at a real stranger. When the stay has no saved handle for the chosen app, one must be entered, and the app link, QR code, and copy step stay blocked until then. A handle typed for one app is cleared when you pick another. Apple Cash now uses the copy-and-send step, because it has no app link to open.
   - The 4.5-second paced saving screen stays, kept at the owner's request. Its last step now says "Marking it for confirmation..." instead of claiming the host got a heads-up.
