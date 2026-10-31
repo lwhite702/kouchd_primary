@@ -232,7 +232,7 @@ export function SubscriptionManagement({ userId }: { userId: string }) {
     if (portal) portal.opener = null;
     try {
       const info = await getCustomerInfo(userId);
-      const url = info.managementURL;
+      const url = info?.managementURL;
       if (!url) {
         portal?.close();
         setMessage("No web subscription is available to manage for this account.");

@@ -1,5 +1,5 @@
 {
-  "type": "minor",
-  "version": "0.8.0",
-  "reason": "Adapt the iOS app for iPad with sidebar navigation and width-driven layouts (WRE-254)."
+  "type": "patch",
+  "version": "0.8.1",
+  "reason": "Describe Meta ad measurement in the in-app Privacy and Cookie Policies (Pixel only after Allow analytics and ads on kouchd.com, Global Privacy Control as an opt-out), and keep test fixtures out of live PostHog, Knock and Loops."
 }

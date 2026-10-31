@@ -297,6 +297,7 @@ export function WorkspacePanels({ state }: { state: WorkspaceState }) {
         </form>
       )}
       {panel === "settings" && (
+        <>
         <form onSubmit={savePreferences}>
           <div className="settings-summary">
             <Bell size={22} />
@@ -414,6 +415,7 @@ export function WorkspacePanels({ state }: { state: WorkspaceState }) {
           />
         </form>
         {isHost && clerkUser && <SubscriptionManagement userId={clerkUser.id} />}
+        </>
       )}
       {panel === "houseInfo" && (
         <HouseInfoForm

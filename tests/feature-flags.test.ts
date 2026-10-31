@@ -93,6 +93,10 @@ describe("Client Developer / QA Overrides", () => {
   let mockStorage: Map<string, string>;
 
   beforeEach(() => {
+    // Vercel production builds run these tests with NEXT_PUBLIC_VERCEL_ENV=production,
+    // where overrides are off by design; pin a development environment here.
+    vi.stubEnv("NEXT_PUBLIC_VERCEL_ENV", "development");
+    vi.stubEnv("NODE_ENV", "test");
     mockStorage = new Map();
     (globalThis as unknown as { window: unknown }).window = {
       location: { search: "" },

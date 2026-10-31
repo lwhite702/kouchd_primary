@@ -37,8 +37,8 @@ export const legalMeta = {
 };
 
 export const privacyPolicy: LegalDocumentData = {
-  effectiveDate: "October 30, 2026",
-  lastUpdated: "October 30, 2026",
+  effectiveDate: "October 31, 2026",
+  lastUpdated: "October 31, 2026",
   eyebrow: "Wrelik legal",
   title: "Privacy Policy",
   summary:
@@ -151,6 +151,10 @@ export const privacyPolicy: LegalDocumentData = {
           text: "household rules, shared stay logistics, chores, and announcements are visible to stay members. Bilateral financial ledgers, individual contribution records, rates, and balances are partitioned so that each guest's ledger is visible only to that specific guest and the host.",
         },
         {
+          label: "To advertising partners, only with your permission",
+          text: "If you choose “Allow analytics and ads” in the cookie notice on kouchd.com, we use the Meta Pixel on kouchd.com and in the Kouchd web app, and may send sign-up and subscription events to Meta’s Conversions API, to measure and improve our ads. This may include a hashed email address, an advertising cookie identifier, and the event itself (for example, that you created an account). We never share SMS opt-in data, household details, agreements, or contribution records with advertising partners.",
+        },
+        {
           label: "For legal, compliance, and safety obligations",
           text: "when reasonably necessary to comply with valid legal process, court orders, or government requests; protect safety, life, or property; investigate security incidents or fraud; or enforce our Terms.",
         },
@@ -165,7 +169,7 @@ export const privacyPolicy: LegalDocumentData = {
       ],
       numbered: [
         {
-          text: "We do not sell Personal Information for monetary consideration. We do not share Personal Information for cross-context behavioral advertising. We have not sold or shared Personal Information for cross-context behavioral advertising in the preceding 12 months.",
+          text: "We do not sell Personal Information for monetary consideration. If you allow advertising cookies, we share limited information with Meta for ad measurement, which some U.S. state laws treat as “sharing” for cross-context behavioral advertising. You can opt out at any time with Cookie settings (also labelled Your Privacy Choices) in the kouchd.com footer, and we treat a Global Privacy Control signal as an opt-out.",
         },
         {
           text: "Our service providers are bound by written data protection agreements restricting them from retaining, using, or disclosing Personal Information for any purpose other than providing the contracted services.",
@@ -177,7 +181,7 @@ export const privacyPolicy: LegalDocumentData = {
       paragraphs: [
         "Our websites and web applications use essential cookies, secure local storage, and similar technologies to maintain authenticated sessions, secure CSRF tokens, remember user interface preferences, and monitor system performance.",
         "Required technologies are strictly necessary to deliver the Services. In the Kouchd web app, we use PostHog for product analytics. PostHog automatically records page views, clicks, and similar interactions, along with performance data, and makes session replays that show how pages looked and changed while you used them. Session replays hide what you type into form fields, but other information shown on screen, such as names, household details, and contribution amounts, can appear in them. Signed-in web sessions are linked to your account identifier, name, and email address. The Kouchd iPhone app sends PostHog only the screens you open and a pseudonymous account identifier, with no automatic capture or session replay. We do not use advertising beacons or cross-site behavioral tracking. You can manage or disable cookies via your browser settings, though disabling essential session cookies may prevent you from logging into Kouchd.",
-        "We honor legally recognized opt-out preference signals (such as Global Privacy Control) where required by applicable law. Because Wrelik does not sell personal data or engage in targeted behavioral advertising, no sale-related opt-out is applicable.",
+        "We honor legally recognized opt-out preference signals, such as Global Privacy Control. When your browser sends Global Privacy Control, we treat it as an opt-out of advertising cookies and of sharing with advertising partners, and the Meta Pixel does not load. We do not sell personal data.",
       ],
     },
     {
@@ -239,7 +243,7 @@ export const privacyPolicy: LegalDocumentData = {
       title: "10. U.S. state privacy disclosures",
       paragraphs: [
         "Residents of California (CCPA/CPRA), Colorado, Connecticut, Virginia, and other states with comprehensive consumer privacy laws are entitled to specific disclosures. During the preceding 12 months, we collected the categories of Personal Information described in Section 2: identifiers; customer record information; commercial transaction records; internet or electronic network activity; approximate geolocation (derived from IP address); and communications.",
-        "We do not sell personal information, do not share personal information for cross-context behavioral advertising, do not use sensitive personal information for inferring consumer characteristics, and do not knowingly collect or sell personal information of minors under 16.",
+        "We do not sell personal information. If you allow advertising cookies, we share limited information with Meta for ad measurement, which some U.S. state laws treat as sharing for cross-context behavioral advertising; you can opt out at any time with Cookie settings (Your Privacy Choices), and we treat Global Privacy Control as an opt-out. We do not use sensitive personal information for inferring consumer characteristics and do not knowingly collect or sell personal information of minors under 16.",
       ],
     },
     {
@@ -530,8 +534,8 @@ export const termsOfUse: LegalDocumentData = {
 };
 
 export const cookiePolicy: LegalDocumentData = {
-  effectiveDate: "October 30, 2026",
-  lastUpdated: "October 30, 2026",
+  effectiveDate: "October 31, 2026",
+  lastUpdated: "October 31, 2026",
   eyebrow: "Wrelik legal",
   title: "Cookie & Tracking Policy",
   summary:
@@ -560,18 +564,23 @@ export const cookiePolicy: LegalDocumentData = {
           label: "Performance and diagnostics",
           text: "We use Sentry for crash diagnostics and PostHog for product analytics. In the Kouchd web app, PostHog uses cookies and local storage to recognize your browser, automatically records page views and interactions, and makes session replays with typed form input hidden. In the Kouchd iPhone app, PostHog receives only the screens you open and a pseudonymous account identifier. These tools do not track you across third-party websites.",
         },
+        {
+          label: "Advertising (only with your permission)",
+          text: "With your permission (“Allow analytics and ads” on kouchd.com), the Meta Pixel sets cookies on kouchd.com and in the Kouchd web app to measure our ads. Without that choice, or when your browser sends Global Privacy Control, no advertising cookies are set.",
+        },
       ],
     },
     {
       title: "3. Third-party technologies",
       paragraphs: [
-        "We do not allow third-party advertising networks to place tracking cookies on Kouchd for targeted advertising or cross-context behavioral profiling. Third-party technologies deployed on Kouchd are strictly service providers acting on our behalf, including Clerk (authentication), Convex (real-time data sync), Sentry (error diagnostics), PostHog (product analytics), and RevenueCat (Kouchd Plus subscriptions).",
+        "The only advertising network we use is Meta. Its Pixel loads only if you choose “Allow analytics and ads” on kouchd.com and your browser does not send Global Privacy Control. Third-party technologies deployed on Kouchd are strictly service providers acting on our behalf, including Clerk (authentication), Convex (real-time data sync), Sentry (error diagnostics), PostHog (product analytics), and RevenueCat (Kouchd Plus subscriptions).",
       ],
     },
     {
       title: "4. Managing your cookie preferences",
       paragraphs: [
         "Most web browsers allow you to control cookies through their browser settings. You can set your browser to refuse cookies, alert you when a cookie is placed, or delete existing cookies. Note that if you block essential cookies, you will not be able to log in to your Kouchd account or maintain an active session.",
+        "To allow or withdraw advertising cookies, use Cookie settings (also labelled Your Privacy Choices) in the kouchd.com website footer. The Kouchd web app follows the choice you make there.",
         "To learn more about cookies, visit www.allaboutcookies.org or www.aboutcookies.org.",
       ],
     },
