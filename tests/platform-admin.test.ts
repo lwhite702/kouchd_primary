@@ -412,27 +412,35 @@ describe("Convex Platform Admin Backend Authorization & Privacy", () => {
 
     await expect(
       admin.mutation(api.flags.setOverride, {
-        key: "enable_sms_reminders",
+        key: "feature_sms_reminders",
         override: "disabled",
         reason: "no",
       })
     ).rejects.toThrow("Audit reason is required");
 
+    await expect(
+      admin.mutation(api.flags.setOverride, {
+        key: "enable_sms_reminders",
+        override: "disabled",
+        reason: "Typo in the flag key should be refused",
+      })
+    ).rejects.toThrow("Unknown feature flag");
+
     await admin.mutation(api.flags.setOverride, {
-      key: "enable_sms_reminders",
+      key: "feature_sms_reminders",
       override: "disabled",
       note: "Internal operator note",
       reason: "Pausing SMS reminders during carrier maintenance window",
     });
 
     // Public flags.get should not expose internal operator note
-    const publicFlag = await t.query(api.flags.get, { key: "enable_sms_reminders" });
+    const publicFlag = await t.query(api.flags.get, { key: "feature_sms_reminders" });
     expect(publicFlag.enabled).toBe(false);
     expect((publicFlag as Record<string, unknown>).note).toBeUndefined();
 
     // Admin audit log should contain the override event
     const logs = await admin.query(api.admin.listPlatformAuditLogs, { provider: "convex" });
-    expect(logs.some((l) => l.action === "feature_flag.override_created" && l.targetId === "enable_sms_reminders")).toBe(true);
+    expect(logs.some((l) => l.action === "feature_flag.override_created" && l.targetId === "feature_sms_reminders")).toBe(true);
   });
 });
 

@@ -1,5 +1,5 @@
 {
   "type": "patch",
-  "version": "0.7.24",
-  "reason": "Finish the iPhone Plus flow: Plus sheet, confirmation, Plus is on, Plan screen, and host guest spots (WRE-250 follow-up)."
+  "version": "0.8.1",
+  "reason": "Describe Meta ad measurement in the in-app Privacy and Cookie Policies (Pixel only after Allow analytics and ads on kouchd.com, Global Privacy Control as an opt-out), and keep test fixtures out of live PostHog, Knock and Loops."
 }

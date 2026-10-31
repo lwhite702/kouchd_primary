@@ -5,6 +5,9 @@ import { mutation, query } from "./_generated/server";
 import { requireCurrentUser } from "./lib/auth";
 import { resolveMemberName } from "./lib/names";
 import { assertPhone } from "./lib/validation";
+import { ANALYTICS_EVENTS } from "../lib/analytics/events";
+import { trackServerEvent } from "./lib/posthog";
+import { signupMetaEventId } from "../lib/analytics/consent";
 
 const guideStateValidator = v.object({
   step: v.number(),
@@ -50,6 +53,9 @@ export const syncCurrent = mutation({
       await ctx.db.patch(existing._id, { name, email, imageUrl, updatedAt: now });
     } else {
       userId = await ctx.db.insert("users", { clerkUserId: identity.subject, name, email, imageUrl, createdAt: now, updatedAt: now });
+      trackServerEvent(ctx, { clerkUserId: identity.subject }, ANALYTICS_EVENTS.USER_SIGNED_UP, {
+        meta_event_id: signupMetaEventId(identity.subject),
+      });
     }
     if (userId) {
       await ctx.scheduler.runAfter(0, internal.knock.identifyUser, { userId });

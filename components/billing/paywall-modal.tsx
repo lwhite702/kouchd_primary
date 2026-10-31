@@ -214,3 +214,51 @@ export function useKouchdPlus(userId?: string) {
     manageSubscription,
   };
 }
+
+/** Account settings entry point for RevenueCat's hosted web subscription center. */
+export function SubscriptionManagement({ userId }: { userId: string }) {
+  const { customerInfo } = useKouchdPlus(userId);
+  const [isOpening, setIsOpening] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  const isCustomerCenterEnabled = useFeatureFlag(FEATURE_FLAGS.CUSTOMER_CENTER);
+
+  if (!isCustomerCenterEnabled) return null;
+
+  const manage = async () => {
+    setMessage(null);
+    setIsOpening(true);
+    // Open synchronously from the click so browsers do not block the portal tab.
+    const portal = window.open("about:blank", "_blank");
+    if (portal) portal.opener = null;
+    try {
+      const info = await getCustomerInfo(userId);
+      const url = info?.managementURL;
+      if (!url) {
+        portal?.close();
+        setMessage("No web subscription is available to manage for this account.");
+      } else if (portal) {
+        portal.location.href = url;
+      } else {
+        window.location.assign(url);
+      }
+    } catch {
+      portal?.close();
+      setMessage("We couldn’t load subscription management. Please try again.");
+    } finally {
+      setIsOpening(false);
+    }
+  };
+
+  return (
+    <section className="settings-summary" aria-label="Subscription management">
+      <div>
+        <strong>Subscription</strong>
+        <span>{customerInfo?.managementURL ? "Manage billing, cancellation, or renewal" : "Manage your Kouchd web subscription"}</span>
+      </div>
+      <button className="button soft compact" type="button" onClick={() => void manage()} disabled={isOpening}>
+        {isOpening ? "Opening…" : "Manage subscription"}
+      </button>
+      {message && <p className="muted" role="status">{message}</p>}
+    </section>
+  );
+}

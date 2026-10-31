@@ -5,6 +5,8 @@ import { requireMembership } from "./lib/auth";
 import { recordActivity } from "./lib/activity";
 import { assertChoreInput } from "./lib/validation";
 import { addCalendarDays, calendarDateInTimezone } from "../lib/domain/dates";
+import { ANALYTICS_EVENTS } from "../lib/analytics/events";
+import { trackServerEvent } from "./lib/posthog";
 
 export const list = query({
   args: { stayId: v.id("stays") },
@@ -32,6 +34,7 @@ export const create = mutation({
     const choreId = await ctx.db.insert("chores", { ...args, createdBy: user._id, createdAt: now, updatedAt: now });
     if (args.repeatCadence) await ctx.db.patch(choreId, { recurrenceRootId: choreId });
     await recordActivity(ctx, { stayId: args.stayId, actorUserId: user._id, kind: "chore", action: "created", detail: args.title, entityId: choreId });
+    trackServerEvent(ctx, user, ANALYTICS_EVENTS.CHORE_CREATED, { stayId: args.stayId, choreId }, args.stayId);
     return choreId;
   },
 });
@@ -71,6 +74,7 @@ export const toggle = mutation({
     }
     await ctx.db.patch(choreId, { completedAt: isComplete ? now : undefined, completedBy: isComplete ? user._id : undefined, updatedAt: now });
     await recordActivity(ctx, { stayId: chore.stayId, actorUserId: user._id, kind: "chore", action: isComplete ? "completed" : "reopened", detail: chore.title, entityId: choreId });
+    if (isComplete) trackServerEvent(ctx, user, ANALYTICS_EVENTS.CHORE_COMPLETED, { stayId: chore.stayId, choreId }, chore.stayId);
     if (nextDueDate) await recordActivity(ctx, { stayId: chore.stayId, actorUserId: user._id, kind: "chore", action: "recurrence_scheduled", detail: `${chore.title} scheduled again for ${nextDueDate}`, entityId: choreId });
     return isComplete;
   },
