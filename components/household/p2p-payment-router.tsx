@@ -288,7 +288,7 @@ export const P2PPaymentRouter: React.FC<P2PPaymentRouterProps> = ({
       contributionType === "payment",
   );
 
-  const rewardSummary = useMemo(() => {
+  const liveRewardSummary = useMemo(() => {
     if (!canUseRewards || !applyRewards || !rewardWallet) {
       const grossCents = Math.max(0, Math.round((Number(effectiveTransaction.amount) || 0) * 100));
       return {
@@ -307,6 +307,10 @@ export const P2PPaymentRouter: React.FC<P2PPaymentRouterProps> = ({
       maxRedeemablePoints: rewardWallet.maxRedeemablePoints,
     });
   }, [canUseRewards, applyRewards, rewardWallet, effectiveTransaction.amount, pointsToUse]);
+
+  // Saving can change the wallet passed in, so the saved screen keeps what was submitted.
+  const [submittedSummary, setSubmittedSummary] = useState<typeof liveRewardSummary | null>(null);
+  const rewardSummary = submittedSummary ?? liveRewardSummary;
 
   const isCoveredEntirelyByRewards =
     canUseRewards &&
@@ -360,6 +364,8 @@ export const P2PPaymentRouter: React.FC<P2PPaymentRouterProps> = ({
       savingPauseRef.current = window.setTimeout(resolve, SAVING_PAUSE_MS);
     });
 
+    setSubmittedSummary(rewardSummary);
+
     try {
       const channelLabel =
         contributionType !== "payment"
@@ -407,6 +413,7 @@ export const P2PPaymentRouter: React.FC<P2PPaymentRouterProps> = ({
           ? err.message
           : "Could not save this contribution to the Ledger.",
       );
+      setSubmittedSummary(null);
       setPhase("SELECT_AND_ROUTE");
     } finally {
       isSavingRef.current = false;
@@ -455,6 +462,7 @@ export const P2PPaymentRouter: React.FC<P2PPaymentRouterProps> = ({
 
   const handleFinishAndClose = useCallback(() => {
     onComplete?.();
+    setSubmittedSummary(null);
     setPhase("SELECT_AND_ROUTE");
   }, [onComplete]);
 
