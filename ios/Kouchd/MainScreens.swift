@@ -9,79 +9,74 @@ import UIKit
 struct HomeScreen: View {
   let store: KouchdStore
   let openLedger: () -> Void
+  let openChores: () -> Void
   let openMore: (KouchdRoute?) -> Void
   let openActivity: (String, String) -> Void
+  @Environment(\.horizontalSizeClass) private var sizeClass
+  private var usesSidebar: Bool { sizeClass == .regular }
   private var nextContribution: LedgerRecord? { store.typedLedger.filter { $0.balanceCents > 0 }.min { $0.dueDate < $1.dueDate } }
+  private var nextChore: Value? {
+    store.chores.first(where: {  $0["completedAt"].text.isEmpty && $0["voidedAt"].text.isEmpty && $0["assignee"].text != "host" && ($0["assigneeUserId"].text.isEmpty || $0["assigneeUserId"].text == store.viewer["id"].text) })
+  }
+  private var needsAgreementReview: Bool {
+    store.bundle["membership"]["acceptedTermsId"].text != store.bundle["terms"]["_id"].text &&
+      !store.isHost && !store.isEnded
+  }
+
   var body: some View {
-    ScrollView {
-      VStack(alignment: .leading, spacing: 24) {
-        VStack(alignment: .leading, spacing: 8) {
-          Text(store.isHost ? "A little room, well shared." : "Make yourself at home.")
-            .font(Palette.heading).foregroundStyle(Palette.forest)
-            .accessibilityAddTraits(.isHeader)
-          Text(store.isHost
-               ? "Welcome back, \(store.viewer["name"].text)."
-               : "Your stay with \(store.members.first(where: { $0["membership"]["role"].text == "host" })?["person"]["name"].text ?? "your host") · \(store.bundle["terms"]["startDate"].text) – \(store.bundle["terms"]["endDate"].text)")
-            .font(.subheadline).foregroundStyle(Palette.muted)
-        }
-        if store.isHost {
-          VStack(alignment: .leading, spacing: 14) {
-            Text(store.stayName.uppercased()).font(.caption.bold())
-              .foregroundStyle(Palette.lime)
-            Text("\(store.stays.count) stays. One welcoming home.")
-              .font(Palette.section).foregroundStyle(.white)
-            Text("Next shared check-in · \(store.bundle["stay"]["nextCheckInDate"].text.isEmpty ? "Set a date" : store.bundle["stay"]["nextCheckInDate"].text)")
-              .font(.subheadline).foregroundStyle(.white.opacity(0.8))
-          }
-          .padding(24).frame(maxWidth: .infinity, alignment: .leading)
-          .background(Palette.brandForest, in: RoundedRectangle(cornerRadius: 24))
-          Text("Your stays").font(Palette.section)
-          ForEach(store.stays.indices, id: \.self) { index in
-            let stay = store.stays[index]["stay"]
-            NavigationLink(value: KouchdRoute.stayDetails(stay["_id"].text)) {
-              VStack(alignment: .leading, spacing: 14) {
-                Text(stay["name"].text.isEmpty ? "Shared stay" : stay["name"].text)
-                  .font(.title3.bold()).foregroundStyle(Palette.forest)
-                Text(stay["status"].text.capitalized)
-                  .font(.subheadline).foregroundStyle(Palette.muted)
-                Rectangle().fill(Palette.line).frame(height: 1)
-                Text("Open household details").font(.subheadline).foregroundStyle(Palette.forest)
+    ResponsiveScroll(width: .wide, padding: 24) {
+      ColumnsReader { columns in
+        if columns > 1 { wideDashboard } else { singleColumn }
+      }
+    }
+    .background(Palette.cream.ignoresSafeArea())
+    .kouchdEntrance()
+    .kouchdNavigationBar()
+    .toolbar {
+      if !usesSidebar {
+        ToolbarItem(placement: .topBarLeading) {
+          Menu {
+            ForEach(store.stays.indices, id: \.self) { index in
+              let stay = store.stays[index]["stay"]
+              Button(stay["name"].text.isEmpty ? "Shared stay" : stay["name"].text) {
+                store.selectStay(stay["_id"].text)
               }
-              .padding(22).frame(maxWidth: .infinity, alignment: .leading)
-              .background(Palette.surface, in: RoundedRectangle(cornerRadius: 24))
-              .overlay(RoundedRectangle(cornerRadius: 24).stroke(Palette.line))
-            }.buttonStyle(.plain)
-          }
-        } else {
-          VStack(alignment: .leading, spacing: 18) {
-            Text("NEXT CONTRIBUTION").font(.caption.bold()).foregroundStyle(Palette.lime)
-            Text(nextContribution.map { Display.money($0.balanceCents) } ?? "All caught up")
-              .font(.largeTitle.bold()).foregroundStyle(.white)
-            Text(nextContribution.map { "Due \($0.dueDate)" } ?? "No contribution is currently due.")
-              .font(.subheadline).foregroundStyle(.white.opacity(0.85))
-            Button(action: openLedger) {
-              Text("View contributions")
-                .font(.headline).foregroundStyle(Palette.ink)
-                .frame(maxWidth: .infinity).padding(14)
-                .background(Palette.surface, in: RoundedRectangle(cornerRadius: 14))
             }
-          }
-          .padding(24).frame(maxWidth: .infinity, alignment: .leading)
-          .background(Palette.brandForest, in: RoundedRectangle(cornerRadius: 24))
-          if let next = store.chores.first(where: {  $0["completedAt"].text.isEmpty && $0["voidedAt"].text.isEmpty && $0["assignee"].text != "host" && ($0["assigneeUserId"].text.isEmpty || $0["assigneeUserId"].text == store.viewer["id"].text) }) {
-            Card {
-              Text(next.title).font(.headline)
-              Text("Your turn · \(next["dueDate"].text)")
-                .font(.subheadline).foregroundStyle(Palette.muted)
+          } label: {
+            HStack(spacing: 5) {
+              Text(store.stayName).font(.headline)
+              Image(systemName: "chevron.down").font(.caption2.bold())
             }
+            .foregroundStyle(Palette.forest)
           }
-          Card {
-            Text("Your shared expectations").font(.headline)
-            Text(store.bundle["terms"]["houseNotes"].text)
-              .font(.subheadline).foregroundStyle(Palette.muted)
-          }
+          .accessibilityLabel("Switch stay, current stay: \(store.stayName)")
         }
-      if store.stays.count > 1 {
+      }
+      ToolbarItem(placement: .topBarTrailing) {
+        Button { openMore(.settings) } label: {
+          Text(String(store.viewer["name"].text.prefix(2)).uppercased())
+            .font(.caption2.bold())
+            .foregroundStyle(Palette.onLime)
+            .frame(width: 32, height: 32)
+            .background(Palette.lime, in: Circle())
+        }
+        .accessibilityLabel("Settings, account: \(store.viewer["name"].text)")
+      }
+    }
+  }
+
+  private var singleColumn: some View {
+    VStack(alignment: .leading, spacing: 24) {
+      header
+      if store.isHost {
+        hostHero
+        yourStays
+      } else {
+        guestHero
+        nextChoreCard
+        expectationsCard
+      }
+      if store.stays.count > 1 && !usesSidebar {
         Picker("Stay", selection: Binding(
           get: { store.selectedStayID },
           set: { store.selectStay($0) }
@@ -96,97 +91,198 @@ struct HomeScreen: View {
       if store.isHost && store.guests.count > 1 {
         GuestPicker(store: store)
       }
-      if store.bundle["membership"]["acceptedTermsId"].text != store.bundle["terms"]["_id"].text,
-         !store.isHost, !store.isEnded {
-        Card {
-          Text("Your agreement needs review").font(.headline)
-          Text("Read the current terms before recording new activity.")
-          NavigationLink("Review agreement", value: KouchdRoute.agreement)
-        }
-      }
-      Card {
-        Text("Remaining scheduled contributions").font(.subheadline).foregroundStyle(Palette.muted)
-        Text(Display.money(store.typedLedger.reduce(0) { $0 + $1.balanceCents }))
-          .font(.system(size: 38, weight: .bold, design: .rounded))
-          .foregroundStyle(Palette.forest)
-        Button("Open ledger", action: openLedger)
-      }
-      HStack(spacing: 12) {
-        NavigationLink(value: KouchdRoute.chores) {
-          StatCard(number: "\(store.chores.filter {  $0["completedAt"].text.isEmpty && $0["voidedAt"].text.isEmpty }.count)", label: "Open chores")
-        }
-        Button { openMore(.rewards) } label: {
-          StatCard(number: "\(store.wallet["availablePoints"].int)", label: "Reward points")
-        }
-      }
-      if let notice = store.announcements.first {
-        Card {
-          Pill(text: "Household note")
-          Text(notice.title).font(.headline)
-          Text(notice["body"].text).font(.subheadline)
-        }
-      }
-      Card {
-        Text("More stay tools").font(.headline)
-        Text("Find agreements, schedule requests, rewards, and account options together.")
-          .font(.subheadline).foregroundStyle(Palette.muted)
-        Button { openMore(nil) } label: {
-          Label("Browse all tools", systemImage: "ellipsis.circle")
-            .font(.subheadline.weight(.semibold)).foregroundStyle(Palette.forest)
-        }
-      }
-      if !store.activity.isEmpty {
-        Card {
-          Text("Recent activity").font(.headline)
-          ForEach(Array(store.activity.prefix(3)), id: \.id) { item in
-            Button { openActivity(item["kind"].text, item["action"].text) } label: {
-              HStack(alignment: .top, spacing: 10) {
-                Text(item["detail"].text).font(.subheadline).foregroundStyle(Palette.ink)
-                  .frame(maxWidth: .infinity, alignment: .leading)
-                Image(systemName: "arrow.up.right").font(.caption.bold()).foregroundStyle(Palette.forest)
-              }
-              .padding(.vertical, 7).contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-            .accessibilityHint("Opens the related section")
-          }
-        }
-      }
-      }
-      .padding(24)
-      .frame(maxWidth: 720, alignment: .leading)
-      .frame(maxWidth: .infinity)
+      agreementCard
+      remainingCard
+      statTiles
+      noticeCard
+      if !usesSidebar { moreToolsCard }
+      activityCard(limit: 3)
     }
-    .background(Palette.cream.ignoresSafeArea())
-    .kouchdEntrance()
-    .kouchdNavigationBar()
-    .toolbar {
-      ToolbarItem(placement: .topBarLeading) {
-        Menu {
-          ForEach(store.stays.indices, id: \.self) { index in
-            let stay = store.stays[index]["stay"]
-            Button(stay["name"].text.isEmpty ? "Shared stay" : stay["name"].text) {
-              store.selectStay(stay["_id"].text)
-            }
-          }
-        } label: {
-          HStack(spacing: 5) {
-            Text(store.stayName).font(.headline)
-            Image(systemName: "chevron.down").font(.caption2.bold())
-          }
-          .foregroundStyle(Palette.forest)
+  }
+
+  private var wideDashboard: some View {
+    VStack(alignment: .leading, spacing: 24) {
+      header
+      TwoColumnLayout(spacing: 24) {
+        if store.isHost {
+          hostHero
+          yourStays
+        } else {
+          guestHero
+          agreementCard
+          nextChoreCard
+          expectationsCard
         }
-        .accessibilityLabel("Switch stay, current stay: \(store.stayName)")
+      } trailing: {
+        if store.isHost && store.guests.count > 1 {
+          GuestPicker(store: store)
+        }
+        remainingCard
+        statTiles
+        noticeCard
+        activityCard(limit: 5)
       }
-      ToolbarItem(placement: .topBarTrailing) {
-        Button { openMore(.settings) } label: {
-          Text(String(store.viewer["name"].text.prefix(2)).uppercased())
-            .font(.caption2.bold())
-            .foregroundStyle(Palette.onLime)
-            .frame(width: 32, height: 32)
-            .background(Palette.lime, in: Circle())
+    }
+  }
+
+  private var header: some View {
+    VStack(alignment: .leading, spacing: 8) {
+      Text(store.isHost ? "A little room, well shared." : "Make yourself at home.")
+        .font(Palette.heading).foregroundStyle(Palette.forest)
+        .accessibilityAddTraits(.isHeader)
+      Text(store.isHost
+           ? "Welcome back, \(store.viewer["name"].text)."
+           : "Your stay with \(store.members.first(where: { $0["membership"]["role"].text == "host" })?["person"]["name"].text ?? "your host") · \(store.bundle["terms"]["startDate"].text) – \(store.bundle["terms"]["endDate"].text)")
+        .font(.subheadline).foregroundStyle(Palette.muted)
+    }
+  }
+
+  private var hostHero: some View {
+    VStack(alignment: .leading, spacing: 14) {
+      Text(store.stayName.uppercased()).font(.caption.bold())
+        .foregroundStyle(Palette.lime)
+      Text("\(store.stays.count) stays. One welcoming home.")
+        .font(Palette.section).foregroundStyle(.white)
+      Text("Next shared check-in · \(store.bundle["stay"]["nextCheckInDate"].text.isEmpty ? "Set a date" : store.bundle["stay"]["nextCheckInDate"].text)")
+        .font(.subheadline).foregroundStyle(.white.opacity(0.8))
+    }
+    .padding(24).frame(maxWidth: .infinity, alignment: .leading)
+    .background(Palette.brandForest, in: RoundedRectangle(cornerRadius: 24))
+  }
+
+  @ViewBuilder private var yourStays: some View {
+    Text("Your stays").font(Palette.section)
+    ForEach(store.stays.indices, id: \.self) { index in
+      let stay = store.stays[index]["stay"]
+      NavigationLink(value: KouchdRoute.stayDetails(stay["_id"].text)) {
+        VStack(alignment: .leading, spacing: 14) {
+          Text(stay["name"].text.isEmpty ? "Shared stay" : stay["name"].text)
+            .font(.title3.bold()).foregroundStyle(Palette.forest)
+          Text(stay["status"].text.capitalized)
+            .font(.subheadline).foregroundStyle(Palette.muted)
+          Rectangle().fill(Palette.line).frame(height: 1)
+          Text("Open household details").font(.subheadline).foregroundStyle(Palette.forest)
         }
-        .accessibilityLabel("Settings, account: \(store.viewer["name"].text)")
+        .padding(22).frame(maxWidth: .infinity, alignment: .leading)
+        .background(Palette.surface, in: RoundedRectangle(cornerRadius: 24))
+        .overlay(RoundedRectangle(cornerRadius: 24).stroke(Palette.line))
+      }
+      .buttonStyle(.plain)
+      .hoverEffect(.highlight)
+    }
+  }
+
+  private var guestHero: some View {
+    VStack(alignment: .leading, spacing: 18) {
+      Text("NEXT CONTRIBUTION").font(.caption.bold()).foregroundStyle(Palette.lime)
+      Text(nextContribution.map { Display.money($0.balanceCents) } ?? "All caught up")
+        .font(.largeTitle.bold()).foregroundStyle(.white)
+      Text(nextContribution.map { "Due \($0.dueDate)" } ?? "No contribution is currently due.")
+        .font(.subheadline).foregroundStyle(.white.opacity(0.85))
+      Button(action: openLedger) {
+        Text("View contributions")
+          .font(.headline).foregroundStyle(Palette.ink)
+          .frame(maxWidth: .infinity).padding(14)
+          .background(Palette.surface, in: RoundedRectangle(cornerRadius: 14))
+      }
+      .hoverEffect(.highlight)
+    }
+    .padding(24).frame(maxWidth: .infinity, alignment: .leading)
+    .background(Palette.brandForest, in: RoundedRectangle(cornerRadius: 24))
+  }
+
+  @ViewBuilder private var nextChoreCard: some View {
+    if let next = nextChore {
+      Card {
+        Text(next.title).font(.headline)
+        Text("Your turn · \(next["dueDate"].text)")
+          .font(.subheadline).foregroundStyle(Palette.muted)
+      }
+    }
+  }
+
+  private var expectationsCard: some View {
+    Card {
+      Text("Your shared expectations").font(.headline)
+      Text(store.bundle["terms"]["houseNotes"].text)
+        .font(.subheadline).foregroundStyle(Palette.muted)
+    }
+  }
+
+  @ViewBuilder private var agreementCard: some View {
+    if needsAgreementReview {
+      Card {
+        Text("Your agreement needs review").font(.headline)
+        Text("Read the current terms before recording new activity.")
+        NavigationLink("Review agreement", value: KouchdRoute.agreement)
+      }
+    }
+  }
+
+  private var remainingCard: some View {
+    Card {
+      Text("Remaining scheduled contributions").font(.subheadline).foregroundStyle(Palette.muted)
+      Text(Display.money(store.typedLedger.reduce(0) { $0 + $1.balanceCents }))
+        .font(.system(size: 38, weight: .bold, design: .rounded))
+        .foregroundStyle(Palette.forest)
+      Button("Open ledger", action: openLedger)
+    }
+  }
+
+  private var statTiles: some View {
+    HStack(spacing: 12) {
+      let openChoresTile = StatCard(number: "\(store.chores.filter {  $0["completedAt"].text.isEmpty && $0["voidedAt"].text.isEmpty }.count)", label: "Open chores")
+      if usesSidebar {
+        Button(action: openChores) { openChoresTile }.hoverEffect(.highlight)
+      } else {
+        NavigationLink(value: KouchdRoute.chores) { openChoresTile }
+      }
+      Button { openMore(.rewards) } label: {
+        StatCard(number: "\(store.wallet["availablePoints"].int)", label: "Reward points")
+      }
+      .hoverEffect(.highlight)
+    }
+  }
+
+  @ViewBuilder private var noticeCard: some View {
+    if let notice = store.announcements.first {
+      Card {
+        Pill(text: "Household note")
+        Text(notice.title).font(.headline)
+        Text(notice["body"].text).font(.subheadline)
+      }
+    }
+  }
+
+  private var moreToolsCard: some View {
+    Card {
+      Text("More stay tools").font(.headline)
+      Text("Find agreements, schedule requests, rewards, and account options together.")
+        .font(.subheadline).foregroundStyle(Palette.muted)
+      Button { openMore(nil) } label: {
+        Label("Browse all tools", systemImage: "ellipsis.circle")
+          .font(.subheadline.weight(.semibold)).foregroundStyle(Palette.forest)
+      }
+    }
+  }
+
+  @ViewBuilder private func activityCard(limit: Int) -> some View {
+    if !store.activity.isEmpty {
+      Card {
+        Text("Recent activity").font(.headline)
+        ForEach(Array(store.activity.prefix(limit)), id: \.id) { item in
+          Button { openActivity(item["kind"].text, item["action"].text) } label: {
+            HStack(alignment: .top, spacing: 10) {
+              Text(item["detail"].text).font(.subheadline).foregroundStyle(Palette.ink)
+                .frame(maxWidth: .infinity, alignment: .leading)
+              Image(systemName: "arrow.up.right").font(.caption.bold()).foregroundStyle(Palette.forest)
+            }
+            .padding(.vertical, 7).contentShape(Rectangle())
+          }
+          .buttonStyle(.plain)
+          .hoverEffect(.highlight)
+          .accessibilityHint("Opens the related section")
+        }
       }
     }
   }
@@ -253,81 +349,8 @@ struct LedgerScreen: View {
   let store: KouchdStore
   @State private var showingContribution = false
   var body: some View {
-    Page(title: "The ledger") {
-      if store.isHost && store.guests.count > 1 { GuestPicker(store: store) }
-      Card {
-        Text("Outside contributions").font(.headline)
-        Text("Kouchd records contributions and asks the other person to confirm. Money moves outside the app.")
-          .font(.subheadline).foregroundStyle(Palette.muted)
-        if !store.isEnded {
-          PrimaryButton(title: "Record a contribution") { showingContribution = true }
-        }
-      }
-      if case .object = store.ledgerSummary {
-        LedgerSummaryCard(summary: store.ledgerSummary)
-      }
-      if store.ledger.isEmpty {
-        EmptyCard(title: "Nothing due yet", message: "Agreed charges will appear here.")
-      } else {
-        ForEach(store.ledger, id: \.id) { item in
-          Card {
-            HStack {
-              Text(item["title"].text.isEmpty ? "Stay contribution" : item["title"].text)
-                .font(.headline)
-              Spacer()
-              Pill(text: item["status"].text)
-            }
-            DataRow(title: "Due", detail: item["dueDate"].text)
-            DataRow(title: "Charge", detail: Display.money(item["effectiveChargeCents"].int))
-            DataRow(title: "Confirmed credit", detail: Display.money(item["creditedCents"].int))
-            DataRow(title: "Balance", detail: Display.money(item["balanceCents"].int))
-            if store.isHost && item["type"].text == "adhoc" && item["status"].text != "voided" {
-              VoidRecordButton(store: store, function: "obligations:voidAdhocCharge",
-                               recordKey: "obligationId", recordID: item.id)
-            }
-            if store.isHost && !store.isEnded && item["lateFeeCents"].int > 0 && !item["lateFeeWaived"].flag {
-              Button("Waive late fee") {
-                Task { _ = await store.mutate("obligations:waiveLateFee", ["obligationId": item.id]) }
-              }
-            }
-          }
-        }
-      }
-      Text("Contribution records").font(.title2.bold())
-      if store.contributions.isEmpty {
-        EmptyCard(title: "No records yet", message: "Record a payment made outside Kouchd, groceries, supplies, or house work.")
-      }
-      ForEach(store.contributions, id: \.id) { item in
-        Card {
-          HStack {
-            Text(item["type"].text.replacingOccurrences(of: "_", with: " ").capitalized).font(.headline)
-            Spacer()
-            Pill(text: item["status"].text)
-          }
-          DataRow(title: "Amount", detail: Display.money(item["amountCents"].int))
-          DataRow(title: "Date", detail: item["date"].text)
-          if !item["note"].text.isEmpty { Text(item["note"].text).font(.subheadline) }
-          if !store.isEnded && item["status"].text == "pending" && item["createdBy"].text != store.viewer["id"].text {
-            HStack {
-              Button("Confirm") {
-                Task { _ = await store.mutate("contributions:confirm", ["contributionId": item.id]) }
-              }
-              Button("Dispute") {
-                Task { _ = await store.mutate("contributions:dispute", ["contributionId": item.id]) }
-              }.tint(.red)
-            }.buttonStyle(.bordered)
-          }
-          if item["status"].text != "voided" &&
-             (store.isHost || item["createdBy"].text == store.viewer["id"].text) {
-            VoidRecordButton(store: store, function: "contributions:voidContribution",
-                             recordKey: "contributionId", recordID: item.id)
-          }
-          if item["status"].text == "pending" && item["createdBy"].text == store.viewer["id"].text {
-            Text("Waiting for the other person to confirm.")
-              .font(.caption).foregroundStyle(Palette.muted)
-          }
-        }
-      }
+    Page(title: "Ledger", width: .wide) {
+      LedgerContent(store: store, showingContribution: $showingContribution)
     }
     .toolbar {
       if !store.isEnded {
@@ -335,12 +358,240 @@ struct LedgerScreen: View {
           Button {
             showingContribution = true
           } label: {
-            Label("Record contribution", systemImage: "plus")
+            Label("Add contribution", systemImage: "plus")
           }
+          .keyboardShortcut("n")
         }
       }
     }
     .sheet(isPresented: $showingContribution) { ContributionForm(store: store) }
+  }
+}
+
+private struct LedgerContent: View {
+  let store: KouchdStore
+  @Binding var showingContribution: Bool
+  @Environment(\.kouchdContentWidth) private var contentWidth
+  @Environment(\.dynamicTypeSize) private var typeSize
+
+  var body: some View {
+    if contentWidth >= KouchdLayout.ledgerSplitWidth && !typeSize.isAccessibilitySize {
+      LedgerSplitContent(store: store, showingContribution: $showingContribution)
+    } else {
+      stacked
+    }
+  }
+
+  @ViewBuilder private var stacked: some View {
+    if store.isHost && store.guests.count > 1 { GuestPicker(store: store) }
+    Card {
+      Text("Outside contributions").font(.headline)
+      Text("Kouchd records contributions and asks the other person to confirm. Money moves outside the app.")
+        .font(.subheadline).foregroundStyle(Palette.muted)
+      if !store.isEnded {
+        PrimaryButton(title: "Add contribution") { showingContribution = true }
+      }
+    }
+    if case .object = store.ledgerSummary {
+      LedgerSummaryCard(summary: store.ledgerSummary)
+    }
+    if store.ledger.isEmpty {
+      EmptyCard(title: "Nothing due yet", message: "Agreed charges will appear here.")
+    } else {
+      ForEach(store.ledger, id: \.id) { item in
+        LedgerChargeCard(store: store, item: item)
+      }
+    }
+    Text("Contribution records").font(.title2.bold())
+    if store.contributions.isEmpty {
+      EmptyCard(title: "No records yet", message: "Record a payment made outside Kouchd, groceries, supplies, or house work.")
+    }
+    ForEach(store.contributions, id: \.id) { item in
+      ContributionRecordCard(store: store, item: item)
+    }
+  }
+}
+
+/// Wide windows: totals on top, a scannable list, and the selected entry beside it.
+private struct LedgerSplitContent: View {
+  enum Segment: String, CaseIterable { case charges = "Charges", records = "Contribution records" }
+
+  let store: KouchdStore
+  @Binding var showingContribution: Bool
+  @State private var segment: Segment = .charges
+  @State private var selectedID: [Segment: String] = [:]
+
+  private var rows: [Value] { segment == .charges ? store.ledger : store.contributions }
+  private var selected: Value? {
+    rows.first { $0.id == selectedID[segment] } ?? rows.first
+  }
+
+  var body: some View {
+    if store.isHost && store.guests.count > 1 { GuestPicker(store: store) }
+    if case .object = store.ledgerSummary {
+      HStack(alignment: .top, spacing: 12) {
+        ForEach(LedgerSummaryCard.rows(store.ledgerSummary), id: \.title) { row in
+          VStack(alignment: .leading, spacing: 6) {
+            Text(row.detail).font(.title3.bold()).foregroundStyle(Palette.forest)
+            Text(row.title).font(.caption).foregroundStyle(Palette.muted)
+          }
+          .padding(16)
+          .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+          .background(Palette.surface, in: RoundedRectangle(cornerRadius: 18))
+          .accessibilityElement(children: .combine)
+        }
+      }
+      .fixedSize(horizontal: false, vertical: true)
+    }
+    HStack(spacing: 16) {
+      Text("Kouchd records contributions and asks the other person to confirm. Money moves outside the app. Scheduled totals include upcoming periods.")
+        .font(.footnote).foregroundStyle(Palette.muted)
+        .frame(maxWidth: .infinity, alignment: .leading)
+      if !store.isEnded {
+        PrimaryButton(title: "Add contribution") { showingContribution = true }
+          .frame(maxWidth: 240)
+      }
+    }
+    Picker("Show", selection: $segment) {
+      ForEach(Segment.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+    }
+    .pickerStyle(.segmented)
+    .frame(maxWidth: 420)
+    if rows.isEmpty {
+      if segment == .charges {
+        EmptyCard(title: "Nothing due yet", message: "Agreed charges will appear here.")
+      } else {
+        EmptyCard(title: "No records yet", message: "Record a payment made outside Kouchd, groceries, supplies, or house work.")
+      }
+    } else {
+      HStack(alignment: .top, spacing: 20) {
+        rowList.frame(maxWidth: .infinity)
+        detail.frame(width: 320)
+      }
+      .environment(\.kouchdContentWidth, 0)
+    }
+  }
+
+  private var rowList: some View {
+    VStack(spacing: 0) {
+      ForEach(Array(rows.enumerated()), id: \.element.id) { index, item in
+        if index > 0 { Divider().padding(.horizontal, 16) }
+        Button { selectedID[segment] = item.id } label: { rowLabel(item) }
+          .buttonStyle(.plain)
+          .hoverEffect(.highlight)
+          .accessibilityAddTraits(selected?.id == item.id ? .isSelected : [])
+      }
+    }
+    .padding(8)
+    .background(Palette.surface, in: RoundedRectangle(cornerRadius: 24))
+    .focusable()
+    .focusEffectDisabled()
+    .onKeyPress(keys: [.upArrow, .downArrow]) { press in
+      guard let current = rows.firstIndex(where: { $0.id == selected?.id }) else { return .ignored }
+      let next = press.key == .upArrow ? current - 1 : current + 1
+      guard rows.indices.contains(next) else { return .ignored }
+      selectedID[segment] = rows[next].id
+      return .handled
+    }
+  }
+
+  private func rowLabel(_ item: Value) -> some View {
+    let isCharge = segment == .charges
+    let title = isCharge
+      ? (item["title"].text.isEmpty ? "Stay contribution" : item["title"].text)
+      : item["type"].text.replacingOccurrences(of: "_", with: " ").capitalized
+    let date = isCharge ? "Due \(item["dueDate"].text)" : item["date"].text
+    let amount = !isCharge ? Display.money(item["amountCents"].int)
+      : item["balanceCents"].int > 0 ? "\(Display.money(item["balanceCents"].int)) left" : Display.money(item["effectiveChargeCents"].int)
+    return HStack(spacing: 12) {
+      VStack(alignment: .leading, spacing: 3) {
+        Text(title).font(.subheadline.weight(.semibold)).foregroundStyle(Palette.ink)
+        Text(date).font(.caption).foregroundStyle(Palette.muted)
+      }
+      Spacer(minLength: 8)
+      Text(amount).font(.subheadline.weight(.semibold)).foregroundStyle(Palette.ink)
+      Pill(text: item["status"].text)
+    }
+    .padding(.horizontal, 14).padding(.vertical, 12)
+    .background(selected?.id == item.id ? Palette.lime.opacity(0.3) : .clear, in: RoundedRectangle(cornerRadius: 14))
+    .contentShape(Rectangle())
+    .accessibilityElement(children: .combine)
+  }
+
+  @ViewBuilder private var detail: some View {
+    if let selected {
+      if segment == .charges {
+        LedgerChargeCard(store: store, item: selected)
+      } else {
+        ContributionRecordCard(store: store, item: selected)
+      }
+    }
+  }
+}
+
+private struct LedgerChargeCard: View {
+  let store: KouchdStore
+  let item: Value
+
+  var body: some View {
+    Card {
+      HStack {
+        Text(item["title"].text.isEmpty ? "Stay contribution" : item["title"].text)
+          .font(.headline)
+        Spacer()
+        Pill(text: item["status"].text)
+      }
+      DataRow(title: "Due", detail: item["dueDate"].text)
+      DataRow(title: "Charge", detail: Display.money(item["effectiveChargeCents"].int))
+      DataRow(title: "Confirmed credit", detail: Display.money(item["creditedCents"].int))
+      DataRow(title: "Balance", detail: Display.money(item["balanceCents"].int))
+      if store.isHost && item["type"].text == "adhoc" && item["status"].text != "voided" {
+        VoidRecordButton(store: store, function: "obligations:voidAdhocCharge",
+                         recordKey: "obligationId", recordID: item.id)
+      }
+      if store.isHost && !store.isEnded && item["lateFeeCents"].int > 0 && !item["lateFeeWaived"].flag {
+        Button("Waive late fee") {
+          Task { _ = await store.mutate("obligations:waiveLateFee", ["obligationId": item.id]) }
+        }
+      }
+    }
+  }
+}
+
+private struct ContributionRecordCard: View {
+  let store: KouchdStore
+  let item: Value
+
+  var body: some View {
+    Card {
+      HStack {
+        Text(item["type"].text.replacingOccurrences(of: "_", with: " ").capitalized).font(.headline)
+        Spacer()
+        Pill(text: item["status"].text)
+      }
+      DataRow(title: "Amount", detail: Display.money(item["amountCents"].int))
+      DataRow(title: "Date", detail: item["date"].text)
+      if !item["note"].text.isEmpty { Text(item["note"].text).font(.subheadline) }
+      if !store.isEnded && item["status"].text == "pending" && item["createdBy"].text != store.viewer["id"].text {
+        HStack {
+          Button("Confirm") {
+            Task { _ = await store.mutate("contributions:confirm", ["contributionId": item.id]) }
+          }
+          Button("Dispute") {
+            Task { _ = await store.mutate("contributions:dispute", ["contributionId": item.id]) }
+          }.tint(.red)
+        }.buttonStyle(.bordered)
+      }
+      if item["status"].text != "voided" &&
+         (store.isHost || item["createdBy"].text == store.viewer["id"].text) {
+        VoidRecordButton(store: store, function: "contributions:voidContribution",
+                         recordKey: "contributionId", recordID: item.id)
+      }
+      if item["status"].text == "pending" && item["createdBy"].text == store.viewer["id"].text {
+        Text("Waiting for the other person to confirm.")
+          .font(.caption).foregroundStyle(Palette.muted)
+      }
+    }
   }
 }
 
@@ -551,6 +802,7 @@ struct ContributionForm: View {
         }
       }
     }
+    .environment(\.kouchdContentWidth, 0)
   }
 
   @ViewBuilder
@@ -961,7 +1213,7 @@ struct ChoresScreen: View {
   let store: KouchdStore
   @State private var showingCreate = false
   var body: some View {
-    Page(title: "Chores & check-ins") {
+    Page(title: "Chores & check-ins", width: .wide) {
       Card {
         Text("Little things, shared fairly.").font(.headline)
         Text("Keep track of what needs doing around the home.")
@@ -973,29 +1225,13 @@ struct ChoresScreen: View {
       if store.chores.isEmpty {
         EmptyCard(title: "All clear", message: "Chores your household adds will show up here.")
       }
-      ForEach(store.chores, id: \.id) { chore in
-        Card {
-          HStack {
-            Button {
-              Task { _ = await store.mutate("chores:toggle", ["choreId": chore.id]) }
-            } label: {
-              Image(systemName: chore["completed"].flag ? "checkmark.circle.fill" : "circle")
-                .font(.title2).foregroundStyle(Palette.forest)
-                .frame(minWidth: 44, minHeight: 44)
-            }.disabled(store.isEnded || !chore["voidedAt"].text.isEmpty).accessibilityLabel(chore["completed"].flag ? "Mark incomplete" : "Mark complete")
-            VStack(alignment: .leading, spacing: 4) {
-              Text(chore.title).font(.headline)
-              Text(HouseholdRules.choreScheduleLabel(chore))
-                .font(.caption).foregroundStyle(Palette.muted)
-            }
-            Spacer()
-          }
-          if !chore["note"].text.isEmpty { Text(chore["note"].text).font(.subheadline) }
-          if !chore["voidedAt"].text.isEmpty { Pill(text: "Voided") }
-          if chore["voidedAt"].text.isEmpty && (store.isHost || chore["createdBy"].text == store.viewer["id"].text) {
-            VoidRecordButton(store: store, function: "chores:voidChore",
-                             recordKey: "choreId", recordID: chore.id)
-          }
+      ColumnsReader { columns in
+        // In a grid, open chores come first so nothing to do hides behind finished work.
+        let chores = columns > 1
+          ? store.chores.filter { !$0["completed"].flag } + store.chores.filter { $0["completed"].flag }
+          : store.chores
+        AdaptiveGrid {
+          ForEach(chores, id: \.id) { chore in ChoreCard(store: store, chore: chore) }
         }
       }
     }
@@ -1007,10 +1243,44 @@ struct ChoresScreen: View {
           } label: {
             Label("Add chore", systemImage: "plus")
           }
+          .keyboardShortcut("n")
         }
       }
     }
     .sheet(isPresented: $showingCreate) { ChoreForm(store: store) }
+  }
+}
+
+private struct ChoreCard: View {
+  let store: KouchdStore
+  let chore: Value
+
+  var body: some View {
+    Card {
+      HStack {
+        Button {
+          Task { _ = await store.mutate("chores:toggle", ["choreId": chore.id]) }
+        } label: {
+          Image(systemName: chore["completed"].flag ? "checkmark.circle.fill" : "circle")
+            .font(.title2).foregroundStyle(Palette.forest)
+            .frame(minWidth: 44, minHeight: 44)
+        }
+        .hoverEffect(.highlight)
+        .disabled(store.isEnded || !chore["voidedAt"].text.isEmpty).accessibilityLabel(chore["completed"].flag ? "Mark incomplete" : "Mark complete")
+        VStack(alignment: .leading, spacing: 4) {
+          Text(chore.title).font(.headline)
+          Text(HouseholdRules.choreScheduleLabel(chore))
+            .font(.caption).foregroundStyle(Palette.muted)
+        }
+        Spacer()
+      }
+      if !chore["note"].text.isEmpty { Text(chore["note"].text).font(.subheadline) }
+      if !chore["voidedAt"].text.isEmpty { Pill(text: "Voided") }
+      if chore["voidedAt"].text.isEmpty && (store.isHost || chore["createdBy"].text == store.viewer["id"].text) {
+        VoidRecordButton(store: store, function: "chores:voidChore",
+                         recordKey: "choreId", recordID: chore.id)
+      }
+    }
   }
 }
 

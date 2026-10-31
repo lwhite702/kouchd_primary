@@ -92,6 +92,7 @@ struct TermsEditScreen: View {
         Text("Guests must review a changed agreement before continuing.")
       }
     }
+    .kouchdFormWidth()
     .kouchdNavigationBar(title: "Agreement")
     .toolbar {
       ToolbarItem(placement: .confirmationAction) {
@@ -181,6 +182,7 @@ struct HouseInfoScreen: View {
         save()
       }
     }
+    .kouchdFormWidth()
     .kouchdNavigationBar(title: "House details")
     .toolbar {
       ToolbarItem(placement: .confirmationAction) {
@@ -253,6 +255,7 @@ struct PaymentOptionsScreen: View {
         }
       } footer: { Text("Kouchd displays these options but does not move money.") }
     }
+    .kouchdFormWidth()
     .kouchdNavigationBar(title: "Outside payment")
     .toolbar {
       ToolbarItem(placement: .confirmationAction) {
@@ -286,6 +289,7 @@ struct AdhocChargeScreen: View {
         }.disabled(isInvalid)
       }
     }
+    .kouchdFormWidth()
     .kouchdNavigationBar(title: "One-time charge")
     .toolbar {
       ToolbarItem(placement: .confirmationAction) {
@@ -338,6 +342,7 @@ struct RewardRulesScreen: View {
         }
       }
     }
+    .kouchdFormWidth()
     .kouchdNavigationBar(title: "Reward rules")
     .toolbar {
       ToolbarItem(placement: .confirmationAction) {

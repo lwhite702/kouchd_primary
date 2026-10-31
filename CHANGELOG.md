@@ -4,6 +4,13 @@
 
 ### Added
 
+- **iPad layout (WRE-254, branch only, not released)**:
+  - **Navigation:** regular-width windows use a `NavigationSplitView` sidebar with a single stay switcher; compact widths keep the tabs. `ShellNavigator` holds one navigation state, so a resized window stays on the same screen. The sidebar pins at 1000pt and wider and slides over narrower windows. `StayTool` is the one definition of who sees which tool, read by both the sidebar and More.
+  - **Layouts:** `KouchdLayout` picks 1, 2, or 3 columns from measured content width (700pt and 1000pt), and always 1 at accessibility text sizes. Home is a two-column dashboard, Ledger shows summary tiles with a row list beside the selected entry's details and actions (700pt and wider), Chores and Stay use grids and columns, and Shopping separates shared and personal items. Settings-style forms center at 640pt, and the introduction and first-stay setup use the wider space.
+  - **Keyboard and pointer:** ⌘1–⌘4 open Home, Ledger, Chores, and Stay; ⌘N adds a contribution or chore; arrow keys move through Ledger rows; rows and cards have hover effects.
+  - **Copy:** the Ledger title and action now read "Ledger" and "Add contribution", on iPhone as well.
+  - **Testing:** a DEBUG-only `StayLayoutTestHost` renders signed-in screens from synthetic data with no network, and `AdaptiveLayoutTests` and `AdaptiveShellTests` cover layout, tool visibility, and navigation. Simulator checks only; not checked with a real account or on a device.
+
 - **iOS Plus purchase flow (WRE-250, branch only, not released)**:
   - **Subscription screen:** shows the current plan as Free, Plus, or Pro (never internal plan names), with the trial end, renewal, or end date, payment-problem notes, and a trial-reminder email toggle. Hosts who started Plus on the web are sent to kouchd.com to manage it.
   - **Plus offer:** a yearly/monthly picker (yearly is the default) with a "Save N%" badge worked out from store prices, a "Start N-day free trial" button only when Kouchd and the Apple sheet will agree, and a plain line saying when the trial ends and the renewal price. Each purchase passes Kouchd's signed intro-offer eligibility to StoreKit, so one trial per host billing account holds across web and iPhone. Ask to Buy shows "waiting for approval" instead of an error. After Apple's sheet finishes, the app shows "Confirming your plan" until Kouchd's backend records Plus, and only then says "You're on Plus"; after 60 seconds without confirmation it says the purchase was received and is still being confirmed.

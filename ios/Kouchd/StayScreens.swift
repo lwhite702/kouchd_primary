@@ -10,7 +10,8 @@ struct StayScreen: View {
   @State private var showingEdit = false
   @State private var showingContributionRouter = false
   var body: some View {
-    Page(title: "Your stay") {
+    Page(title: "Your stay", width: .wide) {
+      TwoColumnLayout {
       Card {
         HStack { Pill(text: store.isHost ? "Host" : "Guest"); Spacer(); Pill(text: store.bundle["stay"]["status"].text) }
         Text(store.stayName).font(.title2.bold())
@@ -33,6 +34,7 @@ struct StayScreen: View {
           PrimaryButton(title: "Invite a guest") { showingInvite = true }
         }
       }
+      } trailing: {
       Card {
         Text("House notes").font(.headline)
         Text(store.bundle["terms"]["houseNotes"].text.isEmpty
@@ -61,6 +63,7 @@ struct StayScreen: View {
             showingContributionRouter = true
           }
         }
+      }
       }
     }
     .toolbar {
@@ -295,6 +298,7 @@ struct CreateStayScreen: View {
         }.disabled(isInvalid)
       }
     }
+    .kouchdFormWidth()
     .kouchdNavigationBar(title: "Create stay")
     .toolbar {
       ToolbarItem(placement: .confirmationAction) {
@@ -347,6 +351,7 @@ struct JoinCodeScreen: View {
         }.disabled(busy || code.trimmingCharacters(in: .whitespaces).isEmpty)
       } footer: { Text("Ask your host for their household code.") }
     }
+    .kouchdFormWidth()
     .kouchdNavigationBar(title: "Join a stay")
     .toolbar {
       ToolbarItem(placement: .confirmationAction) {

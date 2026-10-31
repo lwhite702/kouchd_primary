@@ -1,5 +1,5 @@
 {
   "type": "patch",
-  "version": "0.7.23",
-  "reason": "Stop SignInFormGuard's MutationObserver from re-triggering itself and freezing the sign-in page (WRE-253)."
+  "version": "0.7.24",
+  "reason": "Adapt the iOS app for iPad with sidebar navigation and width-driven layouts (WRE-254)."
 }

@@ -8,7 +8,7 @@ import SwiftUI
 @main struct KouchdApp: App {
   init() {
     #if DEBUG
-    if IntroductionTestHost.isEnabled { return }
+    if IntroductionTestHost.isEnabled || StayLayoutTestHost.scenario != nil { return }
     initConvexLogging()
     #endif
     if AppConfig.isConfigured {
@@ -33,6 +33,8 @@ import SwiftUI
         IntroductionTestHost()
       } else if let scenario = PlanScreensTestHost.scenario {
         PlanScreensTestHost(scenario: scenario)
+      } else if let scenario = StayLayoutTestHost.scenario {
+        StayLayoutTestHost(scenario: scenario)
       } else {
         configuredContent
       }
@@ -40,6 +42,7 @@ import SwiftUI
       configuredContent
       #endif
     }
+    .commands { KouchdCommands() }
   }
 
   @ViewBuilder private var configuredContent: some View {
@@ -53,19 +56,6 @@ import SwiftUI
         systemImage: "gearshape",
         description: Text("Add the Clerk and Convex development settings to Local.xcconfig.")
       )
-    }
-  }
-}
-
-private enum Tab: String, CaseIterable {
-  case home = "Home", ledger = "Ledger", chores = "Chores", stay = "Stay", more = "More"
-  var symbol: String {
-    switch self {
-    case .home: "house.fill"
-    case .ledger: "list.bullet.rectangle"
-    case .chores: "checkmark.circle"
-    case .stay: "bed.double"
-    case .more: "ellipsis.circle"
     }
   }
 }
@@ -93,29 +83,8 @@ struct RootView: View {
   @State private var activeSheet: ActiveSheet?
   @State private var inviteToken = ""
   @State private var invitePreview: Value = .null
-  @State private var tab: Tab = .home
+  @State private var navigator = ShellNavigator()
   @State private var billing = BillingModel(client: RevenueCatBillingClient.shared)
-  @State private var morePath = NavigationPath()
-
-  private func openMore(_ route: KouchdRoute? = nil) {
-    morePath = NavigationPath()
-    if let route { morePath.append(route) }
-    tab = .more
-  }
-
-  private func openActivity(_ kind: String, action: String = "") {
-    switch kind {
-    case "contribution", "obligation": tab = .ledger
-    case "chore": tab = .chores
-    case "check_in": openMore(.checkins)
-    case "shopping": openMore(.shopping)
-    case "reward": openMore(.rewards)
-    case "terms": openMore(action.hasPrefix("payment_schedule_") ? .schedule : .agreement)
-    case "stay", "invite": tab = .stay
-    case "announcement": tab = .home
-    default: openMore(.activity)
-    }
-  }
 
   private func markIntroductionComplete() {
     introductionRevision = 1
@@ -170,54 +139,8 @@ struct RootView: View {
     } else if store.stays.isEmpty {
       onboarding
     } else {
-      authenticatedTabs
+      AuthenticatedShell(store: store, navigator: navigator)
     }
-  }
-
-  private var authenticatedTabs: some View {
-    TabView(selection: $tab) {
-      NavigationStack {
-        LoadedStayContent(loading: store.isStayLoading || store.isFinancialLoading) {
-          HomeScreen(
-            store: store,
-            openLedger: { tab = .ledger },
-            openMore: { openMore($0) },
-            openActivity: { openActivity($0, action: $1) }
-          )
-        }
-        .kouchdDestinations(store: store)
-      }
-      .tabItem { Label(Tab.home.rawValue, systemImage: Tab.home.symbol) }.tag(Tab.home)
-      NavigationStack {
-        LoadedStayContent(loading: store.isStayLoading || store.isFinancialLoading) {
-          LedgerScreen(store: store)
-        }
-        .kouchdDestinations(store: store)
-      }
-      .tabItem { Label(Tab.ledger.rawValue, systemImage: Tab.ledger.symbol) }.tag(Tab.ledger)
-      NavigationStack {
-        LoadedStayContent(loading: store.isStayLoading) {
-          ChoresScreen(store: store)
-        }
-        .kouchdDestinations(store: store)
-      }
-      .tabItem { Label(Tab.chores.rawValue, systemImage: Tab.chores.symbol) }.tag(Tab.chores)
-      NavigationStack {
-        LoadedStayContent(loading: store.isStayLoading) {
-          StayScreen(store: store)
-        }
-        .kouchdDestinations(store: store)
-      }
-      .tabItem { Label(Tab.stay.rawValue, systemImage: Tab.stay.symbol) }.tag(Tab.stay)
-      NavigationStack(path: $morePath) {
-        LoadedStayContent(loading: store.isStayLoading) {
-          MoreScreen(store: store)
-        }
-        .kouchdDestinations(store: store)
-      }
-      .tabItem { Label(Tab.more.rawValue, systemImage: Tab.more.symbol) }.tag(Tab.more)
-    }
-    .tint(Palette.forest)
   }
 
   private func hideSplashScreen() async {
@@ -331,7 +254,8 @@ struct RootView: View {
 
   private var onboarding: some View {
     NavigationStack {
-      Page(title: "Welcome to Kouchd") {
+      Page(title: "Welcome to Kouchd", width: .wide) {
+        TwoColumnLayout {
         Card {
           Text("Start a shared stay").font(.title3.bold())
           Text("Set the dates, contribution rhythm, and house notes for your guests.")
@@ -339,10 +263,12 @@ struct RootView: View {
           NavigationLink("Create a stay", value: KouchdRoute.createStay)
             .buttonStyle(.borderedProminent).tint(Palette.forest)
         }
+        } trailing: {
         Card {
           Text("Joining someone?").font(.title3.bold())
           Text("Open their invite link or enter their referral code.")
           NavigationLink("Join with a code", value: KouchdRoute.joinCode)
+        }
         }
         NavigationLink("Profile and optional reminders", value: KouchdRoute.settings)
         Link("Terms & Conditions", destination: URL(string: "https://kouchd.com/terms")!)
