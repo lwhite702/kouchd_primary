@@ -31,6 +31,13 @@
 
 ### Fixed
 
+- **Web contribution router trust fixes (WRE-259, branch only, not released)**:
+  - The router no longer falls back to made-up handles such as `johndoe`, and the preview workspace no longer ships made-up host handles. When a stay has no saved handle for the chosen app, one must be entered, and the app link, QR code, and copy step stay blocked until then. A bare `@`, `$`, or empty paypal.me link doesn't count. Routes also stay blocked without an amount. Apple Cash now uses the copy-and-send step, because it has no app link to open.
+  - The handle field no longer disappears after the first typed character.
+  - The 4.5-second simulated verification is gone. The router shows a saving state only while the Ledger save is running, and a save handler is now required, so it can't report a save that didn't happen.
+  - The saved screen no longer says "Transaction ID", "Settled Amount", or "Timestamp", and the made-up `KCH-994827` reference and 4500-cent default amount are removed. It now describes a saved shared record that is pending until the other person confirms it, and says the record is not proof that money moved.
+  - The screens no longer say Kouchd opened an app, gave the host a heads-up, or pre-filled an amount, and developer labels such as "Compiled Link" and "Level-H QR" are gone.
+  - In the preview workspace, only the amount sent outside Kouchd is saved as pending. A Coins credit is saved as its own confirmed entry, matching the iOS split.
 - **Sign-in page freeze (WRE-253, 0.7.23)**: `SignInFormGuard` now changes the submit button only when its state actually differs. It used to rewrite the same attributes on every change its own `MutationObserver` reported, which re-triggered the observer forever and froze `/sign-in` as soon as Clerk showed the form.
 - **Blank web app (WRE-253, 0.7.22)**: removed the `<meta>` Content-Security-Policy fallback from `app/layout.tsx`. For browser requests, a layer in front of the app rewrote the tag and split it at the semicolons in React's `&#x27;` escapes. The malformed policy blocked Next.js and Clerk scripts, so pages stayed blank. The response header CSP from `next.config.ts` and `proxy.ts` is unchanged and is now the only policy. A test keeps the tag out of the layout.
 - Web body copy is now set in Inter, as the brand design system specifies. Headings, eyebrows, metrics, buttons, pills, and the wordmark stay in Manrope (0.7.21).
