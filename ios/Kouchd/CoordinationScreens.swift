@@ -157,6 +157,8 @@ struct CheckInsScreen: View {
   @State private var note = ""
   @State private var date = Date.now
   @State private var submitting = false
+  // Held here so a draft survives the card moving between layouts on a resize.
+  @State private var responses: [String: String] = [:]
 
   var body: some View {
     Page(title: "Check-ins", width: .wide) {
@@ -182,7 +184,10 @@ struct CheckInsScreen: View {
       if store.checkins.isEmpty { EmptyCard(title: "Room for a conversation", message: "Start a check-in to share an update or make a plan together.") }
       AdaptiveGrid(maxColumns: 2) {
         ForEach(store.checkins, id: \.id) { item in
-          CheckInCard(store: store, item: item)
+          CheckInCard(store: store, item: item, response: Binding(
+            get: { responses[item.id] ?? "" },
+            set: { responses[item.id] = $0 }
+          ))
         }
       }
     }
@@ -193,7 +198,7 @@ struct CheckInsScreen: View {
 private struct CheckInCard: View {
   let store: KouchdStore
   let item: Value
-  @State private var response = ""
+  @Binding var response: String
   @State private var submitting = false
 
   var body: some View {

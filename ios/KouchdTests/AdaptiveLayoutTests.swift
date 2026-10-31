@@ -127,6 +127,25 @@ final class ShellNavigatorTests: XCTestCase {
     XCTAssertEqual(navigator.detailPath, [.joinCode])
   }
 
+  func testUnavailableToolsCloseWhenAccessChanges() {
+    let navigator = ShellNavigator()
+    navigator.select(.tool(.hostControls))
+    navigator.detailPath = [.termsEdit]
+    let hostedEnded = StayTool.Context(isHost: true, isEnded: true, usesOccupiedNights: false, isAdmin: false)
+    navigator.closeUnavailableTools(in: hostedEnded)
+    XCTAssertEqual(navigator.section, .home)
+    XCTAssertTrue(navigator.detailPath.isEmpty)
+    XCTAssertTrue(navigator.morePath.isEmpty)
+  }
+
+  func testAvailableToolsStayOpen() {
+    let navigator = ShellNavigator()
+    navigator.select(.tool(.hostControls))
+    let host = StayTool.Context(isHost: true, isEnded: false, usesOccupiedNights: false, isAdmin: false)
+    navigator.closeUnavailableTools(in: host)
+    XCTAssertEqual(navigator.section, .tool(.hostControls))
+  }
+
   func testChoosingASectionClearsPushedScreens() {
     let navigator = ShellNavigator()
     navigator.detailPath = [.about]

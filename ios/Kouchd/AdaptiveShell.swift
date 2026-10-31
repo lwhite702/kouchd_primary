@@ -117,6 +117,15 @@ enum ShellSection: Hashable {
     if case .tool = section { select(.home) }
   }
 
+  /// Leaves a tool the person can no longer use, such as Host controls after a stay ends.
+  func closeUnavailableTools(in context: StayTool.Context) {
+    func isUnavailable(_ route: KouchdRoute) -> Bool {
+      StayTool.allCases.contains { $0.route == route && !$0.isVisible(in: context) }
+    }
+    if let root = morePath.first, isUnavailable(root) { morePath = [] }
+    if case .tool(let route) = section, isUnavailable(route) { select(.home) }
+  }
+
   func tabPath(_ tab: AppTab) -> Binding<[KouchdRoute]> {
     Binding(get: { self.tabPaths[tab] ?? [] }, set: { self.tabPaths[tab] = $0 })
   }
@@ -268,6 +277,13 @@ struct AuthenticatedShell: View {
     .focusedSceneValue(\.shellNavigator, navigator)
     .onChange(of: usesSidebar) { _, toSidebar in navigator.syncLayout(toSidebar: toSidebar) }
     .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { windowWidth = $0 }
+    .onChange(of: store.toolContext) { _, context in
+      // Role and status are unknown while a stay loads, so wait for its data.
+      if !store.isStayLoading { navigator.closeUnavailableTools(in: context) }
+    }
+    .onChange(of: store.isStayLoading) { _, loading in
+      if !loading { navigator.closeUnavailableTools(in: store.toolContext) }
+    }
   }
 
   @ViewBuilder private var sidebarLayout: some View {
