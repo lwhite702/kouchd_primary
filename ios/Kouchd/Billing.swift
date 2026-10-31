@@ -331,7 +331,7 @@ typealias TrialEligibilityLookup = @MainActor (_ productID: String, _ appTransac
     )
     model.onPurchaseFinished = { [weak store] in
       guard let store else { return }
-      store.plusSetup.purchaseFinished(userID: store.viewer["_id"].text)
+      store.plusSetup.purchaseFinished(userID: store.viewer["id"].text)
     }
     return model
   }
@@ -713,7 +713,10 @@ struct PlanLimitPresentation: ViewModifier {
       }
       .sheet(item: Binding(
         get: { store.plusEntry },
-        set: { store.plusEntry = $0 }
+        set: {
+          store.plusEntry = $0
+          if $0 == nil { store.plusEntryStayID = nil }
+        }
       )) { entry in
         PlusSheet(store: store, entry: entry, billing: makeBilling?())
       }

@@ -169,6 +169,10 @@ private enum KouchdAuthError: LocalizedError {
   var planLimit: PlanLimitError?
   /// Opens the Plus sheet (host only) from wherever the root view is presenting.
   var plusEntry: PlusEntry?
+  /// The stay a guest was blocked from, so "Invite your next guest" returns to it.
+  var plusEntryStayID: String?
+  /// Set by the Plus sheet; the stay screen opens its invite form and clears it.
+  var opensInviteOnStay = false
   /// A screen the Plus sheet wants to continue on once it closes.
   var planRoute: KouchdRoute?
   /// A purchase Apple finished that the backend hasn't confirmed yet.
@@ -336,6 +340,8 @@ private enum KouchdAuthError: LocalizedError {
     planUsage = nil
     planLimit = nil
     plusEntry = nil
+    plusEntryStayID = nil
+    opensInviteOnStay = false
     planRoute = nil
     plusSetup.signedOut()
     isSubscriptionSummaryLoading = true
@@ -671,8 +677,8 @@ private enum KouchdAuthError: LocalizedError {
   }
 
   private func refreshPlusSetup() {
-    guard !viewer["_id"].text.isEmpty else { return }
-    plusSetup.refresh(userID: viewer["_id"].text, hasPlus: typedSubscriptionSummary?.hasPlus)
+    guard !viewer["id"].text.isEmpty else { return }
+    plusSetup.refresh(userID: viewer["id"].text, hasPlus: typedSubscriptionSummary?.hasPlus)
   }
 
   /// Notes a refused join so the host can see it. Errors are ignored: it is not the guest's problem.

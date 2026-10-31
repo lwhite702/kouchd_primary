@@ -91,6 +91,13 @@ struct StayScreen: View {
       }
     }
     .sheet(isPresented: $showingInvite) { InviteForm(store: store) }
+    .task(id: store.opensInviteOnStay) {
+      guard store.opensInviteOnStay else { return }
+      // Wait for the Plus sheet to finish closing, or this one can't present.
+      try? await Task.sleep(for: .milliseconds(600))
+      showingInvite = true
+      store.opensInviteOnStay = false
+    }
     .sheet(isPresented: $showingEdit) { RenameStayForm(store: store) }
     .sheet(isPresented: $showingContributionRouter) { ContributionForm(store: store) }
   }
@@ -222,7 +229,7 @@ struct InviteForm: View {
       .navigationTitle("Invite a guest")
       .kouchdNavigationBar()
       .tint(Palette.forest)
-      .sheet(item: $plusEntry) { PlusSheet(store: store, entry: $0) }
+      .sheet(item: $plusEntry) { PlusSheet(store: store, entry: $0, returnsToInvite: true) }
       .toolbar {
         ToolbarItem(placement: .cancellationAction) { Button("Done") { dismiss() } }
         ToolbarItem(placement: .confirmationAction) {

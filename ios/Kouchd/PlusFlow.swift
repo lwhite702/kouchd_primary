@@ -53,6 +53,7 @@ enum PlusEntry: String, Identifiable {
 
   /// Notes the purchase as soon as Apple finishes, so it survives the app closing mid-wait.
   func purchaseFinished(userID: String) {
+    guard !userID.isEmpty else { return }
     defaults.set(userID, forKey: Self.userKey)
     defaults.set(Date.now.timeIntervalSince1970, forKey: Self.startedKey)
     sheetIsWaiting = true
@@ -138,9 +139,13 @@ struct PlusSheet: View {
   @State private var showingWelcome = false
   @Environment(\.dismiss) private var dismiss
 
-  init(store: KouchdStore, entry: PlusEntry, billing: BillingModel? = nil) {
+  /// Opened over the invite form: "Invite your next guest" just goes back to it.
+  var returnsToInvite = false
+
+  init(store: KouchdStore, entry: PlusEntry, billing: BillingModel? = nil, returnsToInvite: Bool = false) {
     self.store = store
     self.entry = entry
+    self.returnsToInvite = returnsToInvite
     _billing = State(initialValue: billing ?? BillingModel.live(store: store))
   }
 
@@ -150,7 +155,7 @@ struct PlusSheet: View {
     NavigationStack {
       Group {
         if showingWelcome {
-          PlusWelcome(store: store, entry: entry) { dismiss() }
+          PlusWelcome(store: store, entry: entry, returnsToInvite: returnsToInvite) { dismiss() }
         } else {
           offer
         }
@@ -170,7 +175,7 @@ struct PlusSheet: View {
       switch outcome {
       case .confirmed: showingWelcome = true
       case .settingUp:
-        store.plusSetup.begin(userID: store.viewer["_id"].text)
+        store.plusSetup.begin(userID: store.viewer["id"].text)
         dismiss()
       default: break
       }
@@ -375,6 +380,7 @@ struct PlanOptionRow: View {
 struct PlusWelcome: View {
   let store: KouchdStore
   let entry: PlusEntry
+  var returnsToInvite = false
   let close: () -> Void
 
   private var summary: AccountSubscriptionSummary? { store.typedSubscriptionSummary }
@@ -394,7 +400,11 @@ struct PlusWelcome: View {
       }
       if let action = entry.welcomeAction {
         PrimaryButton(title: action.title) {
-          store.planRoute = action.route
+          if entry == .guestLimit && !returnsToInvite {
+            if let stayID = store.plusEntryStayID, stayID != store.selectedStayID { store.selectStay(stayID) }
+            store.opensInviteOnStay = true
+          }
+          if !returnsToInvite { store.planRoute = action.route }
           close()
         }
         Button("Done", action: close)
@@ -570,7 +580,10 @@ struct BlockedJoinCard: View {
       }
       VStack(alignment: .leading, spacing: 8) {
         if usage.isFree && usage.guests.isFull && purchasesEnabled {
-          Button("Make room with Plus") { store.plusEntry = .guestLimit }
+          Button("Make room with Plus") {
+            store.plusEntryStayID = blocked.stayId
+            store.plusEntry = .guestLimit
+          }
         }
         if usage.guests.isFull {
           Button("Manage guests") {
