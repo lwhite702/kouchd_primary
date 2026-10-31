@@ -2,6 +2,12 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-10-31 — Production build fix for 0.7.25 (WRE-252)
+
+- The production deploy of #97 failed: two flag-override tests in `tests/feature-flags.test.ts` assumed overrides were allowed, but Vercel's production build runs tests with `NEXT_PUBLIC_VERCEL_ENV=production`, where overrides are off by design. app.kouchd.com stayed on the previous deploy.
+- Fix: the override tests pin `NEXT_PUBLIC_VERCEL_ENV=development` and `NODE_ENV=test`. Test-only, no version change; 0.7.25 ships with it.
+- Evidence: the full suite passes with `NEXT_PUBLIC_VERCEL_ENV` set to production, preview and unset; `npm run verify` passes with production set.
+
 ## 2026-10-31 — Google Tag Manager removed (WRE-252)
 
 - Decision (Lee): no Tag Manager on either site; PostHog covers it.
