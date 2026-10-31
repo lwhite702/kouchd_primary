@@ -4,6 +4,7 @@
 
 ### Added
 
+- **RevenueCat → PostHog preparation (WRE-251, branch only, not released)**: no new events are sent. New `tests/revenuecat-posthog.test.ts` checks that PostHog and RevenueCat are both identified by the Clerk user ID on web and iOS, so RevenueCat's own PostHog integration (not turned on yet) can attribute purchases without a `$posthogUserId` attribute, and that the paywall does not send `checkout_started` or `subscription_activated` itself. Web `paywall_viewed` and `customer_center_opened` were left out until the privacy copy covers them. Setup steps and privacy-copy findings are in `docs/internal/REVENUECAT_POSTHOG.md`.
 - **iPhone Plus flow, screens per the agreed plan (WRE-250 follow-up, branch only, not released)**:
   - **Plus sheet:** opens from a Free limit or the Plan screen, with the limit as its headline. Annual is preselected, the free trial is Annual only, and the trial timeline uses real calendar dates. All amounts come from the store. Loading shows placeholder rows, and a failed load says "Plans can't load right now" with Retry.
   - **Confirming and "Plus is on":** "Plus is on" opens only after the backend records Plus. After about 10 seconds the sheet closes with "Plus is being set up". The app keeps re-sending the purchase, including on the next launch, and asks the host to retry or contact support if it stays unconfirmed. Limits stay as they are until confirmed.
@@ -20,6 +21,7 @@
 
 ### Changed
 
+- **Privacy and Cookie Policy wording for web analytics (WRE-251, branch only, not released)**: the in-app Privacy Policy (section 6) and Cookie Policy now match what the web app does. PostHog automatically records page views and interactions, makes session replays with typed form input hidden, and links signed-in web sessions to the account identifier, name and email. They used to say autocapture and replay were off and that names and emails were not sent. The iPhone wording is unchanged. The service-provider lists now name RevenueCat for Kouchd Plus subscriptions (the marketing site's Privacy Policy gets the same line). The Privacy and Cookie Policies are dated October 30, 2026; the Terms and Acceptable Use Policy keep October 23, 2026. Each legal document now has its own dates instead of sharing `legalMeta`. No separate user notice is planned (0.7.25).
 - **iOS introduction and sign-in look (branch only, not released)**:
   - The introduction steps can be swiped left and right as well as moved with Continue, Back, and Skip. A tapped move ignores the pager's in-between page reports, so the footer never jumps back to the previous step.
   - Clerk's sign-in, sign-up, and account screens use a Kouchd `ClerkTheme`: cream background, white rounded fields, forest buttons (lime with dark text in dark mode), Manrope headings, and 16-point corners.
@@ -31,6 +33,29 @@
 
 ### Fixed
 
+- **Server funnel events, enforced flags, Meta groundwork and monitoring (WRE-252 phases 2–6, branch only, not released)**:
+  - **Server events:** Convex sends the funnel events from the mutations that own them, keyed by the Clerk user ID and grouped by stay, with IDs and categories only.
+    - Account and stay: `user_signed_up`, `stay_created`, `invite_created`, `invite_accepted`, `stay_joined`, `terms_accepted`.
+    - Household activity: `contribution_recorded`, `chore_created`, `chore_completed`, `reward_claimed`.
+    - Limits: `plan_limit_hit`.
+  - **Client event fixes:** `stay_switched` counts only real switches and no longer sends the stay name. `shopping_item_purchased` fires after the save succeeds. `checkout_started` and `subscription_activated` are removed, because RevenueCat supplies purchases. A test fails if a defined event has no call site.
+  - **Feature flags:** flags read as off until Convex and PostHog have answered (2.5-second fallback), so a switched-off feature no longer flashes on. Every shopping, check-in and rewards write now honours the platform kill switch on the server. Flag overrides reject unknown keys.
+  - **Meta Pixel:** loads only when `NEXT_PUBLIC_META_PIXEL_ID` is set and the visitor allowed ads on kouchd.com, with no Global Privacy Control. It sends `PageView` and, for new accounts, `CompleteRegistration`, with the same event ID as the server's `user_signed_up`. `identify` records `ads_consent`. The ID is unset, so nothing loads. The advertising policy text in `docs/internal/META_ADS.md` must be approved first.
+  - **Monitoring:**
+    - Sentry is the only error tracker; PostHog exception capture is off.
+    - Sentry replays only sessions with an error.
+    - `verify-env` warns when a production build has no `SENTRY_AUTH_TOKEN`.
+  - **Docs:** `docs/internal/ANALYTICS.md` covers the event taxonomy, identity, consent, flags and monitoring set-up.
+- **Analytics foundations (WRE-252 phase 1, branch only, not released)**:
+  - PostHog traffic goes through the app's own `/ingest` route (`next.config.ts` rewrites to PostHog US), so ad blockers no longer drop it. Clerk's middleware skips `/ingest`.
+  - The Content-Security-Policy is defined once in `lib/security/csp.ts` and used by `next.config.ts` and `proxy.ts`, instead of hand-kept copies.
+  - PostHog shares its visitor cookie across `kouchd.com` and `app.kouchd.com` (`cross_subdomain_cookie`).
+  - New `lib/analytics/attribution.ts` records UTM parameters, `gclid` and `fbclid` in a shared first- and last-touch cookie (`kouchd_attr`, 90 days). At sign-in the first touch is added to the PostHog person as `initial_*` properties. Tested in `tests/attribution.test.ts`.
+- **Analytics and flag safety (WRE-252, branch only, not released)**:
+  - The hard-coded analytics paragraph on the in-app privacy page (`app/privacy/page.tsx`) still said names and emails were not sent to analytics. It now matches `lib/legal.ts`.
+  - Feature-flag overrides from the address bar (`?flag:<key>=true`) or localStorage now work only in development and Vercel previews. In production anyone could use them to open the Plus paywall before launch.
+  - PostHog no longer resets an anonymous visitor's ID while Clerk is still loading. It resets only after a real sign-out, so visits before sign-up stay linked to the new account.
+  - `ios/README.md` no longer says the web client turns off autocapture and replay, and notes that the tracked PostHog token is real.
 - **Sign-in page freeze (WRE-253, 0.7.23)**: `SignInFormGuard` now changes the submit button only when its state actually differs. It used to rewrite the same attributes on every change its own `MutationObserver` reported, which re-triggered the observer forever and froze `/sign-in` as soon as Clerk showed the form.
 - **Blank web app (WRE-253, 0.7.22)**: removed the `<meta>` Content-Security-Policy fallback from `app/layout.tsx`. For browser requests, a layer in front of the app rewrote the tag and split it at the semicolons in React's `&#x27;` escapes. The malformed policy blocked Next.js and Clerk scripts, so pages stayed blank. The response header CSP from `next.config.ts` and `proxy.ts` is unchanged and is now the only policy. A test keeps the tag out of the layout.
 - Web body copy is now set in Inter, as the brand design system specifies. Headings, eyebrows, metrics, buttons, pills, and the wordmark stay in Manrope (0.7.21).

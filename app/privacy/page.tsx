@@ -41,7 +41,7 @@ export default function PrivacyPolicyPage() {
             Privacy Policy
           </h1>
           <p style={{ margin: 0, color: "var(--kouchd-muted, #59675f)", fontSize: "0.9rem" }}>
-            Effective Date: {legalMeta.effectiveDate} &middot; Last updated: {legalMeta.lastUpdated} &middot; Brand: <strong>{legalMeta.provider}</strong> (operating <strong>Kouchd</strong>)
+            Effective Date: {privacyPolicy.effectiveDate} &middot; Last updated: {privacyPolicy.lastUpdated} &middot; Brand: <strong>{legalMeta.provider}</strong> (operating <strong>Kouchd</strong>)
           </p>
         </div>
 
@@ -92,7 +92,7 @@ export default function PrivacyPolicyPage() {
               <strong>Household Ledger &amp; Contribution Records:</strong> Contribution amounts, dates, categories, notes, receipt images, and chore point redemptions. <em>Note: Kouchd is an agreement and bookkeeping ledger; we do not store credit card numbers, process payments, or custody funds.</em>
             </li>
             <li style={{ marginBottom: "0.5rem" }}>
-              <strong>Technical &amp; Usage Telemetry:</strong> Browser or app version, operating system, IP address, and limited product-usage events. For signed-in sessions, analytics may use a pseudonymous account identifier and a generic screen or page category. We do not send names, email addresses, household text, invite tokens, or contribution amounts to product analytics.
+              <strong>Technical &amp; Usage Telemetry:</strong> Browser or app version, operating system, IP address, and product-usage events. In the Kouchd web app, PostHog automatically records page views and interactions and makes session replays that hide what you type into form fields; other information shown on screen, such as names, household details, and contribution amounts, can appear in them. Signed-in web sessions are linked to your account identifier, name, and email address. The Kouchd iPhone app sends only the screens you open and a pseudonymous account identifier.
             </li>
           </ul>
         </section>

@@ -6,7 +6,7 @@ import type { Id } from "./_generated/dataModel";
 import { mutation, query } from "./_generated/server";
 import { requireMembership } from "./lib/auth";
 import { recordActivity } from "./lib/activity";
-import { isFeatureEnabled } from "./flags";
+import { isFeatureEnabled, requireFeature } from "./flags";
 import { FEATURE_FLAGS } from "../lib/flags/config";
 
 function validateItem(title: string, quantity: string, note: string) {
@@ -81,6 +81,7 @@ export const update = mutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
+    await requireFeature(ctx, FEATURE_FLAGS.SHOPPING_LIST, "Household shopping list is currently disabled by platform policy.");
     const { item, user } = await requireItemEditor(ctx, args.itemId);
     validateItem(args.title, args.quantity, args.note);
     if (args.visibility === "personal" && item.createdBy !== user._id) {
@@ -96,6 +97,7 @@ export const toggle = mutation({
   args: { itemId: v.id("shoppingItems") },
   returns: v.boolean(),
   handler: async (ctx, { itemId }) => {
+    await requireFeature(ctx, FEATURE_FLAGS.SHOPPING_LIST, "Household shopping list is currently disabled by platform policy.");
     const { item, user } = await requireItemEditor(ctx, itemId);
     const checked = !item.checkedAt;
     await ctx.db.patch(item._id, { checkedAt: checked ? Date.now() : undefined, checkedBy: checked ? user._id : undefined, updatedAt: Date.now() });
@@ -108,6 +110,7 @@ export const remove = mutation({
   args: { itemId: v.id("shoppingItems") },
   returns: v.null(),
   handler: async (ctx, { itemId }) => {
+    await requireFeature(ctx, FEATURE_FLAGS.SHOPPING_LIST, "Household shopping list is currently disabled by platform policy.");
     const { item, user } = await requireItemEditor(ctx, itemId);
     const now = Date.now();
     await ctx.db.patch(item._id, { deletedAt: now, updatedAt: now });
