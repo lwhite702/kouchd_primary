@@ -168,6 +168,15 @@ describe("one trial per host billing account", () => {
     );
     expect(valid).toBe(true);
 
+    const monthly = await host.action(api.introOffer.signEligibility, {
+      productId: "kouchd_plus_monthly", appTransactionId: "2000000123456789",
+    });
+    expect(monthly.eligible).toBe(false);
+    expect(decodePart(monthly.jws!.split(".")[1])).toMatchObject({
+      productId: "kouchd_plus_monthly",
+      allowIntroductoryOffer: false,
+    });
+
     await t.mutation(internal.subscriptions.recordProviderSnapshotEvent, trialEvent(account));
     const used = await host.action(api.introOffer.signEligibility, {
       productId: "kouchd_plus_yearly", appTransactionId: "2000000123456789",

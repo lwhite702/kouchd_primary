@@ -44,6 +44,10 @@ struct HomeScreen: View {
                   .font(.title3.bold()).foregroundStyle(Palette.forest)
                 Text(stay["status"].text.capitalized)
                   .font(.subheadline).foregroundStyle(Palette.muted)
+                // iOS has no notification feed yet, so this is how a host hears about it.
+                if let blocked = store.planUsage?.blockedJoins(inStay: stay["_id"].text).count, blocked > 0 {
+                  Pill(text: "\(blocked) tried to join")
+                }
                 Rectangle().fill(Palette.line).frame(height: 1)
                 Text("Open household details").font(.subheadline).foregroundStyle(Palette.forest)
               }

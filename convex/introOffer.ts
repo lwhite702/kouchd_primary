@@ -4,7 +4,8 @@ import { internal } from "./_generated/api";
 import { action } from "./_generated/server";
 import { createIntroOfferEligibilityJws, readIntroOfferSigningConfig } from "../lib/domain/introOfferSignature";
 
-const PLUS_PRODUCTS = new Set(["kouchd_plus_monthly", "kouchd_plus_yearly"]);
+const ANNUAL_PRODUCT = "kouchd_plus_yearly";
+const PLUS_PRODUCTS = new Set(["kouchd_plus_monthly", ANNUAL_PRODUCT]);
 
 /**
  * One free trial per host billing account across web and iPhone. StoreKit
@@ -37,6 +38,8 @@ export const signEligibility = action({
     });
     if (!decision) throw new Error("Only a host can buy Kouchd Plus.");
 
+    // The free trial belongs to Annual only, whatever is set up in App Store Connect.
+    const eligible = decision.eligible && args.productId === ANNUAL_PRODUCT;
     const config = readIntroOfferSigningConfig(process.env);
     const transactionId = args.appTransactionId?.trim();
     if (!config || !transactionId || !/^[0-9]{1,30}$/.test(transactionId)) {
@@ -45,10 +48,10 @@ export const signEligibility = action({
     try {
       const jws = await createIntroOfferEligibilityJws(config, {
         productId: args.productId,
-        allowIntroductoryOffer: decision.eligible,
+        allowIntroductoryOffer: eligible,
         transactionId,
       });
-      return { eligible: decision.eligible, jws };
+      return { eligible, jws };
     } catch {
       // A malformed key must not block the purchase, only the trial wording.
       console.warn("intro_offer_signing_failed");
