@@ -260,7 +260,8 @@ struct AuthenticatedShell: View {
   @Bindable var navigator: ShellNavigator
   @Environment(\.horizontalSizeClass) private var sizeClass
   @Environment(\.dynamicTypeSize) private var typeSize
-  @State private var windowWidth: CGFloat = 0
+  @State private var columnVisibility: NavigationSplitViewVisibility = .all
+  @State private var pinsSidebar = true
 
   private var usesSidebar: Bool {
     #if DEBUG
@@ -276,7 +277,16 @@ struct AuthenticatedShell: View {
     .tint(Palette.forest)
     .focusedSceneValue(\.shellNavigator, navigator)
     .onChange(of: usesSidebar) { _, toSidebar in navigator.syncLayout(toSidebar: toSidebar) }
-    .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { windowWidth = $0 }
+    // A pinned sidebar would squeeze smaller windows, so there it stays closed until asked for.
+    // Changing visibility, not the split view's style, keeps open screens and their edits.
+    .onGeometryChange(for: Bool.self) { $0.size.width >= 1000 } action: { pinned in
+      pinsSidebar = pinned
+      // The split view ignores a change made while it is first being laid out.
+      Task { @MainActor in columnVisibility = pinned ? .all : .detailOnly }
+    }
+    .onChange(of: navigator.section) { _, _ in
+      if !pinsSidebar { columnVisibility = .detailOnly }
+    }
     .onChange(of: store.toolContext) { _, context in
       // Role and status are unknown while a stay loads, so wait for its data.
       if !store.isStayLoading { navigator.closeUnavailableTools(in: context) }
@@ -286,17 +296,8 @@ struct AuthenticatedShell: View {
     }
   }
 
-  @ViewBuilder private var sidebarLayout: some View {
-    // A pinned sidebar would squeeze smaller windows, so there it slides over the content.
-    if windowWidth >= 1000 {
-      splitView.navigationSplitViewStyle(.balanced)
-    } else {
-      splitView.navigationSplitViewStyle(.prominentDetail)
-    }
-  }
-
-  private var splitView: some View {
-    NavigationSplitView {
+  private var sidebarLayout: some View {
+    NavigationSplitView(columnVisibility: $columnVisibility) {
       StaySidebar(store: store, navigator: navigator)
         .navigationSplitViewColumnWidth(min: 240, ideal: typeSize.isAccessibilitySize ? 380 : 280, max: 420)
     } detail: {
@@ -308,6 +309,7 @@ struct AuthenticatedShell: View {
           .kouchdDestinations(store: store)
       }
     }
+    .navigationSplitViewStyle(.balanced)
   }
 
   private var tabLayout: some View {
