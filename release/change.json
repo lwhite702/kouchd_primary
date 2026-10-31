@@ -1,5 +1,5 @@
 {
   "type": "patch",
-  "version": "0.8.1",
-  "reason": "Describe Meta ad measurement in the in-app Privacy and Cookie Policies (Pixel only after Allow analytics and ads on kouchd.com, Global Privacy Control as an opt-out), and keep test fixtures out of live PostHog, Knock and Loops."
+  "version": "0.8.2",
+  "reason": "Remove made-up payment handles and payment-processor wording from the iOS contribution form (WRE-257)."
 }

@@ -181,6 +181,36 @@ enum P2PRouting {
     }
   }
 
+  /// Every channel except cash routes to a person, so it needs a real handle.
+  static func requiresHandle(_ channel: P2PChannel) -> Bool {
+    channel != .cash
+  }
+
+  /// The handle to route to: the host's saved one, then one the person entered.
+  /// Returns nil when there is none, and the route stays blocked. Never substitute a placeholder here:
+  /// a made-up handle can belong to a real stranger.
+  static func resolvedHandle(channel: P2PChannel, configured: String, entered: String) -> String? {
+    let candidates = [configured, entered].map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+    if let handle = candidates.first(where: { isUsableHandle(channel: channel, handle: $0) }) {
+      return handle
+    }
+    return requiresHandle(channel) ? nil : "Hand directly to your host"
+  }
+
+  /// A bare prefix such as "@" or an empty paypal.me link names nobody.
+  private static func isUsableHandle(channel: P2PChannel, handle: String) -> Bool {
+    switch channel {
+    case .venmo:
+      return !handle.replacingOccurrences(of: "^@", with: "", options: .regularExpression).isEmpty
+    case .cashapp, .chime:
+      return !handle.replacingOccurrences(of: "^\\$", with: "", options: .regularExpression).isEmpty
+    case .paypal:
+      return !normalizePayPalHandle(handle).isEmpty
+    case .zelle, .cash, .applepay:
+      return !handle.isEmpty
+    }
+  }
+
   static func formattedHandle(channel: P2PChannel, rawHandle: String) -> String {
     let trimmed = rawHandle.trimmingCharacters(in: .whitespacesAndNewlines)
     if trimmed.isEmpty {
