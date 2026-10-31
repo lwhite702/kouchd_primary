@@ -239,13 +239,15 @@ export function ShoppingList({
                       type="button"
                       disabled={busy}
                       onClick={() => {
+                        const checkingOff = !item.checkedAt;
                         void run(
                           () => toggleItem({ itemId: item._id }),
                           "Could not update this item.",
-                        );
-                        if (!item.checkedAt) {
-                          trackEvent(ANALYTICS_EVENTS.SHOPPING_ITEM_PURCHASED, { stayId, itemId: item._id });
-                        }
+                        ).then((saved) => {
+                          if (saved && checkingOff) {
+                            trackEvent(ANALYTICS_EVENTS.SHOPPING_ITEM_PURCHASED, { stayId, itemId: item._id });
+                          }
+                        });
                       }}
                       aria-label={`${item.checkedAt ? "Uncheck" : "Check off"} ${item.title}`}
                     >

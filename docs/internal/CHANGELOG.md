@@ -7,6 +7,90 @@ Internal engineering record. This file is excluded from Mintlify navigation and 
 - Sidebar navigation, width-driven layouts, Ledger list and detail, keyboard shortcuts, and a DEBUG layout test host on `codex/WRE-254-ipad-redesign`. Version 0.8.0. Branch only.
 - Details, evidence, and open items: `docs/internal/WRE-254-ipad-handoff.md`.
 
+
+## 2026-10-31 — Google Tag Manager removed (WRE-252)
+
+- Decision (Lee): no Tag Manager on either site; PostHog covers it.
+- App: removed `components/google-tag-manager.tsx`, its mount in `app/layout.tsx`, the Google hosts in `lib/security/csp.ts`, and the Tag Manager wording in `lib/legal.ts` and `app/privacy/page.tsx`. The policies go back to the October 30 text, which was never published, so their dates stay October 30.
+- Marketing (`kouchd_marketing`): removed the Tag Manager loader from `Analytics.astro` and its policy wording. GA4 still loads directly after "Allow analytics".
+- `main` also merged into this branch, so it's now 0.7.25 (`main` used 0.7.22–0.7.24 for WRE-253 and WRE-256).
+
+## 2026-10-30 — Previews on production Clerk
+
+- Decision (Lee): Vercel previews keep the production Clerk instance. Its only domain is `kouchd.com` (Frontend API `clerk.kouchd.com`), so it refuses `*.vercel.app` origins; that was the blank `/sign-in` with a Clerk 400 on previews.
+- `proxy.ts` trusts `https://preview.kouchd.com` when `VERCEL_ENV` is `preview`.
+- **Still to do (needs approval, not done):**
+  1. Vercel app project → Domains → add `preview.kouchd.com`, assigned to a Git branch (currently `claude/inspiring-volta-fvyy1z`; change the branch as needed).
+  2. Cloudflare DNS (kouchd.com is on Cloudflare): CNAME `preview` → `cname.vercel-dns.com`, **DNS only** (grey cloud).
+  3. Open `https://preview.kouchd.com/sign-in`. Previews sign in with real production accounts; use a test account.
+- `*.vercel.app` preview URLs still won't sign in. Only the branch assigned to `preview.kouchd.com` can.
+
+## 2026-10-30 — Analytics phases 2–6 (WRE-252)
+
+- **Phase 2:** `trackServerEvent` (`convex/lib/posthog.ts`) is called from users, stays, invites, referral, terms, contributions, chores, rewards and subscriptions.
+  - `CONTRIBUTION_RECORDED` replaces `PAYMENT_RECORDED`, matching the "contribution" wording.
+  - New events: `USER_SIGNED_UP` and `PLAN_LIMIT_HIT`.
+  - Removed: `CHECKOUT_STARTED` and `SUBSCRIPTION_ACTIVATED`.
+  - Tests: `tests/server-analytics.test.ts`, and the coverage test in `tests/analytics.test.ts`.
+- **Phase 3:**
+  - `lib/flags/resolve.ts` and the rewritten `useFeatureFlag` (off while loading; 2.5-second PostHog fallback).
+  - `requireFeature` in every gated write.
+  - `setOverride` key validation. `tests/platform-admin.test.ts` used the misspelled key `enable_sms_reminders`; it now uses `feature_sms_reminders` and checks the refusal.
+  - Server-side bootstrapping was not added, because reading cookies in the root layout would make every page dynamic.
+- **Phase 4 (marketing):**
+  - PostHog loads after consent through the `vercel.json` `/ingest` rewrites.
+  - `cta_clicked` event; the last campaign touch is appended to sign-up links.
+  - "Cookie settings" link added to the legal footer.
+  - The marketing policies now describe PostHog and the shared cookies.
+  - Added the `/ingest/array` route to both proxies.
+- **Phase 5:**
+  - Meta Pixel on both sites behind the ads choice, Global Privacy Control and a Pixel ID that is unset.
+  - `meta_event_id` on `user_signed_up`; `ads_consent` person property.
+  - CSP allows the Meta hosts.
+  - Setup steps and draft policy text in `docs/internal/META_ADS.md`, not published.
+- **Phase 6:** PostHog `capture_exceptions` off; Sentry session replay 0 (errors only); `verify-env` warns on a missing `SENTRY_AUTH_TOKEN` in production. Convex→Sentry, iOS Sentry, uptime checks and alerts are listed in `docs/internal/ANALYTICS.md` as dashboard work.
+- **Phase 7 (dashboards):** deferred until the new events arrive in PostHog, so each insight can be checked against data.
+- **Evidence:**
+  - `vitest run`: 40 files, 231 tests.
+  - `tsc --noEmit`, `eslint` and `next build` pass.
+  - Marketing: `astro check`, `eslint`, `prettier` and `npm run build` pass.
+  - Chromium against `astro preview`:
+    - No PostHog traffic before consent; after consent it goes to `/ingest`.
+    - The sign-up link gained `utm_source` and `utm_campaign`.
+    - With a test Pixel ID, Meta loads only after "Allow analytics and ads" and never with GPC.
+  - Unverified: production delivery through `/ingest`, Convex server events reaching PostHog, and anything involving Meta.
+
+## 2026-10-30 — Analytics foundations, phase 1 (WRE-252)
+
+- `/ingest` proxy: rewrites in `next.config.ts` (`/ingest/static/*` to `us-assets.i.posthog.com`, `/ingest/*` to `us.i.posthog.com`), plus `skipTrailingSlashRedirect`. `proxy.ts` matcher skips `ingest`. `posthog.init` uses `api_host: "/ingest"`. `NEXT_PUBLIC_POSTHOG_HOST` is now read only by `convex/posthog.ts` (`.env.example` says so).
+- CSP: `lib/security/csp.ts` is the one source. It exports the directives (for Clerk), the header string, and the `<meta>` string without `frame-ancestors`. Directive content is unchanged.
+- `cross_subdomain_cookie: true` on PostHog.
+- `lib/analytics/attribution.ts`: shared `kouchd_attr` cookie on `.kouchd.com` (host-only on previews and localhost). `captureAttribution()` runs after `posthog.init`; `PostHogAuthSync` passes `initial_*` properties as `$set_once` on identify.
+- Marketing site (`kouchd_marketing`, same branch): `src/components/common/ConsentBridge.astro` mirrors the banner choice into a `kouchd_consent` cookie (`analytics`, `ads` always false for now, `gpc` from Global Privacy Control). With analytics consent it records `kouchd_attr`; choosing "Only necessary" clears it.
+- Evidence:
+  - `next build` passes. Built routes manifest shows both rewrites and a CSP header with `frame-ancestors`.
+  - Locally, `/ingest/*` reached the rewrite without Clerk. The upstream fetch failed only because this sandbox can't resolve PostHog's hosts.
+  - Marketing preview in Chromium: no cookies before a choice; consent and attribution cookies after "Allow analytics"; attribution cleared after "Only necessary".
+  - `vitest run` passes. Not yet checked: production delivery through `/ingest`.
+
+## 2026-10-30 — Analytics and flags review, phase 0 (WRE-252)
+
+- Full PostHog, flag, observability and conversion review; the phased plan is in WRE-252.
+- `app/privacy/page.tsx`: the hard-coded telemetry bullet matched neither `lib/legal.ts` nor the code. Rewritten to match `lib/legal.ts` section 6.
+- `lib/flags/client.ts`: new `localOverridesAllowed()`. It returns false when `NEXT_PUBLIC_VERCEL_ENV` is `production`, or when that variable is unset and `NODE_ENV` is `production`. `getLocalDevOverride` returns null then. Test added in `tests/feature-flags.test.ts`.
+- `components/posthog-provider.tsx`: `PostHogAuthSync` waits for Clerk `isLoaded`, and calls `reset()` only when PostHog's `$user_state` is `identified`. Before this, every signed-out page load reset the anonymous ID.
+- `ios/README.md`: the web-client analytics description and the tracked PostHog token note corrected.
+- Checks: `vitest run` (36 files, 215 tests), `tsc --noEmit`, `eslint` on the changed files (no errors), release gate passes.
+
+## 2026-10-29 — RevenueCat → PostHog preparation (WRE-251)
+
+- Context: RevenueCat's PostHog integration sends subscription lifecycle events to PostHog from RevenueCat's servers. It is not turned on; the `Kouchd` PostHog project (595950) had no RevenueCat, purchase, paywall or checkout events in the last 60 days.
+- First commit sent `paywall_viewed` and `customer_center_opened` from `components/billing/paywall-modal.tsx`. Removed after review (xhawk): the in-app Privacy Policy section 6 limits optional telemetry to page and screen categories, `paywall_viewed` fired before the paywall rendered, and `customer_center_opened` can't detect a blocked pop-up (`window.open` with `noopener` returns `null`). The doc records how to add them once the copy is approved.
+- `tests/revenuecat-posthog.test.ts`: source checks that web and iOS identify PostHog and RevenueCat with the same Clerk user ID (so no `$posthogUserId` attribute is needed), and that the paywall does not send `checkout_started` or `subscription_activated`. No product code changes.
+- Decision (Lee, 2026-10-30): keep web autocapture and session replay on; change the policy, not the config. `lib/legal.ts` Privacy Policy section 6 and Cookie Policy "Performance and diagnostics" rewritten to say what the web app records, including that replays hide typed input but can show names, household details and contribution amounts, and that signed-in web sessions are linked to account ID, name and email. Decisions (Lee, 2026-10-30): keep sending name and email with the web `identify`; add RevenueCat to the service-provider lists here and in `kouchd_marketing`; no separate user notice. Dates moved from shared `legalMeta` to each `LegalDocumentData` (review finding: a shared date re-dated unchanged documents). Privacy and Cookie Policies are dated October 30, 2026; Terms and Acceptable Use keep October 23, 2026. Same change in `kouchd_marketing`, where only the Privacy Policy moves. Version 0.7.25 (`main` used 0.7.22–0.7.24 for WRE-253 and WRE-256).
+- `docs/internal/REVENUECAT_POSTHOG.md`: identity table, event plan, dashboard checklist, verification query, privacy findings.
+- Privacy findings (open, need approval): neither privacy policy names RevenueCat; the in-app Cookie Policy's PostHog sentence would no longer be accurate once plan data arrives; and on web the policy already conflicts with `autocapture: true`, session replay, and `identify` sending email and name.
+- Checks: `vitest run` (36 files, 214 tests), `tsc --noEmit`, `eslint` on changed files. The RevenueCat docs page could not be fetched from this environment; the dashboard steps follow its PostHog integration and must be confirmed in the RevenueCat dashboard.
 ## 2026-10-30 — iPhone Plus flow per flow plan section 6 (WRE-250 follow-up)
 
 - Built P1, P3, P4 and P5 and the host spots UI on the backend from #93. New file: `ios/Kouchd/PlusFlow.swift`.

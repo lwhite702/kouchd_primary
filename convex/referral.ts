@@ -10,6 +10,8 @@ import { generateReferralCode, normalizeReferralCode } from "../lib/referral";
 import { ensureGuestTerms, offerGuestAgreement } from "./lib/stayTerms";
 import { scheduleSubscriptionLimitShadow } from "./subscriptionShadow";
 import { clearBlockedJoins } from "./subscriptions";
+import { ANALYTICS_EVENTS } from "../lib/analytics/events";
+import { trackServerEvent } from "./lib/posthog";
 
 export const preview = query({
   args: { referralCode: v.string() },
@@ -140,6 +142,7 @@ export const joinWithCode = mutation({
       detail: `${user.name} joined the household with a referral code`,
       entityId: stay._id,
     });
+    trackServerEvent(ctx, user, ANALYTICS_EVENTS.STAY_JOINED, { stayId: stay._id, via: "referral_code" }, stay._id);
 
     return { stayId: stay._id, alreadyMember: false };
   },
