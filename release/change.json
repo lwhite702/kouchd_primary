@@ -1,5 +1,5 @@
 {
   "type": "patch",
-  "version": "0.8.2",
-  "reason": "Remove made-up payment handles and payment-processor wording from the iOS contribution form (WRE-257)."
+  "version": "0.8.3",
+  "reason": "Removes made-up payment handles and payment-processor wording from the web contribution router (WRE-259)."
 }

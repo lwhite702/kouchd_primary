@@ -90,6 +90,7 @@ export function KouchdWorkspace({ servicesConfigured }: { servicesConfigured: bo
   const [toast, setToast] = useState("");
   const [contributions, setContributions] = useState(initialContributions);
   const [chores, setChores] = useState(initialChores);
+  const [coinsRemaining, setCoinsRemaining] = useState(50);
   const [ended, setEnded] = useState(false);
   const [confirmEnd, setConfirmEnd] = useState(false);
   const [tourOpen, setTourOpen] = useState(false);
@@ -176,18 +177,32 @@ export function KouchdWorkspace({ servicesConfigured }: { servicesConfigured: bo
       house_work: "House work",
       other: "Other",
     };
-    setContributions((items) => [
-      {
+    // Only the part sent outside Kouchd waits for confirmation. A Coins credit needs none.
+    const added: Contribution[] = [];
+    if (payload.netPaymentAmountCents > 0) {
+      added.push({
         id: crypto.randomUUID(),
         type: labelMap[payload.type] ?? "Payment",
-        amountCents: payload.grossAmountCents,
+        amountCents: payload.netPaymentAmountCents,
         date: payload.date,
         note: payload.note || "Shared contribution",
         status: "pending",
         countsTowardBalance: payload.countsTowardBalance,
-      },
-      ...items,
-    ]);
+      });
+    }
+    if (payload.rewardCreditCents > 0) {
+      setCoinsRemaining((coins) => Math.max(0, coins - payload.pointsRedeemed));
+      added.push({
+        id: crypto.randomUUID(),
+        type: "Coins credit",
+        amountCents: payload.rewardCreditCents,
+        date: payload.date,
+        note: `${payload.pointsRedeemed} Coins`,
+        status: "confirmed",
+        countsTowardBalance: payload.countsTowardBalance,
+      });
+    }
+    setContributions((items) => [...added, ...items]);
   }
 
   function addChore(event: FormEvent<HTMLFormElement>) {
@@ -367,28 +382,28 @@ export function KouchdWorkspace({ servicesConfigured }: { servicesConfigured: bo
         {modal === "contribution" && (
           <P2PPaymentRouter
             transaction={{
-              transactionId: "KCH-994827",
               amount: "200.00",
               memo: "Maple House · Week two contribution",
-              recipientVenmo: "lee-maplehouse",
-              recipientCashApp: "leemaplehouse",
-              recipientChime: "lee-maple-house",
-              recipientZelle: "lee@maplehouse.example",
+              recipientVenmo: "",
+              recipientCashApp: "",
+              recipientChime: "",
+              recipientZelle: "",
               recipientCashNote: "Leave on the kitchen counter or hand to Lee",
             }}
+            otherPerson={role === "host" ? "Marcus" : "Lee"}
             defaultDate={today}
             allowEditingDetails={true}
             rewardWallet={{
               enabled: true,
-              availablePoints: 50,
+              availablePoints: coinsRemaining,
               coinName: "Coins",
               centsPerPoint: 100,
-              maxRedeemablePoints: 50,
+              maxRedeemablePoints: coinsRemaining,
             }}
             onLogContribution={handleLogPreviewContribution}
             onComplete={() => {
               setModal(null);
-              notify("Contribution added for confirmation.");
+              notify("Saved to the Ledger.");
             }}
             onCancel={() => setModal(null)}
           />

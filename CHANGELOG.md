@@ -39,6 +39,13 @@
 
 ### Fixed
 
+- **Web contribution router trust fixes (WRE-259, 0.8.3, branch only, not released)**:
+  - The router no longer falls back to made-up handles such as `johndoe`, and the preview workspace no longer ships made-up host handles. When a stay has no saved handle for the chosen app, one must be entered, and the app link, QR code, and copy step stay blocked until then. A bare `@`, `$`, or paypal.me link with no name doesn't count. Routes also stay blocked without an amount. Apple Cash now uses the copy-and-send step, because it has no app link to open.
+  - The handle field no longer disappears after the first typed character.
+  - The 4.5-second paced saving screen stays, kept at the owner's request. Its last step now says "Marking it for confirmation..." instead of claiming the host got a heads-up. A save handler is now required, so the router can't report a save that didn't happen.
+  - The saved screen no longer says "Transaction ID", "Settled Amount", or "Timestamp", and the made-up `KCH-994827` reference and 4500-cent default amount are removed. It now describes a saved shared record that is pending until the other person confirms it, and says the record is not proof that money moved.
+  - The screens no longer say Kouchd opened an app, gave the host a heads-up, or pre-filled an amount, and developer labels such as "Compiled Link" and "Level-H QR" are gone.
+  - In the preview workspace, only the amount sent outside Kouchd is saved as pending. A Coins credit is saved as its own confirmed entry, matching the iOS split, and used Coins come off the preview's balance.
 - **iOS contribution form trust fixes (WRE-257, 0.8.2, branch only, not released)**:
   - The form no longer falls back to made-up handles such as `johndoe`, which could have opened a payment app aimed at a real stranger. When the stay has no saved handle for the chosen app, one must be entered, and the app link, QR code, and copy step stay blocked until then. A handle typed for one app is cleared when you pick another. Apple Cash now uses the copy-and-send step, because it has no app link to open.
   - The 4.5-second paced saving screen stays, kept at the owner's request. Its last step now says "Marking it for confirmation..." instead of claiming the host got a heads-up.

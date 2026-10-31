@@ -4,7 +4,6 @@ export type P2PNetworkId = "venmo" | "cashapp" | "chime" | "paypal" | "zelle";
 export type ExtendedPaymentChannelId = P2PNetworkId | "cash" | "applepay";
 
 export interface P2PTransactionInput {
-  transactionId: string;
   amount: string;
   memo: string;
   recipientVenmo: string;
@@ -24,18 +23,6 @@ export interface RewardOffsetSummary {
   netPayableFormatted: string;
 }
 
-export const DEFAULT_P2P_TRANSACTION: P2PTransactionInput = {
-  transactionId: "TXN-994827",
-  amount: "45.00",
-  memo: "House stay contribution",
-  recipientVenmo: "johndoe",
-  recipientCashApp: "johndoe33",
-  recipientChime: "john-doe-chime",
-  recipientZelle: "johndoe@email.com",
-  recipientCashNote: "Leave on the kitchen counter or hand directly to your host.",
-  recipientPayPal: "johndoe",
-};
-
 /**
  * Parses a client User-Agent string to determine if the device is a mobile phone/tablet
  * capable of native P2P app deep-linking.
@@ -54,52 +41,92 @@ function normalizePayPalHandle(raw: string): string {
   return raw
     .trim()
     .replace(/^@/, "")
-    .replace(/^https?:\/\/(www\.)?paypal\.me\//i, "")
-    .replace(/^paypal\.me\//i, "")
+    .replace(/^(https?:\/\/)?(www\.)?paypal\.me(\/|$)/i, "")
     .split(/[/?#]/)[0]
     .trim();
 }
 
+function normalizeVenmoHandle(raw: string): string {
+  return raw.trim().replace(/^@/, "").trim();
+}
+
+function normalizeDollarHandle(raw: string): string {
+  return raw.trim().replace(/^\$/, "").trim();
+}
+
 /**
- * Builds the exact outbound deep-link or QR string for a given network and transaction.
- * 1. Venmo:   venmo://paycharge?txn=pay&recipients=[username]&amount=[amount]&note=[url_encoded_memo]
- * 2. CashApp: https://cash.app/$[cashtag]/[amount]
- * 3. Chime:   https://app.chime.com/link/qr?u=[chimesign]
- * 4. PayPal:  https://paypal.me/[username]/[amount]
- * 5. Zelle:   raw recipient credential string
+ * The person-identifying part of a channel's handle, or "" when there is none.
+ * A bare prefix such as "@" or an empty paypal.me link names nobody.
+ * Never substitute a placeholder here: a made-up handle can belong to a real stranger.
+ */
+function normalizedRecipient(
+  network: Exclude<ExtendedPaymentChannelId, "cash">,
+  tx: P2PTransactionInput,
+): string {
+  switch (network) {
+    case "venmo":
+      return normalizeVenmoHandle(tx.recipientVenmo);
+    case "cashapp":
+      return normalizeDollarHandle(tx.recipientCashApp);
+    case "chime":
+      return normalizeDollarHandle(tx.recipientChime);
+    case "paypal":
+      return normalizePayPalHandle(tx.recipientPayPal ?? "");
+    case "zelle":
+      return tx.recipientZelle.trim();
+    case "applepay":
+      return tx.recipientApplePay?.trim() ?? "";
+  }
+}
+
+/**
+ * Every channel except cash routes to a person, so it needs a real handle
+ * before any app link, QR code, or copy step.
+ */
+export function hasUsableRecipient(
+  network: ExtendedPaymentChannelId,
+  tx: P2PTransactionInput,
+): boolean {
+  return network === "cash" || normalizedRecipient(network, tx) !== "";
+}
+
+/**
+ * Builds the exact outbound deep-link, QR string, or copy value for a given network and transaction.
+ * Returns null when the channel has no real handle, and the route stays blocked.
+ * 1. Venmo:      venmo://paycharge?txn=pay&recipients=[username]&amount=[amount]&note=[url_encoded_memo]
+ * 2. CashApp:    https://cash.app/$[cashtag]/[amount]
+ * 3. Chime:      https://app.chime.com/link/qr?u=[chimesign]
+ * 4. PayPal:     https://paypal.me/[username]/[amount]
+ * 5. Zelle:      raw recipient credential string
+ * 6. Apple Cash: raw recipient credential string
  */
 export function buildNetworkRouteUri(
   network: ExtendedPaymentChannelId,
   tx: P2PTransactionInput,
   overrideAmount?: string,
-): string {
+): string | null {
+  if (network === "cash") {
+    return tx.recipientCashNote?.trim() || "In-person cash handoff with your host";
+  }
+
+  const recipient = normalizedRecipient(network, tx);
+  if (!recipient) return null;
+
   const cleanAmount = (overrideAmount ?? tx.amount).trim();
-  const encodedMemo = encodeURIComponent(tx.memo.trim());
+  const encodedRecipient = encodeURIComponent(recipient);
 
   switch (network) {
-    case "venmo": {
-      const cleanVenmo = tx.recipientVenmo.replace(/^@/, "").trim();
-      return `venmo://paycharge?txn=pay&recipients=${encodeURIComponent(cleanVenmo)}&amount=${encodeURIComponent(cleanAmount)}&note=${encodedMemo}`;
-    }
-    case "cashapp": {
-      const cleanCashtag = tx.recipientCashApp.replace(/^\$/, "").trim();
-      return `https://cash.app/$${encodeURIComponent(cleanCashtag)}/${encodeURIComponent(cleanAmount)}`;
-    }
-    case "chime": {
-      const cleanChime = tx.recipientChime.replace(/^\$/, "").trim();
-      return `https://app.chime.com/link/qr?u=${encodeURIComponent(cleanChime)}`;
-    }
-    case "paypal": {
-      const cleanPayPal = normalizePayPalHandle(tx.recipientPayPal ?? "");
-      if (!cleanPayPal) return "https://paypal.me";
-      return `https://paypal.me/${encodeURIComponent(cleanPayPal)}/${encodeURIComponent(cleanAmount)}`;
-    }
+    case "venmo":
+      return `venmo://paycharge?txn=pay&recipients=${encodedRecipient}&amount=${encodeURIComponent(cleanAmount)}&note=${encodeURIComponent(tx.memo.trim())}`;
+    case "cashapp":
+      return `https://cash.app/$${encodedRecipient}/${encodeURIComponent(cleanAmount)}`;
+    case "chime":
+      return `https://app.chime.com/link/qr?u=${encodedRecipient}`;
+    case "paypal":
+      return `https://paypal.me/${encodedRecipient}/${encodeURIComponent(cleanAmount)}`;
     case "zelle":
-      return tx.recipientZelle.trim();
-    case "cash":
-      return tx.recipientCashNote?.trim() || "In-person cash handoff with your host";
     case "applepay":
-      return tx.recipientApplePay?.trim() || "";
+      return recipient;
   }
 }
 
@@ -107,29 +134,24 @@ export function formatRecipientHandle(
   network: ExtendedPaymentChannelId,
   tx: P2PTransactionInput,
 ): string {
+  if (network === "cash") {
+    return tx.recipientCashNote?.trim() || "Hand directly to your host";
+  }
+
+  const recipient = normalizedRecipient(network, tx);
+  if (!recipient) return "Not set by host";
+
   switch (network) {
-    case "venmo": {
-      const handle = tx.recipientVenmo.replace(/^@/, "").trim();
-      return handle ? `@${handle}` : "Not set by host";
-    }
-    case "cashapp": {
-      const handle = tx.recipientCashApp.replace(/^\$/, "").trim();
-      return handle ? `$${handle}` : "Not set by host";
-    }
-    case "chime": {
-      const handle = tx.recipientChime.replace(/^\$/, "").trim();
-      return handle ? `$${handle}` : "Not set by host";
-    }
-    case "paypal": {
-      const handle = normalizePayPalHandle(tx.recipientPayPal ?? "");
-      return handle ? `paypal.me/${handle}` : "Not set by host";
-    }
+    case "venmo":
+      return `@${recipient}`;
+    case "cashapp":
+    case "chime":
+      return `$${recipient}`;
+    case "paypal":
+      return `paypal.me/${recipient}`;
     case "zelle":
-      return tx.recipientZelle.trim() || "Not set by host";
-    case "cash":
-      return tx.recipientCashNote?.trim() || "Hand directly to your host";
     case "applepay":
-      return tx.recipientApplePay?.trim() || "Not set by host";
+      return recipient;
   }
 }
 
@@ -179,7 +201,6 @@ export function calculateContributionWithRewards(params: {
  * Maps a stay's configured paymentOptions and current balance into a unified P2PTransactionInput.
  */
 export function buildTransactionInputFromStay(params: {
-  stayId?: string;
   stayName?: string;
   suggestedAmountCents?: number;
   defaultMemo?: string;
@@ -188,15 +209,13 @@ export function buildTransactionInputFromStay(params: {
   const byProvider = new Map(
     (params.paymentOptions ?? []).map((item) => [item.provider, item.detail.trim()]),
   );
-  const suffix = (params.stayId ?? "994827").slice(-6).toUpperCase();
-  const amountCents =
+  const amount =
     typeof params.suggestedAmountCents === "number" && params.suggestedAmountCents > 0
-      ? params.suggestedAmountCents
-      : 4500;
+      ? (params.suggestedAmountCents / 100).toFixed(2)
+      : "";
 
   return {
-    transactionId: `KCH-${suffix}`,
-    amount: (amountCents / 100).toFixed(2),
+    amount,
     memo: params.defaultMemo?.trim() || (params.stayName ? `${params.stayName} stay contribution` : "Shared stay contribution"),
     recipientVenmo: byProvider.get("venmo") ?? "",
     recipientCashApp: byProvider.get("cashapp") ?? "",
