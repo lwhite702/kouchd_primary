@@ -215,6 +215,18 @@ private enum KouchdAuthError: LocalizedError {
   var featureLoading: Set<StayFeature> = []
   private var adminSubscriptions: [String: [AnyCancellable]] = [:]
   private var adminVersions: [String: Int] = [:]
+  #if DEBUG
+  /// Set only by the layout test host. A seeded store never subscribes or mutates.
+  private var isSeeded = false
+
+  init(seed: (KouchdStore) -> Void) {
+    client = ConvexClientWithAuth(deploymentUrl: "https://seed.invalid", authProvider: KouchdAuthProvider())
+    isSeeded = true
+    isLoading = false
+    isSubscriptionSummaryLoading = false
+    seed(self)
+  }
+  #endif
 
   init() {
     client = ConvexClientWithAuth(
@@ -429,6 +441,9 @@ private enum KouchdAuthError: LocalizedError {
 
   func selectStay(_ id: String) {
     guard !id.isEmpty else { return }
+    #if DEBUG
+    if isSeeded { selectedStayID = id; return }
+    #endif
     stayGeneration += 1
     financialGeneration += 1
     isStayLoading = true
@@ -465,6 +480,9 @@ private enum KouchdAuthError: LocalizedError {
 
   func selectGuest(_ id: String) {
     selectedGuestID = id
+    #if DEBUG
+    if isSeeded { return }
+    #endif
     loadGuestData()
   }
 
@@ -516,6 +534,9 @@ private enum KouchdAuthError: LocalizedError {
   }
 
   private func loadFeature(_ feature: StayFeature) {
+    #if DEBUG
+    if isSeeded { return }
+    #endif
     guard !selectedStayID.isEmpty, !isStayLoading else { return }
     featureLoading.insert(feature)
     featureVersions[feature, default: 0] += 1
@@ -544,6 +565,9 @@ private enum KouchdAuthError: LocalizedError {
     adminScope: String = "",
     feature: StayFeature? = nil
   ) {
+    #if DEBUG
+    if isSeeded { return }
+    #endif
     let featureEpoch = featureGeneration
     let adminVersion = adminVersions[adminScope, default: 0]
     let featureVersion = feature.map { featureVersions[$0, default: 0] }
@@ -636,6 +660,9 @@ private enum KouchdAuthError: LocalizedError {
   }
 
   func mutateValue(_ name: String, _ args: [String: ConvexEncodable?]) async -> Value? {
+    #if DEBUG
+    if isSeeded { return .null }
+    #endif
     let accountEpoch = accountGeneration
     let stayEpoch = stayGeneration
     let guestEpoch = financialGeneration

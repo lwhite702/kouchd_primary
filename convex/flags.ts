@@ -34,6 +34,11 @@ export async function isFeatureEnabled(
   return meta?.defaultValue ?? true;
 }
 
+/** Throws when a platform kill switch has turned the feature off. */
+export async function requireFeature(ctx: AppCtx, key: string, message: string): Promise<void> {
+  if (!(await isFeatureEnabled(ctx, key))) throw new Error(message);
+}
+
 export const list = query({
   args: {},
   handler: async (ctx) => {
@@ -87,6 +92,7 @@ export const setOverride = mutation({
   },
   handler: async (ctx, args) => {
     const { user, identity } = await requirePlatformAdmin(ctx);
+    if (!(args.key in FEATURE_FLAGS_REGISTRY)) throw new Error(`Unknown feature flag: ${args.key}`);
     const rawReason = args.reason !== undefined ? args.reason : (args.note ?? `Feature flag ${args.key} set to ${args.override}`);
     const auditReason = requireAuditReason(rawReason);
 
