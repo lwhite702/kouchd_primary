@@ -2,6 +2,15 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-10-30 — iOS contribution form trust fixes (WRE-257)
+
+- Removed made-up fallback handles from `ContributionForm`, and replaced payment-processor wording with a saved shared record pending confirmation.
+- Kept the 4.5-second paced saving screen by owner decision (2026-10-30). It runs before the save and checks nothing. Its heads-up step was reworded.
+- `contributions:create` stores `status: "pending"`; `rewards:redeem` stores a confirmed credit. The saved screen follows that split.
+- Not changed: the web router `components/household/p2p-payment-router.tsx` and `lib/domain/p2pRouting.ts` have the same made-up handles and receipt wording.
+- Evidence: 39 KouchdTests passed on a dedicated iPhone 17 Pro simulator. The Debug test host with synthetic config and no real backend showed the blocked route, unlock after entering a handle, the handle clearing on app switch, cash without a handle, the send confirmation, the saved screen, and a failed save showing an error. Not checked: a successful save against a real backend, a fully coin-covered save, and the Apple Cash copy step on screen.
+- Branch only. Not pushed, released, or verified against real accounts.
+
 ## 2026-10-31 — Meta advertising wording approved (WRE-252)
 
 - Decision (Lee, 2026-10-31): publish the Meta wording drafted in `docs/internal/META_ADS.md`, then set Pixel ID `1163132673323923` on both sites.

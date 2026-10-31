@@ -66,6 +66,44 @@ import XCTest
     XCTAssertTrue(model.message.contains("restored"))
   }
 
+  func testHandleIsRequiredForEveryRoutedChannelWhenNoneIsKnown() {
+    for channel in P2PChannel.allCases where channel != .cash {
+      XCTAssertTrue(P2PRouting.requiresHandle(channel))
+      XCTAssertNil(
+        P2PRouting.resolvedHandle(channel: channel, configured: "", entered: ""),
+        "\(channel.label) must stay blocked without a handle"
+      )
+      XCTAssertNil(P2PRouting.resolvedHandle(channel: channel, configured: "  ", entered: "\n "))
+    }
+  }
+
+  func testBarePrefixesAndEmptyLinksDoNotCountAsHandles() {
+    XCTAssertNil(P2PRouting.resolvedHandle(channel: .venmo, configured: "", entered: "@"))
+    XCTAssertNil(P2PRouting.resolvedHandle(channel: .cashapp, configured: "", entered: "$"))
+    XCTAssertNil(P2PRouting.resolvedHandle(channel: .chime, configured: "$", entered: ""))
+    XCTAssertNil(P2PRouting.resolvedHandle(channel: .paypal, configured: "", entered: "https://paypal.me/"))
+  }
+
+  func testEnteredHandleReplacesAnUnusableSavedHandle() {
+    XCTAssertEqual(P2PRouting.resolvedHandle(channel: .venmo, configured: "@", entered: "maple-host"), "maple-host")
+    XCTAssertEqual(P2PRouting.resolvedHandle(channel: .paypal, configured: "https://paypal.me/", entered: "maple"), "maple")
+  }
+
+  func testSavedHandleWinsAndEnteredHandleIsTrimmed() {
+    XCTAssertEqual(
+      P2PRouting.resolvedHandle(channel: .venmo, configured: "@maple-host", entered: "someone-else"),
+      "@maple-host"
+    )
+    XCTAssertEqual(P2PRouting.resolvedHandle(channel: .venmo, configured: " ", entered: " maple-host "), "maple-host")
+    XCTAssertEqual(P2PRouting.resolvedHandle(channel: .zelle, configured: "", entered: "host@example.com"), "host@example.com")
+  }
+
+  func testCashNeverNeedsAHandle() {
+    XCTAssertFalse(P2PRouting.requiresHandle(.cash))
+    XCTAssertEqual(P2PRouting.resolvedHandle(channel: .cash, configured: "", entered: ""), "Hand directly to your host")
+    XCTAssertEqual(P2PRouting.resolvedHandle(channel: .cash, configured: "Kitchen drawer", entered: ""), "Kitchen drawer")
+  }
+
   func testP2PRoutingBuildsExpectedDeepLinksAndRewardsOffset() {
     let venmoURI = P2PRouting.buildURI(
       channel: .venmo,

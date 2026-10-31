@@ -46,6 +46,13 @@
   - The saved screen no longer says "Transaction ID", "Settled Amount", or "Timestamp", and the made-up `KCH-994827` reference and 4500-cent default amount are removed. It now describes a saved shared record that is pending until the other person confirms it, and says the record is not proof that money moved.
   - The screens no longer say Kouchd opened an app, gave the host a heads-up, or pre-filled an amount, and developer labels such as "Compiled Link" and "Level-H QR" are gone.
   - In the preview workspace, only the amount sent outside Kouchd is saved as pending. A Coins credit is saved as its own confirmed entry, matching the iOS split.
+- **iOS contribution form trust fixes (WRE-257, 0.8.2, branch only, not released)**:
+  - The form no longer falls back to made-up handles such as `johndoe`, which could have opened a payment app aimed at a real stranger. When the stay has no saved handle for the chosen app, one must be entered, and the app link, QR code, and copy step stay blocked until then. A handle typed for one app is cleared when you pick another. Apple Cash now uses the copy-and-send step, because it has no app link to open.
+  - The 4.5-second paced saving screen stays, kept at the owner's request. Its last step now says "Marking it for confirmation..." instead of claiming the host got a heads-up.
+  - The saved screen no longer says "Transaction ID", "Settled Amount", or "Timestamp", and the made-up `KCH-` reference is removed. It now describes a saved shared record that is pending until the other person confirms it, and says the record is not proof that money moved. A contribution fully covered by coins says it was added as a stay credit, because that credit needs no confirmation.
+  - The screens no longer say Kouchd opened an app or gave the host a heads-up, since neither is checked.
+  - Version 0.8.2.
+  - New `P2PRouting.resolvedHandle` unit tests and a Debug-only `--ui-test-contribution` test host.
 - **Server funnel events, enforced flags, Meta groundwork and monitoring (WRE-252 phases 2–6, branch only, not released)**:
   - **Server events:** Convex sends the funnel events from the mutations that own them, keyed by the Clerk user ID and grouped by stay, with IDs and categories only.
     - Account and stay: `user_signed_up`, `stay_created`, `invite_created`, `invite_accepted`, `stay_joined`, `terms_accepted`.
