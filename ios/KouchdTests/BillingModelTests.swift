@@ -354,6 +354,16 @@ import XCTest
     XCTAssertEqual(tracker.state, .idle)
   }
 
+  func testRecoveryStartsFromTheModelSoAClosedSheetCannotStrandIt() async {
+    let tracker = PlusSetupTracker(sync: {}, retryDelays: [.seconds(60)], defaults: trackerDefaults())
+    let model = BillingModel(client: BillingClientMock(), isPlanConfirmed: { false }, confirmationTimeout: .milliseconds(100))
+    model.onPurchaseFinished = { tracker.purchaseFinished(userID: "u1") }
+    model.onStillUnconfirmed = { tracker.begin(userID: "u1") }
+    await model.purchase(annual)
+    XCTAssertEqual(tracker.state, .settingUp)
+    tracker.signedOut()
+  }
+
   func testEndingAStayPicksOneTheHostStillHosts() {
     let stays = [(id: "ended", role: "host", status: "ended"), (id: "theirs", role: "guest", status: "active"),
                  (id: "mine", role: "host", status: "active"), (id: "mine2", role: "host", status: "pending")]

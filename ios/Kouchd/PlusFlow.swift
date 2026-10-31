@@ -174,9 +174,7 @@ struct PlusSheet: View {
     .onChange(of: billing.outcome) { _, outcome in
       switch outcome {
       case .confirmed: showingWelcome = true
-      case .settingUp:
-        store.plusSetup.begin(userID: store.viewer["id"].text)
-        dismiss()
+      case .settingUp: dismiss()
       default: break
       }
     }

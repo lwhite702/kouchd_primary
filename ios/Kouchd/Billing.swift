@@ -269,6 +269,8 @@ typealias TrialEligibilityLookup = @MainActor (_ productID: String, _ appTransac
   private let confirmationTimeout: Duration
   /// Runs the moment Apple finishes, before any waiting.
   var onPurchaseFinished: (@MainActor () -> Void)?
+  /// Runs when the wait ends without an answer, even if the sheet has already closed.
+  var onStillUnconfirmed: (@MainActor () -> Void)?
   var packages: [BillingPackage] = []
   /// Waiting for the backend to record a completed purchase.
   var isConfirming = false
@@ -332,6 +334,10 @@ typealias TrialEligibilityLookup = @MainActor (_ productID: String, _ appTransac
     model.onPurchaseFinished = { [weak store] in
       guard let store else { return }
       store.plusSetup.purchaseFinished(userID: store.viewer["id"].text)
+    }
+    model.onStillUnconfirmed = { [weak store] in
+      guard let store else { return }
+      store.plusSetup.begin(userID: store.viewer["id"].text)
     }
     return model
   }
@@ -405,6 +411,7 @@ typealias TrialEligibilityLookup = @MainActor (_ productID: String, _ appTransac
         let confirmed = await waitUntil(isPlanConfirmed)
         isConfirming = false
         outcome = confirmed ? .confirmed : .settingUp
+        if !confirmed { onStillUnconfirmed?() }
         message = confirmed ? "" : PlanCopy.settingUp
       } else if result == .purchased {
         message = "Purchase received. Your household plan will update after Kouchd verifies it."
