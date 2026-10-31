@@ -1,7 +1,7 @@
 # Meta Pixel and Conversions API
 
 **Issue:** [WRE-252](https://linear.app/wrelik/issue/WRE-252/kouchd-analytics-feature-flags-and-conversion-tracking-phased-plan), phase 5
-**State (2026-10-30):** Code is in place on both sites and is **off**. Nothing loads until a Pixel ID is configured. The advertising policy text below is a **draft that needs approval**; it is not in `lib/legal.ts` or the marketing site.
+**State (2026-10-31):** Policy text approved (Lee) and added to `lib/legal.ts` and the marketing `src/lib/legal.ts`, dated October 31, 2026. Pixel ID `1163132673323923` is set in Vercel once those changes are deployed. The Conversions API destination in PostHog is not set up yet.
 
 Internal setup note. Excluded from Mintlify navigation.
 
