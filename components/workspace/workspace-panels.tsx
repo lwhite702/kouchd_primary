@@ -12,6 +12,7 @@ import { HouseInfoForm } from "@/components/household/household-logistics";
 import { PaymentOptionsForm } from "@/components/household/payment-options";
 
 import { GuestAgreementForm } from "@/components/household/guest-agreement-form";
+import { SubscriptionManagement } from "@/components/billing/paywall-modal";
 
 import { HelpTip } from "@/components/onboarding/help-tip";
 
@@ -412,6 +413,7 @@ export function WorkspacePanels({ state }: { state: WorkspaceState }) {
             submitting={isSubmittingModal}
           />
         </form>
+        {isHost && clerkUser && <SubscriptionManagement userId={clerkUser.id} />}
       )}
       {panel === "houseInfo" && (
         <HouseInfoForm
