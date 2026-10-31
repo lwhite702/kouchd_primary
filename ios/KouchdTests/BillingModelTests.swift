@@ -13,7 +13,7 @@ import XCTest
 
   func testPriceIncludesRenewalPeriodWhenKnown() {
     let monthly = BillingPackage(id: "m", title: "Monthly", detail: "", price: "$4.99", period: "month")
-    XCTAssertEqual(monthly.priceWithPeriod, "$4.99 / month")
+    XCTAssertEqual(monthly.priceWithPeriod, "$4.99/month")
     let unknown = BillingPackage(id: "u", title: "Plan", detail: "", price: "$4.99")
     XCTAssertEqual(unknown.priceWithPeriod, "$4.99")
   }
@@ -220,7 +220,7 @@ import XCTest
     backendHasPlus = true
     await purchase.value
     XCTAssertFalse(model.isConfirming)
-    XCTAssertTrue(model.message.hasPrefix("You're on Plus"))
+    XCTAssertEqual(model.outcome, .confirmed)
     XCTAssertNil(model.activeOperation)
   }
 
@@ -229,8 +229,8 @@ import XCTest
     let model = BillingModel(client: client, isPlanConfirmed: { false }, confirmationTimeout: .milliseconds(100))
     await model.purchase(annual)
     XCTAssertFalse(model.isConfirming)
-    XCTAssertFalse(model.message.contains("You're on Plus"))
-    XCTAssertTrue(model.message.contains("still confirming"))
+    XCTAssertEqual(model.outcome, .settingUp)
+    XCTAssertEqual(model.message, PlanCopy.settingUp)
   }
 
   func testPendingPurchaseSaysNothingWasCharged() async {
@@ -239,6 +239,7 @@ import XCTest
     let model = BillingModel(client: client)
     await model.purchase(annual)
     XCTAssertTrue(model.message.contains("Nothing has been charged"))
+    XCTAssertEqual(model.outcome, .awaitingApproval)
     XCTAssertTrue(model.error.isEmpty)
   }
 
@@ -249,6 +250,88 @@ import XCTest
     XCTAssertEqual(limit?.isGuest, false)
     XCTAssertNil(KouchdStore.planLimit(from: ClientError.ConvexError(data: #""Something else""#)))
     XCTAssertEqual(KouchdStore.message(for: ClientError.ConvexError(data: #"{"message":"Readable"}"#)), "Readable")
+  }
+
+  func testTrialWordingIsAnnualOnlyEvenIfTheStoreOffersOneOnMonthly() async {
+    let client = BillingClientMock()
+    client.availablePackages = [monthly, annual]
+    let model = BillingModel(client: client) { _, _ in (true, "jws") }
+    await model.load(kouchdTrialEligible: true)
+    XCTAssertNotNil(model.trialDays(for: annual))
+    XCTAssertNil(model.trialDays(for: monthly))
+  }
+
+  func testRenewalLineUsesStorePrice() {
+    XCTAssertEqual(PlusSheet.renewalLine(annual, trialDays: 7), "Free for 7 days, then $39.99/year. Renews until cancelled in Settings.")
+    XCTAssertEqual(PlusSheet.renewalLine(monthly, trialDays: nil), "$4.99/month. Renews until cancelled in Settings.")
+  }
+
+  private func usage(plan: String, stays: Int, guests: Int, spots: [PlanUsage.GuestSpot] = []) -> PlanUsage {
+    let plus = plan == "plus"
+    return PlanUsage(plan: plan, planConfigured: true, stays: .init(used: stays, limit: plus ? 3 : 1),
+                     guests: .init(used: guests, limit: plus ? 5 : 1), guestSpots: spots, blockedJoins: [])
+  }
+
+  func testSpotsAreTheHostsTotalAcrossStays() {
+    XCTAssertEqual(PlanCopy.guestSpotsLine(.init(used: 1, limit: 1)), "1 of 1 guest spots used across your stays")
+    XCTAssertEqual(PlanCopy.guestSpotsLine(.init(used: 7, limit: nil)), "7 guests across your stays")
+    XCTAssertEqual(PlanCopy.inviteSpotsLine(usage(plan: "free", stays: 1, guests: 0), guestsInThisStay: 0), "1 guest spot left on Free")
+    XCTAssertEqual(PlanCopy.inviteSpotsLine(usage(plan: "plus", stays: 1, guests: 3), guestsInThisStay: 3), "2 guest spots left on Plus")
+  }
+
+  func testPlusCapOnInviteHasNoUpsell() {
+    let elsewhere = PlanCopy.inviteSpotsLine(usage(plan: "plus", stays: 2, guests: 5), guestsInThisStay: 0)
+    XCTAssertEqual(elsewhere, "All 5 guest spots are in use in your other stays. Remove a guest there to invite someone here.")
+    let here = PlanCopy.inviteSpotsLine(usage(plan: "plus", stays: 2, guests: 5), guestsInThisStay: 2)
+    XCTAssertEqual(here, "Plus covers up to 5 guests across your stays. Remove a guest from any stay to make room.")
+  }
+
+  func testNewStayIsAnsweredBeforeTypingAndOnlyUpsellsBelowTheCap() {
+    XCTAssertNil(PlanLimitError.stayLimit(usage(plan: "free", stays: 0, guests: 0)))
+    XCTAssertEqual(PlanLimitError.stayLimit(usage(plan: "free", stays: 1, guests: 0))?.atHighestPlan, false)
+    let cap = PlanLimitError.stayLimit(usage(plan: "plus", stays: 3, guests: 0))
+    XCTAssertEqual(cap?.atHighestPlan, true)
+    XCTAssertEqual(cap?.message, "Plus covers up to 3 active stays. End a stay to start a new one.")
+  }
+
+  func testDowngradeNoteOnlyWhenOverFreeLimits() {
+    XCTAssertNil(PlanCopy.downgradeNote(usage(plan: "plus", stays: 1, guests: 1)))
+    XCTAssertEqual(PlanCopy.downgradeNote(usage(plan: "plus", stays: 3, guests: 1)),
+                   "When Plus ends, your 3 stays stay open. You won't be able to add new ones until you're down to 1.")
+  }
+
+  private func trackerDefaults() -> UserDefaults {
+    let name = "plus-setup-\(UUID().uuidString)"
+    return UserDefaults(suiteName: name)!
+  }
+
+  func testSetupRetriesThenAsksForHelpWithoutClaimingPlus() async {
+    var syncs = 0
+    let tracker = PlusSetupTracker(sync: { syncs += 1 }, retryDelays: [.milliseconds(5), .milliseconds(5)], defaults: trackerDefaults())
+    tracker.begin(userID: "u1")
+    XCTAssertEqual(tracker.state, .settingUp)
+    try? await Task.sleep(for: .milliseconds(300))
+    XCTAssertEqual(syncs, 2)
+    XCTAssertEqual(tracker.state, .stuck)
+    tracker.refresh(userID: "u1", hasPlus: true)
+    XCTAssertEqual(tracker.state, .confirmed)
+    tracker.dismissConfirmation()
+    XCTAssertEqual(tracker.state, .idle)
+  }
+
+  func testSetupCarriesOverToTheNextLaunchForTheSameHostOnly() {
+    let defaults = trackerDefaults()
+    PlusSetupTracker(sync: {}, retryDelays: [.seconds(60)], defaults: defaults).begin(userID: "u1")
+    let nextLaunch = PlusSetupTracker(sync: {}, retryDelays: [.seconds(60)], defaults: defaults)
+    nextLaunch.refresh(userID: "someone-else", hasPlus: false)
+    XCTAssertEqual(nextLaunch.state, .idle)
+    nextLaunch.refresh(userID: "u1", hasPlus: nil)
+    XCTAssertEqual(nextLaunch.state, .idle)
+    nextLaunch.refresh(userID: "u1", hasPlus: false)
+    XCTAssertEqual(nextLaunch.state, .settingUp)
+    nextLaunch.signedOut()
+    nextLaunch.refresh(userID: "u1", hasPlus: false, now: .now.addingTimeInterval(8 * 86_400))
+    XCTAssertEqual(nextLaunch.state, .idle)
   }
 
   func testUsageCountsReadPlainly() {

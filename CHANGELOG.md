@@ -4,6 +4,13 @@
 
 ### Added
 
+- **iPhone Plus flow, screens per the agreed plan (WRE-250 follow-up, branch only, not released)**:
+  - **Plus sheet:** opens from a Free limit or the Plan screen, with the limit as its headline. Annual is preselected, the free trial is Annual only, and the trial timeline uses real calendar dates. All amounts come from the store. Loading shows placeholder rows, and a failed load says "Plans can't load right now" with Retry.
+  - **Confirming and "Plus is on":** "Plus is on" opens only after the backend records Plus. After about 10 seconds the sheet closes with "Plus is being set up". The app keeps re-sending the purchase, including on the next launch, and asks the host to retry or contact support if it stays unconfirmed. Limits stay as they are until confirmed.
+  - **Plan screen:** plan, renewal or trial end with the store's price, where Plus was bought, Apple's manage-subscriptions sheet or "Manage on kouchd.com", Restore, and a note on what happens when Plus ends. It is one tap from More.
+  - **Guest spots:** the stay screen shows "N of M guest spots used across your stays" and who holds each, including pending guests. Blocked joins appear on the stay and as a badge on the stay list. The invite screen shows spots left. At the Plus cap the app shows a plain message with no upsell. "Create a stay" answers at the limit before the host types anything.
+- **Backend:** the signed trial answer now allows an introductory offer on Annual only. The trial-ending email links to `app.kouchd.com`, because `/settings` isn't a web route.
+
 - **iOS Plus purchase flow (WRE-250, branch only, not released)**:
   - **Subscription screen:** shows the current plan as Free, Plus, or Pro (never internal plan names), with the trial end, renewal, or end date, payment-problem notes, and a trial-reminder email toggle. Hosts who started Plus on the web are sent to kouchd.com to manage it.
   - **Plus offer:** a yearly/monthly picker (yearly is the default) with a "Save N%" badge worked out from store prices, a "Start N-day free trial" button only when Kouchd and the Apple sheet will agree, and a plain line saying when the trial ends and the renewal price. Each purchase passes Kouchd's signed intro-offer eligibility to StoreKit, so one trial per host billing account holds across web and iPhone. Ask to Buy shows "waiting for approval" instead of an error. After Apple's sheet finishes, the app shows "Confirming your plan" until Kouchd's backend records Plus, and only then says "You're on Plus"; after 60 seconds without confirmation it says the purchase was received and is still being confirmed.

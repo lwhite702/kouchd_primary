@@ -167,6 +167,12 @@ private enum KouchdAuthError: LocalizedError {
   /// Set when the backend refused a stay or guest for plan limits. Screens
   /// show their own copy for it instead of the generic error alert.
   var planLimit: PlanLimitError?
+  /// Opens the Plus sheet (host only) from wherever the root view is presenting.
+  var plusEntry: PlusEntry?
+  /// A screen the Plus sheet wants to continue on once it closes.
+  var planRoute: KouchdRoute?
+  /// A purchase Apple finished that the backend hasn't confirmed yet.
+  let plusSetup = PlusSetupTracker(sync: { try await RevenueCatBillingClient.shared.syncPurchases() })
   var typedLedger: [LedgerRecord] = []
   var isSubscriptionSummaryLoading = true
   var subscriptionSummaryError = ""
@@ -329,6 +335,9 @@ private enum KouchdAuthError: LocalizedError {
     planUsageValue = .null
     planUsage = nil
     planLimit = nil
+    plusEntry = nil
+    planRoute = nil
+    plusSetup.signedOut()
     isSubscriptionSummaryLoading = true
     subscriptionSummaryError = ""
     clearAdmin()
@@ -573,7 +582,9 @@ private enum KouchdAuthError: LocalizedError {
         }
         if name == "subscriptions:currentAccountSummary", let summary = value as? Value {
           self.typedSubscriptionSummary = summary.decoded(AccountSubscriptionSummary.self)
+          self.refreshPlusSetup()
         }
+        if name == "users:viewer" { self.refreshPlusSetup() }
         if name == "subscriptions:planUsage", let usage = value as? Value {
           self.planUsage = usage.decoded(PlanUsage.self)
         }
@@ -657,6 +668,11 @@ private enum KouchdAuthError: LocalizedError {
       if let text = try? JSONDecoder().decode(String.self, from: Data(data.utf8)) { return text }
     }
     return error.localizedDescription
+  }
+
+  private func refreshPlusSetup() {
+    guard !viewer["_id"].text.isEmpty else { return }
+    plusSetup.refresh(userID: viewer["_id"].text, hasPlus: typedSubscriptionSummary?.hasPlus)
   }
 
   /// Notes a refused join so the host can see it. Errors are ignored: it is not the guest's problem.

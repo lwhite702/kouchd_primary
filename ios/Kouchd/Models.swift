@@ -323,6 +323,8 @@ struct PlanUsage: Decodable, Equatable {
   var isFree: Bool { plan == "free" }
   var isPlus: Bool { plan == "plus" }
   var planLabel: String { plan == "plus" ? "Plus" : plan == "pro" ? "Pro" : "Free" }
+  func blockedJoins(inStay stayID: String) -> [BlockedJoin] { blockedJoins.filter { $0.stayId == stayID } }
+  func guestSpots(inStay stayID: String) -> [GuestSpot] { guestSpots.filter { $0.stayId == stayID } }
 }
 
 /// `ConvexError` data for a refused stay or guest (convex/lib/planCapacity.ts).
@@ -335,6 +337,17 @@ struct PlanLimitError: Decodable, Equatable {
   let message: String
 
   var isGuest: Bool { dimension == "guest" }
+
+  /// Answers "New stay" before the host types anything, using the same words as the
+  /// server's refusal. The server still decides; nil when there's room or no known limit.
+  static func stayLimit(_ usage: PlanUsage) -> PlanLimitError? {
+    guard usage.planConfigured, usage.stays.isFull, let limit = usage.stays.limit else { return nil }
+    let message = usage.isPlus
+      ? "Plus covers up to \(limit) active stays. End a stay to start a new one."
+      : "Free includes \(limit) active stay. End your current stay or move to Plus to host up to \(PlanCopy.plusStays) at once."
+    return PlanLimitError(code: "plan_limit", dimension: "stay", plan: usage.plan, limit: limit,
+                          atHighestPlan: usage.isPlus, message: message)
+  }
 }
 
 struct AgreementRecord: Decodable, Identifiable {
