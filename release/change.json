@@ -1,5 +1,5 @@
 {
-  "type": "patch",
-  "version": "0.7.25",
-  "reason": "Make the in-app Privacy and Cookie Policy wording match web analytics: PostHog autocapture and session replay are on, and signed-in web sessions are linked to account ID, name and email."
+  "type": "minor",
+  "version": "0.8.0",
+  "reason": "Adapt the iOS app for iPad with sidebar navigation and width-driven layouts (WRE-254)."
 }

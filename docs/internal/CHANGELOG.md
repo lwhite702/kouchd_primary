@@ -2,6 +2,12 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-10-30 — iPad layout (WRE-254)
+
+- Sidebar navigation, width-driven layouts, Ledger list and detail, keyboard shortcuts, and a DEBUG layout test host on `codex/WRE-254-ipad-redesign`. Version 0.8.0. Branch only.
+- Details, evidence, and open items: `docs/internal/WRE-254-ipad-handoff.md`.
+
+
 ## 2026-10-31 — Google Tag Manager removed (WRE-252)
 
 - Decision (Lee): no Tag Manager on either site; PostHog covers it.

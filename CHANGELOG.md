@@ -4,6 +4,12 @@
 
 ### Added
 
+- **iPad layout (WRE-254, branch only, not released)**:
+  - **Navigation:** regular-width windows use a `NavigationSplitView` sidebar with a single stay switcher; compact widths keep the tabs. `ShellNavigator` holds one navigation state, so a resized window stays on the same screen. The sidebar pins at 1000pt and wider and slides over narrower windows. `StayTool` is the one definition of who sees which tool, read by both the sidebar and More.
+  - **Layouts:** `KouchdLayout` picks 1, 2, or 3 columns from measured content width (700pt and 1000pt), and always 1 at accessibility text sizes. Home is a two-column dashboard, Ledger shows summary tiles with a row list beside the selected entry's details and actions (700pt and wider), Chores and Stay use grids and columns, and Shopping separates shared and personal items. Settings-style forms center at 640pt, and the introduction and first-stay setup use the wider space.
+  - **Keyboard and pointer:** ⌘1–⌘4 open Home, Ledger, Chores, and Stay; ⌘N adds a contribution or chore; arrow keys move through Ledger rows; rows and cards have hover effects.
+  - **Copy:** the Ledger title and action now read "Ledger" and "Add contribution", on iPhone as well.
+  - **Testing:** a DEBUG-only `StayLayoutTestHost` renders signed-in screens from synthetic data with no network, and `AdaptiveLayoutTests` and `AdaptiveShellTests` cover layout, tool visibility, and navigation. Simulator checks only; not checked with a real account or on a device.
 - **RevenueCat → PostHog preparation (WRE-251, branch only, not released)**: no new events are sent. New `tests/revenuecat-posthog.test.ts` checks that PostHog and RevenueCat are both identified by the Clerk user ID on web and iOS, so RevenueCat's own PostHog integration (not turned on yet) can attribute purchases without a `$posthogUserId` attribute, and that the paywall does not send `checkout_started` or `subscription_activated` itself. Web `paywall_viewed` and `customer_center_opened` were left out until the privacy copy covers them. Setup steps and privacy-copy findings are in `docs/internal/REVENUECAT_POSTHOG.md`.
 - **iPhone Plus flow, screens per the agreed plan (WRE-250 follow-up, branch only, not released)**:
   - **Plus sheet:** opens from a Free limit or the Plan screen, with the limit as its headline. Annual is preselected, the free trial is Annual only, and the trial timeline uses real calendar dates. All amounts come from the store. Loading shows placeholder rows, and a failed load says "Plans can't load right now" with Retry.
