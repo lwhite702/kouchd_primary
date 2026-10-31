@@ -33,16 +33,11 @@ Internal reference. Excluded from Mintlify navigation. Related notes:
   - Global Privacy Control forces `ads` off.
   - The app reads only `ads` (for Meta). App analytics is covered by the app's own policy.
 
-## Google Tag Manager
+## Google Tag Manager: not used
 
-- **Container:** `GTM-P39F6XRN` is used on both app.kouchd.com and kouchd.com.
-- **App:** `components/google-tag-manager.tsx`, mounted in `app/layout.tsx`. It loads on every page (owner decision, 2026-10-30).
-  - Consent Mode defaults: `analytics_storage` granted. `ad_storage`, `ad_user_data` and `ad_personalization` are granted only when `kouchd_consent.ads` is true and the browser sends no Global Privacy Control.
-  - Every route change pushes `{event: "kouchd_page_view", page_path}`, where `page_path` uses route categories with invite tokens removed. **Configure GA4 and any page-view tags in the container to read `page_path` from this event, not the raw page URL**, because `/invite/<token>` paths are bearer tokens.
-  - The CSP allows `www.googletagmanager.com` and the Google Analytics hosts. Tags added in the container that call other hosts need those hosts added to `lib/security/csp.ts`.
-- **kouchd.com:** the container loads only after "Allow analytics", as the marketing policies promise.
-- **One GA4 property:** the container should send both sites to the one GA4 property (`G-L668QY22EX`). Google's cookies are shared across `kouchd.com` subdomains.
-  - The marketing site also loads GA4 directly (`src/components/common/Analytics.astro`). Keep only one of the direct gtag config or a GA4 tag in the container, or page views count twice.
+Removed from both sites on 2026-10-31 (owner decision). PostHog covers product and campaign analytics, and Meta runs without it. kouchd.com still loads GA4 directly (`src/components/common/Analytics.astro`).
+
+Add a tag manager back only for Google Ads conversion tracking or remarketing. It would need new CSP hosts, consent handling and policy text, and it should stay off signed-in app pages.
 
 ## Events
 

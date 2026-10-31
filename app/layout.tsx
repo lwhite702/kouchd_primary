@@ -1,8 +1,6 @@
 import { ClerkProvider } from "@clerk/nextjs";
 import type { Metadata, Viewport } from "next";
 import { Inter, Manrope } from "next/font/google";
-import { Suspense } from "react";
-import { GoogleTagManager } from "../components/google-tag-manager";
 import { VercelAnalytics } from "../components/vercel-analytics";
 import { SECURITY_RUNTIME_INLINE_SCRIPT } from "../lib/security-runtime";
 
@@ -81,9 +79,6 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           <AppProviders>{children}</AppProviders>
         </ClerkProvider>
         <VercelAnalytics />
-        <Suspense fallback={null}>
-          <GoogleTagManager />
-        </Suspense>
       </body>
     </html>
   );

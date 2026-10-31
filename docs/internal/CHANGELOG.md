@@ -2,6 +2,13 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-10-31 — Google Tag Manager removed (WRE-252)
+
+- Decision (Lee): no Tag Manager on either site; PostHog covers it.
+- App: removed `components/google-tag-manager.tsx`, its mount in `app/layout.tsx`, the Google hosts in `lib/security/csp.ts`, and the Tag Manager wording in `lib/legal.ts` and `app/privacy/page.tsx`. The policies go back to the October 30 text, which was never published, so their dates stay October 30.
+- Marketing (`kouchd_marketing`): removed the Tag Manager loader from `Analytics.astro` and its policy wording. GA4 still loads directly after "Allow analytics".
+- `main` also merged into this branch, so it's now 0.7.24 (main used 0.7.22 and 0.7.23 for WRE-253).
+
 ## 2026-10-30 — Previews on production Clerk
 
 - Decision (Lee): Vercel previews keep the production Clerk instance. Its only domain is `kouchd.com` (Frontend API `clerk.kouchd.com`), so it refuses `*.vercel.app` origins; that was the blank `/sign-in` with a Clerk 400 on previews.
