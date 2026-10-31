@@ -7,6 +7,7 @@ Internal engineering record. This file is excluded from Mintlify navigation and 
 - The production deploy of #97 failed: two flag-override tests in `tests/feature-flags.test.ts` assumed overrides were allowed, but Vercel's production build runs tests with `NEXT_PUBLIC_VERCEL_ENV=production`, where overrides are off by design. app.kouchd.com stayed on the previous deploy.
 - Fix: the override tests pin `NEXT_PUBLIC_VERCEL_ENV=development` and `NODE_ENV=test`. Test-only, no version change; 0.7.25 ships with it.
 - Evidence: the full suite passes with `NEXT_PUBLIC_VERCEL_ENV` set to production, preview and unset; `npm run verify` passes with production set.
+- Found in the follow-up audit: Vercel builds run the suite with real provider keys, so Convex test fixtures sent server events to the live PostHog project (160 events in the 01:20 UTC build, all from test users such as `legacy-approval-guest`), and Knock could be reached the same way. `vitest.config.ts` now clears `NEXT_PUBLIC_POSTHOG_KEY`, `KNOCK_API_KEY` and `LOOPS_API_KEY` for every test. Proof: pointing the suite at a local fake PostHog host, it sent 147 requests without the change and 0 with it. Every `user_signed_up`, `stay_created`, `invite_*`, `stay_joined`, `terms_accepted` and `contribution_recorded` event in PostHog before this fix is test data; filter it out (or delete it) before building funnels.
 
 ## 2026-10-31 — Google Tag Manager removed (WRE-252)
 
