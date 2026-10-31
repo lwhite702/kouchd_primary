@@ -890,9 +890,9 @@ struct ContributionForm: View {
         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
           ForEach(P2PChannel.allCases) { channel in
             Button {
-              selectedChannel = channel
               // A handle typed for one app must never route through another.
-              customHandle = ""
+              if channel != selectedChannel { customHandle = "" }
+              selectedChannel = channel
               copiedZelle = false
             } label: {
               HStack(spacing: 8) {
@@ -925,7 +925,8 @@ struct ContributionForm: View {
           detail: P2PRouting.formattedHandle(channel: selectedChannel, rawHandle: activeRawHandle)
         )
 
-        if configuredHandleForChannel.isEmpty && selectedChannel != .cash {
+        // A saved value such as "@" names nobody, so it also needs a real handle entered.
+        if P2PRouting.resolvedHandle(channel: selectedChannel, configured: configuredHandleForChannel, entered: "") == nil {
           TextField("Host's \(selectedChannel.label) handle", text: $customHandle)
             .textInputAutocapitalization(.never)
             .autocorrectionDisabled()

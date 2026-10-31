@@ -84,6 +84,11 @@ import XCTest
     XCTAssertNil(P2PRouting.resolvedHandle(channel: .paypal, configured: "", entered: "https://paypal.me/"))
   }
 
+  func testEnteredHandleReplacesAnUnusableSavedHandle() {
+    XCTAssertEqual(P2PRouting.resolvedHandle(channel: .venmo, configured: "@", entered: "maple-host"), "maple-host")
+    XCTAssertEqual(P2PRouting.resolvedHandle(channel: .paypal, configured: "https://paypal.me/", entered: "maple"), "maple")
+  }
+
   func testSavedHandleWinsAndEnteredHandleIsTrimmed() {
     XCTAssertEqual(
       P2PRouting.resolvedHandle(channel: .venmo, configured: "@maple-host", entered: "someone-else"),
