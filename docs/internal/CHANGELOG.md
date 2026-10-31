@@ -2,6 +2,14 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-10-30 — iOS contribution form trust fixes (WRE-257)
+
+- Removed made-up fallback handles and the simulated verification from `ContributionForm`, and replaced payment-processor wording with a saved shared record pending confirmation.
+- `contributions:create` stores `status: "pending"`; `rewards:redeem` stores a confirmed credit. The saved screen follows that split.
+- Not changed: the web router `components/household/p2p-payment-router.tsx` and `lib/domain/p2pRouting.ts` have the same made-up handles and receipt wording.
+- Evidence: 39 KouchdTests passed on a dedicated iPhone 17 Pro simulator. The Debug test host with synthetic config and no real backend showed the blocked route, unlock after entering a handle, the handle clearing on app switch, cash without a handle, the send confirmation, the saved screen, and a failed save showing an error. Not checked: a successful save against a real backend, a fully coin-covered save, and the Apple Cash copy step on screen.
+- Branch only. Not pushed, released, or verified against real accounts.
+
 ## 2026-10-30 — Sign-in freeze from guard observer loop (WRE-253)
 
 - After 0.7.22 (`0436bcf`) removed the meta CSP, scripts ran on `/sign-in` but the tab stopped responding. `/terms` stayed responsive.

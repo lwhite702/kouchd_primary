@@ -16,7 +16,7 @@ import SwiftUI
     }
     #if DEBUG
     // The plan host builds a signed-out store, which reads Clerk, but skips analytics and purchases.
-    if PlanScreensTestHost.scenario != nil { return }
+    if PlanScreensTestHost.scenario != nil || ContributionFormTestHost.scenario != nil { return }
     #endif
     KouchdAnalytics.configure()
     if AppConfig.purchasesEnabled {
@@ -33,6 +33,8 @@ import SwiftUI
         IntroductionTestHost()
       } else if let scenario = PlanScreensTestHost.scenario {
         PlanScreensTestHost(scenario: scenario)
+      } else if let scenario = ContributionFormTestHost.scenario {
+        ContributionFormTestHost(scenario: scenario)
       } else {
         configuredContent
       }

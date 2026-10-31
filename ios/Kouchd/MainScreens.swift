@@ -348,15 +348,9 @@ struct ContributionForm: View {
   enum Phase {
     case selectAndRoute
     case outboundConfirmation
-    case processingVerification
-    case successCompletion
+    case saving
+    case saved
   }
-
-  private static let casualSteps = [
-    "Writing down your note for the house...",
-    "Adding your contribution to the shared Ledger...",
-    "Giving your host a quick heads-up..."
-  ]
 
   let store: KouchdStore
   @Environment(\.dismiss) private var dismiss
@@ -376,12 +370,21 @@ struct ContributionForm: View {
   @State private var applyRewards = false
   @State private var pointsToRedeem = 0
 
-  // Phase 3 & 4 state
-  @State private var stepIndex = 0
-  @State private var progress: Double = 0
-  @State private var referenceID = "KCH-994827"
-  @State private var settledTimestamp = ""
+  @State private var savedAt = ""
   @State private var errorMessage = ""
+
+  init(store: KouchdStore) {
+    self.store = store
+  }
+
+  #if DEBUG
+  /// Opens the form on a given phase for the Debug test host.
+  init(store: KouchdStore, phase: Phase, savedAt: String) {
+    self.store = store
+    _phase = State(initialValue: phase)
+    _savedAt = State(initialValue: savedAt)
+  }
+  #endif
 
   private var availablePoints: Int {
     store.wallet["availablePoints"].int
@@ -415,21 +418,22 @@ struct ContributionForm: View {
     return ""
   }
 
+  /// The real handle to route to, or nil until the host's handle is known.
+  private var resolvedHandle: String? {
+    P2PRouting.resolvedHandle(channel: selectedChannel, configured: configuredHandleForChannel, entered: customHandle)
+  }
+
   private var activeRawHandle: String {
-    let configured = configuredHandleForChannel
-    if !configured.isEmpty { return configured }
-    if !customHandle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-      return customHandle
-    }
-    switch selectedChannel {
-    case .venmo: return "johndoe"
-    case .cashapp: return "johndoe33"
-    case .chime: return "john-doe-chime"
-    case .zelle: return "johndoe@email.com"
-    case .cash: return "Hand directly to your host"
-    case .paypal: return "johndoe"
-    case .applepay: return "Host Apple Cash"
-    }
+    resolvedHandle ?? ""
+  }
+
+  private var otherPerson: String {
+    store.isHost ? "your guest" : "your host"
+  }
+
+  /// What goes on the Ledger as a pending contribution. Redeemed coins are a separate, already confirmed credit.
+  private var pendingRecordCents: Int {
+    type == "payment" ? rewardOffset.netPayableCents : rewardOffset.grossAmountCents
   }
 
   private var effectiveMemo: String {
@@ -469,12 +473,6 @@ struct ContributionForm: View {
           // Header summary card
           VStack(spacing: 10) {
             HStack {
-              Text("REF · \(referenceID)")
-                .font(.caption2.bold())
-                .foregroundStyle(.white.opacity(0.85))
-                .padding(.horizontal, 10)
-                .padding(.vertical, 4)
-                .background(.white.opacity(0.14), in: Capsule())
               Spacer()
               Button {
                 showQRCode.toggle()
@@ -521,10 +519,10 @@ struct ContributionForm: View {
             selectAndRouteView
           case .outboundConfirmation:
             outboundConfirmationView
-          case .processingVerification:
-            processingVerificationView
-          case .successCompletion:
-            successCompletionView
+          case .saving:
+            savingView
+          case .saved:
+            savedView
           }
         }
         .padding(20)
@@ -538,8 +536,6 @@ struct ContributionForm: View {
         }
       }
       .onAppear {
-        let suffix = String(store.selectedStayID.suffix(6)).uppercased()
-        referenceID = suffix.isEmpty ? "KCH-994827" : "KCH-\(suffix)"
         if amount.isEmpty {
           let dueCents = store.ledger.first(where: { $0["balanceCents"].int > 0 })?["balanceCents"].int
             ?? store.bundle["terms"]["rateCents"].int
@@ -606,11 +602,11 @@ struct ContributionForm: View {
     if type != "payment" {
       Card {
         Text("Shared household contribution").font(.headline)
-        Text("We'll add this \(type.replacingOccurrences(of: "_", with: " ")) entry to the Ledger and give your host a heads-up to confirm it.")
+        Text("We'll add this \(type.replacingOccurrences(of: "_", with: " ")) entry to the Ledger. It stays pending until \(otherPerson) confirms it.")
           .font(.subheadline)
           .foregroundStyle(Palette.muted)
         PrimaryButton(title: "Log on Ledger") {
-          startVerificationPhase()
+          saveContribution()
         }
         .disabled(rewardOffset.grossAmountCents <= 0)
       }
@@ -621,7 +617,7 @@ struct ContributionForm: View {
           .font(.subheadline)
           .foregroundStyle(Palette.muted)
         PrimaryButton(title: "Redeem \(rewardOffset.pointsApplied) \(coinName) & Log") {
-          startVerificationPhase()
+          saveContribution()
         }
       }
     } else {
@@ -631,6 +627,8 @@ struct ContributionForm: View {
           ForEach(P2PChannel.allCases) { channel in
             Button {
               selectedChannel = channel
+              // A handle typed for one app must never route through another.
+              customHandle = ""
               copiedZelle = false
             } label: {
               HStack(spacing: 8) {
@@ -670,7 +668,14 @@ struct ContributionForm: View {
             .textFieldStyle(.roundedBorder)
         }
 
-        if selectedChannel == .zelle {
+        if resolvedHandle == nil {
+          Text("No \(selectedChannel.label) handle is saved for this stay. Enter the host's handle, exactly as they gave it to you, to continue.")
+            .font(.footnote)
+            .foregroundStyle(Palette.muted)
+
+          PrimaryButton(title: "Enter a handle to continue") {}
+            .disabled(true)
+        } else if selectedChannel == .zelle || selectedChannel == .applepay {
           HStack {
             Text(activeRawHandle)
               .font(.system(.subheadline, design: .monospaced).bold())
@@ -687,11 +692,11 @@ struct ContributionForm: View {
           .padding(12)
           .background(Palette.cream, in: RoundedRectangle(cornerRadius: 12))
 
-          Text("Copy your host's Zelle info above, send $\(rewardOffset.netPayableFormatted) in your bank's Zelle app, then tap below to log it.")
+          Text("Copy your host's \(selectedChannel.label) info above, send $\(rewardOffset.netPayableFormatted) in \(selectedChannel == .zelle ? "your bank's Zelle app" : "Messages or Wallet"), then tap below to log it.")
             .font(.footnote)
             .foregroundStyle(Palette.muted)
 
-          PrimaryButton(title: "I'm ready to send via Zelle") {
+          PrimaryButton(title: "I'm ready to send via \(selectedChannel.label)") {
             phase = .outboundConfirmation
           }
           .disabled(rewardOffset.grossAmountCents <= 0)
@@ -763,8 +768,8 @@ struct ContributionForm: View {
 
         Text(
           selectedChannel == .cash
-            ? "Once you hand over $\(rewardOffset.netPayableFormatted) (or leave it in the agreed spot), tap below so we can put it on the shared Ledger."
-            : "We've opened \(selectedChannel.label). Please complete your transfer of $\(rewardOffset.netPayableFormatted) inside their app, then pop right back here to log it."
+            ? "Once you hand over $\(rewardOffset.netPayableFormatted) (or leave it in the agreed spot), tap below to save it to the shared Ledger."
+            : "Send $\(rewardOffset.netPayableFormatted) in \(selectedChannel.label), then come back here to save it. Kouchd can't see or check the transfer."
         )
         .font(.subheadline)
         .foregroundStyle(Palette.muted)
@@ -781,8 +786,8 @@ struct ContributionForm: View {
         .padding(14)
         .background(Palette.cream, in: RoundedRectangle(cornerRadius: 16))
 
-        PrimaryButton(title: "I Have Sent the Money") {
-          startVerificationPhase()
+        PrimaryButton(title: selectedChannel == .cash ? "I handed it over. Save to Ledger" : "I sent it. Save to Ledger") {
+          saveContribution()
         }
 
         Button("Cancel / Go Back") {
@@ -796,7 +801,7 @@ struct ContributionForm: View {
     }
   }
 
-  private var processingVerificationView: some View {
+  private var savingView: some View {
     Card {
       VStack(spacing: 16) {
         ProgressView()
@@ -804,37 +809,33 @@ struct ContributionForm: View {
           .tint(Palette.brandForest)
           .padding(.top, 8)
 
-        Text(Self.casualSteps[min(stepIndex, Self.casualSteps.count - 1)])
+        Text("Saving to the Ledger...")
           .font(.headline)
           .multilineTextAlignment(.center)
-
-        Text("Saving your shared contribution record for \(Display.money(rewardOffset.grossAmountCents)) — Kouchd keeps the house in sync while payments stay between you two.")
-          .font(.footnote)
-          .foregroundStyle(Palette.muted)
-          .multilineTextAlignment(.center)
-
-        ProgressView(value: progress, total: 1.0)
-          .tint(Palette.brandForest)
       }
       .padding(.vertical, 14)
       .frame(maxWidth: .infinity)
     }
   }
 
-  private var successCompletionView: some View {
+  private var savedView: some View {
     Card {
       VStack(spacing: 14) {
         Image(systemName: "checkmark.circle.fill")
           .font(.system(size: 52))
           .foregroundStyle(Palette.brandForest)
 
-        Text("On the Ledger!")
+        Text("Saved to the Ledger")
           .font(Palette.section)
 
-        Text("All set — your contribution is saved and we gave your host a heads-up so they can confirm it once they check their app.")
-          .font(.subheadline)
-          .foregroundStyle(Palette.muted)
-          .multilineTextAlignment(.center)
+        Text(
+          pendingRecordCents > 0
+            ? "Your contribution is saved and waiting for \(otherPerson) to confirm it."
+            : "Your \(rewardOffset.pointsApplied) \(coinName) are on the Ledger as a stay credit. There's nothing else to send."
+        )
+        .font(.subheadline)
+        .foregroundStyle(Palette.muted)
+        .multilineTextAlignment(.center)
 
         VStack(alignment: .leading, spacing: 10) {
           HStack {
@@ -842,28 +843,27 @@ struct ContributionForm: View {
               .font(.caption2.bold())
               .foregroundStyle(Palette.muted)
             Spacer()
-            Pill(text: "Logged")
+            Pill(text: pendingRecordCents > 0 ? "Pending" : "Saved")
           }
           Divider()
-          DataRow(title: "Transaction ID", detail: referenceID)
-          DataRow(title: "Timestamp", detail: settledTimestamp)
-          DataRow(title: "Settled Amount", detail: Display.money(rewardOffset.grossAmountCents))
-          if rewardOffset.pointsApplied > 0 {
-            DataRow(title: "\(coinName) Redeemed", detail: "\(rewardOffset.pointsApplied) (−\(Display.money(rewardOffset.rewardCreditCents)))")
+          DataRow(title: "Saved on", detail: savedAt)
+          if pendingRecordCents > 0 {
+            DataRow(title: "Amount", detail: Display.money(pendingRecordCents))
+            DataRow(title: "Status", detail: "Waiting for \(otherPerson) to confirm")
           }
-          DataRow(
-            title: "Selected Channel",
-            detail: type != "payment"
-              ? type.replacingOccurrences(of: "_", with: " ").capitalized
-              : isCoveredEntirelyByRewards
-                ? "\(coinName) credit"
-                : "\(selectedChannel.label) (\(P2PRouting.formattedHandle(channel: selectedChannel, rawHandle: activeRawHandle)))"
-          )
+          if rewardOffset.pointsApplied > 0 {
+            DataRow(title: "\(coinName) used", detail: "\(rewardOffset.pointsApplied) (−\(Display.money(rewardOffset.rewardCreditCents)))")
+          }
+          if type != "payment" {
+            DataRow(title: "Type", detail: type.replacingOccurrences(of: "_", with: " ").capitalized)
+          } else if !isCoveredEntirelyByRewards {
+            DataRow(title: "Sent with", detail: "\(selectedChannel.label) (\(P2PRouting.formattedHandle(channel: selectedChannel, rawHandle: activeRawHandle)))")
+          }
         }
         .padding(14)
         .background(Palette.cream, in: RoundedRectangle(cornerRadius: 16))
 
-        Text("A contribution is a shared household record — Kouchd never collects, holds, or moves money itself.")
+        Text("A contribution is a shared record, not proof that money moved. Kouchd never collects, holds, or moves money.")
           .font(.caption2)
           .foregroundStyle(Palette.muted)
           .multilineTextAlignment(.center)
@@ -876,22 +876,11 @@ struct ContributionForm: View {
     }
   }
 
-  private func startVerificationPhase() {
+  private func saveContribution() {
     errorMessage = ""
-    stepIndex = 0
-    progress = 0.05
-    phase = .processingVerification
+    phase = .saving
 
     Task {
-      // 4.5-second simulated verification broken into 3 x 1.5s casual status steps
-      for step in 0..<3 {
-        await MainActor.run {
-          stepIndex = step
-          progress = Double(step + 1) / 3.0
-        }
-        try? await Task.sleep(nanoseconds: 1_500_000_000)
-      }
-
       let today = Display.date()
       if canApplyRewards && applyRewards && rewardOffset.pointsApplied > 0 {
         let redeemed = await store.mutate("rewards:redeem", [
@@ -908,7 +897,7 @@ struct ContributionForm: View {
         }
       }
 
-      let centsToRecord = type == "payment" ? rewardOffset.netPayableCents : rewardOffset.grossAmountCents
+      let centsToRecord = pendingRecordCents
       if centsToRecord > 0 {
         let noteSummary: String = {
           if type != "payment" { return effectiveMemo }
@@ -930,7 +919,7 @@ struct ContributionForm: View {
         let created = await store.mutate("contributions:create", args)
         if !created {
           await MainActor.run {
-            errorMessage = "Could not record contribution on the Ledger."
+            errorMessage = "Could not save this contribution to the Ledger."
             phase = .selectAndRoute
           }
           return
@@ -938,9 +927,8 @@ struct ContributionForm: View {
       }
 
       await MainActor.run {
-        settledTimestamp = Date.now.formatted(date: .abbreviated, time: .shortened)
-        progress = 1.0
-        phase = .successCompletion
+        savedAt = Date.now.formatted(date: .abbreviated, time: .shortened)
+        phase = .saved
       }
     }
   }
@@ -956,6 +944,41 @@ struct ContributionForm: View {
     return UIImage(cgImage: cgImage)
   }
 }
+
+#if DEBUG
+/// Shows the contribution form with a synthetic stay and no Clerk or Convex data.
+/// Launch with `--ui-test-contribution=<no-handle|venmo-saved|saved>`; absent from Release.
+struct ContributionFormTestHost: View {
+  static var scenario: String? {
+    ProcessInfo.processInfo.arguments.first { $0.hasPrefix("--ui-test-contribution=") }?
+      .replacingOccurrences(of: "--ui-test-contribution=", with: "")
+  }
+  let scenario: String
+  @State private var store = KouchdStore()
+  @State private var ready = false
+
+  var body: some View {
+    ZStack {
+      Palette.cream.ignoresSafeArea()
+      if ready {
+        if scenario == "saved" {
+          ContributionForm(store: store, phase: .saved, savedAt: "Oct 30, 2026 at 9:00 AM")
+        } else {
+          ContributionForm(store: store)
+        }
+      }
+    }
+    .task {
+      // The signed-out store resets once Convex reports its auth state; seed after that.
+      try? await Task.sleep(for: .milliseconds(600))
+      let options = scenario != "no-handle" ? #"[{"provider":"venmo","detail":"@maple-host"}]"# : "[]"
+      let json = #"{"stay":{"name":"Maple Street room","paymentOptions":\#(options)},"membership":{"role":"guest"}}"#
+      store.bundle = (try? JSONDecoder().decode(Value.self, from: Data(json.utf8))) ?? .null
+      ready = true
+    }
+  }
+}
+#endif
 
 struct ChoresScreen: View {
   let store: KouchdStore
