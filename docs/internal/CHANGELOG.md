@@ -9,6 +9,7 @@ Internal engineering record. This file is excluded from Mintlify navigation and 
 - Marketing footers get a "Your Privacy Choices" link that opens Cookie settings.
 - Unchanged on purpose: the SMS line "We do not sell or share your SMS opt-in data or personal information with third parties for marketing purposes" (carrier-compliance wording, `AGENTS.md`). It sits next to the new Meta sharing; legal should confirm the two read consistently.
 - Pixel ID is set in Vercel only after both policy changes are merged and deployed.
+- Merged `main` at 0.8.0 into this branch, so this release is 0.8.1. `main` failed `tsc` after `6fcdae3` (web subscription management): two sibling elements under one `&&` in `workspace-panels.tsx`, and `info.managementURL` on a possibly-null `info` in `paywall-modal.tsx`. Both fixed here (fragment wrapper; `info?.managementURL`, which falls through to the existing "No web subscription" message).
 
 ## 2026-10-31 — Production build fix for 0.7.25 (WRE-252)
 
@@ -16,6 +17,11 @@ Internal engineering record. This file is excluded from Mintlify navigation and 
 - Fix: the override tests pin `NEXT_PUBLIC_VERCEL_ENV=development` and `NODE_ENV=test`. Test-only, no version change; 0.7.25 ships with it.
 - Evidence: the full suite passes with `NEXT_PUBLIC_VERCEL_ENV` set to production, preview and unset; `npm run verify` passes with production set.
 - Found in the follow-up audit: Vercel builds run the suite with real provider keys, so Convex test fixtures sent server events to the live PostHog project (160 events in the 01:20 UTC build, all from test users such as `legacy-approval-guest`), and Knock could be reached the same way. `vitest.config.ts` now clears `NEXT_PUBLIC_POSTHOG_KEY`, `KNOCK_API_KEY` and `LOOPS_API_KEY` for every test. Proof: pointing the suite at a local fake PostHog host, it sent 147 requests without the change and 0 with it. Every `user_signed_up`, `stay_created`, `invite_*`, `stay_joined`, `terms_accepted` and `contribution_recorded` event in PostHog before this fix is test data; filter it out (or delete it) before building funnels.
+## 2026-10-30 — iPad layout (WRE-254)
+
+- Sidebar navigation, width-driven layouts, Ledger list and detail, keyboard shortcuts, and a DEBUG layout test host on `codex/WRE-254-ipad-redesign`. Version 0.8.0. Branch only.
+- Details, evidence, and open items: `docs/internal/WRE-254-ipad-handoff.md`.
+
 
 ## 2026-10-31 — Google Tag Manager removed (WRE-252)
 

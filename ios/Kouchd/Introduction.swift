@@ -44,6 +44,8 @@ struct IntroductionScreen: View {
     "Record contributions made outside Kouchd. The people involved confirm or dispute the shared record.",
     "Coordinate chores, check-ins and occupied nights. Keep the little things from becoming a guessing game."
   ]
+  @State private var windowWidth: CGFloat = 0
+  private var usesWideLayout: Bool { windowWidth >= 900 && !typeSize.isAccessibilitySize }
   var body: some View {
     VStack(spacing: 0) {
       HStack {
@@ -67,7 +69,7 @@ struct IntroductionScreen: View {
               // Only the visible page carries it, so its buttons appear once.
               if typeSize.isAccessibilitySize && page == step { footer.frame(maxWidth: .infinity) }
             }
-            .padding(24).frame(maxWidth: 600, alignment: .leading).frame(maxWidth: .infinity)
+            .padding(24).frame(maxWidth: usesWideLayout ? 1040 : 600, alignment: .leading).frame(maxWidth: .infinity)
           }
           .tag(page)
         }
@@ -76,14 +78,34 @@ struct IntroductionScreen: View {
     }
     .safeAreaInset(edge: .bottom, spacing: 0) {
       if !typeSize.isAccessibilitySize {
-        footer.padding(.horizontal, 24).padding(.bottom, 16).background(Palette.cream)
+        footer.frame(maxWidth: 600).frame(maxWidth: .infinity)
+          .padding(.horizontal, 24).padding(.bottom, 16).background(Palette.cream)
       }
     }
     .foregroundStyle(Palette.ink)
     .tint(Palette.forest)
     .background(Palette.cream.ignoresSafeArea())
+    .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { windowWidth = $0 }
   }
   @ViewBuilder private func pageContent(_ page: Int) -> some View {
+    if usesWideLayout {
+      if page < 4 {
+        HStack(alignment: .center, spacing: 48) {
+          VStack(alignment: .leading, spacing: 20) { pageText(page) }
+            .frame(maxWidth: .infinity, alignment: .leading)
+          VStack(alignment: .leading, spacing: 20) { pagePreview(page) }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+      } else {
+        pageText(page)
+        HStack(alignment: .top, spacing: 20) { roleCards }
+      }
+    } else {
+      pageText(page)
+      if page < 4 { pagePreview(page) } else { roleCards }
+    }
+  }
+  @ViewBuilder private func pageText(_ page: Int) -> some View {
     if page < 4 {
       Image("CouchMark").renderingMode(.template).resizable().scaledToFit().frame(width: 64, height: 64)
         .foregroundStyle(Palette.forest)
@@ -91,15 +113,20 @@ struct IntroductionScreen: View {
       if page > 0 { Pill(text: ["", "01 / Your stay", "02 / Contributions", "03 / Everyday living"][page]) }
       Text(titles[page]).font(Palette.heading).accessibilityAddTraits(.isHeader)
       Text(descriptions[page]).foregroundStyle(Palette.muted)
-      preview(page)
-      if page == 2 {
-        Text("Kouchd records contributions. It does not move money.")
-          .font(.footnote).foregroundStyle(Palette.muted)
-      }
     } else {
       Text("How are you\nmaking room?").font(Palette.heading).accessibilityAddTraits(.isHeader)
       Text("Start with your role in this stay. You can host and be a guest in different stays.")
         .foregroundStyle(Palette.muted)
+    }
+  }
+  @ViewBuilder private func pagePreview(_ page: Int) -> some View {
+    preview(page)
+    if page == 2 {
+      Text("Kouchd records contributions. It does not move money.")
+        .font(.footnote).foregroundStyle(Palette.muted)
+    }
+  }
+  @ViewBuilder private var roleCards: some View {
       Card {
         Text("I’m hosting").font(Palette.section)
         Text("Create a stay, set expectations and invite your guests.")
@@ -110,7 +137,6 @@ struct IntroductionScreen: View {
         Text("Join using the invitation your host shared.")
         PrimaryButton(title: "Join a stay") { finish(.guest) }
       }
-    }
   }
   private var footer: some View {
     VStack(spacing: 12) {
