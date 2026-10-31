@@ -2,6 +2,14 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-10-31 — Meta advertising wording approved (WRE-252)
+
+- Decision (Lee, 2026-10-31): publish the Meta wording drafted in `docs/internal/META_ADS.md`, then set Pixel ID `1163132673323923` on both sites.
+- `lib/legal.ts` (and `src/lib/legal.ts` in `kouchd_marketing`): advertising-partner disclosure in section 5, sale/share statements in sections 5 and 10, Global Privacy Control as an opt-out in section 6, an "Advertising (only with your permission)" cookie category, and Meta named in the Cookie Policy's third-party section. Privacy and Cookie Policies dated October 31, 2026.
+- Marketing footers get a "Your Privacy Choices" link that opens Cookie settings.
+- Unchanged on purpose: the SMS line "We do not sell or share your SMS opt-in data or personal information with third parties for marketing purposes" (carrier-compliance wording, `AGENTS.md`). It sits next to the new Meta sharing; legal should confirm the two read consistently.
+- Pixel ID is set in Vercel only after both policy changes are merged and deployed.
+
 ## 2026-10-31 — Production build fix for 0.7.25 (WRE-252)
 
 - The production deploy of #97 failed: two flag-override tests in `tests/feature-flags.test.ts` assumed overrides were allowed, but Vercel's production build runs tests with `NEXT_PUBLIC_VERCEL_ENV=production`, where overrides are off by design. app.kouchd.com stayed on the previous deploy.

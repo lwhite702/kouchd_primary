@@ -1,5 +1,5 @@
 {
   "type": "patch",
-  "version": "0.7.25",
-  "reason": "Make the in-app Privacy and Cookie Policy wording match web analytics: PostHog autocapture and session replay are on, and signed-in web sessions are linked to account ID, name and email."
+  "version": "0.7.26",
+  "reason": "Describe Meta ad measurement in the in-app Privacy and Cookie Policies (Pixel only after Allow analytics and ads on kouchd.com, Global Privacy Control as an opt-out), and keep test fixtures out of live PostHog, Knock and Loops."
 }
