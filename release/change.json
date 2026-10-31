@@ -1,5 +1,5 @@
 {
   "type": "patch",
-  "version": "0.7.24",
-  "reason": "Finish the iPhone Plus flow: Plus sheet, confirmation, Plus is on, Plan screen, and host guest spots (WRE-250 follow-up)."
+  "version": "0.7.25",
+  "reason": "Remove made-up payment handles and payment-processor wording from the iOS contribution form (WRE-257)."
 }

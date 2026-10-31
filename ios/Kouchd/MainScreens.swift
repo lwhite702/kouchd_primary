@@ -356,6 +356,12 @@ struct ContributionForm: View {
     case saved
   }
 
+  private static let casualSteps = [
+    "Writing down your note for the house...",
+    "Adding your contribution to the shared Ledger...",
+    "Marking it for confirmation..."
+  ]
+
   let store: KouchdStore
   @Environment(\.dismiss) private var dismiss
   @Environment(\.openURL) private var openURL
@@ -374,6 +380,8 @@ struct ContributionForm: View {
   @State private var applyRewards = false
   @State private var pointsToRedeem = 0
 
+  @State private var stepIndex = 0
+  @State private var progress: Double = 0
   @State private var savedAt = ""
   @State private var errorMessage = ""
 
@@ -813,9 +821,17 @@ struct ContributionForm: View {
           .tint(Palette.brandForest)
           .padding(.top, 8)
 
-        Text("Saving to the Ledger...")
+        Text(Self.casualSteps[min(stepIndex, Self.casualSteps.count - 1)])
           .font(.headline)
           .multilineTextAlignment(.center)
+
+        Text("Saving your shared contribution record for \(Display.money(rewardOffset.grossAmountCents)) — Kouchd keeps the house in sync while payments stay between you two.")
+          .font(.footnote)
+          .foregroundStyle(Palette.muted)
+          .multilineTextAlignment(.center)
+
+        ProgressView(value: progress, total: 1.0)
+          .tint(Palette.brandForest)
       }
       .padding(.vertical, 14)
       .frame(maxWidth: .infinity)
@@ -882,9 +898,20 @@ struct ContributionForm: View {
 
   private func saveContribution() {
     errorMessage = ""
+    stepIndex = 0
+    progress = 0.05
     phase = .saving
 
     Task {
+      // A 4.5-second pause broken into 3 x 1.5s status steps. It paces the screen; nothing is checked here.
+      for step in 0..<3 {
+        await MainActor.run {
+          stepIndex = step
+          progress = Double(step + 1) / 3.0
+        }
+        try? await Task.sleep(nanoseconds: 1_500_000_000)
+      }
+
       let today = Display.date()
       if canApplyRewards && applyRewards && rewardOffset.pointsApplied > 0 {
         let redeemed = await store.mutate("rewards:redeem", [
@@ -932,6 +959,7 @@ struct ContributionForm: View {
 
       await MainActor.run {
         savedAt = Date.now.formatted(date: .abbreviated, time: .shortened)
+        progress = 1.0
         phase = .saved
       }
     }

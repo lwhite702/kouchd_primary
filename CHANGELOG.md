@@ -31,11 +31,12 @@
 
 ### Fixed
 
-- **iOS contribution form trust fixes (WRE-257, branch only, not released)**:
+- **iOS contribution form trust fixes (WRE-257, 0.7.25, branch only, not released)**:
   - The form no longer falls back to made-up handles such as `johndoe`, which could have opened a payment app aimed at a real stranger. When the stay has no saved handle for the chosen app, one must be entered, and the app link, QR code, and copy step stay blocked until then. A handle typed for one app is cleared when you pick another. Apple Cash now uses the copy-and-send step, because it has no app link to open.
-  - The 4.5-second simulated verification is gone. The form shows a saving state only while the Ledger save is running.
+  - The 4.5-second paced saving screen stays, kept at the owner's request. Its last step now says "Marking it for confirmation..." instead of claiming the host got a heads-up.
   - The saved screen no longer says "Transaction ID", "Settled Amount", or "Timestamp", and the made-up `KCH-` reference is removed. It now describes a saved shared record that is pending until the other person confirms it, and says the record is not proof that money moved. A contribution fully covered by coins says it was added as a stay credit, because that credit needs no confirmation.
   - The screens no longer say Kouchd opened an app or gave the host a heads-up, since neither is checked.
+  - Version 0.7.25.
   - New `P2PRouting.resolvedHandle` unit tests and a Debug-only `--ui-test-contribution` test host.
 - **Sign-in page freeze (WRE-253, 0.7.23)**: `SignInFormGuard` now changes the submit button only when its state actually differs. It used to rewrite the same attributes on every change its own `MutationObserver` reported, which re-triggered the observer forever and froze `/sign-in` as soon as Clerk showed the form.
 - **Blank web app (WRE-253, 0.7.22)**: removed the `<meta>` Content-Security-Policy fallback from `app/layout.tsx`. For browser requests, a layer in front of the app rewrote the tag and split it at the semicolons in React's `&#x27;` escapes. The malformed policy blocked Next.js and Clerk scripts, so pages stayed blank. The response header CSP from `next.config.ts` and `proxy.ts` is unchanged and is now the only policy. A test keeps the tag out of the layout.

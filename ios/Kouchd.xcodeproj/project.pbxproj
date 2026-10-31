@@ -583,7 +583,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.7.24;
+				MARKETING_VERSION = 0.7.25;
 				PRODUCT_BUNDLE_IDENTIFIER = com.wrelikbrands.kouchd;
 				PROVISIONING_PROFILE_SPECIFIER = "$(KOUCHD_PROVISIONING_PROFILE_SPECIFIER)";
 				SDKROOT = iphoneos;
@@ -627,7 +627,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.7.24;
+				MARKETING_VERSION = 0.7.25;
 				PRODUCT_BUNDLE_IDENTIFIER = com.wrelikbrands.kouchd;
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 5.0;
