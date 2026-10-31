@@ -10,6 +10,14 @@ Internal engineering record. This file is excluded from Mintlify navigation and 
 - Evidence: 39 KouchdTests passed on a dedicated iPhone 17 Pro simulator. The Debug test host with synthetic config and no real backend showed the blocked route, unlock after entering a handle, the handle clearing on app switch, cash without a handle, the send confirmation, the saved screen, and a failed save showing an error. Not checked: a successful save against a real backend, a fully coin-covered save, and the Apple Cash copy step on screen.
 - Branch only. Not pushed, released, or verified against real accounts.
 
+## 2026-10-30 — iPhone Plus flow per flow plan section 6 (WRE-250 follow-up)
+
+- Built P1, P3, P4 and P5 and the host spots UI on the backend from #93. New file: `ios/Kouchd/PlusFlow.swift`.
+- RevenueCat 5.95.0 supports the signed offer: `PurchaseParams.Builder.with(introductoryOfferEligibilityJWS:)`, forwarded by `PurchasesOrchestrator` as a StoreKit 2 purchase option. Source inspection only; not exercised against the App Store sandbox.
+- Evidence: Vitest, `KouchdTests`, and simulator screenshots of synthetic scenarios (`--ui-test-plan=<scenario>`) with a fake store client. No real purchase, webhook, or Knock delivery was run.
+- Depends on open PR #101 for removing a guest. Until then "Manage guests" opens Host controls, which has no remove action.
+- Version 0.7.24. Not deployed.
+
 ## 2026-10-30 — Sign-in freeze from guard observer loop (WRE-253)
 
 - After 0.7.22 (`0436bcf`) removed the meta CSP, scripts ran on `/sign-in` but the tab stopped responding. `/terms` stayed responsive.

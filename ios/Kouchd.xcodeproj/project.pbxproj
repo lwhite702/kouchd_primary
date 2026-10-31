@@ -17,6 +17,7 @@
 		69A55372E4F1B37912C6F675 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D2113646E0AF990592F43C78 /* Assets.xcassets */; };
 		74A2F0D8A622DB5FF5F0698E /* ConvexMobile in Frameworks */ = {isa = PBXBuildFile; productRef = BD61274E31847F6F50F197AB /* ConvexMobile */; };
 		77FDA152A858F52D82564449 /* CoordinationScreens.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCF1EE5BCF3A582046B33F13 /* CoordinationScreens.swift */; };
+		8E7D9D38BBD62E3B22636B88 /* PlusFlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = A426A500DE744298EF653CD0 /* PlusFlow.swift */; };
 		934269B63B55A9B645F86F33 /* Service.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1BFE92274E81D4153B7707BC /* Service.swift */; };
 		979ED40CCDDC40CC6B8E855B /* HostExtras.swift in Sources */ = {isa = PBXBuildFile; fileRef = 396286E31FFCC158CF46E208 /* HostExtras.swift */; };
 		99554FEEDC942FF5659E53D4 /* Introduction.swift in Sources */ = {isa = PBXBuildFile; fileRef = AAF2858D8754E0517EEF1659 /* Introduction.swift */; };
@@ -74,6 +75,7 @@
 		5A2C23CE4D758536585C5F62 /* LaunchContractTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchContractTests.swift; sourceTree = "<group>"; };
 		94F34D6A302D22BE5484C401 /* IntroductionFlowTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntroductionFlowTests.swift; sourceTree = "<group>"; };
 		9D4E9A2F9C52E7B0F9D9EC5F /* KouchdApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KouchdApp.swift; sourceTree = "<group>"; };
+		A426A500DE744298EF653CD0 /* PlusFlow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlusFlow.swift; sourceTree = "<group>"; };
 		AAB94C093B8F8FD00D92532A /* Production.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Production.xcconfig; sourceTree = "<group>"; };
 		AAF2858D8754E0517EEF1659 /* Introduction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Introduction.swift; sourceTree = "<group>"; };
 		AB86696BEB36D275DE75C665 /* HouseholdRules.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HouseholdRules.swift; sourceTree = "<group>"; };
@@ -131,6 +133,7 @@
 				28FB67FA8ACEEF88028EB12D /* MainScreens.swift */,
 				1F456BBBC4E5A79C83B94DD4 /* Models.swift */,
 				3D6C4CC4E2D25C8E55E007C5 /* MoreScreens.swift */,
+				A426A500DE744298EF653CD0 /* PlusFlow.swift */,
 				1BFE92274E81D4153B7707BC /* Service.swift */,
 				547C9B65F24DB992638D44B8 /* StayFeature.swift */,
 				F05360FF67DCBF3824A3A69F /* StayScreens.swift */,
@@ -358,6 +361,7 @@
 				50DD2C11C824695D4C0B9F3F /* MainScreens.swift in Sources */,
 				2FF47254E3CA13D7C4C05DC0 /* Models.swift in Sources */,
 				B8DBADA83280A246F6DF6617 /* MoreScreens.swift in Sources */,
+				8E7D9D38BBD62E3B22636B88 /* PlusFlow.swift in Sources */,
 				934269B63B55A9B645F86F33 /* Service.swift in Sources */,
 				54611A406021F7270CE43B98 /* StayFeature.swift in Sources */,
 				DA298C1816D701574257B0E6 /* StayScreens.swift in Sources */,
@@ -579,7 +583,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.7.23;
+				MARKETING_VERSION = 0.7.24;
 				PRODUCT_BUNDLE_IDENTIFIER = com.wrelikbrands.kouchd;
 				PROVISIONING_PROFILE_SPECIFIER = "$(KOUCHD_PROVISIONING_PROFILE_SPECIFIER)";
 				SDKROOT = iphoneos;
@@ -623,7 +627,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.7.23;
+				MARKETING_VERSION = 0.7.24;
 				PRODUCT_BUNDLE_IDENTIFIER = com.wrelikbrands.kouchd;
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 5.0;

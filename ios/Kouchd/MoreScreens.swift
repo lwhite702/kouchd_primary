@@ -51,6 +51,9 @@ struct MoreScreen: View {
       }
       Card {
         Text("Account & help").font(.headline)
+        if store.typedSubscriptionSummary?.canManageSubscription == true {
+          MoreActionRow(title: "Plan", detail: "See your plan, guest spots, and renewal.", symbol: "house.lodge", route: .subscription)
+        }
         MoreActionRow(title: "Profile & reminders", detail: "Update your name, phone number, and notifications.", symbol: "person.crop.circle", route: .settings)
         MoreActionRow(title: "Household guide", detail: "Learn how shared stay tools work.", symbol: "book.closed", route: .householdGuide)
         MoreActionRow(title: "About Kouchd", detail: "See what Kouchd helps hosts and guests manage.", symbol: "info.circle", route: .about)
@@ -61,7 +64,15 @@ struct MoreScreen: View {
 
       Card {
         Text("Another stay").font(.headline)
-        MoreActionRow(title: "Create a stay", detail: "Set up a new shared stay and its agreement.", symbol: "plus.circle", route: .createStay)
+        // At the limit, nothing gets typed before the host knows why it can't be saved.
+        if let limit = store.planUsage.flatMap(PlanLimitError.stayLimit) {
+          Button { store.planLimit = limit } label: {
+            MoreRowLabel(title: "Create a stay", detail: "Set up a new shared stay and its agreement.", symbol: "plus.circle", showsChevron: true)
+          }
+          .buttonStyle(.plain)
+        } else {
+          MoreActionRow(title: "Create a stay", detail: "Set up a new shared stay and its agreement.", symbol: "plus.circle", route: .createStay)
+        }
         MoreActionRow(title: "Join a stay", detail: "Enter an invitation code from your host.", symbol: "person.badge.plus", route: .joinCode)
       }
 
@@ -381,7 +392,7 @@ struct SettingsScreen: View {
             .foregroundStyle(Palette.muted)
           Button("Try again") { store.loadAccount() }
         } else if store.subscriptionSummary["canManageSubscription"].flag {
-          NavigationLink("Subscription", value: KouchdRoute.subscription)
+          NavigationLink("Plan", value: KouchdRoute.subscription)
         }
         NavigationLink("About Kouchd", value: KouchdRoute.about)
         Button("Manage account & security") { showAccount = true }

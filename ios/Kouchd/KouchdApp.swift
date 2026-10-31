@@ -150,6 +150,12 @@ struct RootView: View {
       Button("OK") { store.error = "" }
     } message: { Text(store.error) }
     .planLimitPresentation(store: store)
+    .plusSetupBanner(store.plusSetup)
+    .onChange(of: store.planRoute) { _, route in
+      guard let route else { return }
+      store.planRoute = nil
+      openMore(route)
+    }
     .onOpenURL(perform: handleOpenURL)
     .onChange(of: clerk.user?.id, initial: true) { _, userID in handleSessionUserChange(userID) }
     .onChange(of: store.stays.count) { _, count in handleStayCountChange(count) }

@@ -167,6 +167,16 @@ private enum KouchdAuthError: LocalizedError {
   /// Set when the backend refused a stay or guest for plan limits. Screens
   /// show their own copy for it instead of the generic error alert.
   var planLimit: PlanLimitError?
+  /// Opens the Plus sheet (host only) from wherever the root view is presenting.
+  var plusEntry: PlusEntry?
+  /// The stay a guest was blocked from, so "Invite your next guest" returns to it.
+  var plusEntryStayID: String?
+  /// Set by the Plus sheet; the stay screen opens its invite form and clears it.
+  var opensInviteOnStay = false
+  /// A screen the Plus sheet wants to continue on once it closes.
+  var planRoute: KouchdRoute?
+  /// A purchase Apple finished that the backend hasn't confirmed yet.
+  let plusSetup = PlusSetupTracker(sync: { try await RevenueCatBillingClient.shared.syncPurchases() })
   var typedLedger: [LedgerRecord] = []
   var isSubscriptionSummaryLoading = true
   var subscriptionSummaryError = ""
@@ -329,6 +339,11 @@ private enum KouchdAuthError: LocalizedError {
     planUsageValue = .null
     planUsage = nil
     planLimit = nil
+    plusEntry = nil
+    plusEntryStayID = nil
+    opensInviteOnStay = false
+    planRoute = nil
+    plusSetup.signedOut()
     isSubscriptionSummaryLoading = true
     subscriptionSummaryError = ""
     clearAdmin()
@@ -573,7 +588,9 @@ private enum KouchdAuthError: LocalizedError {
         }
         if name == "subscriptions:currentAccountSummary", let summary = value as? Value {
           self.typedSubscriptionSummary = summary.decoded(AccountSubscriptionSummary.self)
+          self.refreshPlusSetup()
         }
+        if name == "users:viewer" { self.refreshPlusSetup() }
         if name == "subscriptions:planUsage", let usage = value as? Value {
           self.planUsage = usage.decoded(PlanUsage.self)
         }
@@ -659,6 +676,11 @@ private enum KouchdAuthError: LocalizedError {
     return error.localizedDescription
   }
 
+  private func refreshPlusSetup() {
+    guard !viewer["id"].text.isEmpty else { return }
+    plusSetup.refresh(userID: viewer["id"].text, hasPlus: typedSubscriptionSummary?.hasPlus)
+  }
+
   /// Notes a refused join so the host can see it. Errors are ignored: it is not the guest's problem.
   func recordBlockedJoin(_ args: [String: ConvexEncodable?]) async {
     _ = try? await client.mutation("subscriptions:recordBlockedJoin", with: args) as Value
@@ -700,6 +722,18 @@ private enum KouchdAuthError: LocalizedError {
     guard stayEpoch == stayGeneration || selectedStayID == id else { return false }
     if !id.isEmpty { selectStay(id) }
     return true
+  }
+
+  /// The stay "End current stay instead" acts on: one this person hosts that hasn't ended.
+  var hostedStayToEnd: String? {
+    Self.hostedStayToEnd(selected: selectedStayID, stays: stays.map {
+      (id: $0["stay"]["_id"].text, role: $0["membership"]["role"].text, status: $0["stay"]["status"].text)
+    })
+  }
+
+  nonisolated static func hostedStayToEnd(selected: String, stays: [(id: String, role: String, status: String)]) -> String? {
+    let hosted = stays.filter { $0.role == "host" && $0.status != "ended" }.map(\.id)
+    return hosted.contains(selected) ? selected : hosted.first
   }
 
   var isHost: Bool { bundle["membership"]["role"].text == "host" }

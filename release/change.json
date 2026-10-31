@@ -1,5 +1,5 @@
 {
   "type": "patch",
-  "version": "0.7.23",
-  "reason": "Stop SignInFormGuard's MutationObserver from re-triggering itself and freezing the sign-in page (WRE-253)."
+  "version": "0.7.24",
+  "reason": "Finish the iPhone Plus flow: Plus sheet, confirmation, Plus is on, Plan screen, and host guest spots (WRE-250 follow-up)."
 }
