@@ -1,7 +1,7 @@
 /**
  * The one Content-Security-Policy for the web app. next.config.ts sends it as a
- * header, proxy.ts hands it to Clerk's middleware, and app/layout.tsx repeats it
- * as a <meta> tag (which cannot carry frame-ancestors).
+ * header and proxy.ts hands it to Clerk's middleware. There is no <meta> copy:
+ * a proxy in front of the app mangled it and blanked every page (WRE-253).
  *
  * PostHog traffic goes through the same-origin /ingest proxy, so 'self' covers
  * it; the PostHog hosts stay listed for clients that load before the proxy is
@@ -62,14 +62,6 @@ export const cspDirectives: Record<string, string[]> = {
   "worker-src": ["'self'", "blob:"],
 };
 
-function serialize(skip: string[] = []): string {
-  return Object.entries(cspDirectives)
-    .filter(([name]) => !skip.includes(name))
-    .map(([name, sources]) => [name, ...sources].join(" "))
-    .join("; ");
-}
-
-export const contentSecurityPolicy = serialize();
-
-/** Browsers ignore frame-ancestors in a <meta> CSP, so it is left out there. */
-export const metaContentSecurityPolicy = serialize(["frame-ancestors"]);
+export const contentSecurityPolicy = Object.entries(cspDirectives)
+  .map(([name, sources]) => [name, ...sources].join(" "))
+  .join("; ");

@@ -5,7 +5,6 @@ import { Suspense } from "react";
 import { GoogleTagManager } from "../components/google-tag-manager";
 import { VercelAnalytics } from "../components/vercel-analytics";
 import { SECURITY_RUNTIME_INLINE_SCRIPT } from "../lib/security-runtime";
-import { metaContentSecurityPolicy } from "../lib/security/csp";
 
 import { AppProviders } from "./providers";
 import "../styles.css";
@@ -65,10 +64,6 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="en" className={`${manrope.variable} ${inter.variable}`}>
       <head>
-        <meta
-          httpEquiv="Content-Security-Policy"
-          content={metaContentSecurityPolicy}
-        />
         <link
           rel="preload"
           as="script"

@@ -1,6 +1,6 @@
 {
   "name": "kouchd",
-  "version": "0.7.22",
+  "version": "0.7.24",
   "private": true,
   "type": "module",
   "scripts": {
