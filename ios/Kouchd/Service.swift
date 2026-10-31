@@ -718,6 +718,18 @@ private enum KouchdAuthError: LocalizedError {
     return true
   }
 
+  /// The stay "End current stay instead" acts on: one this person hosts that hasn't ended.
+  var hostedStayToEnd: String? {
+    Self.hostedStayToEnd(selected: selectedStayID, stays: stays.map {
+      (id: $0["stay"]["_id"].text, role: $0["membership"]["role"].text, status: $0["stay"]["status"].text)
+    })
+  }
+
+  nonisolated static func hostedStayToEnd(selected: String, stays: [(id: String, role: String, status: String)]) -> String? {
+    let hosted = stays.filter { $0.role == "host" && $0.status != "ended" }.map(\.id)
+    return hosted.contains(selected) ? selected : hosted.first
+  }
+
   var isHost: Bool { bundle["membership"]["role"].text == "host" }
   var isEnded: Bool { bundle["stay"]["status"].text == "ended" }
   var members: [Value] { bundle["members"].items }

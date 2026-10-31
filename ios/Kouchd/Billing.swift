@@ -267,6 +267,8 @@ typealias TrialEligibilityLookup = @MainActor (_ productID: String, _ appTransac
   /// True once Kouchd's backend reports Plus. A store receipt alone is not confirmation.
   private let isPlanConfirmed: (@MainActor () -> Bool)?
   private let confirmationTimeout: Duration
+  /// Runs the moment Apple finishes, before any waiting.
+  var onPurchaseFinished: (@MainActor () -> Void)?
   var packages: [BillingPackage] = []
   /// Waiting for the backend to record a completed purchase.
   var isConfirming = false
@@ -319,7 +321,7 @@ typealias TrialEligibilityLookup = @MainActor (_ productID: String, _ appTransac
   }
 
   static func live(store: KouchdStore) -> BillingModel {
-    BillingModel(
+    let model = BillingModel(
       client: RevenueCatBillingClient.shared,
       eligibility: { [weak store] productID, transactionID in
         guard let store else { return (nil, nil) }
@@ -327,6 +329,11 @@ typealias TrialEligibilityLookup = @MainActor (_ productID: String, _ appTransac
       },
       isPlanConfirmed: { [weak store] in store?.typedSubscriptionSummary?.hasPlus == true }
     )
+    model.onPurchaseFinished = { [weak store] in
+      guard let store else { return }
+      store.plusSetup.purchaseFinished(userID: store.viewer["_id"].text)
+    }
+    return model
   }
 
   func updateIdentity(_ userID: String?) async {
@@ -391,6 +398,7 @@ typealias TrialEligibilityLookup = @MainActor (_ productID: String, _ appTransac
         }
       }
       let result = try await client.purchase(packageID: package.id, introductoryOfferEligibilityJWS: jws)
+      if result == .purchased { onPurchaseFinished?() }
       if result == .purchased, let isPlanConfirmed {
         message = ""
         isConfirming = true
@@ -488,10 +496,10 @@ enum PlanCopy {
   static func downgradeNote(_ usage: PlanUsage) -> String? {
     var parts: [String] = []
     if usage.stays.used > freeStays {
-      parts.append("When Plus ends, your \(usage.stays.used) stays stay open. You won't be able to add new ones until you're down to \(freeStays).")
+      parts.append("When Plus ends, your \(usage.stays.used) stays stay open. You can add a new one once you're under the Free limit of \(freeStays).")
     }
     if usage.guests.used > freeGuests {
-      parts.append("\(parts.isEmpty ? "When Plus ends, your" : "Your") \(usage.guests.used) guests stay too. No one new can join until you're down to \(freeGuests).")
+      parts.append("\(parts.isEmpty ? "When Plus ends, your" : "Your") \(usage.guests.used) guests stay too. No one new can join until you're under the Free limit of \(freeGuests).")
     }
     return parts.isEmpty ? nil : parts.joined(separator: " ")
   }

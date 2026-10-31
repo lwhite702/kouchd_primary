@@ -36,6 +36,8 @@ enum PlusEntry: String, Identifiable {
   @ObservationIgnored private let retryDelays: [Duration]
   @ObservationIgnored private let defaults: UserDefaults
   @ObservationIgnored private var task: Task<Void, Never>?
+  /// The Plus sheet is still waiting on this purchase, so it owns what the host sees.
+  @ObservationIgnored private var sheetIsWaiting = false
 
   private static let userKey = "kouchd.plusSetup.userID"
   private static let startedKey = "kouchd.plusSetup.startedAt"
@@ -49,9 +51,17 @@ enum PlusEntry: String, Identifiable {
     self.defaults = defaults
   }
 
-  func begin(userID: String) {
+  /// Notes the purchase as soon as Apple finishes, so it survives the app closing mid-wait.
+  func purchaseFinished(userID: String) {
     defaults.set(userID, forKey: Self.userKey)
     defaults.set(Date.now.timeIntervalSince1970, forKey: Self.startedKey)
+    sheetIsWaiting = true
+  }
+
+  /// The sheet stopped waiting without an answer: carry on from here.
+  func begin(userID: String) {
+    purchaseFinished(userID: userID)
+    sheetIsWaiting = false
     state = .settingUp
     startRetrying()
   }
@@ -70,7 +80,7 @@ enum PlusEntry: String, Identifiable {
       state = .idle
       return
     }
-    if hasPlus == false, state == .idle {
+    if hasPlus == false, state == .idle, !sheetIsWaiting {
       state = .settingUp
       startRetrying()
     }
@@ -89,12 +99,14 @@ enum PlusEntry: String, Identifiable {
   func signedOut() {
     task?.cancel()
     task = nil
+    sheetIsWaiting = false
     state = .idle
   }
 
   private func forget() {
     task?.cancel()
     task = nil
+    sheetIsWaiting = false
     defaults.removeObject(forKey: Self.userKey)
     defaults.removeObject(forKey: Self.startedKey)
   }
@@ -182,8 +194,10 @@ struct PlusSheet: View {
       }
       plans
       footer
-      if entry == .stayLimit {
+      if entry == .stayLimit, let stayID = store.hostedStayToEnd {
         Button("End current stay instead") {
+          // The stay in view may be ended or one they're a guest in; End acts on the selected stay.
+          if store.selectedStayID != stayID { store.selectStay(stayID) }
           store.planRoute = .hostControls
           dismiss()
         }
@@ -548,7 +562,7 @@ struct BlockedJoinCard: View {
     VStack(alignment: .leading, spacing: 10) {
       Text(usage.guests.isFull
            ? "\(blocked.guestName) tried to join — this stay is full"
-           : "\(blocked.guestName) tried to join while this stay was full. There's room now, so the same invite will work.")
+           : "\(blocked.guestName) tried to join while this stay was full. There's room now. If their invite has expired or been used, send a new one.")
         .font(.subheadline.weight(.semibold)).foregroundStyle(Palette.ink)
       Text("\(blocked.stayName) · \(dateText)").font(.footnote).foregroundStyle(Palette.muted)
       if usage.guests.isFull, usage.isPlus, let limit = usage.guests.limit {

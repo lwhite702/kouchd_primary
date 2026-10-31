@@ -297,7 +297,7 @@ import XCTest
   func testDowngradeNoteOnlyWhenOverFreeLimits() {
     XCTAssertNil(PlanCopy.downgradeNote(usage(plan: "plus", stays: 1, guests: 1)))
     XCTAssertEqual(PlanCopy.downgradeNote(usage(plan: "plus", stays: 3, guests: 1)),
-                   "When Plus ends, your 3 stays stay open. You won't be able to add new ones until you're down to 1.")
+                   "When Plus ends, your 3 stays stay open. You can add a new one once you're under the Free limit of 1.")
   }
 
   private func trackerDefaults() -> UserDefaults {
@@ -332,6 +332,35 @@ import XCTest
     nextLaunch.signedOut()
     nextLaunch.refresh(userID: "u1", hasPlus: false, now: .now.addingTimeInterval(8 * 86_400))
     XCTAssertEqual(nextLaunch.state, .idle)
+  }
+
+  func testPurchaseIsNotedBeforeTheConfirmationWait() async {
+    let defaults = trackerDefaults()
+    let tracker = PlusSetupTracker(sync: {}, retryDelays: [.seconds(60)], defaults: defaults)
+    let model = BillingModel(client: BillingClientMock(), isPlanConfirmed: { false }, confirmationTimeout: .seconds(5))
+    model.onPurchaseFinished = { tracker.purchaseFinished(userID: "u1") }
+    let purchase = Task { await model.purchase(annual) }
+    try? await Task.sleep(for: .milliseconds(200))
+    // The sheet owns this moment, so no banner yet.
+    tracker.refresh(userID: "u1", hasPlus: false)
+    XCTAssertEqual(tracker.state, .idle)
+    // The app closed mid-wait: the next launch still picks it up.
+    let nextLaunch = PlusSetupTracker(sync: {}, retryDelays: [.seconds(60)], defaults: defaults)
+    nextLaunch.refresh(userID: "u1", hasPlus: false)
+    XCTAssertEqual(nextLaunch.state, .settingUp)
+    nextLaunch.signedOut()
+    purchase.cancel()
+    tracker.refresh(userID: "u1", hasPlus: true)
+    XCTAssertEqual(tracker.state, .idle)
+  }
+
+  func testEndingAStayPicksOneTheHostStillHosts() {
+    let stays = [(id: "ended", role: "host", status: "ended"), (id: "theirs", role: "guest", status: "active"),
+                 (id: "mine", role: "host", status: "active"), (id: "mine2", role: "host", status: "pending")]
+    XCTAssertEqual(KouchdStore.hostedStayToEnd(selected: "ended", stays: stays), "mine")
+    XCTAssertEqual(KouchdStore.hostedStayToEnd(selected: "theirs", stays: stays), "mine")
+    XCTAssertEqual(KouchdStore.hostedStayToEnd(selected: "mine2", stays: stays), "mine2")
+    XCTAssertNil(KouchdStore.hostedStayToEnd(selected: "x", stays: [stays[0], stays[1]]))
   }
 
   func testUsageCountsReadPlainly() {
