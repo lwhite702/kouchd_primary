@@ -86,6 +86,47 @@ final class ShellNavigatorTests: XCTestCase {
     XCTAssertEqual(navigator.section, .tool(.activity))
   }
 
+  func testSwitchingStaysLeavesStayScopedScreens() {
+    let navigator = ShellNavigator()
+    navigator.select(.tool(.hostControls))
+    navigator.detailPath = [.houseInfo]
+    navigator.tabPaths[.home] = [.agreement]
+    navigator.stayDidChange()
+    XCTAssertEqual(navigator.section, .home)
+    XCTAssertTrue(navigator.detailPath.isEmpty)
+    XCTAssertTrue(navigator.morePath.isEmpty)
+    XCTAssertTrue(navigator.tabPaths.isEmpty)
+  }
+
+  func testSwitchingStaysKeepsAnEverydaySection() {
+    let navigator = ShellNavigator()
+    navigator.select(.ledger)
+    navigator.stayDidChange()
+    XCTAssertEqual(navigator.section, .ledger)
+  }
+
+  func testEverydayPushedScreensCarryAcrossAResize() {
+    let navigator = ShellNavigator()
+    navigator.detailPath = [.agreement]
+    navigator.syncLayout(toSidebar: false)
+    XCTAssertEqual(navigator.tabPaths[.home], [.agreement])
+    navigator.detailPath = []
+    navigator.syncLayout(toSidebar: true)
+    XCTAssertEqual(navigator.detailPath, [.agreement])
+  }
+
+  func testWorkflowsThatDismissArePushed() {
+    let navigator = ShellNavigator()
+    navigator.select(.tool(.createStay))
+    XCTAssertEqual(navigator.section, .home)
+    XCTAssertEqual(navigator.detailPath, [.createStay])
+    navigator.selectTab(.more)
+    navigator.morePath = [.joinCode]
+    navigator.syncLayout(toSidebar: true)
+    XCTAssertEqual(navigator.section, .home)
+    XCTAssertEqual(navigator.detailPath, [.joinCode])
+  }
+
   func testChoosingASectionClearsPushedScreens() {
     let navigator = ShellNavigator()
     navigator.detailPath = [.about]

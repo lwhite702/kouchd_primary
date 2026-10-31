@@ -25,8 +25,19 @@ enum ShellSection: Hashable {
   private(set) var tab: AppTab = .home
   var morePath: [KouchdRoute] = []
   var detailPath: [KouchdRoute] = []
+  /// Pushed screens for each everyday tab, kept so a resize can carry them over.
+  var tabPaths: [AppTab: [KouchdRoute]] = [:]
+
+  /// Screens that finish by dismissing themselves, so they must be pushed rather than be a root.
+  static let pushedWorkflows: Set<KouchdRoute> = [.createStay, .joinCode, .householdGuide]
 
   func select(_ section: ShellSection) {
+    if case .tool(let route) = section, Self.pushedWorkflows.contains(route) {
+      self.section = .home
+      tab = .home
+      detailPath = [route]
+      return
+    }
     self.section = section
     detailPath = []
     switch section {
@@ -77,13 +88,37 @@ enum ShellSection: Hashable {
   /// Carries the screen across when the window crosses between tabs and the sidebar.
   func syncLayout(toSidebar: Bool) {
     if toSidebar {
-      guard tab == .more, let root = morePath.first else { return }
-      section = .tool(root)
-      detailPath = Array(morePath.dropFirst())
+      guard tab == .more else {
+        detailPath = tabPaths[tab] ?? []
+        return
+      }
+      guard let root = morePath.first else { return }
+      if Self.pushedWorkflows.contains(root) {
+        section = .home
+        tab = .home
+        detailPath = morePath
+      } else {
+        section = .tool(root)
+        detailPath = Array(morePath.dropFirst())
+      }
     } else if case .tool(let route) = section {
       tab = .more
       morePath = [route] + detailPath
+    } else {
+      tabPaths[tab] = detailPath
     }
+  }
+
+  /// Pushed screens and tools belong to the stay they opened for, so a switch leaves them.
+  func stayDidChange() {
+    detailPath = []
+    morePath = []
+    tabPaths = [:]
+    if case .tool = section { select(.home) }
+  }
+
+  func tabPath(_ tab: AppTab) -> Binding<[KouchdRoute]> {
+    Binding(get: { self.tabPaths[tab] ?? [] }, set: { self.tabPaths[tab] = $0 })
   }
 }
 
@@ -252,6 +287,8 @@ struct AuthenticatedShell: View {
       NavigationStack(path: $navigator.detailPath) {
         sectionContent(navigator.section)
           .id(navigator.section)
+          // Screens keep local edits, so each stay gets fresh ones.
+          .id(store.selectedStayID)
           .kouchdDestinations(store: store)
       }
     }
@@ -259,19 +296,19 @@ struct AuthenticatedShell: View {
 
   private var tabLayout: some View {
     TabView(selection: Binding(get: { navigator.tab }, set: { navigator.selectTab($0) })) {
-      NavigationStack {
+      NavigationStack(path: navigator.tabPath(.home)) {
         sectionContent(.home).kouchdDestinations(store: store)
       }
       .tabItem { Label(AppTab.home.rawValue, systemImage: AppTab.home.symbol) }.tag(AppTab.home)
-      NavigationStack {
+      NavigationStack(path: navigator.tabPath(.ledger)) {
         sectionContent(.ledger).kouchdDestinations(store: store)
       }
       .tabItem { Label(AppTab.ledger.rawValue, systemImage: AppTab.ledger.symbol) }.tag(AppTab.ledger)
-      NavigationStack {
+      NavigationStack(path: navigator.tabPath(.chores)) {
         sectionContent(.chores).kouchdDestinations(store: store)
       }
       .tabItem { Label(AppTab.chores.rawValue, systemImage: AppTab.chores.symbol) }.tag(AppTab.chores)
-      NavigationStack {
+      NavigationStack(path: navigator.tabPath(.stay)) {
         sectionContent(.stay).kouchdDestinations(store: store)
       }
       .tabItem { Label(AppTab.stay.rawValue, systemImage: AppTab.stay.symbol) }.tag(AppTab.stay)
@@ -366,6 +403,8 @@ private struct StaySidebar: View {
       ForEach(store.stays.indices, id: \.self) { index in
         let stay = store.stays[index]["stay"]
         Button(stay["name"].text.isEmpty ? "Shared stay" : stay["name"].text) {
+          guard stay["_id"].text != store.selectedStayID else { return }
+          navigator.stayDidChange()
           store.selectStay(stay["_id"].text)
         }
       }
