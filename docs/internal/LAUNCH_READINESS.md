@@ -85,6 +85,18 @@ account deletion need authenticated verification.
      generic error when a stay or join is refused. Hosts who are already over
      the Free limits keep their existing stays and guests but cannot add more
      until they move to Plus or make room.
+   - iPhone one-trial-per-host signing (Convex env, never committed): set
+     `APP_STORE_IAP_KEY_ID`, `APP_STORE_IAP_ISSUER_ID`, `APP_STORE_BUNDLE_ID`, and
+     `APP_STORE_IAP_PRIVATE_KEY` from an App Store Connect In-App Purchase key.
+     Without all four, the app shows no trial wording of its own and refuses a
+     purchase when Apple's sheet could disagree with Kouchd.
+   - App Store Connect: `kouchd_plus_monthly` and `kouchd_plus_yearly` at the
+     agreed prices, a 7-day free-trial introductory offer on yearly only, and
+     Family Sharing off.
+   - RevenueCat: both products in the current offering, and the webhook pointed
+     at this deployment.
+   - Knock: a `plus-trial-ending` workflow that sends email. The backend only
+     triggers it.
 6. Newsletter: verify the confirmed, subscribed website-source segment, double opt-in, existing opt-out
    behavior and provider rate limiting before setting `PUBLIC_NEWSLETTER_ENABLED`.
    No server API key is used by the public marketing form.

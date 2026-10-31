@@ -31,7 +31,13 @@ struct StayScreen: View {
                   detail: member["membership"]["role"].text.capitalized)
         }
         if store.isHost && !store.isEnded {
+          if let usage = store.planUsage { GuestSpotsRow(usage: usage) }
           PrimaryButton(title: "Invite a guest") { showingInvite = true }
+        }
+      }
+      if store.isHost && !store.isEnded, let usage = store.planUsage {
+        ForEach(usage.blockedJoins(inStay: store.selectedStayID)) { blocked in
+          BlockedJoinCard(store: store, usage: usage, blocked: blocked)
         }
       }
       } trailing: {
@@ -88,6 +94,13 @@ struct StayScreen: View {
       }
     }
     .sheet(isPresented: $showingInvite) { InviteForm(store: store) }
+    .task(id: store.opensInviteOnStay) {
+      guard store.opensInviteOnStay else { return }
+      // Wait for the Plus sheet to finish closing, or this one can't present.
+      try? await Task.sleep(for: .milliseconds(600))
+      showingInvite = true
+      store.opensInviteOnStay = false
+    }
     .sheet(isPresented: $showingEdit) { RenameStayForm(store: store) }
     .sheet(isPresented: $showingContributionRouter) { ContributionForm(store: store) }
   }
@@ -190,9 +203,20 @@ struct InviteForm: View {
   @Environment(\.dismiss) private var dismiss
   @State private var email = ""
   @State private var link: URL?
+  @State private var plusEntry: PlusEntry?
+  var purchasesEnabled = AppConfig.purchasesEnabled
   var body: some View {
     NavigationStack {
       Form {
+        if let usage = store.planUsage,
+           let line = PlanCopy.inviteSpotsLine(usage, guestsInThisStay: usage.guestSpots(inStay: store.selectedStayID).count) {
+          Section {
+            Text(line)
+            if usage.isFree && usage.guests.isFull && purchasesEnabled {
+              Button("Make room with Plus") { plusEntry = .guestLimit }
+            }
+          }
+        }
         Section {
           TextField("Guest email (optional)", text: $email)
             .keyboardType(.emailAddress).textInputAutocapitalization(.never)
@@ -207,6 +231,8 @@ struct InviteForm: View {
       }
       .navigationTitle("Invite a guest")
       .kouchdNavigationBar()
+      .tint(Palette.forest)
+      .sheet(item: $plusEntry) { PlusSheet(store: store, entry: $0, returnsToInvite: true) }
       .toolbar {
         ToolbarItem(placement: .cancellationAction) { Button("Done") { dismiss() } }
         ToolbarItem(placement: .confirmationAction) {

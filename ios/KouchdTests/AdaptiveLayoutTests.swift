@@ -42,6 +42,13 @@ final class StayToolVisibilityTests: XCTestCase {
     XCTAssertTrue(StayTool.admin.isVisible(in: context(admin: true)))
   }
 
+  func testPlanNeedsAManageableSubscription() {
+    XCTAssertFalse(StayTool.plan.isVisible(in: context()))
+    var manageable = context()
+    manageable.canManagePlan = true
+    XCTAssertTrue(StayTool.plan.isVisible(in: manageable))
+  }
+
   func testOnlyHelpHasNoRoute() {
     XCTAssertEqual(StayTool.allCases.filter { $0.route == nil }, [.help])
   }

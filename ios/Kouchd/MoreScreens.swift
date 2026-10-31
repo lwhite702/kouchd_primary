@@ -15,7 +15,7 @@ struct MoreScreen: View {
       }
       toolCard(store.isHost ? "Manage this stay" : "Your stay", [.hostControls, .agreement, .schedule, .occupancy, .rewards, .activity])
       toolCard("Household coordination", [.shopping, .checkins])
-      toolCard("Account & help", [.settings, .guide, .about, .help])
+      toolCard("Account & help", [.plan, .settings, .guide, .about, .help])
       toolCard("Another stay", [.createStay, .joinStay])
       toolCard("Administration", [.admin])
     }
@@ -27,7 +27,13 @@ struct MoreScreen: View {
       Card {
         Text(title).font(.headline)
         ForEach(visible, id: \.self) { tool in
-          if let route = tool.route {
+          // At the limit, nothing gets typed before the host knows why it can't be saved.
+          if tool == .createStay, let limit = store.planUsage.flatMap(PlanLimitError.stayLimit) {
+            Button { store.planLimit = limit } label: {
+              MoreRowLabel(title: tool.title, detail: tool.detail(isHost: store.isHost), symbol: tool.symbol, showsChevron: true)
+            }
+            .buttonStyle(.plain)
+          } else if let route = tool.route {
             MoreActionRow(title: tool.title, detail: tool.detail(isHost: store.isHost), symbol: tool.symbol, route: route)
           } else {
             Link(destination: StayTool.helpURL) {
@@ -352,7 +358,7 @@ struct SettingsScreen: View {
             .foregroundStyle(Palette.muted)
           Button("Try again") { store.loadAccount() }
         } else if store.subscriptionSummary["canManageSubscription"].flag {
-          NavigationLink("Subscription", value: KouchdRoute.subscription)
+          NavigationLink("Plan", value: KouchdRoute.subscription)
         }
         NavigationLink("About Kouchd", value: KouchdRoute.about)
         Button("Manage account & security") { showAccount = true }

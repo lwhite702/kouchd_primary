@@ -135,7 +135,7 @@ enum ShellSection: Hashable {
 enum StayTool: CaseIterable, Hashable {
   case hostControls, agreement, schedule, occupancy, rewards, activity
   case shopping, checkins
-  case settings, guide, about, help
+  case plan, settings, guide, about, help
   case createStay, joinStay
   case admin
 
@@ -144,6 +144,7 @@ enum StayTool: CaseIterable, Hashable {
     var isEnded: Bool
     var usesOccupiedNights: Bool
     var isAdmin: Bool
+    var canManagePlan = false
   }
 
   func isVisible(in context: Context) -> Bool {
@@ -152,6 +153,7 @@ enum StayTool: CaseIterable, Hashable {
     case .agreement: !context.isHost
     case .occupancy: context.usesOccupiedNights
     case .admin: context.isAdmin
+    case .plan: context.canManagePlan
     default: true
     }
   }
@@ -166,6 +168,7 @@ enum StayTool: CaseIterable, Hashable {
     case .activity: .activity
     case .shopping: .shopping
     case .checkins: .checkins
+    case .plan: .subscription
     case .settings: .settings
     case .guide: .householdGuide
     case .about: .about
@@ -186,6 +189,7 @@ enum StayTool: CaseIterable, Hashable {
     case .activity: "Household activity"
     case .shopping: "Shopping list"
     case .checkins: "Check-ins"
+    case .plan: "Plan"
     case .settings: "Profile & reminders"
     case .guide: "Household guide"
     case .about: "About Kouchd"
@@ -206,6 +210,7 @@ enum StayTool: CaseIterable, Hashable {
     case .activity: "clock.arrow.circlepath"
     case .shopping: "basket"
     case .checkins: "bubble.left.and.bubble.right"
+    case .plan: "house.lodge"
     case .settings: "person.crop.circle"
     case .guide: "book.closed"
     case .about: "info.circle"
@@ -226,6 +231,7 @@ enum StayTool: CaseIterable, Hashable {
     case .activity: "See recent changes and shared updates."
     case .shopping: "Keep shared items and your own list together."
     case .checkins: "Share updates and follow up with your host or guest."
+    case .plan: "See your plan, guest spots, and renewal."
     case .settings: "Update your name, phone number, and notifications."
     case .guide: "Learn how shared stay tools work."
     case .about: "See what Kouchd helps hosts and guests manage."
@@ -249,7 +255,8 @@ extension KouchdStore {
       isHost: isHost,
       isEnded: isEnded,
       usesOccupiedNights: bundle["terms"]["billingBasis"].text == "occupied_nights",
-      isAdmin: adminAccess.flag
+      isAdmin: adminAccess.flag,
+      canManagePlan: typedSubscriptionSummary?.canManageSubscription == true
     )
   }
 }
@@ -384,7 +391,7 @@ private struct StaySidebar: View {
       }
       toolSection("Household", [.shopping, .checkins, .activity])
       toolSection("This stay", [.agreement, .hostControls, .schedule, .occupancy, .rewards])
-      toolSection("Account & help", [.settings, .guide, .about, .help])
+      toolSection("Account & help", [.plan, .settings, .guide, .about, .help])
       toolSection("Another stay", [.createStay, .joinStay])
       toolSection("Administration", [.admin])
     }
@@ -405,7 +412,11 @@ private struct StaySidebar: View {
     if !visible.isEmpty {
       Section(title) {
         ForEach(visible, id: \.self) { tool in
-          if let route = tool.route {
+          // At the limit, nothing gets typed before the host knows why it can't be saved.
+          if tool == .createStay, let limit = store.planUsage.flatMap(PlanLimitError.stayLimit) {
+            Button { store.planLimit = limit } label: { Label(tool.title, systemImage: tool.symbol) }
+              .foregroundStyle(Palette.ink).listItemTint(Palette.forest)
+          } else if let route = tool.route {
             row(tool.title, symbol: tool.symbol, section: .tool(route))
           } else {
             Link(destination: StayTool.helpURL) { Label(tool.title, systemImage: tool.symbol) }
