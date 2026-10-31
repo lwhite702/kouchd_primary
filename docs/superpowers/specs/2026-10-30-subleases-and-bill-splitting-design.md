@@ -92,7 +92,7 @@ Database roles stay `host` and `guest`. Screens also say "host" and "guest" on s
 
 This fixes existing behavior and does not depend on the rest of this document.
 
-- The server removes `doorCode` and `wifiPassword` from responses to a guest unless the stay is active, that guest has accepted their current terms, and, on a sublease, the current date is not after the agreement end date.
+- The server removes `doorCode` and `wifiPassword` from responses to a guest unless the stay has not ended, that guest has accepted an agreement version, and, on a sublease, the current date is not after the agreement end date. A pending new version doesn't remove access, and neither does another guest not having accepted yet, because either would lock out someone already living there. A guest who rejoins must accept again.
 - The redaction lives in one shared helper, used by every query that returns a stay to a guest, and is covered by server tests.
 - Ending a sublease reminds the host to change the codes, because Kouchd cannot revoke a physical code.
 
