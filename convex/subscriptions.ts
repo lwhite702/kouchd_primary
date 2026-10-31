@@ -379,7 +379,7 @@ export const sendTrialEndingReminder = internalMutation({
         boughtOn: snapshot.store === "app_store" ? "iPhone" : snapshot.store === "web" ? "web" : "other",
         manageUrl: snapshot.store === "app_store"
           ? "https://apps.apple.com/account/subscriptions"
-          : "https://app.kouchd.com/settings",
+          : "https://app.kouchd.com",
         detail: "Your Kouchd Plus free trial ends in 2 days.",
         action: "trial_ending",
       },

@@ -7,7 +7,7 @@ Internal engineering record. This file is excluded from Mintlify navigation and 
 - Decision (Lee): no Tag Manager on either site; PostHog covers it.
 - App: removed `components/google-tag-manager.tsx`, its mount in `app/layout.tsx`, the Google hosts in `lib/security/csp.ts`, and the Tag Manager wording in `lib/legal.ts` and `app/privacy/page.tsx`. The policies go back to the October 30 text, which was never published, so their dates stay October 30.
 - Marketing (`kouchd_marketing`): removed the Tag Manager loader from `Analytics.astro` and its policy wording. GA4 still loads directly after "Allow analytics".
-- `main` also merged into this branch, so it's now 0.7.24 (main used 0.7.22 and 0.7.23 for WRE-253).
+- `main` also merged into this branch, so it's now 0.7.25 (`main` used 0.7.22–0.7.24 for WRE-253 and WRE-256).
 
 ## 2026-10-30 — Previews on production Clerk
 
@@ -81,10 +81,18 @@ Internal engineering record. This file is excluded from Mintlify navigation and 
 - Context: RevenueCat's PostHog integration sends subscription lifecycle events to PostHog from RevenueCat's servers. It is not turned on; the `Kouchd` PostHog project (595950) had no RevenueCat, purchase, paywall or checkout events in the last 60 days.
 - First commit sent `paywall_viewed` and `customer_center_opened` from `components/billing/paywall-modal.tsx`. Removed after review (xhawk): the in-app Privacy Policy section 6 limits optional telemetry to page and screen categories, `paywall_viewed` fired before the paywall rendered, and `customer_center_opened` can't detect a blocked pop-up (`window.open` with `noopener` returns `null`). The doc records how to add them once the copy is approved.
 - `tests/revenuecat-posthog.test.ts`: source checks that web and iOS identify PostHog and RevenueCat with the same Clerk user ID (so no `$posthogUserId` attribute is needed), and that the paywall does not send `checkout_started` or `subscription_activated`. No product code changes.
-- Decision (Lee, 2026-10-30): keep web autocapture and session replay on; change the policy, not the config. `lib/legal.ts` Privacy Policy section 6 and Cookie Policy "Performance and diagnostics" rewritten to say what the web app records, including that replays hide typed input but can show names, household details and contribution amounts, and that signed-in web sessions are linked to account ID, name and email. Decisions (Lee, 2026-10-30): keep sending name and email with the web `identify`; add RevenueCat to the service-provider lists here and in `kouchd_marketing`; no separate user notice. Dates moved from shared `legalMeta` to each `LegalDocumentData` (review finding: a shared date re-dated unchanged documents). Privacy and Cookie Policies are dated October 30, 2026; Terms and Acceptable Use keep October 23, 2026. Same change in `kouchd_marketing`, where only the Privacy Policy moves. Version 0.7.24 (0.7.22 and 0.7.23 went to WRE-253 on `main`).
+- Decision (Lee, 2026-10-30): keep web autocapture and session replay on; change the policy, not the config. `lib/legal.ts` Privacy Policy section 6 and Cookie Policy "Performance and diagnostics" rewritten to say what the web app records, including that replays hide typed input but can show names, household details and contribution amounts, and that signed-in web sessions are linked to account ID, name and email. Decisions (Lee, 2026-10-30): keep sending name and email with the web `identify`; add RevenueCat to the service-provider lists here and in `kouchd_marketing`; no separate user notice. Dates moved from shared `legalMeta` to each `LegalDocumentData` (review finding: a shared date re-dated unchanged documents). Privacy and Cookie Policies are dated October 30, 2026; Terms and Acceptable Use keep October 23, 2026. Same change in `kouchd_marketing`, where only the Privacy Policy moves. Version 0.7.25 (`main` used 0.7.22–0.7.24 for WRE-253 and WRE-256).
 - `docs/internal/REVENUECAT_POSTHOG.md`: identity table, event plan, dashboard checklist, verification query, privacy findings.
 - Privacy findings (open, need approval): neither privacy policy names RevenueCat; the in-app Cookie Policy's PostHog sentence would no longer be accurate once plan data arrives; and on web the policy already conflicts with `autocapture: true`, session replay, and `identify` sending email and name.
 - Checks: `vitest run` (36 files, 214 tests), `tsc --noEmit`, `eslint` on changed files. The RevenueCat docs page could not be fetched from this environment; the dashboard steps follow its PostHog integration and must be confirmed in the RevenueCat dashboard.
+## 2026-10-30 — iPhone Plus flow per flow plan section 6 (WRE-250 follow-up)
+
+- Built P1, P3, P4 and P5 and the host spots UI on the backend from #93. New file: `ios/Kouchd/PlusFlow.swift`.
+- RevenueCat 5.95.0 supports the signed offer: `PurchaseParams.Builder.with(introductoryOfferEligibilityJWS:)`, forwarded by `PurchasesOrchestrator` as a StoreKit 2 purchase option. Source inspection only; not exercised against the App Store sandbox.
+- Evidence: Vitest, `KouchdTests`, and simulator screenshots of synthetic scenarios (`--ui-test-plan=<scenario>`) with a fake store client. No real purchase, webhook, or Knock delivery was run.
+- Depends on open PR #101 for removing a guest. Until then "Manage guests" opens Host controls, which has no remove action.
+- Version 0.7.24. Not deployed.
+
 ## 2026-10-30 — Sign-in freeze from guard observer loop (WRE-253)
 
 - After 0.7.22 (`0436bcf`) removed the meta CSP, scripts ran on `/sign-in` but the tab stopped responding. `/terms` stayed responsive.
