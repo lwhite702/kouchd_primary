@@ -13,9 +13,11 @@ Internal engineering record. This file is excluded from Mintlify navigation and 
 ## 2026-10-30 — Web contribution router trust fixes (WRE-259)
 
 - Web counterpart of WRE-257, in `components/household/p2p-payment-router.tsx`, `lib/domain/p2pRouting.ts`, and the preview in `components/kouchd-workspace.tsx`.
-- `buildNetworkRouteUri` now returns `null` without a real handle, and `hasUsableRecipient` is the new gate. `DEFAULT_P2P_TRANSACTION`, `transactionId`, `P2PConfirmationReceipt`, and the simulated phase are removed. `onLogContribution` is required.
+- `buildNetworkRouteUri` now returns `null` without a real handle, and `hasUsableRecipient` is the new gate. `DEFAULT_P2P_TRANSACTION`, `transactionId`, and `P2PConfirmationReceipt` are removed. `onLogContribution` is required.
+- Kept the 4.5-second paced saving screen by owner decision (2026-10-30), matching WRE-257. It runs before the save and checks nothing. Its heads-up step was reworded. Closing the dialog during the pause cancels the save.
 - The router is used only by the preview workspace, shown when Clerk or Convex isn't configured. Nothing in it writes to Convex.
 - Evidence: `tests/p2p-routing.test.ts` and a browser walkthrough of the preview at `localhost` with synthetic, non-working Clerk values and a synthetic local cookie. Checked on screen: blocked route, bare `@`, handle unlock, no amount, Zelle copy step, cash without a handle, phone link blocked then enabled, send confirmation, groceries, full and partial Coins, saved screens, and Ledger rows.
+- The paced screen was timed in the browser at about 4.5 seconds, with its three steps about 1.5 seconds apart. Closing the dialog during the pause added no Ledger row.
 - Not checked: a failed save, the Apple Cash copy step, tapping the phone link into a real payment app, scanning a QR code, or anything on real accounts.
 - Branch only. Not pushed, released, or deployed.
 

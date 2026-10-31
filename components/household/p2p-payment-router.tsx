@@ -129,6 +129,15 @@ const CHANNEL_META: Record<ExtendedPaymentChannelId, ChannelMeta> = {
   },
 };
 
+const SAVING_STEPS = [
+  "Writing down your note for the house...",
+  "Adding your contribution to the shared Ledger...",
+  "Marking it for confirmation...",
+];
+
+// Paces the saving screen. Nothing is checked during this pause.
+const SAVING_PAUSE_MS = 4500;
+
 function LevelHQrCodeSvg({
   value,
   size = 184,
@@ -208,19 +217,42 @@ export const P2PPaymentRouter: React.FC<P2PPaymentRouterProps> = ({
         : detectMobileUserAgent();
 
   const [copiedCredential, setCopiedCredential] = useState<boolean>(false);
+  const [savingStepIndex, setSavingStepIndex] = useState<number>(0);
+  const [progressPercent, setProgressPercent] = useState<number>(0);
   const [savedAt, setSavedAt] = useState<string>("");
   const [persistError, setPersistError] = useState<string>("");
 
   const copyTimeoutRef = useRef<number | null>(null);
   const isSavingRef = useRef<boolean>(false);
+  const savingPauseRef = useRef<number | null>(null);
 
   useEffect(() => {
     return () => {
       if (copyTimeoutRef.current) {
         window.clearTimeout(copyTimeoutRef.current);
       }
+      // Closing during the pause cancels the save.
+      if (savingPauseRef.current) {
+        window.clearTimeout(savingPauseRef.current);
+      }
     };
   }, []);
+
+  useEffect(() => {
+    if (phase !== "SAVING") {
+      return;
+    }
+
+    const startTime = performance.now();
+    const stepDuration = SAVING_PAUSE_MS / SAVING_STEPS.length;
+    const progressInterval = window.setInterval(() => {
+      const elapsed = performance.now() - startTime;
+      setProgressPercent(Math.round(Math.min(elapsed / SAVING_PAUSE_MS, 1) * 100));
+      setSavingStepIndex(Math.min(Math.floor(elapsed / stepDuration), SAVING_STEPS.length - 1));
+    }, 60);
+
+    return () => window.clearInterval(progressInterval);
+  }, [phase]);
 
   // Build effective transaction object combining props + any inline edits
   const effectiveTransaction: P2PTransactionInput = useMemo(
@@ -315,12 +347,18 @@ export const P2PPaymentRouter: React.FC<P2PPaymentRouterProps> = ({
   const canRoute = hasRecipient && hasAmount;
   const isCopyChannel = selectedChannel === "zelle" || selectedChannel === "applepay";
 
-  // Runs only as long as the Ledger save does. Kouchd can't see or check a transfer.
+  // Kouchd can't see or check a transfer, so the pause before the save verifies nothing.
   const saveContribution = async () => {
     if (isSavingRef.current) return;
     isSavingRef.current = true;
     setPersistError("");
+    setSavingStepIndex(0);
+    setProgressPercent(0);
     setPhase("SAVING");
+
+    await new Promise((resolve) => {
+      savingPauseRef.current = window.setTimeout(resolve, SAVING_PAUSE_MS);
+    });
 
     try {
       const channelLabel =
@@ -972,7 +1010,7 @@ export const P2PPaymentRouter: React.FC<P2PPaymentRouterProps> = ({
           </div>
         )}
 
-        {/* PHASE 3: SAVING, only while the Ledger save runs */}
+        {/* PHASE 3: PACED SAVING, a pause and then the Ledger save */}
         {phase === "SAVING" && (
           <div style={styles.phaseBody}>
             <div style={styles.processingStack} role="status">
@@ -980,7 +1018,29 @@ export const P2PPaymentRouter: React.FC<P2PPaymentRouterProps> = ({
                 <div style={styles.spinnerRing} />
               </div>
 
-              <p style={styles.savingTitle}>Saving to the Ledger...</p>
+              <p style={styles.savingTitle}>{SAVING_STEPS[savingStepIndex]}</p>
+
+              <p style={styles.processingSubcopy}>
+                Saving a shared contribution record for{" "}
+                <strong>${(rewardSummary.grossAmountCents / 100).toFixed(2)}</strong>. Kouchd keeps the
+                house in sync while payments stay between you two.
+              </p>
+
+              <div style={styles.progressTrack} aria-hidden="true">
+                <div style={{ ...styles.progressFill, width: `${progressPercent}%` }} />
+              </div>
+
+              <div style={styles.dotsRow}>
+                {SAVING_STEPS.map((stepText, idx) => (
+                  <span
+                    key={stepText}
+                    style={{
+                      ...styles.stepDot,
+                      backgroundColor: idx <= savingStepIndex ? "#184f3a" : "#ded8ce",
+                    }}
+                  />
+                ))}
+              </div>
             </div>
           </div>
         )}
@@ -1556,6 +1616,36 @@ const styles: Record<string, React.CSSProperties> = {
     color: "#17251f",
     margin: 0,
     minHeight: "24px",
+  },
+  processingSubcopy: {
+    fontSize: "13px",
+    color: "#59675f",
+    lineHeight: 1.5,
+    margin: 0,
+  },
+  progressTrack: {
+    width: "100%",
+    height: "8px",
+    backgroundColor: "#ece5da",
+    borderRadius: "999px",
+    overflow: "hidden",
+    marginTop: "4px",
+  },
+  progressFill: {
+    height: "100%",
+    backgroundColor: "#184f3a",
+    borderRadius: "999px",
+    transition: "width 0.1s linear",
+  },
+  dotsRow: {
+    display: "flex",
+    gap: "8px",
+    marginTop: "4px",
+  },
+  stepDot: {
+    width: "8px",
+    height: "8px",
+    borderRadius: "999px",
   },
   successStack: {
     display: "flex",
