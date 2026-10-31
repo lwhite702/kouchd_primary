@@ -36,6 +36,7 @@ enum ShellSection: Hashable {
       self.section = .home
       tab = .home
       detailPath = [route]
+      tabPaths[.home] = [route]
       return
     }
     self.section = section

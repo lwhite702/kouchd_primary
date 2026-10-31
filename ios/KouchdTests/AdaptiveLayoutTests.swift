@@ -127,6 +127,7 @@ final class ShellNavigatorTests: XCTestCase {
     navigator.select(.tool(.createStay))
     XCTAssertEqual(navigator.section, .home)
     XCTAssertEqual(navigator.detailPath, [.createStay])
+    XCTAssertEqual(navigator.tabPaths[.home], [.createStay])
     navigator.selectTab(.more)
     navigator.morePath = [.joinCode]
     navigator.syncLayout(toSidebar: true)
