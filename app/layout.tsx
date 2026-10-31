@@ -75,7 +75,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         />
       </head>
       <body>
-        <ClerkProvider>
+        {/* Explicit auth URLs keep Clerk's sign-up → sign-in hand-off under /sign-in and /sign-up (WRE-261). */}
+        <ClerkProvider signInUrl="/sign-in" signUpUrl="/sign-up">
           <AppProviders>{children}</AppProviders>
         </ClerkProvider>
         <VercelAnalytics />

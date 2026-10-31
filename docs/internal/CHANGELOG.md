@@ -2,6 +2,15 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-10-31 — Facebook sign-up 404 at /sso-callback (WRE-261)
+
+- Report: Facebook sign-up ended on the "Wrong couch" 404 page.
+- Evidence (Vercel production request log, project `kouchd`, deployment `dpl_BWx3jhxvmt29ufwicbuHkfkKkrzx`, 22:33 UTC): `/sign-up/sso-callback` → `/sign-up/continue` → `/sign-up/verify-email-address` → `/sign-in/sso-callback` → `/sign-in/factor-one` (all 200) → `/sso-callback` **404** → `/__clerk/v1/environment` 404. Two `/sign-out` 404s at 22:30 UTC.
+- Likely cause, from code: no `signInUrl`/`signUpUrl` on `ClerkProvider`, no `NEXT_PUBLIC_CLERK_SIGN_IN_URL`/`NEXT_PUBLIC_CLERK_SIGN_UP_URL` in Vercel, and no `routing`/`path` on `<SignIn>`/`<SignUp>`. Clerk's UI code loads at runtime and wasn't inspected, so the exact line that drops `/sign-in` is unconfirmed. Turnstile blocks headless browsers, so the flow couldn't be replayed.
+- Fix: explicit URLs on the provider and both components, a root `/sso-callback` safety-net page, and a `/sign-out` page. 0.8.4.
+- Not addressed: the `/__clerk/v1/environment` 404 (no Clerk proxy is configured; it came right after the 404 page loaded). Vercel env vars unchanged.
+- Branch only. Not pushed or deployed. Facebook sign-up still needs checking on a deployed preview.
+
 ## 2026-10-30 — iOS contribution form trust fixes (WRE-257)
 
 - Removed made-up fallback handles from `ContributionForm`, and replaced payment-processor wording with a saved shared record pending confirmation.

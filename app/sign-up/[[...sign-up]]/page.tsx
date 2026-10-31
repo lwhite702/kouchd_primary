@@ -18,7 +18,7 @@ export default function SignUpPage() {
 
   return (
     <main className="clerk-page" style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "2rem 1rem" }}>
-      <SignUp />
+      <SignUp routing="path" path="/sign-up" signInUrl="/sign-in" />
 
       {/* SMS & Legal Disclosure Card for New Registrations */}
       <div

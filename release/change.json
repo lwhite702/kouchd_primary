@@ -1,5 +1,5 @@
 {
   "type": "patch",
-  "version": "0.8.3",
-  "reason": "Removes made-up payment handles and payment-processor wording from the web contribution router (WRE-259)."
+  "version": "0.8.4",
+  "reason": "Stop Facebook sign-up from ending on a 404 at /sso-callback, and add a /sign-out page (WRE-261)."
 }
