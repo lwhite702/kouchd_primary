@@ -5,7 +5,7 @@ Source checked: `kouchd_primary` `main` at `41a5a41` (code reading only, nothing
 
 ## Goal
 
-Make subleasing a committed Kouchd segment for students, interns, and young professionals, and add a general bill split feature. A primary tenant can run a full sublease, from invite to deposit record, without leaving Kouchd, on web and iOS. Existing stays behave exactly as they do today.
+Make subleasing a committed Kouchd segment for students, interns, and young professionals, and add a general bill split feature. A host can run a full sublease, from invite to deposit record, without leaving Kouchd, on web and iOS. Existing stays behave exactly as they do today.
 
 ## Decisions
 
@@ -57,7 +57,7 @@ All new fields are optional so existing rows stay valid.
 - `conditionChecklists`: `stayId`, `guestUserId`, `stage` (`move_in | move_out`), `items` (`id`, `area`, `label`, `status`, `note`), `submittedBy?`, `submittedAt?`, `confirmedBy?`, `confirmedAt?`, `disputeNote?`.
 - `depositRecords`: `stayId`, `guestUserId`, `amountCents`, `heldBy` (free text), `agreedReturnDate`, `deductions` (`label`, `amountCents`), `status` (`recorded | return_proposed | confirmed | disputed`), plus timestamps and actors.
 
-Database roles stay `host` and `guest`. Sublease screens say "primary tenant" and "subletter". Permission and financial privacy rules do not fork.
+Database roles stay `host` and `guest`. Screens also say "host" and "guest" on subleases, matching the rest of the product and `AGENTS.md`. Permission and financial privacy rules do not fork.
 
 ## 2. Monthly rent
 
@@ -78,8 +78,8 @@ Database roles stay `host` and `guest`. Sublease screens say "primary tenant" an
 - Guest shares may not total more than the bill.
 
 **Sublease presets**
-- Whole place: 100% to the subletter, with the host excluded.
-- Private room: `1 / (roommateCount + 1)` to the subletter, editable before posting.
+- Whole place: 100% to the guest, with the host excluded.
+- Private room: `1 / (roommateCount + 1)` to the guest, editable before posting.
 
 **Privacy**
 - A guest sees the total, their own share, and how it was calculated. The server never returns another guest's share to a guest.
@@ -94,7 +94,7 @@ This fixes existing behavior and does not depend on the rest of this document.
 
 - The server removes `doorCode` and `wifiPassword` from responses to a guest unless the stay is active, that guest has accepted their current terms, and, on a sublease, the current date is not after the agreement end date.
 - The redaction lives in one shared helper, used by every query that returns a stay to a guest, and is covered by server tests.
-- Ending a sublease reminds the tenant to change the codes, because Kouchd cannot revoke a physical code.
+- Ending a sublease reminds the host to change the codes, because Kouchd cannot revoke a physical code.
 
 ## 5. Move-in, move-out, and deposit
 
@@ -103,13 +103,13 @@ This fixes existing behavior and does not depend on the rest of this document.
 - Private room checklists separate the room from shared spaces.
 
 **Deposit record**
-- It records the amount, who holds it, the agreed return date, and itemized deductions. The subletter can confirm or dispute.
+- It records the amount, who holds it, the agreed return date, and itemized deductions. The guest can confirm or dispute.
 - It never affects the rent balance, obligations, or credits. Kouchd does not hold the money or decide disputes.
 
 ## 6. Plus access
 
 - Add `subleases` and `billSplits` to `PlanCapabilities`: on for `hostPlus` and `householdPro`, off for `starter`.
-- The server checks the host's account for every create or post action. Guests and subletters never need Plus.
+- The server checks the host's account for every create or post action. Guests never need Plus.
 - A Free host who tries either feature gets the existing upgrade flow.
 - If the plan cannot be read (`plan === null`), new subleases and new bills are refused, and existing subleases are not locked.
 - When Plus ends on a non-sublease stay, posted bills stay on the ledger and new bills are blocked. Nothing else changes.
@@ -123,7 +123,7 @@ This fixes existing behavior and does not depend on the rest of this document.
 
 **While locked**
 
-| Action | Primary tenant | Subletter |
+| Action | Host | Guest |
 | --- | --- | --- |
 | View terms, ledger, bills, and history | Yes | Own records |
 | View door code and Wi-Fi | Yes | Yes, until the sublease end date |
@@ -137,29 +137,29 @@ This fixes existing behavior and does not depend on the rest of this document.
 - Other stays on the account continue under normal Free limits.
 
 **Notifications**
-- Tenant, in-app and email: "Your Plus subscription has ended. This sublease is locked and exports are blocked until you have an active subscription."
-- Subletter, in-app and email: "This sublease is read-only and exports are blocked until the primary tenant renews. Your sublease agreement still applies, so keep paying rent as agreed. Kouchd's record being locked doesn't change it."
-- The subletter's notice contains no billing details. Text messages go only to people who opted in.
-- During the 7-day `billing_retry` period, the tenant gets warnings. The subletter is not told.
+- Host, in-app and email: "Your Plus subscription has ended. This sublease is locked and exports are blocked until you have an active subscription."
+- Guest, in-app and email: "This sublease is read-only and exports are blocked until the host renews. Your sublease agreement still applies, so keep paying rent as agreed. Kouchd's record being locked doesn't change it."
+- The guest's notice contains no billing details. Text messages go only to people who opted in.
+- During the 7-day `billing_retry` period, the host gets warnings. The guest is not told.
 
 **On renewal**
 - Everything unlocks. Rent charges for the locked period are added in one transaction, labeled as added late, with no late fees for that time and no duplicates.
-- Reminders do not send for each added charge at once. The subletter gets one summary.
+- Reminders do not send for each added charge at once. The guest gets one summary.
 
 **Disclosure**
-- The tenant sees the lock rule before buying Plus through the sublease flow and before creating a sublease.
-- The subletter sees it before accepting the invite, along with advice to keep their own copy of the agreement. This is required.
+- The host sees the lock rule before buying Plus through the sublease flow and before creating a sublease.
+- The guest sees it before accepting the invite, along with advice to keep their own copy of the agreement. This is required.
 
 **Exports**
 - No export feature is built in this project. The block applies to routine support exports, and support needs a written process that separates routine requests from formal legal data requests.
 - The "personal exports" capability comment and `help/support/app-support.mdx` must be updated to match.
 
 **Accepted risk**
-A subletter who has paid everything can lose exports and editing because of something they don't control, possibly during a deposit dispute. The owner accepted this risk. The invite disclosure and the formal request route are the mitigations.
+A guest who has paid everything can lose exports and editing because of something they don't control, possibly during a deposit dispute. The owner accepted this risk. The invite disclosure and the formal request route are the mitigations.
 
 ## 8. Onboarding
 
-**Tenant**
+**Host**
 1. Choose "Someone staying with me" or "Subletting my place". Without Plus, the second choice opens the upgrade flow.
 2. Choose the layout, and enter the roommate count if it is a private room.
 3. Enter dates, monthly rent, and an optional deposit record.
@@ -167,16 +167,16 @@ A subletter who has paid everything can lose exports and editing because of some
 5. Add access details and a bill split preset.
 6. Review the lock rule and the notice that Kouchd's record does not replace a written sublease, then send the invite.
 
-**Subletter**
+**Guest**
 1. Open the invite and sign in. No Plus is needed.
 2. Review the agreement, deposit record, and lock disclosure.
 3. Accept, which unlocks access details. The move-in checklist is the first task.
 
 ## 9. Legal and policy (counsel review required before launch)
 
-- Terms: subleases, the lock rule, the export block and its exception, and that the tenant usually stays responsible under the original lease.
+- Terms: subleases, the lock rule, the export block and its exception, and that a host who is a tenant usually stays responsible under their original lease.
 - Privacy policy: deposit, consent, checklist, roommate name, and bill data.
-- Consent wording, and whether a lock can fairly block a subletter's access to their own records.
+- Consent wording, and whether a lock can fairly block a guest's access to their own records.
 - Which formal data requests must be honored, by location.
 
 Kouchd stays a record-keeping tool. It is not a landlord, broker, or property manager, and it does not replace a written sublease or legal advice.
@@ -201,6 +201,7 @@ Each step ships on its own. Steps 2 to 5 sit behind `featureFlags`. Web and iOS 
 - Present subleasing as a Plus feature. Mention a trial only if checkout offers one at publish time.
 - Add advice to get landlord consent and to note that the tenant usually stays responsible under the lease.
 - Posts go in `src/data/post/` in `kouchd_marketing` and must follow its existing frontmatter schema.
+- Public copy may use "subletter" and "sublease" as search terms, but must explain that the app calls these people the host and the guest.
 - Follow the brand voice in `AGENTS.md`. Don't describe a guest or subletter as a debtor.
 
 ## 12. Testing
@@ -216,11 +217,11 @@ Passing tests are evidence about code only. Release and production behavior are 
 
 ## 13. Measures
 
-Sublease setups started and completed, upgrades from the sublease flow, subletter invites accepted, bills posted by arrangement type, how often `not_confirmed` is chosen, locks and renewals, and cancellations after a first sublease ends. Students and interns may only need Plus for 2 to 4 months, so cancellations after a first sublease are the number to watch.
+Sublease setups started and completed, upgrades from the sublease flow, guest invites accepted, bills posted by arrangement type, how often `not_confirmed` is chosen, locks and renewals, and cancellations after a first sublease ends. Students and interns may only need Plus for 2 to 4 months, so cancellations after a first sublease are the number to watch.
 
 ## Done means
 
-- A primary tenant and a subletter complete a whole-place sublease and a private-room sublease from invite to deposit record on both web and iOS.
+- A host and a guest complete a whole-place sublease and a private-room sublease from invite to deposit record on both web and iOS.
 - A lapsed subscription locks only the affected sublease, and renewal restores it with a correct ledger.
 - Plus limits on subleases and bill splits hold on the server.
 - Former guests can't get access codes from the server.
