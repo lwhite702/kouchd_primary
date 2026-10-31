@@ -41,8 +41,7 @@ function normalizePayPalHandle(raw: string): string {
   return raw
     .trim()
     .replace(/^@/, "")
-    .replace(/^https?:\/\/(www\.)?paypal\.me\//i, "")
-    .replace(/^paypal\.me\//i, "")
+    .replace(/^(https?:\/\/)?(www\.)?paypal\.me(\/|$)/i, "")
     .split(/[/?#]/)[0]
     .trim();
 }

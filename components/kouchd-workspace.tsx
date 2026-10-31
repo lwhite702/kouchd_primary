@@ -90,6 +90,7 @@ export function KouchdWorkspace({ servicesConfigured }: { servicesConfigured: bo
   const [toast, setToast] = useState("");
   const [contributions, setContributions] = useState(initialContributions);
   const [chores, setChores] = useState(initialChores);
+  const [coinsRemaining, setCoinsRemaining] = useState(50);
   const [ended, setEnded] = useState(false);
   const [confirmEnd, setConfirmEnd] = useState(false);
   const [tourOpen, setTourOpen] = useState(false);
@@ -190,6 +191,7 @@ export function KouchdWorkspace({ servicesConfigured }: { servicesConfigured: bo
       });
     }
     if (payload.rewardCreditCents > 0) {
+      setCoinsRemaining((coins) => Math.max(0, coins - payload.pointsRedeemed));
       added.push({
         id: crypto.randomUUID(),
         type: "Coins credit",
@@ -393,10 +395,10 @@ export function KouchdWorkspace({ servicesConfigured }: { servicesConfigured: bo
             allowEditingDetails={true}
             rewardWallet={{
               enabled: true,
-              availablePoints: 50,
+              availablePoints: coinsRemaining,
               coinName: "Coins",
               centsPerPoint: 100,
-              maxRedeemablePoints: 50,
+              maxRedeemablePoints: coinsRemaining,
             }}
             onLogContribution={handleLogPreviewContribution}
             onComplete={() => {

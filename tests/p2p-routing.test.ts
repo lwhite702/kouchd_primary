@@ -191,6 +191,27 @@ describe("P2P Payment Router & Level-H QR Engine", () => {
     }
   });
 
+  it.each([
+    "paypal.me",
+    "paypal.me/",
+    "www.paypal.me",
+    "https://paypal.me",
+    "https://paypal.me/",
+    "https://www.paypal.me",
+    "https://www.paypal.me/",
+  ])("treats the bare PayPal root %s as no handle", (recipientPayPal) => {
+    const tx = { ...NO_HANDLES, recipientPayPal };
+
+    expect(hasUsableRecipient("paypal", tx)).toBe(false);
+    expect(buildNetworkRouteUri("paypal", tx)).toBeNull();
+  });
+
+  it("keeps a PayPal handle that only starts like the domain", () => {
+    const tx = { ...NO_HANDLES, recipientPayPal: "paypal.meow" };
+
+    expect(buildNetworkRouteUri("paypal", tx)).toBe("https://paypal.me/paypal.meow/45.00");
+  });
+
   it("strips a prefix behind leading spaces instead of encoding it into the link", () => {
     const tx = { ...NO_HANDLES, recipientCashApp: " $maplehost", recipientVenmo: " @maple-host" };
 
