@@ -15,7 +15,7 @@ export default function SignInPage() {
   return (
     <main className="clerk-page">
       <SignInFormGuard>
-        <SignIn />
+        <SignIn routing="path" path="/sign-in" signUpUrl="/sign-up" />
       </SignInFormGuard>
     </main>
   );

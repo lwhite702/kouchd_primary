@@ -39,6 +39,13 @@
 
 ### Fixed
 
+- **Facebook sign-up no longer ends on a 404 (WRE-261, 0.8.4, branch only, not released)**:
+  - A Facebook sign-up that Clerk moved over to sign-in (for example, when the Facebook email needs verifying or already belongs to an account) could return to `/sso-callback` at the site root, which had no page and showed the "Wrong couch" 404. Seen in Vercel's production request log on 2026-10-31.
+  - `ClerkProvider` now sets `signInUrl="/sign-in"` and `signUpUrl="/sign-up"`, and `<SignIn>` and `<SignUp>` use `routing="path"` with their own `path` and the other page's URL, so Clerk no longer has to guess these paths.
+  - New `app/sso-callback/page.tsx` finishes an OAuth return that still lands on the root, using `AuthenticateWithRedirectCallback`, and sends each outcome to the matching `/sign-in` or `/sign-up` step.
+  - New `/sign-out` page (`components/sign-out-redirect.tsx`) signs the person out and returns them to `/sign-in`. It used to 404.
+  - Covered by `tests/auth-routes.test.ts`. Not yet checked with a real Facebook sign-up on a deployed build.
+
 - **Web contribution router trust fixes (WRE-259, 0.8.3, branch only, not released)**:
   - The router no longer falls back to made-up handles such as `johndoe`, and the preview workspace no longer ships made-up host handles. When a stay has no saved handle for the chosen app, one must be entered, and the app link, QR code, and copy step stay blocked until then. A bare `@`, `$`, or paypal.me link with no name doesn't count. Routes also stay blocked without an amount. Apple Cash now uses the copy-and-send step, because it has no app link to open.
   - The handle field no longer disappears after the first typed character.
