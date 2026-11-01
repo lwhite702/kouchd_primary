@@ -58,7 +58,7 @@ function PreviewScreen({ tab }: { tab: PreviewTab }) {
       <>
         <div className="simple-screen-header">
           <div>
-            <h3 className="simple-screen-title">Maya’s stay</h3>
+            <h3 className="simple-screen-title">Jordan’s stay</h3>
             <p className="simple-screen-desc">Dates everyone can see at a glance.</p>
           </div>
           <span className="simple-screen-pill"><CalendarDays size={14} aria-hidden="true" /> 14 nights</span>
@@ -130,9 +130,9 @@ function PreviewScreen({ tab }: { tab: PreviewTab }) {
 
   if (tab === "ledger") {
     const rows = [
-      ["Weekly contribution", "Mar 10 · Confirmed", "$120.00"],
-      ["Groceries", "Mar 12 · Confirmed", "$38.50"],
-      ["Cleaning supplies", "Mar 14 · Waiting for review", "$14.25"],
+      ["Weekly contribution", "Mar 10 · Recorded by Jordan · Confirmed", "$120.00"],
+      ["Groceries", "Mar 12 · Recorded by Sam · Confirmed", "$40.00"],
+      ["Household supplies", "Mar 14 · Recorded by Alex · Awaiting review", "$15.00"],
     ];
     return (
       <>
@@ -146,7 +146,7 @@ function PreviewScreen({ tab }: { tab: PreviewTab }) {
         <div className="ledger-preview-box">
           <div className="ledger-summary-bar">
             <span className="ledger-total-label">Confirmed this stay</span>
-            <span className="ledger-total-amount">$158.50</span>
+            <span className="ledger-total-amount">$160.00</span>
           </div>
           <div className="ledger-rows">
             {rows.map(([title, meta, amount]) => (
@@ -160,7 +160,7 @@ function PreviewScreen({ tab }: { tab: PreviewTab }) {
             ))}
           </div>
           <p className="ledger-disclaimer">
-            <Info size={14} aria-hidden="true" /> Contributions are shared records. Kouchd does not collect, hold, or move money.
+            <Info size={14} aria-hidden="true" /> Contributions are shared records. Kouchd does not collect, hold, transfer, or process payments.
           </p>
         </div>
       </>
@@ -169,9 +169,9 @@ function PreviewScreen({ tab }: { tab: PreviewTab }) {
 
   if (tab === "chores") {
     const chores = [
-      ["Take out recycling", "Due Thursday", "Guest", true],
+      ["Take out recycling", "Due Thursday", "Jordan", true],
       ["Wipe down the kitchen", "Due Friday", "Shared", false],
-      ["Water the plants", "Due Sunday", "Host", false],
+      ["Water the plants", "Due Sunday", "Alex", false],
     ] as const;
     return (
       <>
@@ -211,11 +211,11 @@ function PreviewScreen({ tab }: { tab: PreviewTab }) {
       </div>
       <div className="announcements-stack">
         <div className="announcement-box">
-          <h5><Megaphone size={16} aria-hidden="true" /> Plumber visiting Tuesday</h5>
+          <h5><Megaphone size={16} aria-hidden="true" /> Plumber visiting Tuesday · Alex</h5>
           <p>Someone will check the upstairs sink around 10 am. The bathroom may be busy for an hour.</p>
         </div>
         <div className="checkin-row">
-          <span><strong>Weekly check-in</strong> · How is everything going?</span>
+          <span><strong>Weekly check-in</strong> · How is everything going this week? · Jordan & Alex</span>
           <span className="record-status-pill">Shared</span>
         </div>
       </div>
