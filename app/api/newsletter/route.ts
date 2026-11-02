@@ -38,7 +38,14 @@ export async function POST(request: Request) {
   if (!isValidEmail(email)) return json("Enter a valid email address.", 400);
 
   const ip = getClientIp(request);
-  if (isRateLimited(ip)) return json("Please wait a minute before trying again.", 429);
+  try {
+    if (isRateLimited(ip)) return json("Please wait a minute before trying again.", 429);
+  } catch (limiterError) {
+    console.warn("Newsletter rate limiter error; failing open", {
+      ip,
+      error: limiterError instanceof Error ? limiterError.message : String(limiterError),
+    });
+  }
 
   const apiKey = process.env.LOOPS_API_KEY;
   if (!apiKey) return json("Signup is temporarily unavailable. Please try again later.", 503);

@@ -184,6 +184,34 @@ describe("Newsletter API Route & Rate Limiter", () => {
       expect(data.message).toBe("Please wait a minute before trying again.");
     });
 
+    it("fails open and logs warning when rate limiter throws unexpectedly", async () => {
+      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+      vi.stubGlobal(
+        "fetch",
+        vi.fn().mockResolvedValue(new Response(JSON.stringify({ success: true }), { status: 200 }))
+      );
+
+      // We can trigger an error in isRateLimited or mock it, but here we can spy on isRateLimited
+      const limiterModule = await import("../lib/newsletter-limiter");
+      const limiterSpy = vi.spyOn(limiterModule, "isRateLimited").mockImplementation(() => {
+        throw new Error("Simulated storage/map corruption error");
+      });
+
+      const req = new Request("http://localhost/api/newsletter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-real-ip": "1.2.3.4" },
+        body: JSON.stringify({ email: "safe@example.com", consent: true }),
+      });
+
+      const res = await POST(req);
+      expect(res.status).toBe(200);
+      expect(warnSpy).toHaveBeenCalledWith(
+        "Newsletter rate limiter error; failing open",
+        expect.objectContaining({ error: "Simulated storage/map corruption error" })
+      );
+      limiterSpy.mockRestore();
+    });
+
     it("returns 502 when Loops service returns non-200 error", async () => {
       vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response("Service error", { status: 500 })));
       const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
