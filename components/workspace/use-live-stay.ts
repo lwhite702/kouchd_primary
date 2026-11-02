@@ -33,6 +33,7 @@ import {
   formatDate,
   value,
 } from "@/components/workspace/types";
+import { isUsableName } from "@/lib/names";
 
 export function useLiveStay(stayId: Id<"stays">, onBackToHub: () => void) {
   const { user: clerkUser } = useUser();
@@ -368,11 +369,9 @@ export function useLiveStay(stayId: Id<"stays">, onBackToHub: () => void) {
         const guestMember = guestMembers.find(
           (g) => g.person.id === item.guestUserId,
         );
-        const guestName =
-          guestMember?.person.name &&
-          guestMember.person.name !== "Kouchd member"
-            ? guestMember.person.name
-            : "A guest";
+        const guestName = isUsableName(guestMember?.person.name)
+          ? guestMember.person.name
+          : "A guest";
         list.push({
           id: `pending_contrib_${item._id}`,
           type: "payment",
@@ -914,10 +913,9 @@ export function useLiveStay(stayId: Id<"stays">, onBackToHub: () => void) {
     }
   }
 
-  const guestDisplayName =
-    selectedGuest?.name && selectedGuest.name !== "Kouchd member"
-      ? selectedGuest.name
-      : "Guest";
+  const guestDisplayName = isUsableName(selectedGuest?.name)
+    ? selectedGuest.name
+    : "Guest";
   const ledgerLabel = isHost
     ? financialGuestId
       ? `${guestDisplayName}'s private ledger`

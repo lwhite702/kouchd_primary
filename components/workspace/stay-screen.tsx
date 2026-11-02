@@ -23,6 +23,7 @@ import { formatMoney, formatDate } from "@/components/workspace/types";
 
 import type { WorkspaceState } from "./use-live-stay";
 import { GuestTabs } from "./view-helpers";
+import { isUsableName } from "@/lib/names";
 
 const PaywallModal = dynamic(() =>
   import("@/components/billing/paywall-modal").then((m) => m.PaywallModal),
@@ -349,9 +350,9 @@ export function StayScreen({ state }: { state: WorkspaceState }) {
                     name="preferredName"
                     type="text"
                     defaultValue={
-                      selectedGuestMember.person.name === "Kouchd member"
-                        ? ""
-                        : selectedGuestMember.person.name
+                      isUsableName(selectedGuestMember.person.name)
+                        ? selectedGuestMember.person.name
+                        : ""
                     }
                     maxLength={80}
                     required
@@ -425,10 +426,9 @@ export function StayScreen({ state }: { state: WorkspaceState }) {
             <div className="ledger-list">
               {guestMembers.map((guest) => {
                 const guestTerms = guest.terms ?? terms;
-                const currentGuestName =
-                  guest.person.name && guest.person.name !== "Kouchd member"
-                    ? guest.person.name
-                    : "Guest";
+                const currentGuestName = isUsableName(guest.person.name)
+                  ? guest.person.name
+                  : "Guest";
                 return (
                   <article className="list-row" key={guest.person.id}>
                     <div className="list-copy">

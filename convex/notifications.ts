@@ -6,6 +6,7 @@ import type { Doc, Id } from "./_generated/dataModel";
 import { internalMutation, internalQuery, type QueryCtx } from "./_generated/server";
 import { getCurrentGuestTerms } from "./lib/stayTerms";
 import { listActiveGuestObligations } from "./lib/obligations";
+import { isUsableName } from "./lib/names";
 
 function formatCents(cents: number): string {
   const dollars = cents / 100;
@@ -994,7 +995,7 @@ async function collectAgreementPendingCandidatesForStays(
               // Multiple unsigned guests: consolidate into at most 1 reminder
               const primary = unsignedGuestsForStay[0];
               const guestNames = unsignedGuestsForStay.map((g) =>
-                g.guestUser?.name && g.guestUser.name !== "Kouchd member" ? g.guestUser.name : "Guest",
+                isUsableName(g.guestUser?.name) ? g.guestUser.name : "Guest",
               );
               const hostEntityId = `agreement-pending:${stay._id}:${stay.hostUserId}:consolidated:${localDate}:${determinedSlot}`;
               const hostCancellationKey = `agreement-pending:${stay._id}:${stay.hostUserId}`;

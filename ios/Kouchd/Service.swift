@@ -427,7 +427,24 @@ private enum KouchdAuthError: LocalizedError {
     let generation = accountGeneration
     do {
       var args: [String: ConvexEncodable?] = [:]
-      if let name, !name.isEmpty { args["clerkName"] = name }
+      let clerkUser = Clerk.shared.user
+      let resolvedName: String
+      if let name, !name.isEmpty {
+        resolvedName = name
+      } else {
+        let first = clerkUser?.firstName ?? ""
+        let last = clerkUser?.lastName ?? ""
+        resolvedName = [first, last].filter { !$0.isEmpty }.joined(separator: " ")
+      }
+      if !resolvedName.isEmpty {
+        args["clerkName"] = resolvedName
+      }
+      if let email = clerkUser?.primaryEmailAddress?.emailAddress, !email.isEmpty {
+        args["email"] = email
+      }
+      if let imageUrl = clerkUser?.imageUrl, !imageUrl.isEmpty {
+        args["imageUrl"] = imageUrl
+      }
       try await client.mutation("users:syncCurrent", with: args)
       guard generation == accountGeneration else { return }
       connectionError = ""
