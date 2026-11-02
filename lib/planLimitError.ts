@@ -6,7 +6,7 @@ export const STAY_FULL_MESSAGE = "This stay is full right now. Ask your host to 
 /** Data the backend attaches to a plan-limit refusal (convex/lib/planCapacity.ts). */
 export type PlanLimitError = {
   code: "plan_limit";
-  dimension: "stay" | "guest";
+  dimension: "stay" | "guest" | "billSplits" | "subleases";
   plan: "free" | "plus";
   limit: number;
   atHighestPlan: boolean;

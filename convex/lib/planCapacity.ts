@@ -2,11 +2,12 @@ import { ConvexError } from "convex/values";
 
 import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
-import { getPlanLimits, type SubscriptionPlan } from "../../lib/domain/subscriptionPlans";
+import { getPlanCapabilities, getPlanLimits, type SubscriptionPlan } from "../../lib/domain/subscriptionPlans";
 import { getEffectiveSubscriptionForAccount } from "./subscriptionAccess";
 
 type AppCtx = QueryCtx | MutationCtx;
 export type CapacityDimension = "stay" | "guest";
+export type PlanCapabilityKey = "billSplits" | "subleases";
 
 /** Hard read bound; no supported plan reaches it, so hitting it means review. */
 const SCAN_LIMIT = 50;
@@ -16,7 +17,7 @@ export const PLAN_LIMIT_ERROR = "plan_limit";
 
 export type PlanLimitErrorData = {
   code: typeof PLAN_LIMIT_ERROR;
-  dimension: CapacityDimension;
+  dimension: CapacityDimension | PlanCapabilityKey;
   /** "free" or "plus" — the public plan names, never internal ones. */
   plan: "free" | "plus";
   limit: number;
@@ -149,6 +150,36 @@ export async function assertPlanCapacity(
     limit,
     atHighestPlan: plan === "plus",
     message: limitMessage(dimension, usage.plan, limit),
+  };
+  throw new ConvexError(data);
+}
+
+function capabilityMessage(capability: PlanCapabilityKey) {
+  return capability === "billSplits"
+    ? "Splitting household bills is included with Plus. Move to Plus to split bills across guests."
+    : "Subleases are included with Plus. Move to Plus to set up a sublease.";
+}
+
+export async function assertPlanCapability(
+  ctx: MutationCtx,
+  ownerUserId: Id<"users">,
+  capability: PlanCapabilityKey,
+  householdAccountId?: Id<"householdAccounts">,
+): Promise<void> {
+  const usage = await getPlanUsage(ctx, ownerUserId, householdAccountId);
+  if (usage.plan === null) {
+    throw new Error("Host plan limits are being configured. Please contact support before adding capacity.");
+  }
+  const capabilities = getPlanCapabilities(usage.plan);
+  if (capabilities[capability]) return;
+  const plan = usage.plan === "hostPlus" ? "plus" : "free";
+  const data: PlanLimitErrorData = {
+    code: PLAN_LIMIT_ERROR,
+    dimension: capability,
+    plan,
+    limit: 0,
+    atHighestPlan: plan === "plus",
+    message: capabilityMessage(capability),
   };
   throw new ConvexError(data);
 }
