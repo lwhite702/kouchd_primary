@@ -159,6 +159,8 @@ private enum KouchdAuthError: LocalizedError {
   var rules: [Value] = []
   var shopping: [Value] = []
   var checkins: [Value] = []
+  var bills: [Value] = []
+  var flags: [Value] = []
   var subscriptionSummary: Value = .null
   var typedSubscriptionSummary: AccountSubscriptionSummary?
   private var planUsageValue: Value = .null
@@ -306,6 +308,7 @@ private enum KouchdAuthError: LocalizedError {
     subscriptionSummaryError = ""
     watch("users:viewer", into: \.viewer, account: true)
     watch("stays:listMine", into: \.stays, account: true)
+    watch("flags:list", into: \.flags, account: true)
     watch("admin:canAccess", into: \.adminAccess, account: true)
     watch("subscriptions:currentAccountSummary", into: \.subscriptionSummary, account: true)
     watch("subscriptions:planUsage", into: \.planUsageValue, account: true)
@@ -346,6 +349,8 @@ private enum KouchdAuthError: LocalizedError {
     rules = []
     shopping = []
     checkins = []
+    bills = []
+    flags = []
     subscriptionSummary = .null
     typedSubscriptionSummary = nil
     planUsageValue = .null
@@ -487,11 +492,13 @@ private enum KouchdAuthError: LocalizedError {
     rules = []
     shopping = []
     checkins = []
+    bills = []
     let args: [String: ConvexEncodable?] = ["stayId": id]
     watch("stays:getBundle", args: args, into: \.bundle)
     watch("chores:list", args: args, into: \.chores)
     watch("announcements:list", args: args, into: \.announcements)
     watch("activity:list", args: args, into: \.activity)
+    watch("bills:list", args: args, into: \.bills)
 
   }
 
@@ -787,5 +794,14 @@ private enum KouchdAuthError: LocalizedError {
   var stayName: String {
     let value = bundle["stay"]["name"].text
     return value.isEmpty ? "Shared stay" : value
+  }
+
+  func isFeatureEnabled(_ key: String, defaultValue: Bool = false) -> Bool {
+    if let match = flags.first(where: { $0["key"].text == key }) {
+      let override = match["override"].text
+      if override == "enabled" { return true }
+      if override == "disabled" { return false }
+    }
+    return defaultValue
   }
 }

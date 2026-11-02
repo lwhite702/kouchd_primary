@@ -352,9 +352,14 @@ struct LedgerSummaryCard: View {
 struct LedgerScreen: View {
   let store: KouchdStore
   @State private var showingContribution = false
+  @State private var showingBillSplit = false
   var body: some View {
     Page(title: "Ledger", width: .wide) {
-      LedgerContent(store: store, showingContribution: $showingContribution)
+      LedgerContent(
+        store: store,
+        showingContribution: $showingContribution,
+        showingBillSplit: $showingBillSplit
+      )
     }
     .toolbar {
       if !store.isEnded {
@@ -369,18 +374,24 @@ struct LedgerScreen: View {
       }
     }
     .sheet(isPresented: $showingContribution) { ContributionForm(store: store) }
+    .sheet(isPresented: $showingBillSplit) { BillSplitSheet(store: store) }
   }
 }
 
 private struct LedgerContent: View {
   let store: KouchdStore
   @Binding var showingContribution: Bool
+  @Binding var showingBillSplit: Bool
   @Environment(\.kouchdContentWidth) private var contentWidth
   @Environment(\.dynamicTypeSize) private var typeSize
 
   var body: some View {
     if contentWidth >= KouchdLayout.ledgerSplitWidth && !typeSize.isAccessibilitySize {
-      LedgerSplitContent(store: store, showingContribution: $showingContribution)
+      LedgerSplitContent(
+        store: store,
+        showingContribution: $showingContribution,
+        showingBillSplit: $showingBillSplit
+      )
     } else {
       stacked
     }
@@ -395,6 +406,9 @@ private struct LedgerContent: View {
       if !store.isEnded {
         PrimaryButton(title: "Add contribution") { showingContribution = true }
       }
+    }
+    if store.isFeatureEnabled("feature_bill_splitting", defaultValue: false) || !store.bills.isEmpty {
+      SharedBillsCard(store: store, showingBillSplit: $showingBillSplit)
     }
     if case .object = store.ledgerSummary {
       LedgerSummaryCard(summary: store.ledgerSummary)
@@ -416,12 +430,108 @@ private struct LedgerContent: View {
   }
 }
 
+private struct SharedBillsCard: View {
+  let store: KouchdStore
+  @Binding var showingBillSplit: Bool
+
+  private func splitMethodDetail(for bill: Value, guestShare: Value?) -> String {
+    let method = bill["splitMethod"].text
+    if store.isHost {
+      let label: String = switch method {
+      case "percentage": "Percentage split"
+      case "fixed": "Fixed amount"
+      default: "Equal split"
+      }
+      var parts = [label]
+      if method != "fixed" {
+        parts.append(bill["includeHost"].flag ? "Host included" : "Guests only")
+      }
+      if bill["prorateByStayDates"].flag {
+        parts.append("Prorated by stay dates")
+      }
+      return parts.joined(separator: " · ")
+    } else {
+      let base: String = switch method {
+      case "percentage":
+        guestShare?["input"].double ?? 0 > 0
+          ? "Percentage (\(guestShare?["input"].text ?? "")%)"
+          : "Percentage"
+      case "fixed": "Fixed amount"
+      default: "Equal split"
+      }
+      let prorationDays = guestShare?["prorationDays"].int ?? 0
+      if bill["prorateByStayDates"].flag && prorationDays > 0 {
+        return "\(base) · \(prorationDays)d prorated"
+      }
+      return base
+    }
+  }
+
+  var body: some View {
+    Card {
+      HStack {
+        Text("Shared bills").font(.headline)
+        Spacer()
+        if store.isHost && !store.isEnded {
+          Button("Split a bill") { showingBillSplit = true }
+            .buttonStyle(.borderedProminent)
+            .tint(Palette.forest)
+        }
+      }
+      Text(store.isHost
+           ? "Post shared household utilities or recurring bills across active guests. Each guest sees only their own share."
+           : "Shared household bills that include your stay appear here alongside how your share was calculated.")
+        .font(.subheadline).foregroundStyle(Palette.muted)
+      if store.bills.isEmpty {
+        Text(store.isHost ? "No shared bills have been split yet." : "No shared household bills include your stay yet.")
+          .font(.footnote).foregroundStyle(Palette.muted)
+      } else {
+        ForEach(store.bills, id: \.id) { bill in
+          let isVoided = !bill["voidedAt"].text.isEmpty || bill["voidedAt"].int > 0
+          let shares = bill["shares"].items
+          let guestShare = shares.first
+          Divider()
+          VStack(alignment: .leading, spacing: 8) {
+            HStack {
+              Text("\(bill["title"].text) · \(bill["category"].text.capitalized)")
+                .font(.subheadline.weight(.semibold))
+              Spacer()
+              if isVoided {
+                Pill(text: "Voided")
+              }
+            }
+            DataRow(title: "Service", detail: "\(bill["serviceStart"].text) – \(bill["serviceEnd"].text)")
+            DataRow(title: "Due", detail: bill["dueDate"].text)
+            DataRow(title: "Total", detail: Display.money(bill["totalCents"].int))
+            DataRow(title: "Split", detail: splitMethodDetail(for: bill, guestShare: guestShare))
+            if store.isHost {
+              ForEach(shares.indices, id: \.self) { index in
+                let share = shares[index]
+                DataRow(title: share["guestName"].text, detail: Display.money(share["amountCents"].int))
+              }
+              if !store.isEnded && !isVoided {
+                Button("Void bill", role: .destructive) {
+                  Task { _ = await store.mutate("bills:voidBill", ["billId": bill["_id"].text]) }
+                }
+                .font(.subheadline.weight(.semibold))
+              }
+            } else if let share = guestShare {
+              DataRow(title: "Your share", detail: Display.money(share["amountCents"].int))
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
 /// Wide windows: totals on top, a scannable list, and the selected entry beside it.
 private struct LedgerSplitContent: View {
   enum Segment: String, CaseIterable { case charges = "Charges", records = "Contribution records" }
 
   let store: KouchdStore
   @Binding var showingContribution: Bool
+  @Binding var showingBillSplit: Bool
   @State private var segment: Segment = .charges
   @State private var selectedID: [Segment: String] = [:]
 
@@ -455,6 +565,9 @@ private struct LedgerSplitContent: View {
         PrimaryButton(title: "Add contribution") { showingContribution = true }
           .frame(maxWidth: 240)
       }
+    }
+    if store.isFeatureEnabled("feature_bill_splitting", defaultValue: false) || !store.bills.isEmpty {
+      SharedBillsCard(store: store, showingBillSplit: $showingBillSplit)
     }
     Picker("Show", selection: $segment) {
       ForEach(Segment.allCases, id: \.self) { Text($0.rawValue).tag($0) }

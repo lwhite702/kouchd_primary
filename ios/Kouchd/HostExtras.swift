@@ -392,3 +392,193 @@ struct EditableHouseRule: Identifiable {
              "required": .bool(required)])
   }
 }
+
+struct BillSplitSheet: View {
+  let store: KouchdStore
+  @Environment(\.dismiss) private var dismiss
+  @State private var title = ""
+  @State private var category = "electricity"
+  @State private var serviceStart = ""
+  @State private var serviceEnd = ""
+  @State private var total = ""
+  @State private var dueDate = ""
+  @State private var splitMethod = "equal"
+  @State private var includeHost = true
+  @State private var prorateByStayDates = false
+  @State private var selectedGuests: Set<String> = []
+  @State private var guestInputs: [String: String] = [:]
+  @State private var saving = false
+
+  private var activeGuests: [Value] {
+    store.guests.filter { $0["membership"]["status"].text == "active" }
+  }
+
+  private var totalCents: Int {
+    Int(((Double(total.trimmingCharacters(in: .whitespacesAndNewlines)) ?? 0) * 100.0).rounded())
+  }
+
+  private var isInvalid: Bool {
+    saving ||
+    title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
+    serviceStart.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
+    serviceEnd.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
+    dueDate.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ||
+    totalCents <= 0 ||
+    selectedGuests.isEmpty
+  }
+
+  var body: some View {
+    NavigationStack {
+      Form {
+        Section("Bill details") {
+          TextField("Title", text: $title)
+          Picker("Category", selection: $category) {
+            Text("Electricity").tag("electricity")
+            Text("Water").tag("water")
+            Text("Gas").tag("gas")
+            Text("Internet").tag("internet")
+            Text("Trash").tag("trash")
+            Text("Other").tag("other")
+          }
+          TextField("Service start (YYYY-MM-DD)", text: $serviceStart)
+            .textInputAutocapitalization(.never)
+            .autocorrectionDisabled()
+          TextField("Service end (YYYY-MM-DD)", text: $serviceEnd)
+            .textInputAutocapitalization(.never)
+            .autocorrectionDisabled()
+          TextField("Total in dollars", text: $total)
+            .keyboardType(.decimalPad)
+          TextField("Due date (YYYY-MM-DD)", text: $dueDate)
+            .textInputAutocapitalization(.never)
+            .autocorrectionDisabled()
+        }
+
+        Section {
+          Picker("Split method", selection: $splitMethod) {
+            Text("Equal").tag("equal")
+            Text("Percentage").tag("percentage")
+            Text("Fixed amount").tag("fixed")
+          }
+          if splitMethod == "equal" || splitMethod == "percentage" {
+            Toggle("Include host in split", isOn: $includeHost)
+          }
+          Toggle("Prorate by guest stay dates", isOn: $prorateByStayDates)
+        } header: {
+          Text("How to split")
+        } footer: {
+          if splitMethod == "equal" {
+            Text("In an equal split, guests can work out each other's share from the bill total.")
+          }
+        }
+
+        Section("Guests") {
+          if activeGuests.isEmpty {
+            Text("Invite an active guest to split a household bill.")
+              .foregroundStyle(Palette.muted)
+          } else {
+            ForEach(activeGuests, id: \.guestPersonID) { guest in
+              let id = guest.guestPersonID
+              let isSelected = selectedGuests.contains(id)
+              VStack(alignment: .leading, spacing: 8) {
+                Toggle(guest["person"]["name"].text, isOn: Binding(
+                  get: { isSelected },
+                  set: { checked in
+                    if checked { selectedGuests.insert(id) }
+                    else { selectedGuests.remove(id) }
+                  }
+                ))
+                if isSelected && splitMethod == "percentage" {
+                  TextField("Percentage (0–100)", text: Binding(
+                    get: { guestInputs[id] ?? "" },
+                    set: { guestInputs[id] = $0 }
+                  ))
+                  .keyboardType(.decimalPad)
+                  .textFieldStyle(.roundedBorder)
+                } else if isSelected && splitMethod == "fixed" {
+                  TextField("Share in dollars", text: Binding(
+                    get: { guestInputs[id] ?? "" },
+                    set: { guestInputs[id] = $0 }
+                  ))
+                  .keyboardType(.decimalPad)
+                  .textFieldStyle(.roundedBorder)
+                }
+              }
+            }
+          }
+        }
+
+        Section {
+          Button(saving ? "Posting…" : "Post split bill") {
+            submit()
+          }
+          .disabled(isInvalid)
+        } footer: {
+          Text("Posting a split bill adds an entry to each selected guest's Ledger. Kouchd records each share and never moves money directly.")
+        }
+      }
+      .kouchdFormWidth()
+      .navigationTitle("Split a bill")
+      .kouchdNavigationBar()
+      .toolbar {
+        ToolbarItem(placement: .cancellationAction) {
+          Button("Cancel") { dismiss() }
+        }
+        ToolbarItem(placement: .confirmationAction) {
+          Button("Post") { submit() }
+            .disabled(isInvalid)
+        }
+      }
+      .onAppear {
+        let today = Display.date(timezone: store.bundle["stay"]["timezone"].text)
+        let defaultStart = store.bundle["terms"]["startDate"].text.isEmpty ? today : store.bundle["terms"]["startDate"].text
+        let defaultEnd = store.bundle["terms"]["endDate"].text.isEmpty ? today : store.bundle["terms"]["endDate"].text
+        if serviceStart.isEmpty { serviceStart = defaultStart }
+        if serviceEnd.isEmpty { serviceEnd = defaultEnd }
+        if dueDate.isEmpty { dueDate = today }
+        if selectedGuests.isEmpty {
+          selectedGuests = Set(activeGuests.map(\.guestPersonID))
+        }
+      }
+    }
+  }
+
+  private func submit() {
+    guard !isInvalid else { return }
+    saving = true
+    let guestItems: [Value] = activeGuests.compactMap { guest in
+      let id = guest.guestPersonID
+      guard selectedGuests.contains(id) else { return nil }
+      var fields: [String: Value] = ["guestUserId": .string(id)]
+      let rawInput = (guestInputs[id] ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+      if splitMethod == "percentage" {
+        fields["input"] = .number(Double(rawInput) ?? 0)
+      } else if splitMethod == "fixed" {
+        let cents = Int(((Double(rawInput) ?? 0) * 100.0).rounded())
+        fields["input"] = .number(Double(cents))
+      }
+      return .object(fields)
+    }
+
+    let args: [String: ConvexEncodable?] = [
+      "stayId": store.selectedStayID,
+      "title": title.trimmingCharacters(in: .whitespacesAndNewlines),
+      "category": category,
+      "serviceStart": serviceStart.trimmingCharacters(in: .whitespacesAndNewlines),
+      "serviceEnd": serviceEnd.trimmingCharacters(in: .whitespacesAndNewlines),
+      "totalCents": Double(totalCents),
+      "dueDate": dueDate.trimmingCharacters(in: .whitespacesAndNewlines),
+      "splitMethod": splitMethod,
+      "includeHost": splitMethod == "fixed" ? false : includeHost,
+      "prorateByStayDates": prorateByStayDates,
+      "guests": Value.array(guestItems)
+    ]
+
+    Task {
+      let created = await store.mutate("bills:create", args)
+      saving = false
+      if created || store.planLimit != nil {
+        dismiss()
+      }
+    }
+  }
+}
