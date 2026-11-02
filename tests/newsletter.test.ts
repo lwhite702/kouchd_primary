@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { POST } from "../app/api/newsletter/route";
+import { POST, classifyUpstreamError } from "../app/api/newsletter/route";
 import {
   isRateLimited,
   getClientIp,
@@ -199,6 +199,31 @@ describe("Newsletter API Route & Rate Limiter", () => {
         "Loops newsletter signup failed",
         expect.objectContaining({ status: 500 })
       );
+    });
+
+    it("classifies upstream errors correctly by code, name, and cause", () => {
+      const timeoutErr = new Error("Request timed out");
+      timeoutErr.name = "TimeoutError";
+      expect(classifyUpstreamError(timeoutErr)).toBe("timeout");
+
+      const abortErr = new Error("Aborted");
+      abortErr.name = "AbortError";
+      expect(classifyUpstreamError(abortErr)).toBe("timeout");
+
+      const causeTimeoutErr = new Error("Fetch failed", { cause: { name: "TimeoutError" } });
+      expect(classifyUpstreamError(causeTimeoutErr)).toBe("timeout");
+
+      const connectionResetErr = new Error("Fetch failed", { cause: { code: "ECONNRESET" } });
+      expect(classifyUpstreamError(connectionResetErr)).toBe("network");
+
+      const connectionRefusedErr = new Error("Fetch failed", { cause: { code: "ECONNREFUSED" } });
+      expect(classifyUpstreamError(connectionRefusedErr)).toBe("network");
+
+      const typeErr = new TypeError("fetch failed");
+      expect(classifyUpstreamError(typeErr)).toBe("network");
+
+      const internalErr = new SyntaxError("Unexpected token");
+      expect(classifyUpstreamError(internalErr)).toBe("unknown");
     });
 
     it("returns 502 for upstream network failure or timeout", async () => {

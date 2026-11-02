@@ -8,6 +8,36 @@ function isValidEmail(email: string) {
   return email.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
+export function classifyUpstreamError(error: unknown): "timeout" | "network" | "unknown" {
+  if (!(error instanceof Error)) return "unknown";
+
+  if (error.name === "TimeoutError" || error.name === "AbortError") {
+    return "timeout";
+  }
+
+  const cause = (error as { cause?: unknown }).cause;
+  if (cause && typeof cause === "object") {
+    const causeObj = cause as { code?: unknown; name?: unknown };
+    if (causeObj.name === "TimeoutError") return "timeout";
+    if (
+      typeof causeObj.code === "string" &&
+      ["ECONNRESET", "ECONNREFUSED", "ENOTFOUND", "ETIMEDOUT", "EAI_AGAIN"].includes(causeObj.code)
+    ) {
+      return "network";
+    }
+  }
+
+  if (
+    error instanceof TypeError &&
+    (error.message.toLowerCase().includes("fetch") ||
+      error.message.toLowerCase().includes("network"))
+  ) {
+    return "network";
+  }
+
+  return "unknown";
+}
+
 export async function POST(request: Request) {
   if (!request.headers.get("content-type")?.toLowerCase().startsWith("application/json")) {
     return json("Please submit the signup form again.", 415);
@@ -66,15 +96,11 @@ export async function POST(request: Request) {
 
     return json("Thanks for signing up.", 200);
   } catch (error: unknown) {
-    const isTimeout =
-      error instanceof Error &&
-      (error.name === "TimeoutError" || error.name === "AbortError");
-    const isNetworkError =
-      error instanceof TypeError &&
-      (error.message.includes("fetch") || error.message.includes("network"));
+    const classification = classifyUpstreamError(error);
 
-    if (isTimeout || isNetworkError) {
+    if (classification === "timeout" || classification === "network") {
       console.error("Loops newsletter upstream network/timeout failure", {
+        classification,
         errorName: error instanceof Error ? error.name : "UnknownError",
         message: error instanceof Error ? error.message : String(error),
       });
