@@ -1,4 +1,6 @@
 name: Release integrity
+# For post-deployment smoke tests and emergency rollback procedures,
+# refer to docs/internal/ROLLBACK_RUNBOOK.md
 on:
   pull_request:
     branches: [main]

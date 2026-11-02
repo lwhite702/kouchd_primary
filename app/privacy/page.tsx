@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { LegalPageLayout } from "@/components/legal/legal-page-layout";
-import { LegalCallout, LegalSectionsRenderer } from "@/components/legal/legal-article";
+import {
+  LegalArticle,
+  LegalSectionList,
+  LegalCrossLinks,
+} from "@/components/legal/legal-article";
 import { ShieldCheck, Lock } from "lucide-react";
-import { privacyPolicy } from "@/lib/legal";
+import { privacyPolicy, legalMeta } from "@/lib/legal";
 
 export const metadata: Metadata = {
   title: "Privacy Policy | Kouchd",
@@ -12,31 +15,67 @@ export const metadata: Metadata = {
   alternates: { canonical: "/privacy" },
 };
 
+export const dynamic = "force-static";
+
 export default function PrivacyPolicyPage() {
   return (
     <LegalPageLayout activeRoute="privacy">
-      <article className="legal-article" style={{ lineHeight: 1.75 }}>
-        {/* Header Block */}
-        <div className="legal-header-block">
-          <p className="legal-eyebrow">Wrelik Brands LLC &middot; Legal Documentation</p>
-          <h1 className="legal-title">Privacy Policy</h1>
-          <p className="legal-meta-text">
-            Effective Date: {privacyPolicy.effectiveDate} &middot; Last updated: {privacyPolicy.lastUpdated} &middot; Brand: <strong>Wrelik Brands LLC</strong> (operating <strong>Kouchd</strong>)
+      <LegalArticle>
+        <div style={{ borderBottom: "1px solid var(--kouchd-line, #ded8ce)", paddingBottom: "1.25rem", marginBottom: "1.75rem" }}>
+          <p
+            style={{
+              textTransform: "uppercase",
+              letterSpacing: "1.5px",
+              fontSize: "0.78rem",
+              fontWeight: 800,
+              color: "var(--kouchd-forest, #184f3a)",
+              margin: "0 0 0.5rem",
+            }}
+          >
+            {legalMeta.provider} &middot; Legal Documentation
+          </p>
+          <h1
+            style={{
+              fontSize: "2.25rem",
+              fontWeight: 800,
+              color: "var(--kouchd-forest, #184f3a)",
+              margin: "0 0 0.5rem",
+              letterSpacing: "-0.5px",
+            }}
+          >
+            Privacy Policy
+          </h1>
+          <p style={{ margin: 0, color: "var(--kouchd-muted, #59675f)", fontSize: "0.9rem" }}>
+            Effective Date: {privacyPolicy.effectiveDate} &middot; Last updated: {privacyPolicy.lastUpdated} &middot; Brand: <strong>{legalMeta.provider}</strong> (operating <strong>Kouchd</strong>)
           </p>
         </div>
 
         {/* Carrier Compliance Highlight Box */}
-        <LegalCallout
-          icon={<ShieldCheck size={26} color="var(--kouchd-forest, #184f3a)" style={{ flexShrink: 0, marginTop: "2px" }} />}
-          title="Strict SMS Privacy &amp; Data Protection Commitment"
+        <div
+          style={{
+            background: "#eaf4ec",
+            border: "2px solid #b8d2c1",
+            borderRadius: "14px",
+            padding: "1.25rem 1.5rem",
+            margin: "1.75rem 0",
+            display: "flex",
+            alignItems: "flex-start",
+            gap: "1rem",
+          }}
         >
-          <p style={{ margin: "0 0 0.4rem", fontWeight: 700, color: "#184f3a", fontSize: "0.98rem" }}>
-            We do not sell or share your SMS opt-in data or personal information with third parties for marketing purposes.
-          </p>
-          <p style={{ margin: 0, fontSize: "0.88rem", color: "#2d4438" }}>
-            Text messaging originator opt-in data and consent are strictly excluded from any sharing with third parties, affiliates, or external partners for marketing or promotional purposes.
-          </p>
-        </LegalCallout>
+          <ShieldCheck size={26} color="var(--kouchd-forest, #184f3a)" style={{ flexShrink: 0, marginTop: "2px" }} />
+          <div>
+            <strong style={{ color: "var(--kouchd-forest, #184f3a)", display: "block", fontSize: "1.05rem", marginBottom: "0.35rem" }}>
+              Strict SMS Privacy &amp; Data Protection Commitment
+            </strong>
+            <p style={{ margin: "0 0 0.4rem", fontWeight: 700, color: "#184f3a", fontSize: "0.98rem" }}>
+              We do not sell or share your SMS opt-in data or personal information with third parties for marketing purposes.
+            </p>
+            <p style={{ margin: 0, fontSize: "0.88rem", color: "#2d4438" }}>
+              Text messaging originator opt-in data and consent are strictly excluded from any sharing with third parties, affiliates, or external partners for marketing or promotional purposes.
+            </p>
+          </div>
+        </div>
 
         {/* Static Carrier-Mandated Headings & Content */}
         <section style={{ marginBottom: "2rem" }}>
@@ -85,7 +124,7 @@ export default function PrivacyPolicyPage() {
         </section>
 
         {/* Master Policy Sections */}
-        <LegalSectionsRenderer sections={privacyPolicy.sections} />
+        <LegalSectionList sections={privacyPolicy.sections} />
 
         {/* Kouchd Specific Addendum */}
         {privacyPolicy.addendum.length > 0 && (
@@ -139,32 +178,8 @@ export default function PrivacyPolicyPage() {
         )}
 
         {/* Cross-navigation Links */}
-        <div
-          style={{
-            borderTop: "1px solid var(--kouchd-line, #ded8ce)",
-            paddingTop: "1.5rem",
-            marginTop: "2rem",
-            display: "flex",
-            justifyContent: "space-between",
-            flexWrap: "wrap",
-            gap: "1rem",
-            fontSize: "0.9rem",
-          }}
-        >
-          <Link href="/terms" style={{ color: "var(--kouchd-forest, #184f3a)", fontWeight: 700, textDecoration: "none" }}>
-            &rarr; View Terms &amp; Conditions
-          </Link>
-          <Link href="/cookies" style={{ color: "var(--kouchd-forest, #184f3a)", fontWeight: 700, textDecoration: "none" }}>
-            &rarr; View Cookie Policy
-          </Link>
-          <Link href="/acceptable-use" style={{ color: "var(--kouchd-forest, #184f3a)", fontWeight: 700, textDecoration: "none" }}>
-            &rarr; View Acceptable Use Policy
-          </Link>
-          <Link href="/sms-opt-in" style={{ color: "var(--kouchd-forest, #184f3a)", fontWeight: 700, textDecoration: "none" }}>
-            &rarr; View SMS Opt-In Form
-          </Link>
-        </div>
-      </article>
+        <LegalCrossLinks currentRoute="privacy" />
+      </LegalArticle>
     </LegalPageLayout>
   );
 }

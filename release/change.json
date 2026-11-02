@@ -1,5 +1,5 @@
 {
   "type": "patch",
-  "version": "0.8.4",
-  "reason": "Stop Facebook sign-up from ending on a 404 at /sso-callback, and add a /sign-out page (WRE-261)."
+  "version": "0.8.8",
+  "reason": "Remediate Replay QA defects: permit Cloudflare Turnstile and Clerk protect in CSP connect-src/frame-src, add sign-up redirect fallbacks, and harden email submit disabling (WRE-271)."
 }

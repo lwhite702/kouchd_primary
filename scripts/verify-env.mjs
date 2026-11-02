@@ -31,23 +31,21 @@ if (isProduction) {
   }
 
   const subEnv = process.env.SUBSCRIPTION_EXPECTED_ENVIRONMENT;
-  if (!subEnv) {
-    console.error(
-      "Missing required environment variable in production: SUBSCRIPTION_EXPECTED_ENVIRONMENT. Must be 'production' or 'sandbox'."
-    );
-    process.exit(1);
-  }
-  if (process.env.VERCEL_ENV === "production" && subEnv !== "production") {
-    console.error(
-      `Invalid SUBSCRIPTION_EXPECTED_ENVIRONMENT for production deployment: "${subEnv}". Must be 'production'.`
-    );
-    process.exit(1);
-  }
-  if (subEnv !== "production" && subEnv !== "sandbox") {
-    console.error(
-      `Invalid SUBSCRIPTION_EXPECTED_ENVIRONMENT: "${subEnv}". Must be 'production' or 'sandbox'.`
-    );
-    process.exit(1);
+  if (process.env.VERCEL_ENV === "production") {
+    if (subEnv !== "production") {
+      console.error(
+        'Configuration error: SUBSCRIPTION_EXPECTED_ENVIRONMENT must be set to "production" for Vercel production deployments.'
+      );
+      process.exit(1);
+    }
+  } else {
+    const allowedSubEnvs = ["production", "sandbox"];
+    if (!subEnv || !allowedSubEnvs.includes(subEnv)) {
+      console.error(
+        'Missing or invalid required environment variable: SUBSCRIPTION_EXPECTED_ENVIRONMENT must be set to "production" or "sandbox".'
+      );
+      process.exit(1);
+    }
   }
 }
 

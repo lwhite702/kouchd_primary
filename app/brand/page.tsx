@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { BrandSystemPortal } from "@/components/brand/brand-system-portal";
+import { BrandKitGate } from "@/components/brand/brand-kit-gate";
 
 export const metadata: Metadata = {
   title: "Brand & Design System | Kouchd",
@@ -13,5 +13,5 @@ export const metadata: Metadata = {
 };
 
 export default function BrandPage() {
-  return <BrandSystemPortal />;
+  return <BrandKitGate />;
 }

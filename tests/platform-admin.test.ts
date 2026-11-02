@@ -4,9 +4,23 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { api, internal } from "../convex/_generated/api";
 import schema from "../convex/schema";
 import { requirePlatformEntryKey } from "../lib/platform/console";
-import { getHelpScoutOpsStatus, getMintlifyOpsStatus } from "../lib/platform/providers";
+import {
+  getFreshdeskOpsStatus,
+  lookupFreshdeskTickets,
+  getMintlifyOpsStatus,
+} from "../lib/platform/providers";
 
 vi.mock("server-only", () => ({}));
+vi.mock("@clerk/nextjs/server", () => ({
+  auth: vi.fn(async () => ({ userId: "admin-1" })),
+  currentUser: vi.fn(async () => ({
+    id: "admin-1",
+    emailAddresses: [{ id: "email-1", emailAddress: "lee@wrelik.com" }],
+    primaryEmailAddressId: "email-1",
+    firstName: "Lee",
+    lastName: "White",
+  })),
+}));
 
 const modules = import.meta.glob([
   "../convex/**/*.ts",
@@ -269,6 +283,15 @@ describe("Convex Platform Admin Backend Authorization & Privacy", () => {
     const rcOpsAfter = await admin.query(api.admin.getRevenueCatOps, {});
     expect(rcOpsAfter.reconciliation.missingAccountLinks).toBe(0);
 
+    // Verify getUserDetail returns environment-segregated providerContext.billing with production prioritized
+    const hostDetail = await admin.query(api.admin.getUserDetail, { userId: hostUserId });
+    expect(hostDetail).not.toBeNull();
+    expect(hostDetail?.providerContext.billing).toHaveLength(2);
+    expect(hostDetail?.providerContext.billing[0].environment).toBe("production");
+    expect(hostDetail?.providerContext.billing[0].entitlement).toBe("pro");
+    expect(hostDetail?.providerContext.billing[1].environment).toBe("sandbox");
+    expect(hostDetail?.providerContext.billing[1].entitlement).toBe("plus");
+
     const logs = await admin.query(api.admin.listPlatformAuditLogs, { provider: "revenuecat" });
     expect(logs).toHaveLength(1);
     expect(logs[0].action).toBe("revenuecat.reconcile_household_ownership");
@@ -445,26 +468,59 @@ describe("Convex Platform Admin Backend Authorization & Privacy", () => {
 });
 
 
-describe("Help Scout & Mintlify Provider Verification Helpers", () => {
+describe("Freshdesk & Mintlify Provider Verification Helpers", () => {
   const originalEnv = { ...process.env };
 
   afterEach(() => {
     process.env = { ...originalEnv };
   });
 
-  it("reports Help Scout as setup_blocked when inbox and OAuth credentials are unconfigured", () => {
-    delete process.env.HELPSCOUT_APP_ID;
-    delete process.env.HELPSCOUT_APP_SECRET;
-    delete process.env.HELPSCOUT_INBOX_ID;
+  it("reports Freshdesk as setup_blocked when domain and API key are unconfigured", () => {
+    delete process.env.FRESHDESK_DOMAIN;
+    delete process.env.FRESHDESK_API_KEY;
 
-    const status = getHelpScoutOpsStatus();
+    const status = getFreshdeskOpsStatus();
     expect(status.status).toBe("setup_blocked");
     expect(status.missingEnvKeys).toEqual([
-      "HELPSCOUT_APP_ID",
-      "HELPSCOUT_APP_SECRET",
-      "HELPSCOUT_INBOX_ID",
+      "FRESHDESK_DOMAIN",
+      "FRESHDESK_API_KEY",
     ]);
+    expect(status.supportEmail).toBe("support@kouchd.com");
+    expect(status.dashboardUrl).toBe("https://kouchd.freshdesk.com");
+  });
+
+  it("reports Freshdesk as configured when domain and API key are provided", () => {
+    process.env.FRESHDESK_DOMAIN = "kouchd-support.freshdesk.com";
+    process.env.FRESHDESK_API_KEY = "test_freshdesk_api_key";
+    process.env.FRESHDESK_SUPPORT_EMAIL = "help@kouchd.com";
+
+    const status = getFreshdeskOpsStatus();
+    expect(status.status).toBe("configured");
+    expect(status.missingEnvKeys).toEqual([]);
+    expect(status.domain).toBe("kouchd-support.freshdesk.com");
+    expect(status.dashboardUrl).toBe("https://kouchd-support.freshdesk.com");
     expect(status.supportEmail).toBe("help@kouchd.com");
+    expect(status.credentialsConfigured.hasDomain).toBe(true);
+    expect(status.credentialsConfigured.hasApiKey).toBe(true);
+  });
+
+  it("requires audit reason and fails closed when Freshdesk is setup_blocked", async () => {
+    process.env.PLATFORM_ADMIN_EMAILS = "lee@wrelik.com";
+    delete process.env.FRESHDESK_DOMAIN;
+    delete process.env.FRESHDESK_API_KEY;
+
+    await expect(
+      lookupFreshdeskTickets({ query: "ticket:123", reason: "no" })
+    ).rejects.toThrow("Audit reason is required");
+
+    const result = await lookupFreshdeskTickets({
+      query: "ticket:123",
+      reason: "Verifying customer ticket status for household inquiry",
+    });
+    expect(result.allowed).toBe(false);
+    expect(result.status).toBe("setup_blocked");
+    expect(result.message).toContain("Missing server environment configuration");
+    expect(result.tickets).toEqual([]);
   });
 
   it("verifies Mintlify repository docs.json navigation and .mintignore without claiming live deployment", () => {

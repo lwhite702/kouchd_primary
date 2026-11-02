@@ -7,32 +7,33 @@ import { requirePlatformAdmin } from "@/lib/platform/platform-admin";
 
 const HELP_BASE_URL = HELP_LINKS.home;
 
-export interface HelpScoutOpsStatus {
-  provider: "helpscout";
+export interface FreshdeskOpsStatus {
+  provider: "freshdesk";
   status: "setup_blocked" | "configured";
   dashboardUrl: string;
   supportEmail: string;
+  domain?: string;
   credentialsConfigured: {
-    hasAppId: boolean;
-    hasAppSecret: boolean;
-    hasInboxId: boolean;
+    hasDomain: boolean;
+    hasApiKey: boolean;
   };
   missingEnvKeys: string[];
   blockerSummary: string;
   guardrails: string[];
 }
 
-export interface HelpScoutLookupResult {
+export interface FreshdeskLookupResult {
   allowed: boolean;
   status: "setup_blocked" | "ready";
   message: string;
-  conversations: Array<{
+  tickets: Array<{
     id: string;
-    number: number;
+    ticketNumber: number;
     subject: string;
-    status: "active" | "pending" | "closed" | "spam";
+    status: "open" | "pending" | "resolved" | "closed";
+    priority: "low" | "medium" | "high" | "urgent";
     updatedAt: string;
-    helpscoutUrl: string;
+    freshdeskUrl: string;
   }>;
 }
 
@@ -62,40 +63,59 @@ export interface MintlifyOpsStatus {
   workflowRules: string[];
 }
 
+function normalizeFreshdeskDomain(raw: string | undefined): { domain: string; dashboardUrl: string } {
+  if (!raw || !raw.trim()) {
+    return {
+      domain: "kouchd.freshdesk.com",
+      dashboardUrl: "https://kouchd.freshdesk.com",
+    };
+  }
+  let cleaned = raw.trim().replace(/^https?:\/\//, "").replace(/\/+$/, "");
+  if (!cleaned.includes(".")) {
+    cleaned = `${cleaned}.freshdesk.com`;
+  }
+  return {
+    domain: cleaned,
+    dashboardUrl: `https://${cleaned}`,
+  };
+}
+
 /**
- * Inspects Help Scout server-side configuration without returning any secret values.
- * Because Kouchd records and environment do not confirm an active Help Scout inbox or
- * API credentials, this reports an explicit setup blocker when unconfigured.
+ * Inspects Freshdesk server-side configuration without returning any secret values.
+ * When Freshdesk domain or API key are not configured, this reports an explicit setup blocker.
  */
-export function getHelpScoutOpsStatus(): HelpScoutOpsStatus {
-  const hasAppId = Boolean(process.env.HELPSCOUT_APP_ID?.trim());
-  const hasAppSecret = Boolean(process.env.HELPSCOUT_APP_SECRET?.trim());
-  const hasInboxId = Boolean(process.env.HELPSCOUT_INBOX_ID?.trim());
+export function getFreshdeskOpsStatus(): FreshdeskOpsStatus {
+  const rawDomain = process.env.FRESHDESK_DOMAIN?.trim();
+  const rawApiKey = process.env.FRESHDESK_API_KEY?.trim();
+
+  const hasDomain = Boolean(rawDomain);
+  const hasApiKey = Boolean(rawApiKey);
 
   const missingEnvKeys: string[] = [];
-  if (!hasAppId) missingEnvKeys.push("HELPSCOUT_APP_ID");
-  if (!hasAppSecret) missingEnvKeys.push("HELPSCOUT_APP_SECRET");
-  if (!hasInboxId) missingEnvKeys.push("HELPSCOUT_INBOX_ID");
+  if (!hasDomain) missingEnvKeys.push("FRESHDESK_DOMAIN");
+  if (!hasApiKey) missingEnvKeys.push("FRESHDESK_API_KEY");
 
   const isConfigured = missingEnvKeys.length === 0;
+  const { domain, dashboardUrl } = normalizeFreshdeskDomain(rawDomain);
+  const supportEmail = process.env.FRESHDESK_SUPPORT_EMAIL?.trim() || "support@kouchd.com";
 
   return {
-    provider: "helpscout",
+    provider: "freshdesk",
     status: isConfigured ? "configured" : "setup_blocked",
-    dashboardUrl: "https://secure.helpscout.net",
-    supportEmail: "help@kouchd.com",
+    dashboardUrl,
+    supportEmail,
+    domain,
     credentialsConfigured: {
-      hasAppId,
-      hasAppSecret,
-      hasInboxId,
+      hasDomain,
+      hasApiKey,
     },
     missingEnvKeys,
     blockerSummary: isConfigured
-      ? "Help Scout OAuth2 credentials and Inbox ID are present in the server environment."
-      : "Setup blocked: No verified Kouchd Help Scout Inbox ID or OAuth2 API credentials are configured in this environment. Do not invent an inbox ID or fabricate support conversation health.",
+      ? "Freshdesk domain and API key are configured in the server environment."
+      : "Setup blocked: No verified Kouchd Freshdesk domain or API key configured in this environment. Do not invent credentials or fabricate support ticket health.",
     guardrails: [
-      "Read-only metadata lookup only (ticket number, subject, status, updated timestamp, and direct Help Scout link).",
-      "Full conversation bodies and attachments remain in Help Scout and are never copied into Kouchd or exposed to household members.",
+      "Read-only metadata lookup only (ticket ID, subject, status, priority, updated timestamp, and direct Freshdesk link).",
+      "Full conversation bodies and attachments remain in Freshdesk and are never copied into Kouchd or exposed to household members.",
       "Every staff support lookup requires an explicit platform-admin grant and an audit reason.",
       "No ticket creation, reply sending, or status mutation is permitted from this console.",
     ],
@@ -105,12 +125,12 @@ export function getHelpScoutOpsStatus(): HelpScoutOpsStatus {
 /**
  * Server-side read-only support lookup gate. Enforces platform-admin authorization,
  * requires a reason for auditability, and fails closed with the setup blocker until
- * verified Help Scout credentials and inbox configuration are provisioned.
+ * verified Freshdesk credentials and domain configuration are provisioned.
  */
-export async function lookupHelpScoutConversations(params: {
+export async function lookupFreshdeskTickets(params: {
   query: string;
   reason: string;
-}): Promise<HelpScoutLookupResult> {
+}): Promise<FreshdeskLookupResult> {
   await requirePlatformAdmin();
 
   const trimmedReason = params.reason.trim();
@@ -118,23 +138,31 @@ export async function lookupHelpScoutConversations(params: {
     throw new Error("Audit reason is required (minimum 5 characters) for support lookup");
   }
 
-  const status = getHelpScoutOpsStatus();
+  const status = getFreshdeskOpsStatus();
   if (status.status === "setup_blocked") {
     return {
       allowed: false,
       status: "setup_blocked",
-      message: `Lookup unavailable: Missing server environment configuration (${status.missingEnvKeys.join(", ")}). Use the Help Scout dashboard directly.`,
-      conversations: [],
+      message: `Lookup unavailable: Missing server environment configuration (${status.missingEnvKeys.join(", ")}). Use the Freshdesk dashboard directly.`,
+      tickets: [],
     };
   }
 
   return {
     allowed: true,
     status: "ready",
-    message: "Help Scout credentials detected; live OAuth2 mailbox query is disabled in local/sandbox mode.",
-    conversations: [],
+    message: "Freshdesk credentials detected; live ticket search is ready behind platform-admin audit.",
+    tickets: [],
   };
 }
+
+// Backward-compatibility aliases for transitional imports
+export {
+  getFreshdeskOpsStatus as getHelpScoutOpsStatus,
+  lookupFreshdeskTickets as lookupHelpScoutConversations,
+  type FreshdeskOpsStatus as HelpScoutOpsStatus,
+  type FreshdeskLookupResult as HelpScoutLookupResult,
+};
 
 /**
  * Inspects the repository-managed Mintlify configuration (`docs.json`, `.mintignore`,

@@ -38,7 +38,7 @@ export function ConsoleShell({ consoleKey, basePath: explicitBasePath, admin, ch
     { label: "Subscriptions — RevenueCat", href: `${basePath}/subscriptions`, icon: CreditCard },
     { label: "Notifications — Knock", href: `${basePath}/notifications`, icon: Bell },
     { label: "Marketing — Loops", href: `${basePath}/marketing`, icon: Mail },
-    { label: "Support — Help Scout", href: `${basePath}/support`, icon: LifeBuoy },
+    { label: "Support — Freshdesk", href: `${basePath}/support`, icon: LifeBuoy },
     { label: "Help docs — Mintlify", href: `${basePath}/docs`, icon: BookOpen },
   ];
 

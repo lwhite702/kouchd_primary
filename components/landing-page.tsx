@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -19,8 +22,7 @@ import { appVersion } from "@/lib/version";
 import { HELP_LINKS } from "@/lib/help-links";
 import { NewsletterSignup } from "@/components/marketing/newsletter-signup";
 import { MarketingHeader, MarketingStartButton as StartButton } from "@/components/marketing/marketing-header";
-import { ProductPreviewTabs } from "@/components/marketing/product-preview-tabs";
-import { GuideSceneTabs } from "@/components/marketing/guide-scene-tabs";
+import { InteractiveStayPreview } from "@/components/interactive-stay-preview";
 import "./landing-v21.css";
 
 interface LandingPageProps {
@@ -28,6 +30,7 @@ interface LandingPageProps {
 }
 
 export function LandingPage({ hasClerk = true }: LandingPageProps) {
+  const [guideSceneTab, setGuideSceneTab] = useState<"overview" | "guide" | "updates">("overview");
 
   return (
     <main className="landing-v21" id="main-content">
@@ -140,7 +143,7 @@ export function LandingPage({ hasClerk = true }: LandingPageProps) {
 
       {/* Interactive Product Preview Section */}
       <section className="v21-product" aria-labelledby="v21-product-title">
-        <ProductPreviewTabs />
+        <InteractiveStayPreview />
         <div className="v21-product-copy">
           <p className="v21-eyebrow">A look inside Kouchd</p>
           <h2 id="v21-product-title">The details of a shared stay, in one place.</h2>
@@ -175,7 +178,70 @@ export function LandingPage({ hasClerk = true }: LandingPageProps) {
               <li><Check size={16} aria-hidden="true" /> Guest list and scheduled check-in date in view</li>
             </ul>
           </div>
-          <GuideSceneTabs />
+          <div className="v21-feature-scene scene-guide" aria-label="Interactive house guide scene">
+            <div className="v21-scene-window">
+              <div className="v21-scene-top">
+                <span><i className="scene-dot" aria-hidden="true" /> JUNIPER HOUSE</span>
+                <span className="scene-date">OCT 10—13</span>
+              </div>
+              <div className="scene-tabs" role="tablist" aria-label="Guide views">
+                <button
+                  type="button"
+                  className={guideSceneTab === "overview" ? "selected" : ""}
+                  onClick={() => setGuideSceneTab("overview")}
+                >
+                  Overview
+                </button>
+                <button
+                  type="button"
+                  className={guideSceneTab === "guide" ? "selected" : ""}
+                  onClick={() => setGuideSceneTab("guide")}
+                >
+                  House guide
+                </button>
+                <button
+                  type="button"
+                  className={guideSceneTab === "updates" ? "selected" : ""}
+                  onClick={() => setGuideSceneTab("updates")}
+                >
+                  Updates
+                </button>
+              </div>
+
+              {guideSceneTab === "overview" && (
+                <>
+                  <div className="scene-welcome">
+                    <span className="scene-house-icon" aria-hidden="true"><House size={17} /></span>
+                    <div>
+                      <strong>Welcome to the house</strong>
+                      <small>The useful details, all together</small>
+                    </div>
+                  </div>
+                  <div className="scene-info-grid">
+                    <div><span>WI-FI</span><strong>JuniperGuest</strong><small>Ask Maya for password</small></div>
+                    <div><span>QUIET HOURS</span><strong>10 pm – 8 am</strong><small>Thanks for keeping it cozy</small></div>
+                  </div>
+                </>
+              )}
+
+              {guideSceneTab === "guide" && (
+                <div className="scene-info-grid">
+                  <div><span>PARKING</span><strong>Driveway right side</strong><small>Leave space for garbage truck</small></div>
+                  <div><span>KITCHEN</span><strong>Shared shelves 1 & 2</strong><small>Label your container</small></div>
+                </div>
+              )}
+
+              {guideSceneTab === "updates" && (
+                <div className="scene-update">
+                  <span className="scene-avatar" aria-hidden="true">M</span>
+                  <div>
+                    <strong>Update from Maya <small>Today</small></strong>
+                    <p>Use the side entrance after 8. The porch light is on.</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         </article>
 
         {/* Feature 02: Ledger */}

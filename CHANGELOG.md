@@ -21,6 +21,17 @@
   - Preserves bilateral privacy (records are strictly visible only to the contributing member and host).
   - Covered by automated Vitest integration suite `tests/shopping-contribution-bridge.test.ts` and verified with Xcode simulator build.
 
+- **Simplified introduction landing page & brand kit password protection (WRE-243)**:
+  - **Simplified landing page:** Added a streamlined marketing landing page at `/simple` featuring the canonical Kouchd brand design system (`MarketingHeader`, warm `v21-hero` with living room artwork and app icon badge, rating pill, interactive tabbed preview window, 6-card feature grid matching `v21-steps`, `v21-cta`, and `MarketingFooter`).
+  - **Brand Kit access control:** Added client/SSR-safe gate `<BrandKitGate />` password-protecting `/brand` and `/brandkit` with credential gate and session persistence.
+  - **Route aliases and telemetry:** Created `/brandkit` redirecting to `/brand` and updated telemetry route allowlist in `lib/telemetry-privacy.ts`.
+
+- **Platform Console user provider context (WRE-263)**:
+  - **Connected provider cards:** Added RevenueCat subscription snapshots, Knock notification event audit history, and Loops marketing consent status to the Platform Console user detail view in `components/platform/users-explorer.tsx` and `convex/admin.ts`.
+  - **Environment segregation:** RevenueCat billing records are displayed per environment (`production` and `sandbox`), prioritizing production so sandbox test events do not mask live subscription status.
+  - **Notification index:** Added a composite index `by_user_occurred_at` on `notificationEvents` in `convex/schema.ts` to paginate recent events efficiently without table scans.
+  - **Privacy boundaries:** Kept provider data minimal: notification payloads, template variables, and marketing contact emails are omitted from support payloads.
+
 - **iPad layout (WRE-254, branch only, not released)**:
   - **Navigation:** regular-width windows use a `NavigationSplitView` sidebar with a single stay switcher; compact widths keep the tabs. `ShellNavigator` holds one navigation state, so a resized window stays on the same screen. The sidebar pins at 1000pt and wider and slides over narrower windows. `StayTool` is the one definition of who sees which tool, read by both the sidebar and More.
   - **Layouts:** `KouchdLayout` picks 1, 2, or 3 columns from measured content width (700pt and 1000pt), and always 1 at accessibility text sizes. Home is a two-column dashboard, Ledger shows summary tiles with a row list beside the selected entry's details and actions (700pt and wider), Chores and Stay use grids and columns, and Shopping separates shared and personal items. Settings-style forms center at 640pt, and the introduction and first-stay setup use the wider space.
@@ -44,6 +55,12 @@
 
 ### Changed
 
+- **Support desk transition to Freshdesk (WRE-265, branch only, not released)**:
+  - Transitioned the Platform Ops console customer support integration from Help Scout to Freshdesk (`lib/platform/providers.ts`, `components/platform/support-explorer.tsx`, `components/platform/overview-dashboard.tsx`).
+  - Added honest `setup_blocked` / `configured` state detection against server-side environment variables `FRESHDESK_DOMAIN` and `FRESHDESK_API_KEY`.
+  - Maintained strict support guardrails: read-only metadata lookups, no message bodies or attachments copied into household records, no ticket mutation from the console, and mandatory platform-admin audit reasons.
+  - Public documentation remains on Mintlify (`https://help.kouchd.com`, `docs.json`, `help/`).
+
 - **Privacy and Cookie Policy wording for web analytics (WRE-251, branch only, not released)**: the in-app Privacy Policy (section 6) and Cookie Policy now match what the web app does. PostHog automatically records page views and interactions, makes session replays with typed form input hidden, and links signed-in web sessions to the account identifier, name and email. They used to say autocapture and replay were off and that names and emails were not sent. The iPhone wording is unchanged. The service-provider lists now name RevenueCat for Kouchd Plus subscriptions (the marketing site's Privacy Policy gets the same line). The Privacy and Cookie Policies are dated October 30, 2026; the Terms and Acceptable Use Policy keep October 23, 2026. Each legal document now has its own dates instead of sharing `legalMeta`. No separate user notice is planned (0.7.25). Version 0.8.1 adds Meta ad measurement to both policies (dated October 31, 2026): the Pixel and Conversions API run only after a visitor chooses “Allow analytics and ads” on kouchd.com, Global Privacy Control counts as an opt-out, SMS, household, agreement and contribution data are never shared with advertising partners, and the old promises of no advertising networks and no cross-context sharing are replaced.
 - **iOS introduction and sign-in look (branch only, not released)**:
   - The introduction steps can be swiped left and right as well as moved with Continue, Back, and Skip. A tapped move ignores the pager's in-between page reports, so the footer never jumps back to the previous step.
@@ -55,6 +72,13 @@
 - Upgraded `zod` from 4.5.4 to 4.6.7 through an npm `overrides` entry (`"zod": "^4.6.6"`) to fix CVE-2023-54404 (high, Dependabot alert #45): Zod could exhaust memory while validating oversized constrained collections. `zod` is not a direct dependency; it comes in only as a dev dependency of `eslint-plugin-react-hooks` (via `eslint-config-next`), so the shipped web bundle and the iOS app do not include it (0.7.19).
 
 ### Fixed
+
+- **Replay QA defect remediation and bot protection unblocking (WRE-271, 0.8.8)**:
+  - **Cloudflare Turnstile & Clerk protect CSP allowances:** Added `https://challenges.cloudflare.com` and `https://*.protect.clerk.com:*` to `connect-src`, and `https://*.protect.clerk.com` to `script-src` and `frame-src` in `lib/security/csp.ts`. Previously, the absence of `challenges.cloudflare.com` in `connect-src` caused Cloudflare Turnstile token validation fetches to fail silently on `/sign-up`, locking Clerk's form in an inert state.
+  - **CSP hardening in production:** Removed `'unsafe-eval'` from `script-src` in production builds (`lib/security/csp.ts`), keeping it restricted exclusively to local development (`NODE_ENV === "development"`) for Next.js Fast Refresh and tooling.
+  - **Dynamic layout rendering for strict nonce-based CSP:** Documented that calling `headers()` in the root layout (`app/layout.tsx`) and configuring `<ClerkProvider dynamic>` renders routes dynamically to supply a per-request `x-nonce`, ensuring strict CSP script verification across all pages.
+  - **Sign-up redirect fallbacks:** Added `fallbackRedirectUrl="/"` and `signInFallbackRedirectUrl="/"` on `<SignUp />` in `app/sign-up/[[...sign-up]]/page.tsx`.
+  - **Sign-in submit button CSS hardening:** Scoped `.kouchd-submit-disabled` live-value fallback in `app/production.css` to `.kouchd-sign-in-container` and removed static `[value=""]` attribute checks to avoid disabling buttons after user input.
 
 - **Facebook sign-up no longer ends on a 404 (WRE-261, 0.8.4, branch only, not released)**:
   - A Facebook sign-up that Clerk moved over to sign-in (for example, when the Facebook email needs verifying or already belongs to an account) could return to `/sso-callback` at the site root, which had no page and showed the "Wrong couch" 404. Seen in Vercel's production request log on 2026-10-31.

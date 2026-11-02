@@ -70,7 +70,13 @@ describe("Clerk auth routes (WRE-261)", () => {
     const { default: SignUpPage } = await import("@/app/sign-up/[[...sign-up]]/page");
     const signUp = findByType(SignUpPage(), SignUp);
 
-    expect(signUp?.props).toMatchObject({ routing: "path", path: "/sign-up", signInUrl: "/sign-in" });
+    expect(signUp?.props).toMatchObject({
+      routing: "path",
+      path: "/sign-up",
+      signInUrl: "/sign-in",
+      fallbackRedirectUrl: "/",
+      signInFallbackRedirectUrl: "/",
+    });
   });
 
   it("gives ClerkProvider explicit sign-in and sign-up URLs", () => {

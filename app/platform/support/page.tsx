@@ -1,7 +1,9 @@
 import { SupportExplorer } from "@/components/platform/support-explorer";
-import { getHelpScoutOpsStatus } from "@/lib/platform/providers";
+import { requirePlatformOpsAccess } from "@/lib/platform/console";
+import { getFreshdeskOpsStatus } from "@/lib/platform/providers";
 
 export default async function PlatformSupportPage() {
-  const status = getHelpScoutOpsStatus();
+  await requirePlatformOpsAccess();
+  const status = getFreshdeskOpsStatus();
   return <SupportExplorer status={status} />;
 }

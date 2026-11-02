@@ -6,6 +6,9 @@ import { contentSecurityPolicy } from "./lib/security/csp";
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  experimental: {
+    agentUpgrade: "security",
+  },
   async headers() {
     return [
       {
@@ -36,6 +39,14 @@ const nextConfig: NextConfig = {
       {
         source: "/ingest/:path*",
         destination: "https://us.i.posthog.com/:path*",
+      },
+      {
+        source: "/dashboard",
+        destination: "/",
+      },
+      {
+        source: "/dashboard/:path*",
+        destination: "/",
       },
     ];
   },
