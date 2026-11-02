@@ -2,6 +2,10 @@
   "$schema": "https://mintlify.com/docs.json",
   "name": "Kouchd Help Center",
   "description": "Guides, ledger management, house rules, and guest agreements for Kouchd.",
+  "metadata": {
+    "image": "https://kouchd.com/brand/kouchd-icon-square.png",
+    "timestamp": false
+  },
   "theme": "mint",
   "appearance": {
     "default": "light",
@@ -45,7 +49,8 @@
         "group": "Overview",
         "pages": [
           "help/index",
-          "help/quickstart"
+          "help/quickstart",
+          "help/faq"
         ],
         "expanded": true
       },
@@ -53,7 +58,7 @@
         "group": "For Hosts",
         "pages": [
           "help/hosts/getting-started",
-          "help/hosts/pricing-and-terms",
+          "help/hosts/stay-terms-and-contributions",
           "help/hosts/house-rules-and-chores",
           "help/hosts/ledger-management"
         ]
@@ -67,7 +72,7 @@
         ]
       },
       {
-        "group": "iPhone app",
+        "group": "iPhone app (TestFlight beta)",
         "pages": [
           "help/ios/using-kouchd-on-ios",
           "help/ios/ledger-and-contributions",
@@ -90,7 +95,10 @@
       {
         "group": "Support",
         "pages": [
-          "help/support/app-support"
+          "help/support/app-support",
+          "help/support/plans-and-subscription",
+          "help/support/refund-policy",
+          "help/support/delete-account"
         ]
       },
       {
@@ -180,9 +188,6 @@
       }
     },
     "latex": false
-  },
-  "metadata": {
-    "timestamp": false
   },
   "thumbnails": {
     "appearance": "light",
