@@ -78,6 +78,7 @@ function householdTermsFields(defaults: Doc<"terms">) {
     endDate: defaults.endDate,
     cadence: defaults.cadence,
     ...(defaults.paymentDayOfWeek !== undefined ? { paymentDayOfWeek: defaults.paymentDayOfWeek } : {}),
+    ...(defaults.paymentDayOfMonth !== undefined ? { paymentDayOfMonth: defaults.paymentDayOfMonth } : {}),
     billingBasis: defaults.billingBasis ?? "continuous",
     rateCents: defaults.rateCents,
     earlyDiscountPercentage: defaults.earlyDiscountPercentage,
@@ -250,7 +251,8 @@ export async function acceptGuestAgreement(
             : Math.round(obligation.baseAmountCents * stayDays(obligation.periodStart, periodEnd) / stayDays(obligation.periodStart, obligation.periodEnd));
           if (amount > 0) await ctx.db.insert("obligations", {
             stayId, termsId: obligation.termsId, guestUserId, type: "cadence",
-            periodStart: obligation.periodStart, periodEnd, dueDate: obligation.dueDate,
+            periodStart: obligation.periodStart, periodEnd,
+            dueDate: obligation.dueDate <= periodEnd ? obligation.dueDate : periodEnd,
             baseAmountCents: amount, lateFeeWaivedAt: obligation.lateFeeWaivedAt,
             lateFeeWaivedBy: obligation.lateFeeWaivedBy, createdAt: now,
           });

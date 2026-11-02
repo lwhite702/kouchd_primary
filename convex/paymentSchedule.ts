@@ -122,7 +122,9 @@ export const requestChange = mutation({
     if (!stay || stay.status === "ended") throw new Error("This stay has ended");
     const currentTerms = await getCurrentGuestTerms(ctx, stayId, user._id);
     if (!currentTerms || membership.acceptedTermsId !== currentTerms._id) throw new Error("Review and accept your current agreement before requesting a schedule change");
+    if (currentTerms.cadence === "monthly") throw new Error("Monthly agreements do not support daily or weekly schedule changes");
     const { terms } = await assertNoOutstandingDueBalance(ctx, stayId, user._id, calendarDateInTimezone(new Date(now), stay.timezone));
+    if (terms.cadence === "monthly") throw new Error("Monthly agreements do not support daily or weekly schedule changes");
     if (terms.cadence === cadence && (cadence !== "weekly" || terms.paymentDayOfWeek === paymentDayOfWeek)) {
       throw new Error("Choose a payment schedule different from your current one");
     }
@@ -165,6 +167,7 @@ export const reviewRequest = mutation({
     const timezone = stay.timezone;
     const effectiveFrom = calendarDateInTimezone(new Date(now), timezone);
     const { terms: previous, includeLegacy } = await assertNoOutstandingDueBalance(ctx, request.stayId, request.guestUserId, effectiveFrom);
+    if (previous.cadence === "monthly") throw new Error("Monthly agreements do not support daily or weekly schedule changes");
     const recent = await ctx.db.query("paymentScheduleRequests").withIndex("by_guest_status", (q) => q.eq("guestUserId", request.guestUserId).eq("status", "approved")).order("desc").take(50);
     if (recent.some((item) => item.stayId === request.stayId && item.reviewedAt && now - item.reviewedAt < COOLDOWN_MS)) {
       throw new Error("Payment schedule changes are limited to once every 14 days");

@@ -19,8 +19,13 @@ import { trackServerEvent } from "./lib/posthog";
 const termsInput = {
   startDate: v.string(),
   endDate: v.string(),
-  cadence: v.union(v.literal("daily"), v.literal("weekly")),
+  cadence: v.union(
+    v.literal("daily"),
+    v.literal("weekly"),
+    v.literal("monthly"),
+  ),
   paymentDayOfWeek: v.optional(v.number()),
+  paymentDayOfMonth: v.optional(v.number()),
   billingBasis: v.optional(
     v.union(v.literal("continuous"), v.literal("occupied_nights")),
   ),
@@ -72,7 +77,16 @@ export const acceptCurrent = mutation({
         ? await ensureGuestTerms(ctx, stayId, user._id, stay.hostUserId)
         : await ctx.db.get(stay.currentTermsId);
     if (!terms) throw new Error("No active terms to accept");
-    if (
+    if (terms.cadence === "monthly") {
+      if (
+        initialCadence !== undefined ||
+        initialPaymentDayOfWeek !== undefined
+      ) {
+        throw new Error(
+          "Monthly sublease agreements cannot be switched to daily or weekly schedules",
+        );
+      }
+    } else if (
       membership.role === "guest" &&
       !membership.acceptedTermsId &&
       initialCadence
@@ -167,7 +181,7 @@ export const updateCurrent = mutation({
     const stay = await ctx.db.get(stayId);
     if (!stay || stay.status === "ended")
       throw new Error("Ended stays cannot be edited");
-    assertStayTerms(terms);
+    assertStayTerms(terms, { arrangement: stay.arrangement });
     const previous = stay.currentTermsId
       ? await ctx.db.get(stay.currentTermsId)
       : null;
@@ -176,6 +190,9 @@ export const updateCurrent = mutation({
       stayId,
       version: (previous?.version ?? 0) + 1,
       ...terms,
+      ...(terms.cadence === "monthly"
+        ? { paymentDayOfMonth: terms.paymentDayOfMonth }
+        : {}),
       createdBy: user._id,
       createdAt: now,
     });
@@ -233,7 +250,19 @@ export const updateCurrent = mutation({
           }
         }
       }
-      assertStayTerms(inherited);
+      if (inherited.cadence === "monthly") {
+        inherited.paymentDayOfWeek = undefined;
+        if (inherited.paymentDayOfMonth === undefined) {
+          inherited.paymentDayOfMonth =
+            oldGuestTerms?.cadence === "monthly" &&
+            oldGuestTerms.paymentDayOfMonth !== undefined
+              ? oldGuestTerms.paymentDayOfMonth
+              : terms.paymentDayOfMonth;
+        }
+      } else {
+        inherited.paymentDayOfMonth = undefined;
+      }
+      assertStayTerms(inherited, { arrangement: stay.arrangement });
       // Legacy weekly schedules ended six days after their start. Preserve that
       // due weekday when older clients and automatically accepted terms omit it.
       if (
@@ -258,6 +287,9 @@ export const updateCurrent = mutation({
       }
       const guestTermsId = await ctx.db.insert("terms", {
         ...inherited,
+        ...(inherited.cadence === "monthly"
+          ? { paymentDayOfMonth: inherited.paymentDayOfMonth }
+          : {}),
         stayId,
         guestUserId: guest.userId,
         version: (oldGuestTerms?.version ?? 0) + 1,
@@ -317,7 +349,7 @@ export const updateGuest = mutation({
     ) {
       throw new Error("Choose a weekday for weekly guest contributions");
     }
-    assertStayTerms(terms);
+    assertStayTerms(terms, { arrangement: stay.arrangement });
     const previous = await ensureGuestTerms(ctx, stayId, guestUserId, user._id);
     const now = Date.now();
     const effectiveFrom = guestMembership.acceptedTermsId
@@ -329,7 +361,13 @@ export const updateGuest = mutation({
       version: previous.version + 1,
       ...(effectiveFrom ? { effectiveFrom } : {}),
       ...terms,
-      billingBasis: terms.billingBasis ?? previous.billingBasis ?? "continuous",
+      ...(terms.cadence === "monthly"
+        ? { paymentDayOfMonth: terms.paymentDayOfMonth }
+        : {}),
+      billingBasis:
+        terms.billingBasis ??
+        (terms.cadence === "monthly" ? "continuous" : previous.billingBasis) ??
+        "continuous",
       createdBy: user._id,
       createdAt: now,
     });
