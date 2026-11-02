@@ -164,13 +164,17 @@ struct HouseInfoScreen: View {
   @State private var otherNotes = ""
   var body: some View {
     Form {
-      Section("Access and Wi-Fi") {
+      Section {
         TextField("Network", text: $network)
         TextField("Password", text: $password)
         TextField("Street address", text: $address)
         TextField("Unit", text: $unit)
         TextField("City, state and ZIP", text: $city)
         TextField("Door code", text: $doorCode)
+      } header: {
+        Text("Access and Wi-Fi")
+      } footer: {
+        Text("Guests see door and Wi-Fi codes after they accept their agreement. Keep codes in these fields, not in notes.")
       }
       Section("Around the home") {
         TextField("Parking", text: $parking, axis: .vertical)

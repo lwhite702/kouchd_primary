@@ -9,6 +9,16 @@ struct StayScreen: View {
   @State private var showingInvite = false
   @State private var showingEdit = false
   @State private var showingContributionRouter = false
+  private var accessCodesHiddenMessage: String? {
+    guard !store.isHost else { return nil }
+    if store.bundle["stay"]["status"].text == "ended" {
+      return "This stay has ended, so door and Wi-Fi codes are no longer shown."
+    }
+    if store.bundle["membership"]["acceptedTermsId"].text.isEmpty {
+      return "Door and Wi-Fi codes appear after you accept your agreement."
+    }
+    return nil
+  }
   var body: some View {
     Page(title: "Your stay", width: .wide) {
       TwoColumnLayout {
@@ -52,7 +62,9 @@ struct StayScreen: View {
           let detail = store.bundle["stay"]["houseInfo"][field.key].text
           if !detail.isEmpty { DataRow(title: field.label, detail: detail) }
         }
-        if HouseDetail.fields.allSatisfy({ store.bundle["stay"]["houseInfo"][$0.key].text.isEmpty }) {
+        if let message = accessCodesHiddenMessage {
+          Text(message).font(.subheadline).foregroundStyle(Palette.muted)
+        } else if HouseDetail.fields.allSatisfy({ store.bundle["stay"]["houseInfo"][$0.key].text.isEmpty }) {
           Text("Your host hasn't added house details yet.").foregroundStyle(Palette.muted)
         }
       }
