@@ -56,6 +56,11 @@
 
 ### Fixed
 
+- **Replay QA defect remediation and bot protection unblocking (WRE-271, 0.8.8)**:
+  - **Cloudflare Turnstile & Clerk protect CSP allowances:** Added `https://challenges.cloudflare.com` and `https://*.protect.clerk.com:*` to `connect-src`, and `https://*.protect.clerk.com` to `script-src` and `frame-src` in `lib/security/csp.ts`. Previously, the absence of `challenges.cloudflare.com` in `connect-src` caused Cloudflare Turnstile token validation fetches to fail silently on `/sign-up`, locking Clerk's form in an inert state.
+  - **Sign-up redirect fallbacks:** Added `fallbackRedirectUrl="/"` and `signInFallbackRedirectUrl="/"` on `<SignUp />` in `app/sign-up/[[...sign-up]]/page.tsx`.
+  - **Sign-in submit button CSS hardening:** Extended `.clerk-page` `:placeholder-shown` CSS rules in `app/production.css` to cover `input[name="identifier"]` and `input[type="email"]` selectors in addition to `#identifier-field`.
+
 - **Facebook sign-up no longer ends on a 404 (WRE-261, 0.8.4, branch only, not released)**:
   - A Facebook sign-up that Clerk moved over to sign-in (for example, when the Facebook email needs verifying or already belongs to an account) could return to `/sso-callback` at the site root, which had no page and showed the "Wrong couch" 404. Seen in Vercel's production request log on 2026-10-31.
   - `ClerkProvider` now sets `signInUrl="/sign-in"` and `signUpUrl="/sign-up"`, and `<SignIn>` and `<SignUp>` use `routing="path"` with their own `path` and the other page's URL, so Clerk no longer has to guess these paths.

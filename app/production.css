@@ -374,6 +374,10 @@
 .clerk-page { display: grid; place-items: center; min-height: 100vh; padding: 24px; }
 .clerk-page form:has(#identifier-field:placeholder-shown) button[type="submit"],
 .clerk-page form:has(#identifier-field[value=""]) button[type="submit"],
+.clerk-page form:has(input[name="identifier"]:placeholder-shown) button[type="submit"],
+.clerk-page form:has(input[name="identifier"][value=""]) button[type="submit"],
+.clerk-page form:has(input[type="email"]:placeholder-shown) button[type="submit"],
+.clerk-page form:has(input[type="email"][value=""]) button[type="submit"],
 .clerk-page button[type="submit"].kouchd-submit-disabled,
 .clerk-page button[type="submit"][aria-disabled="true"],
 .clerk-page button[type="submit"]:disabled {

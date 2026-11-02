@@ -1,5 +1,5 @@
 {
   "type": "patch",
-  "version": "0.8.7",
-  "reason": "Transition Platform Ops support desk from Help Scout to Freshdesk while keeping documentation on Mintlify (WRE-265)."
+  "version": "0.8.8",
+  "reason": "Remediate Replay QA defects: permit Cloudflare Turnstile and Clerk protect in CSP connect-src/frame-src, add sign-up redirect fallbacks, and harden email submit disabling (WRE-271)."
 }

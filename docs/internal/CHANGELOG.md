@@ -2,6 +2,16 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-11-02 — Replay QA defect remediation and bot protection unblocking (WRE-271)
+
+- Remediated reported defects from Replay QA project `proj-app-kouchd-com-mvmq5ma0`:
+  - `bug-mvytufwe-mfxk`: Resolved sign-up form collapse and inert lock by adding `https://challenges.cloudflare.com` and `https://*.protect.clerk.com:*` to `connect-src`, and `https://*.protect.clerk.com` to `script-src` and `frame-src` in `lib/security/csp.ts`. Without `challenges.cloudflare.com` in `connect-src`, browser CSP blocked Cloudflare Turnstile token validation fetches, causing Clerk's smart bot protection to hang with `.cl-main` marked `inert=""`.
+  - Added explicit `fallbackRedirectUrl="/"` and `signInFallbackRedirectUrl="/"` to `<SignUp />` in `app/sign-up/[[...sign-up]]/page.tsx`.
+  - `bug-mvmqh7kl-ga9u`: Extended `.clerk-page` CSS `:placeholder-shown` disabled button rules in `app/production.css` to cover `input[name="identifier"]` and `input[type="email"]`.
+  - Validated existing remediations: `bug-mvmqezug-igs6` (SRI dynamic patch in `lib/security-runtime.ts`), `bug-mvmqg7i1-rcl1` (CSP response headers in `next.config.ts`), `bug-mvmqgu5r-h14n` (canonical link in `app/page.tsx` and `app/layout.tsx`), `bug-mvmqmvv5-r1pm` (`/v1/environment` fetch deduplication in `lib/security-runtime.ts`), and `bug-mvvt00my-6d8x` (`/sign-out` route and explicit Clerk URLs).
+- Updated tests in `tests/replay-qa-remediation.test.ts` and `tests/auth-routes.test.ts`.
+- Version 0.8.8.
+
 ## 2026-11-02 — Support desk transition to Freshdesk (WRE-265)
 
 - Transitioned the Platform Ops console customer support integration from Help Scout to Freshdesk (`lib/platform/providers.ts`, `components/platform/support-explorer.tsx`, `components/platform/overview-dashboard.tsx`).

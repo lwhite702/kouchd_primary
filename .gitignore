@@ -28,4 +28,5 @@ ios/fastlane/README.md
 # Local Agent Workspace and Reports
 .agents/
 .claude/
+.replay/
 posthog-warehouse-report.md
