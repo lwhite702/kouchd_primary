@@ -1,4 +1,5 @@
 import { getClientIp, isRateLimited } from "@/lib/newsletter-limiter";
+import { classifyUpstreamError } from "@/lib/newsletter-error";
 
 function json(message: string, status: number) {
   return Response.json({ message }, { status, headers: { "Cache-Control": "no-store" } });
@@ -6,36 +7,6 @@ function json(message: string, status: number) {
 
 function isValidEmail(email: string) {
   return email.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-}
-
-export function classifyUpstreamError(error: unknown): "timeout" | "network" | "unknown" {
-  if (!(error instanceof Error)) return "unknown";
-
-  if (error.name === "TimeoutError" || error.name === "AbortError") {
-    return "timeout";
-  }
-
-  const cause = (error as { cause?: unknown }).cause;
-  if (cause && typeof cause === "object") {
-    const causeObj = cause as { code?: unknown; name?: unknown };
-    if (causeObj.name === "TimeoutError") return "timeout";
-    if (
-      typeof causeObj.code === "string" &&
-      ["ECONNRESET", "ECONNREFUSED", "ENOTFOUND", "ETIMEDOUT", "EAI_AGAIN"].includes(causeObj.code)
-    ) {
-      return "network";
-    }
-  }
-
-  if (
-    error instanceof TypeError &&
-    (error.message.toLowerCase().includes("fetch") ||
-      error.message.toLowerCase().includes("network"))
-  ) {
-    return "network";
-  }
-
-  return "unknown";
 }
 
 export async function POST(request: Request) {

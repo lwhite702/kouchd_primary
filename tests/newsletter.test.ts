@@ -1,5 +1,6 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { POST, classifyUpstreamError } from "../app/api/newsletter/route";
+import { POST } from "../app/api/newsletter/route";
+import { classifyUpstreamError } from "../lib/newsletter-error";
 import {
   isRateLimited,
   getClientIp,
