@@ -1,0 +1,90 @@
+/* Simplified landing page additions — aligns with landing-v21.css */
+
+.v21-hero-app-icon {
+  width: 54px;
+  height: 54px;
+  border-radius: 16px;
+  background: var(--v21-forest);
+  display: grid;
+  place-items: center;
+  box-shadow: 0 10px 24px rgba(24, 79, 58, 0.22), 0 2px 6px rgba(0, 0, 0, 0.08);
+  border: 2px solid rgba(223, 242, 94, 0.35);
+  margin-bottom: 20px;
+}
+
+.v21-rating-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: #fffefa;
+  border: 1px solid #deded4;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  margin-top: 20px;
+  margin-bottom: 6px;
+  width: fit-content;
+}
+
+.v21-rating-stars {
+  color: #e5a820;
+  font-size: 15px;
+  letter-spacing: 2px;
+  line-height: 1;
+}
+
+.v21-rating-count {
+  font-size: 13px;
+  font-weight: 750;
+  color: #3e4e45;
+  font-family: var(--font-manrope), Manrope, sans-serif;
+}
+
+/* Feature grid 6-card palette cycling for .v21-steps */
+.v21-steps article:nth-child(4) {
+  border-color: #dce5d8;
+  border-top-color: #7a9b74;
+  background: #edf3e9;
+}
+
+.v21-steps article:nth-child(5) {
+  border-color: #eadfd1;
+  border-top-color: #bd8965;
+  background: #f6eee4;
+}
+
+.v21-steps article:nth-child(6) {
+  border-color: #d6e4e5;
+  border-top-color: #709ba0;
+  background: #eaf2f2;
+}
+
+.v21-step-icon {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  color: var(--v21-forest);
+  border-radius: 12px;
+  background: #dce9d4;
+  margin-bottom: 16px;
+}
+
+.v21-steps article:nth-child(2) .v21-step-icon,
+.v21-steps article:nth-child(5) .v21-step-icon {
+  color: #80543e;
+  background: #f0dccc;
+}
+
+.v21-steps article:nth-child(3) .v21-step-icon,
+.v21-steps article:nth-child(6) .v21-step-icon {
+  color: #3d6970;
+  background: #d5e8e9;
+}
+
+.v21-feature-disclaimer {
+  margin-top: 18px;
+  color: #647067;
+  font-size: 11px;
+  line-height: 1.5;
+}

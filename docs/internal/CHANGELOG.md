@@ -11,6 +11,13 @@ Internal engineering record. This file is excluded from Mintlify navigation and 
 - Added tests in `tests/platform-admin.test.ts` verifying unconfigured setup blocker reporting, configured state detection, and audit requirement enforcement.
 - Branch only (`codex/WRE-265-freshdesk-support`).
 
+## 2026-11-02 — Simplified landing page & Brand Kit password protection (WRE-243)
+
+- Added `/simple` (`app/simple/page.tsx`, `components/simplified-landing-page.tsx` + `.css`): aligned with authentic Kouchd design system, using `MarketingHeader`, `MarketingFooter`, `v21-hero` with living room art and app icon badge, interactive preview window with tabs (`v21-product`), 6-card feature grid (`v21-how` / `.v21-steps`), and `v21-cta`.
+- Added password protection to Brand & Press Kit (`/brand` and `/brandkit`) requiring `Wrelik2026!`, via `<BrandKitGate />` with session persistence.
+- Updated `lib/telemetry-privacy.ts` route allowlist for `/simple`, `/brand`, and `/brandkit`.
+- Evidence: `tsc --noEmit`, ESLint, `tests/telemetry-privacy.test.ts` (3/3 passed), and local server validation (HTTP 200).
+
 ## 2026-11-01 — Platform Console user provider context (WRE-263)
 
 - Added connected provider context (RevenueCat subscriptions, Knock notifications, and Loops marketing consent) to the Platform Console user detail view in `components/platform/users-explorer.tsx` and `convex/admin.ts`.
@@ -300,6 +307,7 @@ Internal engineering record. This file is excluded from Mintlify navigation and 
 - `scripts/release-version.mjs` and `scripts/feature-lock.mjs bump-rc` refuse `-rc.N` versions while the lock is off; `lock:status` reports the lock as open.
 - `VERSION`, `package.json`, the lockfile, and the iOS `MARKETING_VERSION` set to `0.7.12`. No 1.0.0 build was uploaded to App Store Connect, per the team.
 - Open PRs renumbered in merge order: #79 → `0.7.13`, #83 → `0.7.14`, #84 → `0.7.15`. Each is stacked on the PR before it. #74 (WRE-242) still needs a 0.7.x number when it merges.
+>>>>>>> origin/main
 
 ## 2026-10-26 — Polish landing and marketing pages, update Mintlify tokens and roadmap (WRE-240)
 

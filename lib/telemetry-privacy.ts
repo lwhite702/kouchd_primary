@@ -4,6 +4,9 @@ export function analyticsRoute(pathname: string) {
   return new Set([
     "/",
     "/about",
+    "/brand",
+    "/brandkit",
+    "/simple",
     "/pricing",
     "/privacy",
     "/terms",
