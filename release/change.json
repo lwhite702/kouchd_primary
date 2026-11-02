@@ -1,5 +1,5 @@
 {
   "type": "patch",
-  "version": "0.8.5",
-  "reason": "Add RevenueCat subscription, Knock notification, and Loops marketing consent context to platform user detail view (WRE-263)."
+  "version": "0.8.6",
+  "reason": "Add simplified marketing landing page at /simple and password-protect brand kit at /brand and /brandkit (WRE-243)."
 }
