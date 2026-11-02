@@ -62,6 +62,9 @@
 
 ### Changed
 
+- **Monthly rent cadence, calendar-month proration, and schedule guards (WRE-270, branch only, not released)**:
+  - Added `"monthly"` cadence support with `paymentDayOfMonth` (`1..28`), calendar-month obligation periods, partial first/last month proration across 28/29/30/31-day calendar months, partial first-month due-date clamping (`lib/domain/dates.ts`, `lib/domain/pricing.ts`, `lib/domain/obligations.ts`), server validation requiring `stay.arrangement === "sublease"` for monthly terms (`convex/lib/validation.ts`), and guards preventing monthly agreements from switching to daily or weekly schedules across Convex, web, and iOS (`convex/terms.ts`, `convex/paymentSchedule.ts`, `convex/occupancy.ts`, `components/`, `ios/Kouchd/`).
+
 - **Support desk transition to Freshdesk (WRE-265, branch only, not released)**:
   - Transitioned the Platform Ops console customer support integration from Help Scout to Freshdesk (`lib/platform/providers.ts`, `components/platform/support-explorer.tsx`, `components/platform/overview-dashboard.tsx`).
   - Added honest `setup_blocked` / `configured` state detection against server-side environment variables `FRESHDESK_DOMAIN` and `FRESHDESK_API_KEY`.

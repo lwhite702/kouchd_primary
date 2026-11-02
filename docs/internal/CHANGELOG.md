@@ -2,6 +2,16 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-11-02 — Monthly rent cadence, calendar-month proration, and schedule guards (WRE-270)
+
+- Added UTC calendar-month date helpers (`daysInCalendarMonth`, `calendarMonthEnd`, `calendarMonthDueDate`) in `lib/domain/dates.ts`, extended `Cadence` to `"daily" | "weekly" | "monthly"` and `calculateStayChargeCents` in `lib/domain/pricing.ts`, and updated `buildObligationPeriods` in `lib/domain/obligations.ts` to generate calendar-month obligation periods with `paymentDayOfMonth` (`1..28`) due-date clamping and partial first/last month proration across 28/29/30/31-day calendar months.
+- Updated `convex/schema.ts` to add `arrangement: v.optional(v.union(v.literal("home_stay"), v.literal("sublease")))` on `stays` and `cadence: v.union(v.literal("daily"), v.literal("weekly"), v.literal("monthly"))` plus `paymentDayOfMonth: v.optional(v.number())` on `terms`.
+- Updated `assertStayTerms` in `convex/lib/validation.ts` to require `arrangement === "sublease"` for `cadence === "monthly"`, validate integer `paymentDayOfMonth` in `1..28`, reject `paymentDayOfWeek`, require continuous billing, and reject early contribution discounts and rewards on monthly terms.
+- Updated `convex/lib/stayTerms.ts`, `convex/terms.ts`, `convex/stays.ts`, `convex/paymentSchedule.ts`, `convex/invites.ts`, and `convex/occupancy.ts` to propagate `paymentDayOfMonth`, preserve earlier monthly due dates on mid-month agreement revisions, and reject daily/weekly schedule conversions or individual night recording on monthly stays.
+- Updated Web (`components/workspace/stay-screen.tsx`, `components/household/payment-schedule-card.tsx`, `components/household/guest-agreement-form.tsx`, `components/onboarding/guest-onboarding-flow.tsx`, `components/referral/join-household.tsx`, `components/workspace/use-live-stay.ts`, `components/workspace/types.ts`) and iOS (`ios/Kouchd/StayScreens.swift`, `ios/Kouchd/MoreScreens.swift`, `ios/Kouchd/HostExtras.swift`) cadence labels, due-day displays, and schedule-switcher guards for monthly agreements.
+- Evidence: `tests/monthly-rent.test.ts` (15/15 passed), full Vitest suite (45 files, 297 tests passed), `npm run release:check`, and iOS Simulator build (`xcodebuild` Debug iphonesimulator).
+- Branch only (`codex/WRE-270-monthly-rent`).
+
 ## 2026-11-02 — Plus household bill splitting (WRE-268)
 
 - Added `billSplits` and `subleases` plan capabilities in `lib/domain/subscriptionPlans.ts`, `assertPlanCapability` in `convex/lib/planCapacity.ts`, `convex/subscriptions.ts`, `billSplits`/`subleases` dimension copy in `lib/planLimitError.ts`, and `FEATURE_FLAGS.BILL_SPLITTING` (`feature_bill_splitting`, `defaultValue: false`) in `lib/flags/config.ts`.

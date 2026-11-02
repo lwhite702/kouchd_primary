@@ -37,7 +37,7 @@
 | --- | --- | --- |
 | **Step 1** | Access code protection (`WRE-266`, PR #132) | Completed |
 | **Step 2** | Bill splitting on Plus (`WRE-268`, PR #137) | Completed |
-| **Step 3 (this plan)** | Monthly rent (`WRE-270`) | In progress |
+| **Step 3 (this plan)** | Monthly rent (`WRE-270`) | Completed |
 | **Step 4** | Sublease type, setup, consent, and lock | Planned after Step 3 |
 | **Step 5** | Checklists and deposit record | Planned after Step 4 |
 | **Step 6** | Blog post, sublease page, and help articles | Planned after Step 5 |
@@ -52,12 +52,12 @@
 - Modify: `lib/domain/obligations.ts`
 - Create: `tests/monthly-rent.test.ts`
 
-- [ ] **Step 1: Add calendar-month helpers in `lib/domain/dates.ts`**
+- [x] **Step 1: Add calendar-month helpers in `lib/domain/dates.ts`**
   - Add `daysInCalendarMonth(year: number, monthOneBased: number): number` using `new Date(Date.UTC(year, monthOneBased, 0)).getUTCDate()`.
   - Add `calendarMonthEnd(dateStr: string): string` returning the `YYYY-MM-DD` of the last day of `dateStr`'s UTC calendar month.
   - Add `calendarMonthDueDate(periodStart: string, paymentDayOfMonth = 1): string` returning `YYYY-MM-${String(clampedDay).padStart(2, "0")}` for `periodStart`'s calendar month, or `periodStart` when that date is earlier than `periodStart` (`dueCandidate < periodStart ? periodStart : dueCandidate`).
 
-- [ ] **Step 2: Extend `Cadence` and `ObligationTerms` (`lib/domain/pricing.ts`, `lib/domain/obligations.ts`)**
+- [x] **Step 2: Extend `Cadence` and `ObligationTerms` (`lib/domain/pricing.ts`, `lib/domain/obligations.ts`)**
   - In `lib/domain/pricing.ts`:
     - Update `export type Cadence = "daily" | "weekly" | "monthly";`.
     - Update `calculateStayChargeCents` so `cadence === "monthly"` computes the sum of calendar-month periods across `[startDate, endDate]` (or when called with only `days`, falls back to `Math.round((days * rateCents) / 30)`).
@@ -74,7 +74,7 @@
           - `dueDate = calendarMonthDueDate(cursor, terms.paymentDayOfMonth ?? 1)` (if `dueDate > periodEnd`, clamp to `periodEnd`? Wait: check spec! Spec section 2: *"Each period covers one calendar month (`YYYY-MM-01` through the last day of that month, clamped to the stay's `startDate` and `endDate`). Its due date is `paymentDayOfMonth` of that month, or `startDate` if that day has already passed in a partial first month."* What if a partial last month ends BEFORE `paymentDayOfMonth`, e.g., ends on `2026-12-10` when `paymentDayOfMonth` is `15`? Clamping `dueDate` to `periodEnd` when `dueDate > periodEnd` ensures the obligation is due by the end of the stay period rather than after the stay ends; if `paymentDayOfMonth` is `1`, `2026-12-01 <= 2026-12-10` so `dueDate` is `2026-12-01`!).
           - Advance `cursor = addUtcDays(periodEnd, 1)`.
 
-- [ ] **Step 3: Write unit tests in `tests/monthly-rent.test.ts`**
+- [x] **Step 3: Write unit tests in `tests/monthly-rent.test.ts`**
   - Test full calendar months (e.g., `2026-10-01` to `2026-12-31` at `$1,500/mo` with `paymentDayOfMonth: 1` and `paymentDayOfMonth: 15`).
   - Test partial first month where `startDate` is after `paymentDayOfMonth` (e.g., `startDate: "2026-10-15"`, `paymentDayOfMonth: 1` -> Oct period `2026-10-15`..`2026-10-31`, `17` days in a `31`-day month, `Math.round((150000 * 17) / 31) = 82258`, `dueDate: "2026-10-15"`).
   - Test partial first month where `startDate` is before `paymentDayOfMonth` (e.g., `startDate: "2026-10-05"`, `paymentDayOfMonth: 15` -> `dueDate: "2026-10-15"`).
@@ -96,11 +96,11 @@
 - Modify: `convex/occupancy.ts`
 - Modify: `tests/monthly-rent.test.ts`
 
-- [ ] **Step 1: Update `convex/schema.ts`**
+- [x] **Step 1: Update `convex/schema.ts`**
   - Add `arrangement: v.optional(v.union(v.literal("home_stay"), v.literal("sublease")))` to `stays`.
   - Update `terms.cadence` to `v.union(v.literal("daily"), v.literal("weekly"), v.literal("monthly"))` and add `paymentDayOfMonth: v.optional(v.number())` right after `paymentDayOfWeek`.
 
-- [ ] **Step 2: Update `assertStayTerms` in `convex/lib/validation.ts`**
+- [x] **Step 2: Update `assertStayTerms` in `convex/lib/validation.ts`**
   - Update `TermsValidationInput` so `cadence: "daily" | "weekly" | "monthly"`, add `paymentDayOfMonth?: number`, and add an optional second parameter `options?: { arrangement?: "home_stay" | "sublease" }`.
   - Enforce:
     - If `terms.cadence === "monthly"`:
@@ -113,7 +113,7 @@
     - If `terms.cadence !== "monthly"` and `terms.paymentDayOfMonth !== undefined`:
       - Throw `new Error("Only monthly contributions use a monthly payment day")`.
 
-- [ ] **Step 3: Update `convex/lib/stayTerms.ts`, `convex/terms.ts`, `convex/stays.ts`, `convex/invites.ts`, `convex/paymentSchedule.ts`, `convex/occupancy.ts`**
+- [x] **Step 3: Update `convex/lib/stayTerms.ts`, `convex/terms.ts`, `convex/stays.ts`, `convex/invites.ts`, `convex/paymentSchedule.ts`, `convex/occupancy.ts`**
   - `convex/lib/stayTerms.ts`:
     - In `ensureGuestTerms`, copy `...(defaults.paymentDayOfMonth !== undefined ? { paymentDayOfMonth: defaults.paymentDayOfMonth } : {})`.
     - In `acceptGuestAgreement`, when replacing an overlapping obligation (`obligation.periodStart < effectiveBoundary && obligation.periodEnd >= effectiveBoundary`), set `dueDate: obligation.dueDate <= periodEnd ? obligation.dueDate : periodEnd` so a monthly obligation whose due date was the 1st of the month keeps its original due date instead of shifting to `periodEnd`.
@@ -139,7 +139,7 @@
     - Update `summary` return validator `cadence` to `v.union(v.literal("daily"), v.literal("weekly"), v.literal("monthly"))`.
     - In `recordNight`: if `terms.cadence === "monthly"`, throw `new Error("Monthly agreements use continuous billing and do not record individual nights")`.
 
-- [ ] **Step 4: Add `convex-test` integration tests in `tests/monthly-rent.test.ts`**
+- [x] **Step 4: Add `convex-test` integration tests in `tests/monthly-rent.test.ts`**
   - Verify `terms.updateCurrent` / `stays.create` rejects `cadence: "monthly"` when `stay.arrangement !== "sublease"`.
   - Verify that on a stay with `arrangement: "sublease"`, `terms.updateCurrent` with `cadence: "monthly"`, `paymentDayOfMonth: 1`, and `rateCents: 180_000` succeeds, and `terms.acceptCurrent` generates calendar-month obligations with prorated partial months.
   - Verify `terms.acceptCurrent` with `initialCadence: "daily"` or `"weekly"` is rejected on a monthly stay.
@@ -161,7 +161,7 @@
 - Modify: `ios/Kouchd/MoreScreens.swift`
 - Modify: `ios/Kouchd/HostExtras.swift`
 
-- [ ] **Step 1: Update Web components for `"monthly"` cadence**
+- [x] **Step 1: Update Web components for `"monthly"` cadence**
   - `components/workspace/stay-screen.tsx`:
     - Format cadence unit as `cadence === "monthly" ? "month" : cadence === "weekly" ? "week" : "day"` in the Contribution plan card and guest list.
     - Only render `PaymentScheduleCard` when `terms.cadence !== "monthly"` (or pass `cadence: "daily" | "weekly" | "monthly"` and let `PaymentScheduleCard` show the fixed monthly due day for guests without the daily/weekly change form).
@@ -175,7 +175,7 @@
   - `components/referral/join-household.tsx`:
     - Format `preview.cadence === "monthly" ? "mo" : preview.cadence === "weekly" ? "wk" : "day"`.
 
-- [ ] **Step 2: Update iOS views for `"monthly"` cadence**
+- [x] **Step 2: Update iOS views for `"monthly"` cadence**
   - `ios/Kouchd/StayScreens.swift`:
     - In `AgreementScreen`: when ` store.bundle["terms"]["cadence"].text == "monthly"`, hide the daily/weekly `Picker("Rhythm")` and call `terms:acceptCurrent` with only `["stayId": store.selectedStayID]`.
   - `ios/Kouchd/MoreScreens.swift`:
@@ -194,8 +194,8 @@
 - Modify: `docs/internal/CHANGELOG.md`
 - Modify: `release/change.json`
 
-- [ ] **Step 1: Update changelogs, roadmap tables, and `release/change.json`**
+- [x] **Step 1: Update changelogs, roadmap tables, and `release/change.json`**
   - Add `WRE-270` summary to `CHANGELOG.md`, `docs/internal/CHANGELOG.md`, and `release/change.json`.
   - Update roadmap status tables in Step 1 and Step 2 plan files.
-- [ ] **Step 2: Run full verification suite**
+- [x] **Step 2: Run full verification suite**
   - Run `npm test`, `npm run release:check`, `git diff --check`, and iOS Simulator `xcodebuild`.

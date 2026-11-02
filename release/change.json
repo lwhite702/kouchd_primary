@@ -1,5 +1,5 @@
 {
   "type": "patch",
   "version": "0.8.12",
-  "reason": "Add Plus household utility and bill splitting behind feature_bill_splitting (WRE-268)."
+  "reason": "Add Plus household utility and bill splitting behind feature_bill_splitting (WRE-268), and add monthly rent cadence with calendar-month proration and schedule guards (WRE-270)."
 }
