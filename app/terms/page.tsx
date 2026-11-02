@@ -3,7 +3,6 @@ import Link from "next/link";
 import { LegalPageLayout } from "@/components/legal/legal-page-layout";
 import {
   LegalArticle,
-  LegalArticleHeader,
   LegalSectionList,
   LegalCrossLinks,
 } from "@/components/legal/legal-article";
