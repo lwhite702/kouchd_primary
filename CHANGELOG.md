@@ -4,6 +4,11 @@
 
 ### Added
 
+- **Simplified introduction landing page & brand kit password protection (WRE-243)**:
+  - **Simplified landing page:** Added a streamlined marketing landing page at `/simple` featuring the canonical Kouchd brand design system (`MarketingHeader`, warm `v21-hero` with living room artwork and app icon badge, rating pill, interactive tabbed preview window, 6-card feature grid matching `v21-steps`, `v21-cta`, and `MarketingFooter`).
+  - **Brand Kit access control:** Added client/SSR-safe gate `<BrandKitGate />` password-protecting `/brand` and `/brandkit` with credential gate and session persistence.
+  - **Route aliases and telemetry:** Created `/brandkit` redirecting to `/brand` and updated telemetry route allowlist in `lib/telemetry-privacy.ts`.
+
 - **Platform Console user provider context (WRE-263)**:
   - **Connected provider cards:** Added RevenueCat subscription snapshots, Knock notification event audit history, and Loops marketing consent status to the Platform Console user detail view in `components/platform/users-explorer.tsx` and `convex/admin.ts`.
   - **Environment segregation:** RevenueCat billing records are displayed per environment (`production` and `sandbox`), prioritizing production so sandbox test events do not mask live subscription status.
