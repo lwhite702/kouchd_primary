@@ -111,6 +111,7 @@ describe("Replay QA: Content-Security-Policy & Canonical Metadata", () => {
     );
     expect(cspHeader).toBeDefined();
     expect(cspHeader?.value).toContain("default-src 'self'");
+    expect(cspHeader?.value).not.toContain("'unsafe-eval'");
     expect(cspHeader?.value).toContain("https://clerk.kouchd.com");
     expect(cspHeader?.value).toContain("https://challenges.cloudflare.com");
     expect(cspHeader?.value).toContain("https://*.protect.clerk.com:*");

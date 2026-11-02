@@ -12,7 +12,6 @@ export const cspDirectives: Record<string, string[]> = {
   "script-src": [
     "'self'",
     "'unsafe-inline'",
-    "'unsafe-eval'",
     "https://clerk.kouchd.com",
     "https://*.clerk.accounts.dev",
     "https://challenges.cloudflare.com",
