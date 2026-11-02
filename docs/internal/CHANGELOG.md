@@ -2,6 +2,14 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-11-01 — Platform Console user provider context (WRE-263)
+
+- Added connected provider context (RevenueCat subscriptions, Knock notifications, and Loops marketing consent) to the Platform Console user detail view in `components/platform/users-explorer.tsx` and `convex/admin.ts`.
+- Preserved privacy boundaries: no notification message payloads, template parameters, or marketing contact emails are exposed in operator support views.
+- Environment segregation: RevenueCat subscription snapshots are grouped and presented per environment (`production` and `sandbox`), with production prioritized so sandbox tests never mask live subscriptions.
+- Added composite database index `by_user_occurred_at` on `notificationEvents` in `convex/schema.ts` for efficient pagination.
+- Version 0.8.5.
+
 ## 2026-10-31 — Facebook sign-up 404 at /sso-callback (WRE-261)
 
 - Report: Facebook sign-up ended on the "Wrong couch" 404 page.
