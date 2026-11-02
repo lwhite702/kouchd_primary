@@ -1337,6 +1337,7 @@ private struct ChoreCard: View {
         Spacer()
       }
       if !chore["note"].text.isEmpty { Text(chore["note"].text).font(.subheadline) }
+      if chore["rotateAssignee"].flag { Pill(text: "Rotating turns") }
       if !chore["voidedAt"].text.isEmpty { Pill(text: "Voided") }
       if chore["voidedAt"].text.isEmpty && (store.isHost || chore["createdBy"].text == store.viewer["id"].text) {
         VoidRecordButton(store: store, function: "chores:voidChore",
@@ -1355,6 +1356,7 @@ struct ChoreForm: View {
   @State private var assigneeID = ""
   @State private var due = Date.now
   @State private var repeatCadence = "none"
+  @State private var rotateAssignee = false
   var body: some View {
     NavigationStack {
       Form {
@@ -1379,6 +1381,9 @@ struct ChoreForm: View {
           Text("Daily").tag("daily")
           Text("Weekly").tag("weekly")
         }
+        if repeatCadence != "none" {
+          Toggle("Rotate turns automatically", isOn: $rotateAssignee)
+        }
       }
       .navigationTitle("New chore")
       .kouchdNavigationBar()
@@ -1392,7 +1397,10 @@ struct ChoreForm: View {
                 "assignee": assignee, "dueDate": Display.date(due)
               ]
               if assignee == "guest" && !assigneeID.isEmpty { args["assigneeUserId"] = assigneeID }
-              if let cadence = HouseholdRules.choreRepeatCadence(repeatCadence) { args["repeatCadence"] = cadence }
+              if let cadence = HouseholdRules.choreRepeatCadence(repeatCadence) {
+                args["repeatCadence"] = cadence
+                if rotateAssignee { args["rotateAssignee"] = true }
+              }
               if await store.mutate("chores:create", args) { dismiss() }
             }
           }.disabled(title.trimmingCharacters(in: .whitespaces).isEmpty)

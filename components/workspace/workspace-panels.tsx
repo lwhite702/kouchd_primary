@@ -290,6 +290,10 @@ export function WorkspacePanels({ state }: { state: WorkspaceState }) {
                 <option value="weekly">Weekly</option>
               </select>
             </label>
+            <label className="check full">
+              <input name="rotateAssignee" type="checkbox" />
+              <span>Rotate turns automatically</span>
+            </label>
             <label className="full">
               <span>Details</span>
               <input name="note" />

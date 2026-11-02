@@ -88,7 +88,9 @@ export function ChoresScreen({ state }: { state: WorkspaceState }) {
                 </span>
                 <span className="badge">
                   {item.repeatCadence
-                    ? `Repeats ${item.repeatCadence}`
+                    ? item.rotateAssignee
+                      ? `Repeats ${item.repeatCadence} · Rotating turns`
+                      : `Repeats ${item.repeatCadence}`
                     : "One time"}{" "}
                   ·{" "}
                   {item.assigneeUserId

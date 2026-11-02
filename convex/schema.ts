@@ -365,6 +365,7 @@ export default defineSchema({
     assigneeUserId: v.optional(v.id("users")),
     dueDate: v.string(),
     repeatCadence: v.optional(v.union(v.literal("daily"), v.literal("weekly"))),
+    rotateAssignee: v.optional(v.boolean()),
     recurrenceRootId: v.optional(v.id("chores")),
     nextOccurrenceId: v.optional(v.id("chores")),
     completedAt: v.optional(v.number()),

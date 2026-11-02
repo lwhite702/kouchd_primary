@@ -24,7 +24,10 @@ enum HouseholdRules {
   static func choreScheduleLabel(_ chore: Value) -> String {
     var label = chore["assignee"].text.capitalized + " · " + chore["dueDate"].text
     let cadence = chore["repeatCadence"].text
-    if !cadence.isEmpty { label += " · Repeats " + cadence }
+    if !cadence.isEmpty {
+      label += " · Repeats " + cadence
+      if chore["rotateAssignee"].flag { label += " · Rotating turns" }
+    }
     return label
   }
 

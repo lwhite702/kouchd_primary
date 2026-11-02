@@ -18,7 +18,16 @@ export const list = query({
 });
 
 export const create = mutation({
-  args: { stayId: v.id("stays"), title: v.string(), note: v.string(), assignee: v.union(v.literal("host"), v.literal("guest"), v.literal("shared")), assigneeUserId: v.optional(v.id("users")), dueDate: v.string(), repeatCadence: v.optional(v.union(v.literal("daily"), v.literal("weekly"))) },
+  args: {
+    stayId: v.id("stays"),
+    title: v.string(),
+    note: v.string(),
+    assignee: v.union(v.literal("host"), v.literal("guest"), v.literal("shared")),
+    assigneeUserId: v.optional(v.id("users")),
+    dueDate: v.string(),
+    repeatCadence: v.optional(v.union(v.literal("daily"), v.literal("weekly"))),
+    rotateAssignee: v.optional(v.boolean()),
+  },
   returns: v.id("chores"),
   handler: async (ctx, args) => {
     const { user } = await requireMembership(ctx, args.stayId);
@@ -57,15 +66,37 @@ export const toggle = mutation({
       const today = calendarDateInTimezone(new Date(now), stay.timezone);
       nextDueDate = addCalendarDays(chore.dueDate, intervalDays);
       while (nextDueDate <= today) nextDueDate = addCalendarDays(nextDueDate, intervalDays);
+
+      let nextAssigneeUserId = chore.assigneeUserId;
+      let nextAssigneeRole = chore.assignee;
+
+      if (chore.rotateAssignee) {
+        const activeMembers = (await ctx.db
+          .query("memberships")
+          .withIndex("by_stay", (q) => q.eq("stayId", chore.stayId))
+          .filter((q) => q.eq(q.field("status"), "active"))
+          .collect())
+          .sort((a, b) => a.joinedAt - b.joinedAt || a._id.localeCompare(b._id));
+
+        if (activeMembers.length > 0) {
+          const currentIndex = activeMembers.findIndex((m) => m.userId === chore.assigneeUserId);
+          const nextIndex = currentIndex >= 0 ? (currentIndex + 1) % activeMembers.length : 0;
+          const nextMember = activeMembers[nextIndex];
+          nextAssigneeUserId = nextMember.userId;
+          nextAssigneeRole = nextMember.role;
+        }
+      }
+
       const nextOccurrenceId = await ctx.db.insert("chores", {
         stayId: chore.stayId,
         createdBy: chore.createdBy,
         title: chore.title,
         note: chore.note,
-        assignee: chore.assignee,
-        assigneeUserId: chore.assigneeUserId,
+        assignee: nextAssigneeRole,
+        assigneeUserId: nextAssigneeUserId,
         dueDate: nextDueDate,
         repeatCadence: chore.repeatCadence,
+        rotateAssignee: chore.rotateAssignee,
         recurrenceRootId: chore.recurrenceRootId ?? chore._id,
         createdAt: now,
         updatedAt: now,
@@ -124,6 +155,7 @@ export const advanceOverdueRecurring = internalMutation({
         assigneeUserId: chore.assigneeUserId,
         dueDate: nextDueDate,
         repeatCadence: chore.repeatCadence,
+        rotateAssignee: chore.rotateAssignee,
         recurrenceRootId: chore.recurrenceRootId ?? chore._id,
         createdAt: now,
         updatedAt: now,
