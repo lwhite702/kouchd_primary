@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { syncSubmitState } from "../components/sign-in-form-guard";
+import { applyIdentifierGuard, syncSubmitState } from "../components/sign-in-form-guard";
 
 function fakeSubmitButton() {
   const attributes = new Map<string, string>();
@@ -55,5 +55,27 @@ describe("SignInFormGuard submit state", () => {
     expect(button.disabled).toBe(false);
     expect(button.getAttribute("aria-disabled")).toBe("false");
     expect(button.classList.contains("kouchd-submit-disabled")).toBe(false);
+  });
+
+  it("re-enables only a button the guard disabled", () => {
+    const { button } = fakeSubmitButton();
+    const owned = new WeakSet<HTMLButtonElement>();
+
+    applyIdentifierGuard(button, true, owned);
+    expect(button.disabled).toBe(true);
+
+    applyIdentifierGuard(button, false, owned);
+    expect(button.disabled).toBe(false);
+  });
+
+  it("never clears a disabled state Clerk applied", () => {
+    const { button } = fakeSubmitButton();
+    const owned = new WeakSet<HTMLButtonElement>();
+    button.disabled = true; // Clerk: invalid form or request in flight
+
+    applyIdentifierGuard(button, true, owned);
+    applyIdentifierGuard(button, false, owned);
+
+    expect(button.disabled).toBe(true);
   });
 });

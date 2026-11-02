@@ -14,12 +14,35 @@ export function syncSubmitState(submitBtn: HTMLButtonElement, disabled: boolean)
   }
 }
 
+/**
+ * Disable the submit button while the identifier is empty, and re-enable only
+ * a button this guard disabled. `owned` records those buttons: a button Clerk
+ * had already disabled (an invalid form or an in-flight request) is never
+ * claimed, so the guard can't clear Clerk's own state.
+ */
+export function applyIdentifierGuard(
+  submitBtn: HTMLButtonElement,
+  identifierEmpty: boolean,
+  owned: WeakSet<HTMLButtonElement>,
+) {
+  if (identifierEmpty) {
+    if (!submitBtn.disabled) {
+      owned.add(submitBtn);
+      syncSubmitState(submitBtn, true);
+    }
+  } else if (owned.has(submitBtn)) {
+    owned.delete(submitBtn);
+    syncSubmitState(submitBtn, false);
+  }
+}
+
 export function SignInFormGuard({ children }: { children: React.ReactNode }) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
+    const owned = new WeakSet<HTMLButtonElement>();
 
     const findElements = () => {
       const input =
@@ -39,13 +62,7 @@ export function SignInFormGuard({ children }: { children: React.ReactNode }) {
 
       // Only guard the initial identifier step if an identifier input exists.
       // On password, OTP code, or MFA steps, do not interfere with Clerk's native button state.
-      if (input && !input.value.trim()) {
-        syncSubmitState(submitBtn, true);
-      } else if (submitBtn.classList.contains("kouchd-submit-disabled")) {
-        // Only undo a disable this guard applied; never clear one Clerk set
-        // while a submission is in flight.
-        syncSubmitState(submitBtn, false);
-      }
+      applyIdentifierGuard(submitBtn, Boolean(input) && !input?.value.trim(), owned);
     };
 
     // Run immediately

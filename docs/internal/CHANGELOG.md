@@ -5,17 +5,17 @@ Internal engineering record. This file is excluded from Mintlify navigation and 
 ## 2026-11-02 — Replay QA review follow-ups (WRE-271, 0.8.9)
 
 - PR #143 merged as 148ef4a before its last review round was pushed; these fixes land on `codex/WRE-271-review-followups`.
-- Removed `force-static` from the four legal pages so Clerk's strict-CSP nonce reaches their inline scripts. Not yet verified in a deployed preview: Vercel previews currently fail at `convex deploy` because the Convex preview deployment quota is full.
-- `SignInFormGuard` only clears a disabled state it applied (marker class `kouchd-submit-disabled`).
+- Removed `force-static` from the four legal pages so Clerk's strict-CSP nonce reaches their inline scripts. The shipped 0.8.8 changelog bullets were restored to their released wording; this entry carries the change. Not yet verified in a deployed preview: Vercel previews currently fail at `convex deploy` because the Convex preview deployment quota is full.
+- `SignInFormGuard` only clears a disabled state it applied, tracked in a `WeakSet` by `applyIdentifierGuard`; a button Clerk already disabled is never claimed.
 - Landing preview tablist: roving tabindex with Arrow/Home/End keys.
-- Checks run locally: `tsc --noEmit`, `vitest run` (43 files, 265 tests), `npm run verify`, `npm run build`, `scripts/release-gate.mjs`.
+- Checks run locally: `npm run release:check` (version check, `npm run verify` with lint, `tsc --noEmit` and `vitest run`, `npm run build`, `scripts/release-gate.mjs`).
 
 ## 2026-11-02 — Replay QA defect remediation and bot protection unblocking (WRE-271)
 
 - Remediated reported defects from Replay QA project `proj-app-kouchd-com-mvmq5ma0`:
   - `bug-mvytufwe-mfxk`: Implemented code fix for sign-up form collapse and inert lock by adding `https://challenges.cloudflare.com` and `https://*.protect.clerk.com:*` to `connect-src`, and `https://*.protect.clerk.com` to `script-src` and `frame-src` in `lib/security/csp.ts` to allow Cloudflare Turnstile token validation and Clerk smart bot protection. Checks run: `tsc --noEmit`, vitest (`tests/replay-qa-remediation.test.ts`), and build checks. This fix is implemented in code on this branch; the deployed sign-up flow still needs live verification in production.
   - Removed `'unsafe-eval'` from `script-src` in production builds (`lib/security/csp.ts`), keeping it restricted exclusively to local development (`NODE_ENV === "development"`) for Next.js Fast Refresh and dev tooling.
-  - Documented that calling `headers()` in the root layout (`app/layout.tsx`) and configuring `<ClerkProvider dynamic>` renders routes dynamically so Clerk's strict CSP can attach per-request nonces. Removed `force-static` from the privacy, terms, cookies, and acceptable-use pages for the same reason. Routes outside the Clerk middleware matcher (for example `/.well-known`) receive only the static header CSP, which has no nonce and still allows `'unsafe-inline'`.
+  - Documented that calling `headers()` in the root layout (`app/layout.tsx`) and configuring `<ClerkProvider dynamic>` renders all routes dynamically to inject per-request CSP nonces, ensuring strict nonce-based CSP protection across all public and authenticated pages.
   - Added explicit `fallbackRedirectUrl="/"` and `signInFallbackRedirectUrl="/"` to `<SignUp />` in `app/sign-up/[[...sign-up]]/page.tsx`.
   - `bug-mvmqh7kl-ga9u`: Scoped `.kouchd-submit-disabled` live-value fallback in `app/production.css` to `.kouchd-sign-in-container` and removed static `[value=""]` attribute checks to avoid disabling buttons after user input.
   - Validated existing remediations: `bug-mvmqezug-igs6` (SRI dynamic patch in `lib/security-runtime.ts`), `bug-mvmqg7i1-rcl1` (CSP response headers in `next.config.ts`), `bug-mvmqgu5r-h14n` (canonical link in `app/page.tsx` and `app/layout.tsx`), `bug-mvmqmvv5-r1pm` (`/v1/environment` fetch deduplication in `lib/security-runtime.ts`), and `bug-mvvt00my-6d8x` (`/sign-out` route and explicit Clerk URLs).

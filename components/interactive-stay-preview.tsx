@@ -23,6 +23,8 @@ export function InteractiveStayPreview() {
   // Roving tabindex: only the selected tab is in the Tab order, so arrow keys,
   // Home, and End move between tabs (WAI-ARIA tabs pattern).
   const handleTabKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    // Leave browser and OS shortcuts such as Alt+Left alone.
+    if (event.altKey || event.ctrlKey || event.metaKey) return;
     const index = PREVIEW_TABS.indexOf(activeTab);
     const last = PREVIEW_TABS.length - 1;
     const next =
