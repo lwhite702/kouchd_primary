@@ -18,18 +18,62 @@ export function HostBillingButton() {
     api.subscriptions.currentAccountSummary,
     user ? {} : "skip",
   );
+  const usage = useQuery(
+    api.subscriptions.planUsage,
+    user && summary?.canManageSubscription ? {} : "skip",
+  );
   const enabled = useFeatureFlag(FEATURE_FLAGS.BILLING_PORTAL);
   const [open, setOpen] = useState(false);
   const close = useCallback(() => setOpen(false), []);
+
   if (!summary?.canManageSubscription || !enabled) return null;
+
+  let label = "Host plan";
+  if (usage) {
+    if (usage.plan === "plus") {
+      const limit = usage.guests.limit ?? 5;
+      label = `Plan · Plus (${usage.guests.used}/${limit} spots)`;
+    } else if (usage.plan === "pro") {
+      label = "Plan · Pro";
+    } else {
+      const limit = usage.guests.limit ?? 1;
+      label = `Host plan · Free (${usage.guests.used}/${limit} spots)`;
+    }
+  }
+
+  const blockedCount = usage?.blockedJoins?.length ?? 0;
+
   return (
     <>
       <button
         className="button soft compact"
         type="button"
         onClick={() => setOpen(true)}
+        style={{ display: "inline-flex", alignItems: "center" }}
       >
-        Host plan
+        <span>{label}</span>
+        {blockedCount > 0 && (
+          <span
+            aria-label={`${blockedCount} waiting`}
+            style={{
+              marginLeft: "6px",
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              minWidth: "18px",
+              height: "18px",
+              padding: "0 5px",
+              borderRadius: "9999px",
+              background: "#dc2626",
+              color: "#ffffff",
+              fontSize: "0.72rem",
+              fontWeight: 800,
+              lineHeight: 1,
+            }}
+          >
+            {blockedCount}
+          </span>
+        )}
       </button>
       {open && (
         <PaywallModal

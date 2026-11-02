@@ -1,6 +1,12 @@
 "use client";
 
+import { useState } from "react";
 import { Copy, Users } from "lucide-react";
+import { useQuery, useMutation } from "convex/react";
+import { useUser } from "@clerk/nextjs";
+import dynamic from "next/dynamic";
+import { api } from "@/convex/_generated/api";
+import { BlockedJoinsBanner } from "@/components/billing/blocked-joins-banner";
 
 import { HouseholdLogisticsCard } from "@/components/household/household-logistics";
 import { PaymentOptionsCard } from "@/components/household/payment-options";
@@ -17,6 +23,10 @@ import { formatMoney, formatDate } from "@/components/workspace/types";
 
 import type { WorkspaceState } from "./use-live-stay";
 import { GuestTabs } from "./view-helpers";
+
+const PaywallModal = dynamic(() =>
+  import("@/components/billing/paywall-modal").then((m) => m.PaywallModal),
+);
 export function StayScreen({ state }: { state: WorkspaceState }) {
   const {
     setPanel,
@@ -45,6 +55,14 @@ export function StayScreen({ state }: { state: WorkspaceState }) {
     setEditingGuestId,
     stayId,
   } = state;
+  const { user } = useUser();
+  const usage = useQuery(
+    api.subscriptions.planUsage,
+    user && isHost ? {} : "skip",
+  );
+  const dismissBlockedJoin = useMutation(api.subscriptions.dismissBlockedJoin);
+  const [paywallOpen, setPaywallOpen] = useState(false);
+
   return (
     <div key="stay" className="screen-transition">
       <div className="page-heading">
@@ -176,6 +194,21 @@ export function StayScreen({ state }: { state: WorkspaceState }) {
             </button>
           </form>
         </section>
+      )}
+      {isHost && usage?.blockedJoins && usage.blockedJoins.length > 0 && (
+        <BlockedJoinsBanner
+          blockedJoins={usage.blockedJoins}
+          filterStayId={stayId}
+          isFree={usage.plan === "free"}
+          guestsFull={
+            usage.guests.limit !== null &&
+            usage.guests.used >= usage.guests.limit
+          }
+          onUpgrade={() => setPaywallOpen(true)}
+          onDismiss={async (blockedJoinId) => {
+            await dismissBlockedJoin({ blockedJoinId });
+          }}
+        />
       )}
       {displayedAgreementTerms && (
         <div className="details-grid">
@@ -515,6 +548,15 @@ export function StayScreen({ state }: { state: WorkspaceState }) {
         >
           End this stay
         </button>
+      )}
+      {paywallOpen && (
+        <PaywallModal
+          key={user?.id}
+          isOpen={paywallOpen}
+          onClose={() => setPaywallOpen(false)}
+          userId={user?.id}
+          userEmail={user?.primaryEmailAddress?.emailAddress}
+        />
       )}
     </div>
   );

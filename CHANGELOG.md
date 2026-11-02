@@ -4,6 +4,13 @@
 
 ### Added
 
+- **Web host plan capacity indicator and blocked join alerts (WRE-265, branch only, not released)**:
+  - `HostBillingButton` dynamically reflects current host plan usage (`Host plan · Free (1/1 spots)` or `Plan · Plus (X/5 spots)`) and surfaces an attention badge when prospective guests are blocked due to full capacity.
+  - Implemented `PlanLimitModal` on web to intercept stay creation attempts when plan limits are reached, showing a clear explanation and a 1-click path to upgrade to Kouchd Plus without submitting invalid data or encountering server rollbacks.
+  - Added `BlockedJoinsBanner` to `StayHub` and `StayScreen`, notifying hosts when a guest attempted to join while capacity was full, with direct actions to upgrade ("Make room with Plus") or dismiss the alert.
+  - Stay cards in `StayHub` display a `[N tried to join]` pill badge corresponding to each stay's blocked join requests, matching native iOS behavior.
+  - Covered by automated Vitest suite `tests/web-plan-capacity.test.ts`.
+
 - **Shopping list to contribution ledger bridge (WRE-264, branch only, not released)**:
   - Checked-off shopping items display a one-tap "Log contribution" button in the shopping list on both web and native iOS (SwiftUI).
   - Tapping opens the Add contribution modal with type prefilled to `groceries` and the note pre-populated with the item name, quantity, and notes.
