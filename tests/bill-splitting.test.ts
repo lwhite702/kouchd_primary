@@ -538,3 +538,409 @@ describe("Task 2: Pure bill-splitting & proration calculation", () => {
     ).toThrow();
   });
 });
+
+async function setBillSplittingFlag(
+  t: ReturnType<typeof convexTest>,
+  override: "enabled" | "disabled",
+) {
+  await t.run(async ({ db }) => {
+    const flags = await db.query("featureFlags").collect();
+    const existing = flags.find((f) => f.key === FEATURE_FLAGS.BILL_SPLITTING);
+    if (existing) {
+      await db.patch(existing._id, { override, updatedAt: Date.now() });
+    } else {
+      await db.insert("featureFlags", {
+        key: FEATURE_FLAGS.BILL_SPLITTING,
+        override,
+        updatedAt: Date.now(),
+      });
+    }
+  });
+}
+
+async function setupHouseholdWithGuests(
+  t: ReturnType<typeof convexTest>,
+  options: { plus?: boolean; guestCount?: 1 | 2 } = {},
+) {
+  const { plus = true, guestCount = 2 } = options;
+  process.env.SUBSCRIPTION_EXPECTED_ENVIRONMENT = "production";
+  await setBillSplittingFlag(t, "enabled");
+
+  const host = t.withIdentity({
+    subject: "bill-host",
+    name: "Dana Host",
+    email: "dana@example.com",
+  });
+  const guestA = t.withIdentity({
+    subject: "bill-guest-a",
+    name: "Alex Guest",
+    email: "alex@example.com",
+  });
+  const guestB = t.withIdentity({
+    subject: "bill-guest-b",
+    name: "Blair Guest",
+    email: "blair@example.com",
+  });
+
+  const hostUserId = await host.mutation(api.users.syncCurrent, {});
+  const guestAUserId = await guestA.mutation(api.users.syncCurrent, {});
+  const guestBUserId = await guestB.mutation(api.users.syncCurrent, {});
+
+  const stayId = await host.mutation(api.stays.create, {
+    timezone: "America/New_York",
+    name: "Cedar House",
+    terms: sampleTerms,
+  });
+
+  if (plus) {
+    await grantPlus(t, stayId);
+  }
+
+  const hashA = "a".repeat(64);
+  await host.mutation(api.invites.create, {
+    stayId,
+    tokenHash: hashA,
+    expiresAt: Date.now() + 86_400_000,
+  });
+  await guestA.mutation(api.invites.accept, { tokenHash: hashA });
+  await guestA.mutation(api.terms.acceptCurrent, { stayId });
+
+  if (guestCount === 2) {
+    const hashB = "b".repeat(64);
+    await host.mutation(api.invites.create, {
+      stayId,
+      tokenHash: hashB,
+      expiresAt: Date.now() + 86_400_000,
+    });
+    await guestB.mutation(api.invites.accept, { tokenHash: hashB });
+    await guestB.mutation(api.terms.acceptCurrent, { stayId });
+  }
+
+  return {
+    host,
+    guestA,
+    guestB,
+    hostUserId,
+    guestAUserId,
+    guestBUserId,
+    stayId,
+  };
+}
+
+describe("Task 3: Schema, convex/bills.ts, and voidAdhocCharge guard", () => {
+  it("blocks a Free host on bills.create with plan_limit and lets a Plus host create a bill whose shares appear on each guest's ledger", async () => {
+    const t = convexTest(schema, modules);
+    const { host, guestA, guestAUserId, stayId } = await setupHouseholdWithGuests(t, {
+      plus: false,
+      guestCount: 1,
+    });
+
+    let freeErr: unknown;
+    try {
+      await host.mutation(api.bills.create, {
+        stayId,
+        title: "October Electricity",
+        category: "electricity",
+        serviceStart: "2026-10-01",
+        serviceEnd: "2026-10-31",
+        totalCents: 12_000,
+        dueDate: "2026-10-25",
+        splitMethod: "equal",
+        includeHost: true,
+        prorateByStayDates: false,
+        guests: [{ guestUserId: guestAUserId }],
+      });
+    } catch (err) {
+      freeErr = err;
+    }
+    expect(planLimitError(freeErr)).toMatchObject({
+      code: "plan_limit",
+      dimension: "billSplits",
+      plan: "free",
+      limit: 0,
+      atHighestPlan: false,
+    });
+
+    await grantPlus(t, stayId);
+
+    const billId = await host.mutation(api.bills.create, {
+      stayId,
+      title: "October Electricity",
+      category: "electricity",
+      serviceStart: "2026-10-01",
+      serviceEnd: "2026-10-31",
+      totalCents: 12_000,
+      dueDate: "2026-10-25",
+      splitMethod: "equal",
+      includeHost: true,
+      prorateByStayDates: false,
+      guests: [{ guestUserId: guestAUserId }],
+    });
+    expect(billId).toBeDefined();
+
+    const guestLedger = await guestA.query(api.obligations.list, {
+      stayId,
+      asOfDate: "2026-10-20",
+    });
+    const billObligation = guestLedger.find((item) => item.title === "October Electricity");
+    expect(billObligation).toBeDefined();
+    expect(billObligation).toMatchObject({
+      type: "adhoc",
+      title: "October Electricity",
+      periodStart: "2026-10-01",
+      periodEnd: "2026-10-31",
+      dueDate: "2026-10-25",
+      baseAmountCents: 6_000,
+    });
+  });
+
+  it("keeps existing bills and ledger obligations visible when Plus expires after posting, while refusing new bills.create", async () => {
+    const t = convexTest(schema, modules);
+    const { host, guestA, guestB, guestAUserId, guestBUserId, stayId } =
+      await setupHouseholdWithGuests(t, { plus: true, guestCount: 2 });
+
+    const billId = await host.mutation(api.bills.create, {
+      stayId,
+      title: "Fiber Internet",
+      category: "internet",
+      serviceStart: "2026-10-01",
+      serviceEnd: "2026-10-31",
+      totalCents: 9_000,
+      dueDate: "2026-10-20",
+      splitMethod: "equal",
+      includeHost: true,
+      prorateByStayDates: false,
+      guests: [{ guestUserId: guestAUserId }, { guestUserId: guestBUserId }],
+    });
+
+    // Expire the Plus subscription snapshot
+    await t.run(async ({ db }) => {
+      const snapshots = await db.query("subscriptionSnapshots").collect();
+      const past = Date.now() - 86_400_000;
+      for (const snap of snapshots) {
+        await db.patch(snap._id, {
+          status: "expired",
+          currentPeriodEndsAt: past,
+          updatedAt: Date.now(),
+        });
+      }
+    });
+
+    // Existing bills and obligations remain visible to host and guests
+    const hostBills = await host.query(api.bills.list, { stayId });
+    expect(hostBills).toHaveLength(1);
+    expect(hostBills[0]._id).toBe(billId);
+    expect(hostBills[0].shares).toHaveLength(2);
+
+    const guestABills = await guestA.query(api.bills.list, { stayId });
+    expect(guestABills).toHaveLength(1);
+    expect(guestABills[0].shares).toHaveLength(1);
+    expect(guestABills[0].shares[0].amountCents).toBe(3_000);
+
+    const guestALedger = await guestA.query(api.obligations.list, {
+      stayId,
+      asOfDate: "2026-10-15",
+    });
+    expect(guestALedger.some((item) => item.title === "Fiber Internet" && item.baseAmountCents === 3_000)).toBe(true);
+
+    const guestBLedger = await guestB.query(api.obligations.list, {
+      stayId,
+      asOfDate: "2026-10-15",
+    });
+    expect(guestBLedger.some((item) => item.title === "Fiber Internet" && item.baseAmountCents === 3_000)).toBe(true);
+
+    // Creating a new bill is now refused with plan_limit
+    let expiredErr: unknown;
+    try {
+      await host.mutation(api.bills.create, {
+        stayId,
+        title: "November Water",
+        category: "water",
+        serviceStart: "2026-10-01",
+        serviceEnd: "2026-10-31",
+        totalCents: 6_000,
+        dueDate: "2026-10-28",
+        splitMethod: "equal",
+        includeHost: true,
+        prorateByStayDates: false,
+        guests: [{ guestUserId: guestAUserId }],
+      });
+    } catch (err) {
+      expiredErr = err;
+    }
+    expect(planLimitError(expiredErr)).toMatchObject({
+      code: "plan_limit",
+      dimension: "billSplits",
+      plan: "free",
+    });
+  });
+
+  it("enforces guest privacy on bills.list so Guest A sees only Guest A's share and never Guest B's share or user ID", async () => {
+    const t = convexTest(schema, modules);
+    const { host, guestA, guestB, guestAUserId, guestBUserId, stayId } =
+      await setupHouseholdWithGuests(t, { plus: true, guestCount: 2 });
+
+    await host.mutation(api.bills.create, {
+      stayId,
+      title: "Water & Sewer",
+      category: "water",
+      serviceStart: "2026-10-01",
+      serviceEnd: "2026-10-31",
+      totalCents: 10_000,
+      dueDate: "2026-10-22",
+      splitMethod: "percentage",
+      includeHost: true,
+      prorateByStayDates: false,
+      guests: [
+        { guestUserId: guestAUserId, input: 30 },
+        { guestUserId: guestBUserId, input: 45 },
+      ],
+    });
+
+    // Bill that only includes Guest B
+    await host.mutation(api.bills.create, {
+      stayId,
+      title: "Parking Pass Utility",
+      category: "other",
+      serviceStart: "2026-10-01",
+      serviceEnd: "2026-10-31",
+      totalCents: 4_000,
+      dueDate: "2026-10-24",
+      splitMethod: "fixed",
+      includeHost: false,
+      prorateByStayDates: false,
+      guests: [{ guestUserId: guestBUserId, input: 4_000 }],
+    });
+
+    const guestAResponse = await guestA.query(api.bills.list, { stayId });
+    expect(guestAResponse).toHaveLength(1);
+    const billForA = guestAResponse[0];
+    expect(billForA).toMatchObject({
+      title: "Water & Sewer",
+      category: "water",
+      serviceStart: "2026-10-01",
+      serviceEnd: "2026-10-31",
+      totalCents: 10_000,
+      dueDate: "2026-10-22",
+      splitMethod: "percentage",
+      includeHost: true,
+      prorateByStayDates: false,
+    });
+    expect(billForA.shares).toHaveLength(1);
+    expect(billForA.shares[0]).toMatchObject({
+      guestUserId: guestAUserId,
+      guestName: "Alex Guest",
+      input: 30,
+      amountCents: 3_000,
+    });
+
+    const serializedForA = JSON.stringify(guestAResponse);
+    expect(serializedForA).not.toContain(guestBUserId);
+    expect(serializedForA).not.toContain("Blair Guest");
+    expect(serializedForA).not.toContain("4500");
+
+    // Host sees both bills and all shares
+    const hostResponse = await host.query(api.bills.list, { stayId });
+    expect(hostResponse).toHaveLength(2);
+    const hostWaterBill = hostResponse.find((b) => b.title === "Water & Sewer")!;
+    expect(hostWaterBill.shares).toHaveLength(2);
+  });
+
+  it("refuses direct obligations.voidAdhocCharge on a bill obligation and voids the bill + all guest obligations via bills.voidBill", async () => {
+    const t = convexTest(schema, modules);
+    const { host, guestA, guestB, guestAUserId, guestBUserId, stayId } =
+      await setupHouseholdWithGuests(t, { plus: true, guestCount: 2 });
+
+    const billId = await host.mutation(api.bills.create, {
+      stayId,
+      title: "Gas Heating",
+      category: "gas",
+      serviceStart: "2026-10-01",
+      serviceEnd: "2026-10-31",
+      totalCents: 9_000,
+      dueDate: "2026-10-25",
+      splitMethod: "equal",
+      includeHost: true,
+      prorateByStayDates: false,
+      guests: [{ guestUserId: guestAUserId }, { guestUserId: guestBUserId }],
+    });
+
+    const hostBills = await host.query(api.bills.list, { stayId });
+    const bill = hostBills.find((b) => b._id === billId)!;
+    expect(bill.shares).toHaveLength(2);
+
+    const shareObligationId = bill.shares[0].obligationId;
+    await expect(
+      host.mutation(api.obligations.voidAdhocCharge, {
+        obligationId: shareObligationId,
+      }),
+    ).rejects.toThrow("This charge comes from a split bill. Void the bill to void its charges.");
+
+    // Void the bill and verify all guest obligations are voided and removed from active ledger totals
+    await host.mutation(api.bills.voidBill, { billId });
+
+    const updatedBills = await host.query(api.bills.list, { stayId });
+    expect(updatedBills[0].voidedAt).toEqual(expect.any(Number));
+
+    const ledgerA = await guestA.query(api.obligations.ledgerWithTotals, {
+      stayId,
+      asOfDate: "2026-10-20",
+    });
+    expect(ledgerA.rows.some((r) => r._id === bill.shares[0].obligationId)).toBe(false);
+    expect(ledgerA.rows.some((r) => r.title === "Gas Heating")).toBe(false);
+
+    const ledgerB = await guestB.query(api.obligations.ledgerWithTotals, {
+      stayId,
+      asOfDate: "2026-10-20",
+    });
+    expect(ledgerB.rows.some((r) => r._id === bill.shares[1].obligationId)).toBe(false);
+    expect(ledgerB.rows.some((r) => r.title === "Gas Heating")).toBe(false);
+  });
+
+  it("enforces the FEATURE_FLAGS.BILL_SPLITTING kill switch across create, voidBill, and list", async () => {
+    const t = convexTest(schema, modules);
+    const { host, guestA, guestAUserId, stayId } = await setupHouseholdWithGuests(t, {
+      plus: true,
+      guestCount: 1,
+    });
+
+    const billId = await host.mutation(api.bills.create, {
+      stayId,
+      title: "Trash Collection",
+      category: "trash",
+      serviceStart: "2026-10-01",
+      serviceEnd: "2026-10-31",
+      totalCents: 4_000,
+      dueDate: "2026-10-25",
+      splitMethod: "equal",
+      includeHost: true,
+      prorateByStayDates: false,
+      guests: [{ guestUserId: guestAUserId }],
+    });
+
+    await setBillSplittingFlag(t, "disabled");
+
+    await expect(
+      host.mutation(api.bills.create, {
+        stayId,
+        title: "Blocked Bill",
+        category: "other",
+        serviceStart: "2026-10-01",
+        serviceEnd: "2026-10-31",
+        totalCents: 4_000,
+        dueDate: "2026-10-25",
+        splitMethod: "equal",
+        includeHost: true,
+        prorateByStayDates: false,
+        guests: [{ guestUserId: guestAUserId }],
+      }),
+    ).rejects.toThrow("Bill splitting is currently disabled by platform policy.");
+
+    await expect(
+      host.mutation(api.bills.voidBill, { billId }),
+    ).rejects.toThrow("Bill splitting is currently disabled by platform policy.");
+
+    await expect(host.query(api.bills.list, { stayId })).resolves.toEqual([]);
+    await expect(guestA.query(api.bills.list, { stayId })).resolves.toEqual([]);
+  });
+});
