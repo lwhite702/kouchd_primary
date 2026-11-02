@@ -34,6 +34,7 @@ export function WorkspacePanels({ state }: { state: WorkspaceState }) {
     isSubmittingModal,
     terms,
     panel,
+    contributionPrefill,
     addContribution,
     addCharge,
     addChore,
@@ -120,7 +121,11 @@ export function WorkspacePanels({ state }: { state: WorkspaceState }) {
           <div className="form-grid">
             <label>
               <span>Type</span>
-              <select name="type">
+              <select
+                name="type"
+                key={`type-${contributionPrefill?.type ?? "default"}`}
+                defaultValue={contributionPrefill?.type ?? "payment"}
+              >
                 <option value="payment">Payment</option>
                 <option value="groceries">Groceries</option>
                 <option value="supplies">Supplies</option>
@@ -154,6 +159,8 @@ export function WorkspacePanels({ state }: { state: WorkspaceState }) {
               <span>Note</span>
               <input
                 name="note"
+                key={`note-${contributionPrefill?.note ?? "default"}`}
+                defaultValue={contributionPrefill?.note ?? ""}
                 placeholder="Backdated payments are supported"
               />
             </label>

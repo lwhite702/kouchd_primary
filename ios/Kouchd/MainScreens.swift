@@ -636,8 +636,10 @@ struct ContributionForm: View {
   @State private var savedAt = ""
   @State private var errorMessage = ""
 
-  init(store: KouchdStore) {
+  init(store: KouchdStore, initialType: String = "payment", initialNote: String = "") {
     self.store = store
+    _type = State(initialValue: initialType)
+    _note = State(initialValue: initialNote)
   }
 
   #if DEBUG

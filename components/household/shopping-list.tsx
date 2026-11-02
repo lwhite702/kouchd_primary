@@ -17,10 +17,16 @@ export function ShoppingList({
   stayId,
   viewerId,
   isEnded,
+  onLogContribution,
 }: {
   stayId: Id<"stays">;
   viewerId: Id<"users">;
   isEnded: boolean;
+  onLogContribution?: (prefill: {
+    type?: "groceries" | "supplies" | "payment" | "house_work" | "other";
+    title?: string;
+    note: string;
+  }) => void;
 }) {
   const items = useQuery(api.shopping.list, { stayId }) as
     ShoppingItem[] | undefined;
@@ -271,30 +277,53 @@ export function ShoppingList({
                       {item.visibility === "personal" ? "Personal" : "Shared"}
                     </span>
                   </div>
-                  {!isEnded && canEdit && (
+                  {!isEnded && (
                     <div className="row-actions">
-                      <button
-                        className="mini-button"
-                        type="button"
-                        onClick={() => setEditingId(item._id)}
-                        aria-label={`Edit ${item.title}`}
-                      >
-                        <Pencil size={14} />
-                      </button>
-                      <button
-                        className="mini-button danger"
-                        type="button"
-                        disabled={busy}
-                        onClick={() =>
-                          void run(
-                            () => removeItem({ itemId: item._id }),
-                            "Could not remove this item.",
-                          )
-                        }
-                        aria-label={`Remove ${item.title}`}
-                      >
-                        <Trash2 size={14} />
-                      </button>
+                      {onLogContribution && Boolean(item.checkedAt) && (
+                        <button
+                          className="mini-button"
+                          type="button"
+                          onClick={() =>
+                            onLogContribution({
+                              type: "groceries",
+                              title: item.title,
+                              note: item.note
+                                ? `${item.title} (${item.quantity}) · ${item.note}`
+                                : `${item.title} (${item.quantity})`,
+                            })
+                          }
+                          title="Record this purchase as a contribution in the ledger"
+                          aria-label={`Log ${item.title} as contribution`}
+                        >
+                          Log contribution
+                        </button>
+                      )}
+                      {canEdit && (
+                        <>
+                          <button
+                            className="mini-button"
+                            type="button"
+                            onClick={() => setEditingId(item._id)}
+                            aria-label={`Edit ${item.title}`}
+                          >
+                            <Pencil size={14} />
+                          </button>
+                          <button
+                            className="mini-button danger"
+                            type="button"
+                            disabled={busy}
+                            onClick={() =>
+                              void run(
+                                () => removeItem({ itemId: item._id }),
+                                "Could not remove this item.",
+                              )
+                            }
+                            aria-label={`Remove ${item.title}`}
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </>
+                      )}
                     </div>
                   )}
                 </article>

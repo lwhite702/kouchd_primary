@@ -4,6 +4,12 @@
 
 ### Added
 
+- **Shopping list to contribution ledger bridge (WRE-264, branch only, not released)**:
+  - Checked-off shopping items display a one-tap "Log contribution" button in the shopping list on both web and native iOS (SwiftUI).
+  - Tapping opens the Add contribution modal with type prefilled to `groceries` and the note pre-populated with the item name, quantity, and notes.
+  - Preserves bilateral privacy (records are strictly visible only to the contributing member and host).
+  - Covered by automated Vitest integration suite `tests/shopping-contribution-bridge.test.ts` and verified with Xcode simulator build.
+
 - **iPad layout (WRE-254, branch only, not released)**:
   - **Navigation:** regular-width windows use a `NavigationSplitView` sidebar with a single stay switcher; compact widths keep the tabs. `ShellNavigator` holds one navigation state, so a resized window stays on the same screen. The sidebar pins at 1000pt and wider and slides over narrower windows. `StayTool` is the one definition of who sees which tool, read by both the sidebar and More.
   - **Layouts:** `KouchdLayout` picks 1, 2, or 3 columns from measured content width (700pt and 1000pt), and always 1 at accessibility text sizes. Home is a two-column dashboard, Ledger shows summary tiles with a row list beside the selected entry's details and actions (700pt and wider), Chores and Stay use grids and columns, and Shopping separates shared and personal items. Settings-style forms center at 640pt, and the introduction and first-stay setup use the wider space.
