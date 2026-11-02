@@ -1,5 +1,5 @@
 {
   "type": "patch",
-  "version": "0.8.8",
-  "reason": "Remediate Replay QA defects: permit Cloudflare Turnstile and Clerk protect in CSP connect-src/frame-src, add sign-up redirect fallbacks, and harden email submit disabling (WRE-271)."
+  "version": "0.8.9",
+  "reason": "Follow up on WRE-271 review: render legal pages dynamically so strict CSP nonces apply, stop the sign-in/up guard from re-enabling Clerk's in-flight submit button, and add keyboard navigation to the landing preview tabs."
 }
