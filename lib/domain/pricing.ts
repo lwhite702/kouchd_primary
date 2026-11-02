@@ -1,6 +1,6 @@
 import { stayDays } from "./dates";
 
-export type Cadence = "daily" | "weekly";
+export type Cadence = "daily" | "weekly" | "monthly";
 export type ContributionStatus = "pending" | "confirmed" | "disputed" | "voided";
 
 export interface ContributionCredit {
@@ -21,6 +21,7 @@ export function calculateStayChargeCents({
   rateCents: number;
 }): number {
   const days = stayDays(startDate, endDate);
+  if (cadence === "monthly") return Math.round((days * rateCents) / 30);
   return cadence === "weekly" ? Math.round((days * rateCents) / 7) : days * rateCents;
 }
 
