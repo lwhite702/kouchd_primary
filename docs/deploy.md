@@ -21,9 +21,12 @@ If a production incident occurs:
    ```
    Or select and promote the prior deployment in the Vercel Dashboard under **Deployments** > **Instant Rollback**.
 
+   This rolls back only the Vercel frontend. Each production build also runs `convex deploy`, so the Convex backend stays on the newer functions and schema. If the incident is in Convex code, also revert it (step 2); check that the older frontend works against the current backend before relying on the rollback alone.
+
 2. **Git Revert**:
+   Find the commit the bad deployment was built from (shown on the deployment in the Vercel Dashboard) and revert that commit or range, not simply `HEAD`, since `main` may have moved on:
    ```bash
-   git revert HEAD
+   git revert <bad-commit-sha>
    git push origin main
    ```
-   This will trigger a clean pipeline run and re-deploy the prior stable commit.
+   After an Instant Rollback, Vercel stops assigning new production deployments to the production domain. Choose **Undo Rollback** in the Dashboard, or run `vercel promote <deployment-url>` on the new build, so the revert actually serves production.

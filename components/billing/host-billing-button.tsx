@@ -12,6 +12,22 @@ const PaywallModal = dynamic(() =>
   import("./paywall-modal").then((m) => m.PaywallModal),
 );
 
+type PlanUsageLabelInput = {
+  planConfigured: boolean;
+  plan: "free" | "plus" | "pro";
+  guests: { used: number; limit: number | null };
+};
+
+/** The button text. Without a readable plan we never guess at a tier or limit. */
+export function hostPlanLabel(usage: PlanUsageLabelInput | null | undefined) {
+  if (!usage || !usage.planConfigured) return "Host plan";
+  if (usage.plan === "plus") {
+    return `Plan · Plus (${usage.guests.used}/${usage.guests.limit ?? 5} spots)`;
+  }
+  if (usage.plan === "pro") return "Plan · Pro";
+  return `Host plan · Free (${usage.guests.used}/${usage.guests.limit ?? 1} spots)`;
+}
+
 export function HostBillingButton() {
   const { user } = useUser();
   const summary = useQuery(
@@ -28,19 +44,7 @@ export function HostBillingButton() {
 
   if (!summary?.canManageSubscription || !enabled) return null;
 
-  let label = "Host plan";
-  if (usage) {
-    if (usage.plan === "plus") {
-      const limit = usage.guests.limit ?? 5;
-      label = `Plan · Plus (${usage.guests.used}/${limit} spots)`;
-    } else if (usage.plan === "pro") {
-      label = "Plan · Pro";
-    } else {
-      const limit = usage.guests.limit ?? 1;
-      label = `Host plan · Free (${usage.guests.used}/${limit} spots)`;
-    }
-  }
-
+  const label = hostPlanLabel(usage);
   const blockedCount = usage?.blockedJoins?.length ?? 0;
 
   return (
@@ -49,12 +53,13 @@ export function HostBillingButton() {
         className="button soft compact"
         type="button"
         onClick={() => setOpen(true)}
+        aria-label={blockedCount > 0 ? `${label}, ${blockedCount} waiting to join` : undefined}
         style={{ display: "inline-flex", alignItems: "center" }}
       >
         <span>{label}</span>
         {blockedCount > 0 && (
           <span
-            aria-label={`${blockedCount} waiting`}
+            aria-hidden="true"
             style={{
               marginLeft: "6px",
               display: "inline-flex",

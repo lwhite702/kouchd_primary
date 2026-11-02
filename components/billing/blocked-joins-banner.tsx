@@ -29,6 +29,7 @@ export function BlockedJoinsBanner({
   filterStayId,
 }: BlockedJoinsBannerProps) {
   const [dismissingId, setDismissingId] = useState<string | null>(null);
+  const [dismissError, setDismissError] = useState<string | null>(null);
 
   const visible = filterStayId
     ? blockedJoins.filter((b) => b.stayId === filterStayId)
@@ -51,8 +52,8 @@ export function BlockedJoinsBanner({
           { month: "short", day: "numeric" },
         );
         const headline = guestsFull
-          ? `${blocked.guestName} tried to join — this stay is full`
-          : `${blocked.guestName} tried to join while this stay was full. There's room now. If their invite has expired or been used, send a new one.`;
+          ? `${blocked.guestName} tried to join — your guest spots are full across your stays`
+          : `${blocked.guestName} tried to join while your guest spots were full. There's room now. If their invite has expired or been used, send a new one.`;
 
         const isDismissing = dismissingId === blocked.id;
 
@@ -131,8 +132,11 @@ export function BlockedJoinsBanner({
                 disabled={isDismissing}
                 onClick={async () => {
                   setDismissingId(blocked.id);
+                  setDismissError(null);
                   try {
                     await onDismiss(blocked.id);
+                  } catch {
+                    setDismissError(blocked.id);
                   } finally {
                     setDismissingId(null);
                   }
@@ -140,6 +144,11 @@ export function BlockedJoinsBanner({
               >
                 {isDismissing ? "Dismissing..." : "Dismiss"}
               </button>
+              {dismissError === blocked.id && (
+                <span role="alert" style={{ fontSize: "0.82rem", color: "var(--danger, #9f1d1d)" }}>
+                  Couldn&apos;t dismiss this right now. Check your connection and try again.
+                </span>
+              )}
             </div>
           </div>
         );

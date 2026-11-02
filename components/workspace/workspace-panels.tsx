@@ -28,6 +28,7 @@ export function WorkspacePanels({ state }: { state: WorkspaceState }) {
     isHost,
     members,
     guestMembers,
+    financialGuestId,
     asOfDate,
     bundle,
     notify,
@@ -119,6 +120,27 @@ export function WorkspacePanels({ state }: { state: WorkspaceState }) {
       {panel === "contribution" && (
         <form onSubmit={addContribution}>
           <div className="form-grid">
+            {isHost && guestMembers.length > 1 && (
+              <label className="full">
+                <span>Guest&apos;s Ledger</span>
+                <select
+                  name="guestUserId"
+                  defaultValue={contributionPrefill ? "" : financialGuestId}
+                  required
+                >
+                  {contributionPrefill && (
+                    <option value="" disabled>
+                      Choose a guest
+                    </option>
+                  )}
+                  {guestMembers.map((member) => (
+                    <option key={member.person.id} value={member.person.id}>
+                      {member.person.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
             <label>
               <span>Type</span>
               <select

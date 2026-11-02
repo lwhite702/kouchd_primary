@@ -413,7 +413,7 @@ export function StayHub({
                         key={stay._id}
                         onClick={() => onSelectStay(stay._id)}
                       >
-                        <div
+                        <span
                           style={{
                             display: "flex",
                             gap: "6px",
@@ -440,7 +440,7 @@ export function StayHub({
                               {blockedForStay} tried to join
                             </span>
                           )}
-                        </div>
+                        </span>
                         <strong>
                           {stay.name ||
                             stay.houseInfo?.cityStateZip ||

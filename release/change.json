@@ -1,5 +1,5 @@
 {
   "type": "patch",
-  "version": "0.8.8",
-  "reason": "Remediate Replay QA defects: permit Cloudflare Turnstile and Clerk protect in CSP connect-src/frame-src, add sign-up redirect fallbacks, and harden email submit disabling (WRE-271)."
+  "version": "0.8.11",
+  "reason": "Shopping-to-contribution shortcut, web plan capacity and blocked-join alerts, and the Kouchd vs Splitwise guide (WRE-264/265/266), with review fixes."
 }

@@ -47,10 +47,7 @@ async function createHousehold() {
   const guest1Bundle = await guest1.query(api.stays.getBundle, { stayId });
   const guest1UserId = guest1Bundle.membership.userId;
 
-  const guest2Bundle = await guest2.query(api.stays.getBundle, { stayId });
-  const guest2UserId = guest2Bundle.membership.userId;
-
-  return { host, guest1, guest2, stayId, guest1UserId, guest2UserId };
+  return { host, guest1, guest2, stayId, guest1UserId };
 }
 
 describe("shopping list to contribution ledger bridge (WRE-264)", () => {

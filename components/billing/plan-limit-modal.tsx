@@ -26,15 +26,22 @@ export function PlanLimitModal({
   const descId = useId();
   const dialogRef = useRef<HTMLDivElement>(null);
   const primaryButtonRef = useRef<HTMLButtonElement>(null);
+  // Read the latest close callback without re-running the focus effect, so a
+  // parent re-render never pulls focus back to the primary button.
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
   useEffect(() => {
     if (!isOpen) return;
+    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
     primaryButtonRef.current?.focus();
 
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
         event.preventDefault();
-        onClose();
+        onCloseRef.current();
       }
       if (event.key !== "Tab") return;
       const focusable = dialogRef.current?.querySelectorAll<HTMLElement>(
@@ -53,8 +60,12 @@ export function PlanLimitModal({
     }
 
     document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, onClose]);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      // Return focus to whatever opened the dialog.
+      if (opener?.isConnected) opener.focus();
+    };
+  }, [isOpen]);
 
   if (!isOpen) return null;
 

@@ -556,11 +556,16 @@ export function useLiveStay(stayId: Id<"stays">, onBackToHub: () => void) {
     event.preventDefault();
     if (!financialGuestId) return;
     const form = new FormData(event.currentTarget);
+    // Hosts with several guests pick the Ledger explicitly in the form.
+    const chosenGuest = guestMembers.find(
+      (member) => member.person.id === form.get("guestUserId"),
+    )?.person.id;
+    const guestUserId = chosenGuest ?? financialGuestId;
     if (!beginSubmit()) return;
     try {
       await createContribution({
         stayId,
-        guestUserId: financialGuestId,
+        guestUserId,
         type: value(form, "type") as
           "payment" | "groceries" | "supplies" | "house_work" | "other",
         amountCents: Math.round(Number(value(form, "amount")) * 100),

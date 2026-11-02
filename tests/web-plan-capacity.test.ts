@@ -3,6 +3,7 @@ import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { PlanLimitModal } from "../components/billing/plan-limit-modal";
 import { BlockedJoinsBanner } from "../components/billing/blocked-joins-banner";
+import { hostPlanLabel } from "../components/billing/host-billing-button";
 import type { Id } from "../convex/_generated/dataModel";
 
 describe("Web Plan Capacity & Blocked Join Components", () => {
@@ -69,7 +70,7 @@ describe("Web Plan Capacity & Blocked Join Components", () => {
       })
     );
 
-    expect(markup).toContain("Sam Guest tried to join — this stay is full");
+    expect(markup).toContain("Sam Guest tried to join — your guest spots are full across your stays");
     expect(markup).toContain("Sunnyvale Room");
     expect(markup).toContain("Make room with Plus");
     expect(markup).toContain("Dismiss");
@@ -107,24 +108,13 @@ describe("Web Plan Capacity & Blocked Join Components", () => {
     expect(markupStay1).not.toContain("Jordan Guest");
   });
 
-  it("formats host plan capacity labels consistently with product standards", () => {
-    function computePlanLabel(usage: {
-      plan: "free" | "plus" | "pro";
-      guests: { used: number; limit: number | null };
-    }) {
-      if (usage.plan === "plus") {
-        const limit = usage.guests.limit ?? 5;
-        return `Plan · Plus (${usage.guests.used}/${limit} spots)`;
-      }
-      if (usage.plan === "pro") {
-        return "Plan · Pro";
-      }
-      const limit = usage.guests.limit ?? 1;
-      return `Host plan · Free (${usage.guests.used}/${limit} spots)`;
-    }
-
-    expect(computePlanLabel({ plan: "free", guests: { used: 1, limit: 1 } })).toBe("Host plan · Free (1/1 spots)");
-    expect(computePlanLabel({ plan: "plus", guests: { used: 2, limit: 5 } })).toBe("Plan · Plus (2/5 spots)");
-    expect(computePlanLabel({ plan: "pro", guests: { used: 10, limit: null } })).toBe("Plan · Pro");
+  it("formats host plan capacity labels from the shared helper", () => {
+    const guests = (used: number, limit: number | null) => ({ used, limit });
+    expect(hostPlanLabel({ planConfigured: true, plan: "free", guests: guests(1, 1) })).toBe("Host plan · Free (1/1 spots)");
+    expect(hostPlanLabel({ planConfigured: true, plan: "plus", guests: guests(2, 5) })).toBe("Plan · Plus (2/5 spots)");
+    expect(hostPlanLabel({ planConfigured: true, plan: "pro", guests: guests(10, null) })).toBe("Plan · Pro");
+    // An unreadable plan must not be shown as Free with a one-guest limit.
+    expect(hostPlanLabel({ planConfigured: false, plan: "free", guests: guests(3, 1) })).toBe("Host plan");
+    expect(hostPlanLabel(undefined)).toBe("Host plan");
   });
 });

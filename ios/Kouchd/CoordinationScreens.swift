@@ -56,7 +56,7 @@ struct ShoppingScreen: View {
     .stayFeature(.shopping, store: store)
     .sheet(item: $editing) { editing in ShoppingItemForm(store: store, item: editing.item) }
     .sheet(item: $contributionPrefill) { prefill in
-      ContributionForm(store: store, initialType: prefill.type, initialNote: prefill.note)
+      ContributionForm(store: store, initialType: prefill.type, initialNote: prefill.note, suggestsAmount: false)
     }
   }
 
@@ -76,7 +76,10 @@ struct ShoppingScreen: View {
             }.buttonStyle(.bordered)
           }
         }
-        if !store.isEnded && !item["checkedAt"].text.isEmpty {
+        // Personal items stay private, so they are never copied into a shared Ledger record.
+        // A host with several guests has no way to pick a Ledger here, so the shortcut is hidden.
+        if !store.isEnded && !item["checkedAt"].text.isEmpty && item["visibility"].text != "personal"
+          && (!store.isHost || store.guests.count == 1) {
           HStack {
             Button {
               let noteDetail = item["note"].text.isEmpty ? "" : " · \(item["note"].text)"

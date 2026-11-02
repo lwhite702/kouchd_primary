@@ -636,8 +636,12 @@ struct ContributionForm: View {
   @State private var savedAt = ""
   @State private var errorMessage = ""
 
-  init(store: KouchdStore, initialType: String = "payment", initialNote: String = "") {
+  /// When false the amount starts empty, so a shortcut never logs an unrelated balance.
+  private var suggestsAmount = true
+
+  init(store: KouchdStore, initialType: String = "payment", initialNote: String = "", suggestsAmount: Bool = true) {
     self.store = store
+    self.suggestsAmount = suggestsAmount
     _type = State(initialValue: initialType)
     _note = State(initialValue: initialNote)
   }
@@ -801,7 +805,7 @@ struct ContributionForm: View {
         }
       }
       .onAppear {
-        if amount.isEmpty {
+        if amount.isEmpty && suggestsAmount {
           let dueCents = store.ledger.first(where: { $0["balanceCents"].int > 0 })?["balanceCents"].int
             ?? store.bundle["terms"]["rateCents"].int
           let initialCents = dueCents > 0 ? dueCents : 4500

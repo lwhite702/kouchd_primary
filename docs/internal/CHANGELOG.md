@@ -2,6 +2,16 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-11-02 — WRE-264/265/266 branch review follow-up (0.8.11)
+
+- Merged `main` into `codex/WRE-266-competitive-guide-kouchd-vs-splitwise`. This branch carried an earlier copy of the FinishKit audit fixes that reached `main` through #143, so conflicting CSP, `verify-env`, newsletter, legal-page, landing-page, and `/platform` files take `main`'s version. That restores `requirePlatformOpsAccess()` on every `/platform` page, which this branch had removed. The unused `ProductPreviewTabs` and `GuideSceneTabs` components were deleted.
+- Shopping-to-contribution shortcut: hidden for personal items and for hosts without a guest; web hosts with several guests choose the Ledger in the form (`guestUserId` select); iOS hosts see it only with exactly one guest; iOS no longer pre-fills an unrelated amount (`ContributionForm(suggestsAmount: false)`).
+- Billing UI: `hostPlanLabel()` is shared by `HostBillingButton` and its test, and returns "Host plan" when `planConfigured` is false; badge is `aria-hidden` with the count in the button label; `BlockedJoinsBanner` uses account-wide wording and reports dismiss failures; `PlanLimitModal` restores focus and keeps `onClose` in a ref.
+- Ops: `scripts/smoke.sh` uses `mktemp`, `--connect-timeout 5 --max-time 15`, and a single `000` on transport failure; `docs/deploy.md` rollback steps cover the Convex backend, reverting the deployed commit, and Undo Rollback/`vercel promote`; `/api/health` HEAD sends `Content-Type`.
+- Docs: guide claims corrected; roadmap lists the shopping shortcut as in development. Conflict to resolve separately: `help/support/plans-and-subscription.mdx` says Plus has unlimited stays and guests, while `lib/domain/subscriptionPlans.ts` caps `hostPlus` at 3 active stays and 5 guests.
+- Checks: `tsc --noEmit`, `vitest run` (46 files, 272 tests), `swiftc -parse` on edited Swift files.
+- Version 0.8.11 (after #145 at 0.8.9 and #132 at 0.8.10).
+
 ## 2026-11-02 — Replay QA defect remediation and bot protection unblocking (WRE-271)
 
 - Remediated reported defects from Replay QA project `proj-app-kouchd-com-mvmq5ma0`:

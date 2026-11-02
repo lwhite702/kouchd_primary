@@ -2,9 +2,14 @@
   min-height: 100vh;
   background: var(--kouchd-paper, #f5f0e8);
   color: var(--kouchd-ink, #17251f);
-  font-family: var(--font-manrope), sans-serif;
+  font-family: var(--font-inter), sans-serif;
   display: flex;
   flex-direction: column;
+}
+
+/* Body copy uses Inter; titles and display text keep Manrope. */
+.legal-page-container :is(h1, h2, h3, h4, strong, .legal-eyebrow) {
+  font-family: var(--font-manrope), sans-serif;
 }
 
 .legal-header-bar {

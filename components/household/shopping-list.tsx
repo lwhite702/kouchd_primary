@@ -279,7 +279,10 @@ export function ShoppingList({
                   </div>
                   {!isEnded && (
                     <div className="row-actions">
-                      {onLogContribution && Boolean(item.checkedAt) && (
+                      {/* Personal items stay private, so they are never copied into a shared Ledger record. */}
+                      {onLogContribution &&
+                        Boolean(item.checkedAt) &&
+                        item.visibility !== "personal" && (
                         <button
                           className="mini-button"
                           type="button"
@@ -292,8 +295,8 @@ export function ShoppingList({
                                 : `${item.title} (${item.quantity})`,
                             })
                           }
-                          title="Record this purchase as a contribution in the ledger"
-                          aria-label={`Log ${item.title} as contribution`}
+                          title="Record this purchase as a contribution in the Ledger"
+                          aria-label={`Log contribution for ${item.title}`}
                         >
                           Log contribution
                         </button>
