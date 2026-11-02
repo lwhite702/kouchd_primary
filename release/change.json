@@ -1,5 +1,5 @@
 {
   "type": "patch",
-  "version": "0.8.8",
+  "version": "0.8.10",
   "reason": "Protect door and Wi-Fi access codes until guest agreement acceptance and after stay end (WRE-266)."
 }

@@ -1,5 +1,5 @@
 import { convexTest } from "convex-test";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { api } from "../convex/_generated/api";
 import type { Id } from "../convex/_generated/dataModel";
 import schema from "../convex/schema";
@@ -51,6 +51,10 @@ async function queryStayFromBoth(
 }
 
 describe("houseInfo access code protection", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it("hides codes from a guest who has not accepted", async () => {
     const t = convexTest(schema, modules);
     const host = await createActor(t, "host");
@@ -222,6 +226,8 @@ describe("houseInfo access code protection", () => {
     for (const stay of [bundleStay, listedStay]) {
       expect(stay.houseInfo).toBeUndefined();
     }
+    // Nothing was configured, so nothing was withheld.
+    expect((await guest.query(api.stays.getBundle, { stayId })).accessCodesHidden).toBeNull();
   });
 
   it("hides codes from a former guest who rejoins until they accept again", async () => {
@@ -247,6 +253,7 @@ describe("houseInfo access code protection", () => {
 
     await guest.mutation(api.referral.joinWithCode, { referralCode });
 
+    expect((await guest.query(api.stays.getBundle, { stayId })).accessCodesHidden).toBe("needs_acceptance");
     const afterRejoin = await queryStayFromBoth(guest, stayId);
     for (const stay of [afterRejoin.bundleStay, afterRejoin.listedStay]) {
       expect(stay.houseInfo?.doorCode).toBeUndefined();
@@ -256,10 +263,52 @@ describe("houseInfo access code protection", () => {
 
     await guest.mutation(api.terms.acceptCurrent, { stayId });
 
+    expect((await guest.query(api.stays.getBundle, { stayId })).accessCodesHidden).toBeNull();
     const afterReaccept = await queryStayFromBoth(guest, stayId);
     for (const stay of [afterReaccept.bundleStay, afterReaccept.listedStay]) {
       expect(stay.houseInfo?.doorCode).toBe("0000");
       expect(stay.houseInfo?.wifiPassword).toBe("test-pass");
     }
+  });
+
+  it("retires the earlier schedule when a rejoining guest accepts, even with a pending revision", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-10-10T12:00:00Z"));
+    const t = convexTest(schema, modules);
+    const host = await createActor(t, "host");
+    const guest = await createActor(t, "guest");
+    const stayId = await host.mutation(api.stays.create, { timezone: "UTC", terms });
+    await host.mutation(api.stays.updateHouseInfo, { stayId, houseInfo });
+    const referralCode = (await host.query(api.stays.getBundle, { stayId })).stay.referralCode!;
+    await guest.mutation(api.referral.joinWithCode, { referralCode });
+    await guest.mutation(api.terms.acceptCurrent, { stayId });
+    const membershipId = (await guest.query(api.stays.getBundle, { stayId })).membership._id;
+
+    // A revision is offered but not accepted before the guest leaves.
+    await host.mutation(api.terms.updateCurrent, { stayId, terms: { ...terms, rateCents: 1500 } });
+    await t.run(async ({ db }) => {
+      await db.patch(membershipId, { status: "left" });
+    });
+
+    vi.setSystemTime(new Date("2026-10-15T12:00:00Z"));
+    await guest.mutation(api.referral.joinWithCode, { referralCode });
+    const rejoined = await guest.query(api.stays.getBundle, { stayId });
+    expect(rejoined.membership.acceptedTermsId).toBeDefined();
+    expect(rejoined.terms?.rateCents).toBe(1500);
+    expect(rejoined.terms?.effectiveFrom).toBe("2026-10-15");
+    expect(rejoined.accessCodesHidden).toBe("needs_acceptance");
+
+    await guest.mutation(api.terms.acceptCurrent, { stayId });
+
+    const active = await t.run(async ({ db }) =>
+      (await db.query("obligations").collect()).filter(
+        (obligation) => obligation.type === "cadence" && obligation.voidedAt === undefined,
+      ),
+    );
+    const starts = active.map((obligation) => obligation.periodStart);
+    expect(new Set(starts).size).toBe(starts.length);
+    const fromRejoin = active.filter((obligation) => obligation.periodStart >= "2026-10-15");
+    expect(fromRejoin.every((obligation) => obligation.termsId === rejoined.terms?._id)).toBe(true);
+    expect((await guest.query(api.stays.getBundle, { stayId })).accessCodesHidden).toBeNull();
   });
 });

@@ -75,7 +75,8 @@ Database roles stay `host` and `guest`. Screens also say "host" and "guest" on s
 **Calculation**
 - Equal and percentage shares include the host as a participant unless the host is excluded. The host's share is never posted to the ledger.
 - Shares use whole cents. Leftover cents go by largest remainder, with ties broken by earliest membership `joinedAt`, so the same inputs always give the same result.
-- Guest shares may not total more than the bill.
+- When the host is excluded, guest shares must equal the bill total exactly.
+- When the host participates, the host's share is stored on the bill as `hostShareCents` (never posted to the ledger), and guest shares plus `hostShareCents` must equal the bill total exactly.
 
 **Sublease presets**
 - Whole place: 100% to the guest, with the host excluded.
@@ -92,7 +93,8 @@ Database roles stay `host` and `guest`. Screens also say "host" and "guest" on s
 
 This fixes existing behavior and does not depend on the rest of this document.
 
-- The server removes `doorCode` and `wifiPassword` from responses to a guest unless the stay has not ended, that guest has accepted an agreement version, and, on a sublease, the current date is not after the agreement end date. A pending new version doesn't remove access, and neither does another guest not having accepted yet, because either would lock out someone already living there. A guest who rejoins must accept again.
+- The server removes `doorCode` and `wifiPassword` from responses to a guest unless the stay has not ended, that guest has accepted an agreement version, and, on a sublease, the current date in the stay's `timezone` is not after the end date of the agreement that guest accepted. A pending new version doesn't remove access, and neither does another guest not having accepted yet, because either would lock out someone already living there. A guest who rejoins must accept again: their earlier acceptance stays on record for Ledger reconciliation, and a membership flag holds codes back until the new agreement is accepted.
+- An ended stay always hides codes from guests. This takes precedence over every other rule, including the sublease lock table in section 7.
 - The redaction lives in one shared helper, used by every query that returns a stay to a guest, and is covered by server tests.
 - Ending a sublease reminds the host to change the codes, because Kouchd cannot revoke a physical code.
 
@@ -118,7 +120,7 @@ This fixes existing behavior and does not depend on the rest of this document.
 
 **When it applies**
 - It is derived on the server from subscription state by one helper, `getSubleaseLockState`, and applies only to `arrangement: sublease`.
-- It locks on `expired`, `refunded`, a canceled or trial period that has ended, or `billing_retry` lasting more than 7 days. The first `billing_retry` time comes from the subscription snapshot. The existing `grace_period` keeps access.
+- It locks on `expired`, `refunded`, a canceled or trial period that has ended, or `billing_retry` lasting more than 7 days. Snapshots do not record when `billing_retry` began, so entering `billing_retry` stores a `billingRetryStartedAt` timestamp on the household account, leaving it clears that timestamp, and the 7-day check compares against it. The existing `grace_period` keeps access.
 - `unknown` status or an unreadable plan never locks a sublease. It raises an operational alert instead, so a provider problem cannot lock a household.
 
 **While locked**
@@ -126,7 +128,7 @@ This fixes existing behavior and does not depend on the rest of this document.
 | Action | Host | Guest |
 | --- | --- | --- |
 | View terms, ledger, bills, and history | Yes | Own records |
-| View door code and Wi-Fi | Yes | Yes, until the sublease end date |
+| View door code and Wi-Fi | Yes | Yes, until the sublease end date or the stay ends, whichever is first |
 | Add or edit anything, including pending invites and agreement acceptance | No | No |
 | End the sublease | Yes | No |
 | Exports in the app or through routine support | No | No |

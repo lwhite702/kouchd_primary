@@ -56,7 +56,7 @@ Not fixable here: a host can type a code into `otherNotes` or `houseNotes`. Thos
 - Produces: `canViewAccessCodes(stay: Pick<Doc<"stays">, "status">, membership: Pick<Doc<"memberships">, "role" | "acceptedTermsId">): boolean`
 - Produces: `redactStayForMember<T extends Pick<Doc<"stays">, "status" | "houseInfo">>(stay: T, membership: Pick<Doc<"memberships">, "role" | "acceptedTermsId">): T`
 
-- [ ] **Step 1: Write the failing tests in `tests/house-info-access.test.ts`**
+- [x] **Step 1: Write the failing tests in `tests/house-info-access.test.ts`**
 
 Use the `convexTest`, `import.meta.glob`, and identity setup from `tests/shopping-privacy.test.ts`, and `grantPlus` from `tests/helpers/plans.ts` for two-guest fixtures. Set `houseInfo` to `{ wifiNetwork: "TestNet", wifiPassword: "test-pass", doorCode: "0000", trashDay: "Tuesday" }`. Run every assertion against both `getBundle` and `listMine`.
 
@@ -76,25 +76,25 @@ it("returns a valid response when the stay has no houseInfo", ...);
 // guest query resolves and stay.houseInfo is undefined
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `npx vitest run tests/house-info-access.test.ts`
 Expected: FAIL on the "hides codes" tests, because the codes are returned.
 
-- [ ] **Step 3: Implement the helper and apply it in both queries**
+- [x] **Step 3: Implement the helper and apply it in both queries**
 
 `canViewAccessCodes` is true for `role === "host"`, otherwise `stay.status !== "ended" && Boolean(membership.acceptedTermsId)`. `redactStayForMember` returns the stay unchanged when allowed or when `houseInfo` is absent, and otherwise returns a copy with both keys removed, not set to empty strings. In `listMine` and `getBundle`, return `redactStayForMember(stay, membership)`. Inside `getBundle`, keep using the unredacted stay for term lookups.
 
-- [ ] **Step 4: Update `tests/backend.test.ts`**
+- [x] **Step 4: Update `tests/backend.test.ts`**
 
 Replace the final guest assertion with: before accepting, `doorCode` and `wifiPassword` are undefined and `wifiNetwork` is `"Kouchd-5G"`. Then call `api.terms.acceptCurrent` as in other tests in that file and assert `houseInfo` matches in full.
 
-- [ ] **Step 5: Run the tests to verify they pass**
+- [x] **Step 5: Run the tests to verify they pass**
 
 Run: `npx vitest run tests/house-info-access.test.ts tests/backend.test.ts`
 Expected: PASS. If `api.terms.acceptCurrent` has required arguments, copy the existing usage in `tests/backend.test.ts`.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add convex/lib/houseInfoAccess.ts convex/stays.ts tests/house-info-access.test.ts tests/backend.test.ts
@@ -110,7 +110,7 @@ git commit -m "fix: hide access codes from guests without an accepted agreement"
 **Interfaces:**
 - Consumes: `redactStayForMember` through `stays.getBundle`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
 it("hides codes from a former guest who rejoins until they accept again", ...);
@@ -118,21 +118,21 @@ it("hides codes from a former guest who rejoins until they accept again", ...);
 // getBundle doorCode undefined; terms.acceptCurrent; doorCode === "0000"
 ```
 
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 Run: `npx vitest run tests/house-info-access.test.ts -t "rejoins"`
 Expected: FAIL, because the old `acceptedTermsId` survives the rejoin.
 
-- [ ] **Step 3: Clear acceptance on rejoin**
+- [x] **Step 3: Clear acceptance on rejoin**
 
 In the reactivation patch at `convex/referral.ts:93`, add `acceptedTermsId: undefined`.
 
-- [ ] **Step 4: Run the full suite to verify nothing regressed**
+- [x] **Step 4: Run the full suite to verify nothing regressed**
 
 Run: `npx vitest run`
 Expected: PASS. `convex/lib/stayTerms.ts:172-181` reads `acceptedTermsId`, so check rejoin ledger behavior if a test fails here, and report it rather than weakening the test.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add convex/referral.ts tests/house-info-access.test.ts
@@ -149,7 +149,7 @@ git commit -m "fix: require a new agreement acceptance after a guest rejoins"
 **Interfaces:**
 - Consumes: `canViewAccessCodes` semantics, computed in the client from `bundle.stay.status` and `bundle.membership`. Do not import from `convex/lib` into components.
 
-- [ ] **Step 1: Add the guest explanation**
+- [x] **Step 1: Add the guest explanation**
 
 Add the prop `accessCodesHidden: "needs_acceptance" | "ended" | null` and show this exact copy in place of the codes:
 - `needs_acceptance`: "Door and Wi-Fi codes appear after you accept your agreement."
@@ -157,16 +157,16 @@ Add the prop `accessCodesHidden: "needs_acceptance" | "ended" | null` and show t
 
 The card must still render when the only `houseInfo` values are hidden.
 
-- [ ] **Step 2: Add the host form hint**
+- [x] **Step 2: Add the host form hint**
 
 Exact copy: "Guests see door and Wi-Fi codes after they accept their agreement. Keep codes in these fields, not in notes."
 
-- [ ] **Step 3: Verify**
+- [x] **Step 3: Verify**
 
 Run: `npm run lint && npm run typecheck`
 Expected: PASS. Then check a guest before acceptance, an accepted guest, and an ended stay in the local app, using synthetic data.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add components/household/household-logistics.tsx components/workspace/use-live-stay.ts
@@ -183,20 +183,20 @@ git commit -m "feat(web): explain when access codes are hidden"
 **Interfaces:**
 - Consumes: `store.bundle["stay"]["status"]` and `store.bundle["membership"]["acceptedTermsId"]`.
 
-- [ ] **Step 1: Add the guest explanation**
+- [x] **Step 1: Add the guest explanation**
 
 In "Around the home", use the same two messages as Task 3, chosen from those two bundle values. The existing "Your host hasn't added house details yet." message must not appear when the reason is hidden codes alone.
 
-- [ ] **Step 2: Add the host form hint**
+- [x] **Step 2: Add the host form hint**
 
 Add the same hint copy from Task 3 to `HouseInfoScreen`.
 
-- [ ] **Step 3: Build and check in the simulator**
+- [x] **Step 3: Build and check in the simulator**
 
 Build through the project's iOS workflow in `ios/README.md`, then check the same three states as Task 3.
 Expected: the build succeeds and all three states read correctly.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add ios/Kouchd/StayScreens.swift ios/Kouchd/HostExtras.swift
@@ -213,16 +213,16 @@ git commit -m "feat(ios): explain when access codes are hidden"
 **Interfaces:**
 - Consumes: the Linear issue created before Task 1.
 
-- [ ] **Step 1: Update the records**
+- [x] **Step 1: Update the records**
 
 Add the `[Unreleased]` entry and internal entry, and say in the relevant help pages that guests see door and Wi-Fi codes after accepting and no longer see them after a stay ends. The public changelog waits for a verified release.
 
-- [ ] **Step 2: Verify**
+- [x] **Step 2: Verify**
 
 Run: `npm run verify && npm run build && npm run release:check && git diff --check`
 Expected: all pass. `mintlify validate` and `mintlify broken-links` also pass where available.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add CHANGELOG.md docs/internal/CHANGELOG.md help VERSION package.json package-lock.json ios

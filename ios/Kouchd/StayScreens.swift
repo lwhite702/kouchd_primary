@@ -10,14 +10,12 @@ struct StayScreen: View {
   @State private var showingEdit = false
   @State private var showingContributionRouter = false
   private var accessCodesHiddenMessage: String? {
-    guard !store.isHost else { return nil }
-    if store.bundle["stay"]["status"].text == "ended" {
-      return "This stay has ended, so door and Wi-Fi codes are no longer shown."
+    // The server sets this only when it actually removed a configured code.
+    switch store.bundle["accessCodesHidden"].text {
+    case "ended": return "This stay has ended, so door and Wi-Fi codes are no longer shown."
+    case "needs_acceptance": return "Door and Wi-Fi codes appear once your agreement is accepted."
+    default: return nil
     }
-    if store.bundle["membership"]["acceptedTermsId"].text.isEmpty {
-      return "Door and Wi-Fi codes appear after you accept your agreement."
-    }
-    return nil
   }
   var body: some View {
     Page(title: "Your stay", width: .wide) {

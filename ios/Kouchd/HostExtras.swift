@@ -174,7 +174,7 @@ struct HouseInfoScreen: View {
       } header: {
         Text("Access and Wi-Fi")
       } footer: {
-        Text("Guests see door and Wi-Fi codes after they accept their agreement. Keep codes in these fields, not in notes.")
+        Text("Guests see door and Wi-Fi codes only while the stay is active and after their agreement is accepted. Keep codes in these fields, not in notes.")
       }
       Section("Around the home") {
         TextField("Parking", text: $parking, axis: .vertical)

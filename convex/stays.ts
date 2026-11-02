@@ -12,7 +12,7 @@ import { SUGGESTED_CONTRIBUTION_TASKS } from "../lib/domain/rewards";
 import { getCurrentGuestTerms } from "./lib/stayTerms";
 import { internal } from "./_generated/api";
 import { resolveMemberName } from "./lib/names";
-import { redactStayForMember } from "./lib/houseInfoAccess";
+import { accessCodesHiddenReason, redactStayForMember } from "./lib/houseInfoAccess";
 import { getOrCreateHouseholdAccount } from "./householdOwnership";
 import { ANALYTICS_EVENTS } from "../lib/analytics/events";
 import { trackServerEvent } from "./lib/posthog";
@@ -247,6 +247,7 @@ export const getBundle = query({
     members: v.array(v.object({ membership: memberDocument, person: v.object({
       id: v.id("users"), name: v.string(), imageUrl: v.optional(v.string()), email: v.optional(v.string()), phone: v.optional(v.string()),
     }), terms: v.optional(v.union(termsDocument, v.null())), agreementOffer: v.optional(v.union(offerDocument, v.null())) })),
+    accessCodesHidden: v.union(v.literal("needs_acceptance"), v.literal("ended"), v.null()),
   }),
   handler: async (ctx, { stayId }) => {
     const { membership } = await requireMembership(ctx, stayId);
@@ -288,7 +289,13 @@ export const getBundle = query({
     }));
     const members = membersWithMissing.filter((member): member is NonNullable<typeof member> => member !== null);
 
-    return { stay: redactStayForMember(stay, membership), terms, membership, members };
+    return {
+      stay: redactStayForMember(stay, membership),
+      terms,
+      membership,
+      members,
+      accessCodesHidden: accessCodesHiddenReason(stay, membership),
+    };
   },
 });
 

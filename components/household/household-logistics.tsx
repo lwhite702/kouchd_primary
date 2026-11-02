@@ -27,7 +27,7 @@ export function HouseholdLogisticsCard({
 
   const accessCodesHiddenMessage =
     accessCodesHidden === "needs_acceptance"
-      ? "Door and Wi-Fi codes appear after you accept your agreement."
+      ? "Door and Wi-Fi codes appear once your agreement is accepted."
       : accessCodesHidden === "ended"
         ? "This stay has ended, so door and Wi-Fi codes are no longer shown."
         : null;

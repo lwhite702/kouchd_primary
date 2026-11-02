@@ -151,6 +151,9 @@ export default defineSchema({
     role: v.union(v.literal("host"), v.literal("guest")),
     status: v.union(v.literal("active"), v.literal("left")),
     acceptedTermsId: v.optional(v.id("terms")),
+    // Set when a former guest rejoins: their earlier acceptance stays on record
+    // for Ledger reconciliation, but access codes wait for a new acceptance.
+    accessCodesNeedAcceptance: v.optional(v.boolean()),
     preferredName: v.optional(v.string()),
     joinedAt: v.number(),
   })

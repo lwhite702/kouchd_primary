@@ -185,14 +185,8 @@ export function useLiveStay(stayId: Id<"stays">, onBackToHub: () => void) {
   const terms = bundle?.terms;
   const selectedGuestTerms = selectedGuestMember?.terms ?? terms;
   const hasAccepted = bundle?.membership.acceptedTermsId === terms?._id;
-  const accessCodesHidden: "needs_acceptance" | "ended" | null =
-    !bundle || bundle.membership.role === "host"
-      ? null
-      : bundle.stay.status === "ended"
-        ? "ended"
-        : !bundle.membership.acceptedTermsId
-          ? "needs_acceptance"
-          : null;
+  // The server reports this only when it actually removed a configured code.
+  const accessCodesHidden = bundle?.accessCodesHidden ?? null;
   const displayedAgreementTerms = isHost ? selectedGuestTerms : terms;
   const displayedAgreementAccepted =
     isHost && selectedGuestMember
