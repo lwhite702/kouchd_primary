@@ -126,7 +126,7 @@ export function WorkspacePanels({ state }: { state: WorkspaceState }) {
                 key={`type-${contributionPrefill?.type ?? "default"}`}
                 defaultValue={contributionPrefill?.type ?? "payment"}
               >
-                <option value="payment">Payment</option>
+                <option value="payment">Send money / Cash</option>
                 <option value="groceries">Groceries</option>
                 <option value="supplies">Supplies</option>
                 <option value="house_work">House work</option>
@@ -134,7 +134,7 @@ export function WorkspacePanels({ state }: { state: WorkspaceState }) {
               </select>
             </label>
             <label>
-              <span>Value</span>
+              <span>Amount</span>
               <div className="money-input">
                 <span>$</span>
                 <input
@@ -147,7 +147,7 @@ export function WorkspacePanels({ state }: { state: WorkspaceState }) {
               </div>
             </label>
             <label>
-              <span>Transaction date</span>
+              <span>Date</span>
               <input
                 name="date"
                 type="date"
@@ -156,17 +156,17 @@ export function WorkspacePanels({ state }: { state: WorkspaceState }) {
               />
             </label>
             <label className="full">
-              <span>Note</span>
+              <span>Household note (optional)</span>
               <input
                 name="note"
                 key={`note-${contributionPrefill?.note ?? "default"}`}
                 defaultValue={contributionPrefill?.note ?? ""}
-                placeholder="Backdated payments are supported"
+                placeholder="What was this contribution for?"
               />
             </label>
             <label className="check full">
               <input name="counts" type="checkbox" defaultChecked />
-              <span>Count toward this guest&apos;s balance</span>
+              <span>Count toward stay balance</span>
             </label>
           </div>
           <ModalActions
