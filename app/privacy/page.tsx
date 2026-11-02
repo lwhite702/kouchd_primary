@@ -22,11 +22,34 @@ export default function PrivacyPolicyPage() {
   return (
     <LegalPageLayout activeRoute="privacy">
       <LegalArticle>
-        <LegalArticleHeader
-          title={privacyPolicy.title}
-          effectiveDate={privacyPolicy.effectiveDate}
-          lastUpdated={privacyPolicy.lastUpdated}
-        />
+        <div style={{ borderBottom: "1px solid var(--kouchd-line, #ded8ce)", paddingBottom: "1.25rem", marginBottom: "1.75rem" }}>
+          <p
+            style={{
+              textTransform: "uppercase",
+              letterSpacing: "1.5px",
+              fontSize: "0.78rem",
+              fontWeight: 800,
+              color: "var(--kouchd-forest, #184f3a)",
+              margin: "0 0 0.5rem",
+            }}
+          >
+            Wrelik Brands LLC &middot; Legal Documentation
+          </p>
+          <h1
+            style={{
+              fontSize: "2.25rem",
+              fontWeight: 800,
+              color: "var(--kouchd-forest, #184f3a)",
+              margin: "0 0 0.5rem",
+              letterSpacing: "-0.5px",
+            }}
+          >
+            Privacy Policy
+          </h1>
+          <p style={{ margin: 0, color: "var(--kouchd-muted, #59675f)", fontSize: "0.9rem" }}>
+            Effective Date: {privacyPolicy.effectiveDate} &middot; Last updated: {privacyPolicy.lastUpdated} &middot; Brand: <strong>Wrelik Brands LLC</strong> (operating <strong>Kouchd</strong>)
+          </p>
+        </div>
 
         {/* Carrier Compliance Highlight Box */}
         <div
