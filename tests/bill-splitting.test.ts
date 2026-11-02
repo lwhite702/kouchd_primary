@@ -777,7 +777,7 @@ describe("Task 3: Schema, convex/bills.ts, and voidAdhocCharge guard", () => {
 
   it("enforces guest privacy on bills.list so Guest A sees only Guest A's share and never Guest B's share or user ID", async () => {
     const t = convexTest(schema, modules);
-    const { host, guestA, guestB, guestAUserId, guestBUserId, stayId } =
+    const { host, guestA, guestAUserId, guestBUserId, stayId } =
       await setupHouseholdWithGuests(t, { plus: true, guestCount: 2 });
 
     await host.mutation(api.bills.create, {

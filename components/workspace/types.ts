@@ -70,6 +70,7 @@ export type Panel =
   | "contribution"
   | "chore"
   | "adhoc"
+  | "splitBill"
   | "announcement"
   | "settings"
   | "invite"
@@ -84,6 +85,7 @@ export type Panel =
 export type DestructiveAction =
   | { type: "end" }
   | { type: "cancelCharge"; obligationId: Id<"obligations">; title: string }
+  | { type: "voidBill"; billId: Id<"bills">; title: string }
   | {
       type: "voidContribution";
       contributionId: Id<"contributions">;
@@ -114,6 +116,12 @@ export function destructiveActionCopy(action: DestructiveAction): {
         title: `Cancel “${action.title}”?`,
         description: `This removes “${action.title}” from the guest’s balance. The charge history will be retained.`,
         confirmLabel: "Cancel charge",
+      };
+    case "voidBill":
+      return {
+        title: `Void “${action.title}”?`,
+        description: `This voids “${action.title}” and removes its generated charges from every guest’s balance. The bill and charge history will be retained.`,
+        confirmLabel: "Void bill",
       };
     case "voidContribution":
     case "voidChore":

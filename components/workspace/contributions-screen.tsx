@@ -2,6 +2,7 @@
 
 import { Landmark, Plus, ReceiptText } from "lucide-react";
 
+import { BillSplittingSection } from "@/components/household/bill-splitting-card";
 import { RewardsHub } from "@/components/rewards/rewards-hub";
 
 import { HelpTip } from "@/components/onboarding/help-tip";
@@ -26,6 +27,7 @@ export function ContributionsScreen({ state }: { state: WorkspaceState }) {
     activeContributions,
     bundle,
     obligations,
+    bills,
     financialGuestId,
     setSelectedGuestId,
     notify,
@@ -228,6 +230,21 @@ export function ContributionsScreen({ state }: { state: WorkspaceState }) {
           )}
         </div>
       </section>
+      <FeatureGate flag={FEATURE_FLAGS.BILL_SPLITTING}>
+        <BillSplittingSection
+          bills={bills}
+          isHost={Boolean(isHost)}
+          isEnded={isEnded}
+          onOpenSplitBill={() => setPanel("splitBill")}
+          onVoidBill={({ billId, title }) =>
+            setDestructiveAction({
+              type: "voidBill",
+              billId,
+              title,
+            })
+          }
+        />
+      </FeatureGate>
       <FeatureGate flag={FEATURE_FLAGS.REWARDS_SYSTEM}>
         <RewardsHub
           stayId={stayId}

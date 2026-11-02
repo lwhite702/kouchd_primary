@@ -10,6 +10,7 @@ import { addCalendarDays } from "@/lib/domain/dates";
 
 import { HouseInfoForm } from "@/components/household/household-logistics";
 import { PaymentOptionsForm } from "@/components/household/payment-options";
+import { SplitBillModalForm } from "@/components/household/bill-splitting-card";
 
 import { GuestAgreementForm } from "@/components/household/guest-agreement-form";
 import { SubscriptionManagement } from "@/components/billing/paywall-modal";
@@ -39,6 +40,7 @@ export function WorkspacePanels({ state }: { state: WorkspaceState }) {
     contributionPrefill,
     addContribution,
     addCharge,
+    addBill,
     addChore,
     addAnnouncement,
     savePreferences,
@@ -248,6 +250,16 @@ export function WorkspacePanels({ state }: { state: WorkspaceState }) {
             submitting={isSubmittingModal}
           />
         </form>
+      )}
+      {panel === "splitBill" && (
+        <SplitBillModalForm
+          guests={guestMembers}
+          defaultTerms={terms}
+          asOfDate={asOfDate}
+          submitting={isSubmittingModal}
+          onSubmit={addBill}
+          onCancel={() => setPanel(null)}
+        />
       )}
       {panel === "chore" && (
         <form onSubmit={addChore}>
