@@ -11,6 +11,8 @@ export const metadata: Metadata = {
   },
 };
 
+export const dynamic = "force-static";
+
 export default function SmsOptInPage() {
   const servicesConfigured = Boolean(
     process.env.NEXT_PUBLIC_CONVEX_URL && process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,

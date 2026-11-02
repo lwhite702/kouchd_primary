@@ -17,6 +17,8 @@ export const metadata: Metadata = {
   alternates: { canonical: "/privacy" },
 };
 
+export const dynamic = "force-static";
+
 export default function PrivacyPolicyPage() {
   return (
     <LegalPageLayout activeRoute="privacy">
