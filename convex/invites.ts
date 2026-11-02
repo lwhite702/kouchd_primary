@@ -25,7 +25,7 @@ export const preview = query({
       version: v.number(),
       startDate: v.string(),
       endDate: v.string(),
-      cadence: v.union(v.literal("daily"), v.literal("weekly")),
+      cadence: v.union(v.literal("daily"), v.literal("weekly"), v.literal("monthly")),
       rateCents: v.number(),
       houseNotes: v.string(),
     })),

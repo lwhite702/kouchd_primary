@@ -46,8 +46,9 @@ const paymentOptionsInput = v.array(v.object({
 const termsInput = {
   startDate: v.string(),
   endDate: v.string(),
-  cadence: v.union(v.literal("daily"), v.literal("weekly")),
+  cadence: v.union(v.literal("daily"), v.literal("weekly"), v.literal("monthly")),
   paymentDayOfWeek: v.optional(v.number()),
+  paymentDayOfMonth: v.optional(v.number()),
   billingBasis: v.optional(v.union(v.literal("continuous"), v.literal("occupied_nights"))),
   rateCents: v.number(),
   earlyDiscountEnabled: v.boolean(),
@@ -132,7 +133,15 @@ export const create = mutation({
       updatedAt: now,
     });
     await ctx.db.insert("memberships", { stayId, userId: user._id, role: "host", status: "active", joinedAt: now });
-    const termsId = await ctx.db.insert("terms", { stayId, version: 1, ...args.terms, billingBasis: args.terms.billingBasis ?? "continuous", createdBy: user._id, createdAt: now });
+    const termsId = await ctx.db.insert("terms", {
+      stayId,
+      version: 1,
+      ...args.terms,
+      ...(args.terms.cadence === "monthly" ? { paymentDayOfMonth: args.terms.paymentDayOfMonth } : {}),
+      billingBasis: args.terms.billingBasis ?? "continuous",
+      createdBy: user._id,
+      createdAt: now,
+    });
     await ctx.db.patch(stayId, { currentTermsId: termsId });
     await ctx.db.insert("termsAcceptances", { stayId, termsId, userId: user._id, acceptedAt: now, method: "host" });
     const membership = await ctx.db.query("memberships").withIndex("by_stay_user", (query) => query.eq("stayId", stayId).eq("userId", user._id)).unique();
