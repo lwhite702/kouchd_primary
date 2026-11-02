@@ -1,6 +1,3 @@
-"use client";
-
-import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -22,17 +19,15 @@ import { appVersion } from "@/lib/version";
 import { HELP_LINKS } from "@/lib/help-links";
 import { NewsletterSignup } from "@/components/marketing/newsletter-signup";
 import { MarketingHeader, MarketingStartButton as StartButton } from "@/components/marketing/marketing-header";
+import { ProductPreviewTabs } from "@/components/marketing/product-preview-tabs";
+import { GuideSceneTabs } from "@/components/marketing/guide-scene-tabs";
 import "./landing-v21.css";
 
 interface LandingPageProps {
   hasClerk?: boolean;
 }
 
-type PreviewTab = "overview" | "guide" | "ledger" | "chores";
-
 export function LandingPage({ hasClerk = true }: LandingPageProps) {
-  const [activeTab, setActiveTab] = useState<PreviewTab>("overview");
-  const [guideSceneTab, setGuideSceneTab] = useState<"overview" | "guide" | "updates">("overview");
 
   return (
     <main className="landing-v21" id="main-content">
@@ -145,145 +140,7 @@ export function LandingPage({ hasClerk = true }: LandingPageProps) {
 
       {/* Interactive Product Preview Section */}
       <section className="v21-product" aria-labelledby="v21-product-title">
-        <div className="v21-product-preview" aria-label="Interactive example Kouchd stay dashboard preview">
-          <div className="v21-preview-window">
-            <div className="v21-preview-top">
-              <span className="v21-preview-mark">
-                <KouchdWordmark size="sm" />
-              </span>
-              <div className="v21-preview-tab-controls" role="tablist" aria-label="Stay preview views">
-                <button
-                  type="button"
-                  role="tab"
-                  aria-selected={activeTab === "overview"}
-                  className={`v21-tab-btn ${activeTab === "overview" ? "active" : ""}`}
-                  onClick={() => setActiveTab("overview")}
-                >
-                  Overview
-                </button>
-                <button
-                  type="button"
-                  role="tab"
-                  aria-selected={activeTab === "guide"}
-                  className={`v21-tab-btn ${activeTab === "guide" ? "active" : ""}`}
-                  onClick={() => setActiveTab("guide")}
-                >
-                  House Guide
-                </button>
-                <button
-                  type="button"
-                  role="tab"
-                  aria-selected={activeTab === "ledger"}
-                  className={`v21-tab-btn ${activeTab === "ledger" ? "active" : ""}`}
-                  onClick={() => setActiveTab("ledger")}
-                >
-                  Ledger
-                </button>
-                <button
-                  type="button"
-                  role="tab"
-                  aria-selected={activeTab === "chores"}
-                  className={`v21-tab-btn ${activeTab === "chores" ? "active" : ""}`}
-                  onClick={() => setActiveTab("chores")}
-                >
-                  Chores
-                </button>
-              </div>
-              <span className="v21-preview-avatar" aria-hidden="true">J</span>
-            </div>
-
-            <div className="v21-preview-inner">
-              <span className="v21-preview-kicker">EXAMPLE STAY · JUNIPER HOUSE</span>
-
-              {activeTab === "overview" && (
-                <>
-                  <h3>Everything that needs attention</h3>
-                  <div className="v21-preview-summary">
-                    <span><strong>3</strong> confirmed</span>
-                    <span><strong>2</strong> due</span>
-                  </div>
-                  <div className="v21-preview-row">
-                    <span className="v21-row-icon row-house"><House size={17} aria-hidden="true" /></span>
-                    <span><strong>House guide</strong><small>Parking, Wi-Fi, quiet hours</small></span>
-                    <em className="tag-ready">Ready</em>
-                  </div>
-                  <div className="v21-preview-row">
-                    <span className="v21-row-icon row-ledger"><ClipboardList size={17} aria-hidden="true" /></span>
-                    <span><strong>Contribution</strong><small>Your share · recorded in Kouchd</small></span>
-                    <em className="tag-recorded">Recorded</em>
-                  </div>
-                  <div className="v21-preview-row">
-                    <span className="v21-row-icon row-chore"><Check size={17} aria-hidden="true" /></span>
-                    <span><strong>Groceries</strong><small>Assigned to guest</small></span>
-                    <em className="tag-due">Due today</em>
-                  </div>
-                </>
-              )}
-
-              {activeTab === "guide" && (
-                <>
-                  <h3>House information & rules</h3>
-                  <div className="v21-preview-summary">
-                    <span><strong>Wi-Fi</strong> JuniperGuest</span>
-                    <span><strong>Quiet</strong> 10 pm – 8 am</span>
-                  </div>
-                  <div className="v21-preview-row">
-                    <span className="v21-row-icon row-house"><House size={17} aria-hidden="true" /></span>
-                    <span><strong>Entry instructions</strong><small>Keypad code shared in private stay details</small></span>
-                    <em className="tag-ready">Active</em>
-                  </div>
-                  <div className="v21-preview-row">
-                    <span className="v21-row-icon row-house"><Users size={17} aria-hidden="true" /></span>
-                    <span><strong>Trash & Recycling</strong><small>Bins go to curb on Wednesday night</small></span>
-                    <em className="tag-ready">Weekly</em>
-                  </div>
-                </>
-              )}
-
-              {activeTab === "ledger" && (
-                <>
-                  <h3>Contribution records</h3>
-                  <div className="v21-preview-summary">
-                    <span><strong>Oct total</strong> $120.50</span>
-                    <span><strong>Status</strong> Up to date</span>
-                  </div>
-                  <div className="v21-preview-row">
-                    <span className="v21-row-icon row-ledger"><ClipboardList size={17} aria-hidden="true" /></span>
-                    <span><strong>Shared utilities</strong><small>Oct 8 · Recorded contribution</small></span>
-                    <em className="tag-recorded">$84.00</em>
-                  </div>
-                  <div className="v21-preview-row">
-                    <span className="v21-row-icon row-ledger"><Check size={17} aria-hidden="true" /></span>
-                    <span><strong>Shared pantry & milk</strong><small>Oct 7 · Recorded contribution</small></span>
-                    <em className="tag-recorded">$36.50</em>
-                  </div>
-                </>
-              )}
-
-              {activeTab === "chores" && (
-                <>
-                  <h3>Shared household responsibilities</h3>
-                  <div className="v21-preview-summary">
-                    <span><strong>2</strong> open</span>
-                    <span><strong>1</strong> completed</span>
-                  </div>
-                  <div className="v21-preview-row">
-                    <span className="v21-row-icon row-chore"><Check size={17} aria-hidden="true" /></span>
-                    <span><strong>Take bins to the curb</strong><small>Alex · Due Thursday</small></span>
-                    <em className="tag-due">Tomorrow</em>
-                  </div>
-                  <div className="v21-preview-row">
-                    <span className="v21-row-icon row-chore"><Check size={17} aria-hidden="true" /></span>
-                    <span><strong>Restock coffee shelf</strong><small>Jordan · Done today</small></span>
-                    <em className="tag-ready">Done</em>
-                  </div>
-                </>
-              )}
-            </div>
-          </div>
-          <span className="v21-preview-orbit orbit-one" aria-hidden="true" />
-          <span className="v21-preview-orbit orbit-two" aria-hidden="true" />
-        </div>
+        <ProductPreviewTabs />
         <div className="v21-product-copy">
           <p className="v21-eyebrow">A look inside Kouchd</p>
           <h2 id="v21-product-title">The details of a shared stay, in one place.</h2>
@@ -318,70 +175,7 @@ export function LandingPage({ hasClerk = true }: LandingPageProps) {
               <li><Check size={16} aria-hidden="true" /> Guest list and scheduled check-in date in view</li>
             </ul>
           </div>
-          <div className="v21-feature-scene scene-guide" aria-label="Interactive house guide scene">
-            <div className="v21-scene-window">
-              <div className="v21-scene-top">
-                <span><i className="scene-dot" aria-hidden="true" /> JUNIPER HOUSE</span>
-                <span className="scene-date">OCT 10—13</span>
-              </div>
-              <div className="scene-tabs" role="tablist" aria-label="Guide views">
-                <button
-                  type="button"
-                  className={guideSceneTab === "overview" ? "selected" : ""}
-                  onClick={() => setGuideSceneTab("overview")}
-                >
-                  Overview
-                </button>
-                <button
-                  type="button"
-                  className={guideSceneTab === "guide" ? "selected" : ""}
-                  onClick={() => setGuideSceneTab("guide")}
-                >
-                  House guide
-                </button>
-                <button
-                  type="button"
-                  className={guideSceneTab === "updates" ? "selected" : ""}
-                  onClick={() => setGuideSceneTab("updates")}
-                >
-                  Updates
-                </button>
-              </div>
-
-              {guideSceneTab === "overview" && (
-                <>
-                  <div className="scene-welcome">
-                    <span className="scene-house-icon" aria-hidden="true"><House size={17} /></span>
-                    <div>
-                      <strong>Welcome to the house</strong>
-                      <small>The useful details, all together</small>
-                    </div>
-                  </div>
-                  <div className="scene-info-grid">
-                    <div><span>WI-FI</span><strong>JuniperGuest</strong><small>Ask Maya for password</small></div>
-                    <div><span>QUIET HOURS</span><strong>10 pm – 8 am</strong><small>Thanks for keeping it cozy</small></div>
-                  </div>
-                </>
-              )}
-
-              {guideSceneTab === "guide" && (
-                <div className="scene-info-grid">
-                  <div><span>PARKING</span><strong>Driveway right side</strong><small>Leave space for garbage truck</small></div>
-                  <div><span>KITCHEN</span><strong>Shared shelves 1 & 2</strong><small>Label your container</small></div>
-                </div>
-              )}
-
-              {guideSceneTab === "updates" && (
-                <div className="scene-update">
-                  <span className="scene-avatar" aria-hidden="true">M</span>
-                  <div>
-                    <strong>Update from Maya <small>Today</small></strong>
-                    <p>Use the side entrance after 8. The porch light is on.</p>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
+          <GuideSceneTabs />
         </article>
 
         {/* Feature 02: Ledger */}

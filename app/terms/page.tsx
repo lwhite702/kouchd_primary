@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LegalPageLayout } from "@/components/legal/legal-page-layout";
-import { MessageSquare, ShieldCheck, Scale } from "lucide-react";
-import { termsOfUse, legalMeta } from "@/lib/legal";
+import { LegalCallout } from "@/components/legal/legal-article";
+import { MessageSquare, Scale } from "lucide-react";
+import { termsOfUse } from "@/lib/legal";
 
 export const metadata: Metadata = {
   title: "Terms & Conditions | Kouchd",
@@ -15,52 +16,20 @@ export default function TermsAndConditionsPage() {
   return (
     <LegalPageLayout activeRoute="terms">
       <article className="legal-article" style={{ lineHeight: 1.75 }}>
-        {/* Header */}
-        <div style={{ borderBottom: "1px solid var(--kouchd-line, #ded8ce)", paddingBottom: "1.25rem", marginBottom: "1.75rem" }}>
-          <p
-            style={{
-              textTransform: "uppercase",
-              letterSpacing: "1.5px",
-              fontSize: "0.78rem",
-              fontWeight: 800,
-              color: "var(--kouchd-forest, #184f3a)",
-              margin: "0 0 0.5rem",
-            }}
-          >
-            Wrelik Brands LLC &middot; Legal Documentation
-          </p>
-          <h1
-            style={{
-              fontSize: "2.25rem",
-              fontWeight: 800,
-              color: "var(--kouchd-forest, #184f3a)",
-              margin: "0 0 0.5rem",
-              letterSpacing: "-0.5px",
-            }}
-          >
-            Terms &amp; Conditions
-          </h1>
-          <p style={{ margin: 0, color: "var(--kouchd-muted, #59675f)", fontSize: "0.9rem" }}>
-            Effective Date: {termsOfUse.effectiveDate} &middot; Last updated: {termsOfUse.lastUpdated} &middot; Brand: <strong>{legalMeta.provider}</strong> (operating <strong>Kouchd</strong>)
+        {/* Header Block */}
+        <div className="legal-header-block">
+          <p className="legal-eyebrow">Wrelik Brands LLC &middot; Legal Documentation</p>
+          <h1 className="legal-title">Terms &amp; Conditions</h1>
+          <p className="legal-meta-text">
+            Effective Date: {termsOfUse.effectiveDate} &middot; Last updated: {termsOfUse.lastUpdated} &middot; Brand: <strong>Wrelik Brands LLC</strong> (operating <strong>Kouchd</strong>)
           </p>
         </div>
 
         {/* Platform Role Overview */}
-        <div
-          style={{
-            background: "#f7faf7",
-            border: "1px solid #b8d2c1",
-            borderRadius: "14px",
-            padding: "1.25rem 1.5rem",
-            margin: "1.75rem 0",
-          }}
+        <LegalCallout
+          icon={<Scale size={22} color="var(--kouchd-forest, #184f3a)" />}
+          title="Collaborative Stay Agreements &amp; Ledger Tool"
         >
-          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "0.5rem" }}>
-            <Scale size={22} color="var(--kouchd-forest, #184f3a)" />
-            <strong style={{ color: "var(--kouchd-forest, #184f3a)", fontSize: "1.05rem" }}>
-              Collaborative Stay Agreements &amp; Ledger Tool
-            </strong>
-          </div>
           <p style={{ margin: "0 0 0.5rem", fontSize: "0.93rem", color: "var(--kouchd-ink, #17251f)" }}>
             Kouchd provides collaborative living agreements, chore coordination, and shared household bookkeeping records between hosts and temporary houseguests.
           </p>
@@ -75,7 +44,7 @@ export default function TermsAndConditionsPage() {
               <strong>Mutual Agreement:</strong> Stay terms and adjustments require mutual confirmation by host and guest to remain active and transparent.
             </li>
           </ul>
-        </div>
+        </LegalCallout>
 
         {/* DEDICATED SMS TERMS SECTION */}
         <section

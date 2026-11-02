@@ -183,7 +183,49 @@ describe("Newsletter API Route & Rate Limiter", () => {
       expect(data.message).toBe("Please wait a minute before trying again.");
     });
 
-    it("returns 502 when Loops service returns non-200 error", async () => {
+    it("returns 500 configuration error for upstream 400 and 401 responses", async () => {
+      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+      for (const status of [400, 401, 422]) {
+        vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response("Bad request", { status })));
+        const req = new Request("http://localhost/api/newsletter", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: "user@example.com", consent: true }),
+        });
+
+        const res = await POST(req);
+        expect(res.status).toBe(500);
+        const data = await res.json();
+        expect(data.message).toContain("provider configuration issue");
+        expect(consoleErrorSpy).toHaveBeenCalledWith(
+          "Loops newsletter signup upstream configuration error (check LOOPS_API_KEY/payload)",
+          expect.objectContaining({ status })
+        );
+      }
+    });
+
+    it("returns 429 when Loops service returns upstream 429 rate limit", async () => {
+      vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response("Too Many Requests", { status: 429 })));
+      const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+      const req = new Request("http://localhost/api/newsletter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: "user@example.com", consent: true }),
+      });
+
+      const res = await POST(req);
+      expect(res.status).toBe(429);
+      const data = await res.json();
+      expect(data.message).toContain("receiving high volume");
+      expect(consoleWarnSpy).toHaveBeenCalledWith(
+        "Loops newsletter signup rate limited by upstream",
+        expect.objectContaining({ status: 429 })
+      );
+    });
+
+    it("returns 502 when Loops service returns upstream 500 or 503 error", async () => {
       vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response("Service error", { status: 500 })));
       const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
@@ -196,9 +238,39 @@ describe("Newsletter API Route & Rate Limiter", () => {
       const res = await POST(req);
       expect(res.status).toBe(502);
       expect(consoleErrorSpy).toHaveBeenCalledWith(
-        "Loops newsletter signup failed",
+        "Loops newsletter signup transient upstream failure",
         expect.objectContaining({ status: 500 })
       );
+    });
+
+    it("returns 500 when rate limiter or IP extraction throws an exception", async () => {
+      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+      const throwingReq = new Request("http://localhost/api/newsletter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: "user@example.com", consent: true }),
+      });
+      // Mock request.headers.get to throw when accessing IP headers
+      vi.spyOn(throwingReq.headers, "get").mockImplementation((key: string) => {
+        if (key.toLowerCase() === "content-type") return "application/json";
+        if (key.toLowerCase() === "content-length") return "50";
+        throw new Error("Corrupted header table");
+      });
+
+      const res = await POST(throwingReq);
+      expect(res.status).toBe(500);
+      const data = await res.json();
+      expect(data.message).toBe("An unexpected error occurred. Please try again.");
+      expect(res.headers.get("Cache-Control")).toBe("no-store");
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        "Newsletter rate limiter error",
+        expect.objectContaining({ errorName: "Error", message: "Corrupted header table" })
+      );
+    });
+
+    it("getClientIp returns fallback 'unknown' when x-real-ip and x-forwarded-for are absent", () => {
+      const emptyReq = new Request("http://localhost/api/newsletter");
+      expect(getClientIp(emptyReq)).toBe("unknown");
     });
 
     it("returns 502 for upstream network failure or timeout", async () => {

@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LegalPageLayout } from "@/components/legal/legal-page-layout";
-import { ShieldCheck, Lock, Users, Smartphone, FileText } from "lucide-react";
-import { privacyPolicy, legalMeta } from "@/lib/legal";
+import { LegalCallout, LegalSectionsRenderer } from "@/components/legal/legal-article";
+import { ShieldCheck, Lock } from "lucide-react";
+import { privacyPolicy } from "@/lib/legal";
 
 export const metadata: Metadata = {
   title: "Privacy Policy | Kouchd",
@@ -16,61 +17,26 @@ export default function PrivacyPolicyPage() {
     <LegalPageLayout activeRoute="privacy">
       <article className="legal-article" style={{ lineHeight: 1.75 }}>
         {/* Header Block */}
-        <div style={{ borderBottom: "1px solid var(--kouchd-line, #ded8ce)", paddingBottom: "1.25rem", marginBottom: "1.75rem" }}>
-          <p
-            style={{
-              textTransform: "uppercase",
-              letterSpacing: "1.5px",
-              fontSize: "0.78rem",
-              fontWeight: 800,
-              color: "var(--kouchd-forest, #184f3a)",
-              margin: "0 0 0.5rem",
-            }}
-          >
-            Wrelik Brands LLC &middot; Legal Documentation
-          </p>
-          <h1
-            style={{
-              fontSize: "2.25rem",
-              fontWeight: 800,
-              color: "var(--kouchd-forest, #184f3a)",
-              margin: "0 0 0.5rem",
-              letterSpacing: "-0.5px",
-            }}
-          >
-            Privacy Policy
-          </h1>
-          <p style={{ margin: 0, color: "var(--kouchd-muted, #59675f)", fontSize: "0.9rem" }}>
-            Effective Date: {privacyPolicy.effectiveDate} &middot; Last updated: {privacyPolicy.lastUpdated} &middot; Brand: <strong>{legalMeta.provider}</strong> (operating <strong>Kouchd</strong>)
+        <div className="legal-header-block">
+          <p className="legal-eyebrow">Wrelik Brands LLC &middot; Legal Documentation</p>
+          <h1 className="legal-title">Privacy Policy</h1>
+          <p className="legal-meta-text">
+            Effective Date: {privacyPolicy.effectiveDate} &middot; Last updated: {privacyPolicy.lastUpdated} &middot; Brand: <strong>Wrelik Brands LLC</strong> (operating <strong>Kouchd</strong>)
           </p>
         </div>
 
         {/* Carrier Compliance Highlight Box */}
-        <div
-          style={{
-            background: "#eaf4ec",
-            border: "2px solid #b8d2c1",
-            borderRadius: "14px",
-            padding: "1.25rem 1.5rem",
-            margin: "1.75rem 0",
-            display: "flex",
-            alignItems: "flex-start",
-            gap: "1rem",
-          }}
+        <LegalCallout
+          icon={<ShieldCheck size={26} color="var(--kouchd-forest, #184f3a)" style={{ flexShrink: 0, marginTop: "2px" }} />}
+          title="Strict SMS Privacy &amp; Data Protection Commitment"
         >
-          <ShieldCheck size={26} color="var(--kouchd-forest, #184f3a)" style={{ flexShrink: 0, marginTop: "2px" }} />
-          <div>
-            <strong style={{ color: "var(--kouchd-forest, #184f3a)", display: "block", fontSize: "1.05rem", marginBottom: "0.35rem" }}>
-              Strict SMS Privacy &amp; Data Protection Commitment
-            </strong>
-            <p style={{ margin: "0 0 0.4rem", fontWeight: 700, color: "#184f3a", fontSize: "0.98rem" }}>
-              We do not sell or share your SMS opt-in data or personal information with third parties for marketing purposes.
-            </p>
-            <p style={{ margin: 0, fontSize: "0.88rem", color: "#2d4438" }}>
-              Text messaging originator opt-in data and consent are strictly excluded from any sharing with third parties, affiliates, or external partners for marketing or promotional purposes.
-            </p>
-          </div>
-        </div>
+          <p style={{ margin: "0 0 0.4rem", fontWeight: 700, color: "#184f3a", fontSize: "0.98rem" }}>
+            We do not sell or share your SMS opt-in data or personal information with third parties for marketing purposes.
+          </p>
+          <p style={{ margin: 0, fontSize: "0.88rem", color: "#2d4438" }}>
+            Text messaging originator opt-in data and consent are strictly excluded from any sharing with third parties, affiliates, or external partners for marketing or promotional purposes.
+          </p>
+        </LegalCallout>
 
         {/* Static Carrier-Mandated Headings & Content */}
         <section style={{ marginBottom: "2rem" }}>
@@ -119,38 +85,7 @@ export default function PrivacyPolicyPage() {
         </section>
 
         {/* Master Policy Sections */}
-        {privacyPolicy.sections.map((section, idx) => (
-          <section key={idx} style={{ marginBottom: "2.25rem" }}>
-            <h2 style={{ fontSize: "1.35rem", fontWeight: 800, color: "var(--kouchd-ink, #17251f)", marginBottom: "0.75rem" }}>
-              {section.title}
-            </h2>
-            {section.paragraphs?.map((p, pIdx) => (
-              <p key={pIdx} style={{ marginBottom: "0.75rem", whiteSpace: "pre-line" }}>
-                {p}
-              </p>
-            ))}
-            {section.bullets && section.bullets.length > 0 && (
-              <ul style={{ paddingLeft: "1.25rem", margin: "0.75rem 0 1rem" }}>
-                {section.bullets.map((b, bIdx) => (
-                  <li key={bIdx} style={{ marginBottom: "0.5rem" }}>
-                    {b.label && <strong style={{ color: "var(--kouchd-ink, #17251f)" }}>{b.label}: </strong>}
-                    <span>{b.text}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-            {section.numbered && section.numbered.length > 0 && (
-              <div style={{ display: "grid", gap: "0.5rem", marginTop: "0.5rem" }}>
-                {section.numbered.map((n, nIdx) => (
-                  <p key={nIdx} style={{ fontSize: "0.92rem", color: "var(--kouchd-muted, #59675f)", margin: 0 }}>
-                    {n.label && <strong>{n.label}: </strong>}
-                    {n.text}
-                  </p>
-                ))}
-              </div>
-            )}
-          </section>
-        ))}
+        <LegalSectionsRenderer sections={privacyPolicy.sections} />
 
         {/* Kouchd Specific Addendum */}
         {privacyPolicy.addendum.length > 0 && (

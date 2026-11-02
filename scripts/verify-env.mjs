@@ -29,6 +29,20 @@ if (isProduction) {
     );
     process.exit(1);
   }
+
+  const subEnv = process.env.SUBSCRIPTION_EXPECTED_ENVIRONMENT;
+  if (!subEnv) {
+    console.error(
+      "Missing required environment variable in production: SUBSCRIPTION_EXPECTED_ENVIRONMENT. Must be 'production' or 'sandbox'."
+    );
+    process.exit(1);
+  }
+  if (subEnv !== "production" && subEnv !== "sandbox") {
+    console.error(
+      `Invalid SUBSCRIPTION_EXPECTED_ENVIRONMENT: "${subEnv}". Must be 'production' or 'sandbox'.`
+    );
+    process.exit(1);
+  }
 }
 
 const required = [

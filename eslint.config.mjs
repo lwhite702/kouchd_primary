@@ -5,5 +5,18 @@ import nextTypeScript from "eslint-config-next/typescript";
 export default defineConfig([
   ...nextVitals,
   ...nextTypeScript,
-  globalIgnores([".next/**", "node_modules/**", "coverage/**", "prototype/**", ".agents/**", "convex/_generated/**"]),
+  globalIgnores([
+    ".next/**",
+    "node_modules/**",
+    "coverage/**",
+    "prototype/**",
+    ".agents/**",
+    ".claude/**",
+    "_deliverables/**",
+    "_design/**",
+    "_funnel/**",
+    "_store/**",
+    "checks/**",
+    "convex/_generated/**",
+  ]),
 ]);

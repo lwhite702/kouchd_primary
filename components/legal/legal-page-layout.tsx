@@ -3,6 +3,7 @@ import React from "react";
 import { ArrowLeft, ArrowUpRight } from "lucide-react";
 
 import { KouchdWordmark } from "@/components/brand/kouchd-logo";
+import "./legal.css";
 
 interface LegalPageLayoutProps {
   children: React.ReactNode;
@@ -11,29 +12,9 @@ interface LegalPageLayoutProps {
 
 export function LegalPageLayout({ children, activeRoute }: LegalPageLayoutProps) {
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: "var(--kouchd-paper, #f5f0e8)",
-        color: "var(--kouchd-ink, #17251f)",
-        fontFamily: "var(--font-manrope), sans-serif",
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
+    <div className="legal-page-container">
       {/* Top Header */}
-      <header
-        style={{
-          borderBottom: "1px solid var(--kouchd-line, #ded8ce)",
-          background: "var(--kouchd-surface, #fffdf8)",
-          padding: "1rem 1.5rem",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          flexWrap: "wrap",
-          gap: "1rem",
-        }}
-      >
+      <header className="legal-header-bar">
         <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
           <Link href="/" style={{ display: "inline-flex", textDecoration: "none" }} aria-label="Kouchd home">
             <KouchdWordmark size="sm" />

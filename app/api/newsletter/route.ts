@@ -36,8 +36,17 @@ export async function POST(request: Request) {
   const email = signup.email.trim().toLowerCase();
   if (!isValidEmail(email)) return json("Enter a valid email address.", 400);
 
-  const ip = getClientIp(request);
-  if (isRateLimited(ip)) return json("Please wait a minute before trying again.", 429);
+  let ip: string;
+  try {
+    ip = getClientIp(request);
+    if (isRateLimited(ip)) return json("Please wait a minute before trying again.", 429);
+  } catch (limiterError: unknown) {
+    console.error("Newsletter rate limiter error", {
+      errorName: limiterError instanceof Error ? limiterError.name : "UnknownError",
+      message: limiterError instanceof Error ? limiterError.message : String(limiterError),
+    });
+    return json("An unexpected error occurred. Please try again.", 500);
+  }
 
   const apiKey = process.env.LOOPS_API_KEY;
   if (!apiKey) return json("Signup is temporarily unavailable. Please try again later.", 503);
@@ -60,7 +69,19 @@ export async function POST(request: Request) {
     });
 
     if (!response.ok) {
-      console.error("Loops newsletter signup failed", { status: response.status });
+      if (response.status >= 400 && response.status < 500 && response.status !== 429) {
+        console.error("Loops newsletter signup upstream configuration error (check LOOPS_API_KEY/payload)", {
+          status: response.status,
+        });
+        return json("Newsletter signup could not be completed due to a provider configuration issue.", 500);
+      }
+
+      if (response.status === 429) {
+        console.warn("Loops newsletter signup rate limited by upstream", { status: response.status });
+        return json("The signup service is receiving high volume. Please try again in a few moments.", 429);
+      }
+
+      console.error("Loops newsletter signup transient upstream failure", { status: response.status });
       return json("We couldn’t add you just now. Please try again.", 502);
     }
 
