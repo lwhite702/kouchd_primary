@@ -6,6 +6,7 @@ import type { MutationCtx, QueryCtx } from "./_generated/server";
 import { internalMutation, internalQuery, mutation, query } from "./_generated/server";
 import { getOrCreateHouseholdAccount } from "./householdOwnership";
 import { getEffectiveSubscriptionForAccount } from "./lib/subscriptionAccess";
+import { reconcileAccountSubleaseLocks } from "./lib/subleaseLock";
 import { requireCurrentUser } from "./lib/auth";
 import { getPlanUsage, publicPlanName } from "./lib/planCapacity";
 import { resolveMemberName } from "./lib/names";
@@ -231,10 +232,15 @@ async function applyProviderSnapshotEvent(
   // cancellation or grace access remains bounded without trusting aliases or
   // product names.
   const entitlement = args.entitlement ?? (
-    args.status === "canceled" || args.status === "grace_period"
+    args.status === "canceled" || args.status === "grace_period" || args.status === "billing_retry"
       ? snapshot?.entitlement
       : undefined
   );
+  const billingRetryStartedAt = args.status === "billing_retry"
+    ? (snapshot?.status === "billing_retry"
+      ? (snapshot.billingRetryStartedAt ?? args.occurredAt)
+      : args.occurredAt)
+    : undefined;
   const snapshotFields = {
     householdAccountId: args.householdAccountId,
     provider: args.provider,
@@ -249,12 +255,15 @@ async function applyProviderSnapshotEvent(
     // Cancellation and billing events can omit these; keep the last known values.
     periodType: args.periodType ?? snapshot?.periodType,
     store: args.store ?? snapshot?.store,
+    billingRetryStartedAt,
     latestProviderEventAt: args.occurredAt,
     updatedAt: receivedAt,
   };
 
   if (snapshot) await ctx.db.patch(snapshot._id, snapshotFields);
   else await ctx.db.insert("subscriptionSnapshots", snapshotFields);
+
+  await reconcileAccountSubleaseLocks(ctx, args.householdAccountId, args.environment, receivedAt);
 
   if (snapshotFields.periodType === "trial" && snapshotFields.currentPeriodEndsAt !== snapshot?.currentPeriodEndsAt) {
     await scheduleTrialReminderIfNeeded(ctx, snapshotFields);

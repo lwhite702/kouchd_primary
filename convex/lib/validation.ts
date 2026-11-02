@@ -287,3 +287,42 @@ export function assertPaymentOptionsInput(options: PaymentOptionInput[]) {
     }
   }
 }
+
+export type SubleaseLayout = "whole_place" | "private_room";
+export type LandlordConsentAnswer = "written_permission" | "not_required" | "not_confirmed";
+
+export function assertSubleaseInput(input: {
+  arrangement?: "home_stay" | "sublease";
+  subleaseLayout?: SubleaseLayout;
+  roommateCount?: number;
+  roommateNames?: string[];
+}) {
+  if (input.arrangement !== "sublease") {
+    if (input.subleaseLayout !== undefined || input.roommateCount !== undefined || input.roommateNames !== undefined) {
+      throw new Error("Sublease layout and roommate details are only used on sublease stays");
+    }
+    return;
+  }
+  if (input.subleaseLayout !== "whole_place" && input.subleaseLayout !== "private_room") {
+    throw new Error("Choose whether you are subletting the whole place or a private room");
+  }
+  if (input.subleaseLayout === "whole_place") {
+    if (input.roommateCount !== undefined || (input.roommateNames && input.roommateNames.length > 0)) {
+      throw new Error("Whole-place subleases do not include roommates");
+    }
+  } else {
+    if (input.roommateCount === undefined || !Number.isInteger(input.roommateCount) || input.roommateCount < 0 || input.roommateCount > 20) {
+      throw new Error("Roommate count must be a whole number from 0 to 20");
+    }
+    if (input.roommateNames !== undefined) {
+      if (input.roommateNames.length > 20) {
+        throw new Error("You can list up to 20 roommate names");
+      }
+      for (const name of input.roommateNames) {
+        if (!name.trim() || name.trim().length > 80) {
+          throw new Error("Each roommate name must be between 1 and 80 characters");
+        }
+      }
+    }
+  }
+}

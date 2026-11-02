@@ -5,6 +5,7 @@ export const FEATURE_FLAGS = {
   REWARDS_SYSTEM: "feature_rewards_system",
   HOUSEHOLD_ANNOUNCEMENTS: "feature_household_announcements",
   BILL_SPLITTING: "feature_bill_splitting",
+  SUBLEASES: "feature_subleases",
 
   // Core & Launch Plans
   FLEXIBLE_PAYMENT_SCHEDULES: "feature_flexible_payment_schedules",
@@ -68,6 +69,13 @@ export const FEATURE_FLAGS_REGISTRY: Record<FeatureFlagKey, FeatureFlagMeta> = {
     key: FEATURE_FLAGS.BILL_SPLITTING,
     label: "Household Bill Splitting",
     description: "Enables Plus hosts to split household bills across guests into ledger obligations.",
+    category: "household",
+    defaultValue: false,
+  },
+  [FEATURE_FLAGS.SUBLEASES]: {
+    key: FEATURE_FLAGS.SUBLEASES,
+    label: "Subleases & Landlord Consent",
+    description: "Enables Plus hosts to create sublease stays with whole-place or private-room layouts, monthly rent, landlord consent tracking, and subscription lock safeguards.",
     category: "household",
     defaultValue: false,
   },
