@@ -65,13 +65,6 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
   return (
     <html lang="en" className={`${manrope.variable} ${inter.variable}`}>
       <head>
-        <link
-          rel="preload"
-          as="script"
-          href="https://clerk.kouchd.com/npm/@clerk/ui@1.41.2/dist/vendors_ui_e564da_1.41.2.js"
-          integrity="sha384-n1qf8LZfE2TLHN1Eh3B3t0LvQVqZYr/WKDzGzK1VwkhfLYrZRFinzvauGI4mHpFu"
-          crossOrigin="anonymous"
-        />
         <script
           id="kouchd-security-runtime"
           nonce={nonce}
