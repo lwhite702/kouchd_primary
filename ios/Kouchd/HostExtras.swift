@@ -7,6 +7,7 @@ struct TermsEditScreen: View {
   @State private var end = ""
   @State private var cadence = "weekly"
   @State private var weekday = 1
+  @State private var paymentDayOfMonth = 1
   @State private var rate = ""
   @State private var notes = ""
   @State private var billing = "continuous"
@@ -35,6 +36,9 @@ struct TermsEditScreen: View {
         TextField("Start (YYYY-MM-DD)", text: $start)
         TextField("End (YYYY-MM-DD)", text: $end)
         Picker("Cadence", selection: $cadence) {
+          if cadence == "monthly" || terms["cadence"].text == "monthly" {
+            Text("Monthly").tag("monthly")
+          }
           Text("Weekly").tag("weekly")
           Text("Daily").tag("daily")
         }
@@ -44,6 +48,9 @@ struct TermsEditScreen: View {
               Text(Calendar.current.weekdaySymbols[day]).tag(day)
             }
           }
+        }
+        if cadence == "monthly" {
+          Stepper("Due day of month: \(paymentDayOfMonth)", value: $paymentDayOfMonth, in: 1...28)
         }
         TextField("Amount in dollars", text: $rate).keyboardType(.decimalPad)
         Picker("Billing", selection: $billing) {
@@ -109,6 +116,7 @@ struct TermsEditScreen: View {
     end = value["endDate"].text
     cadence = value["cadence"].text
     weekday = value["paymentDayOfWeek"].int
+    paymentDayOfMonth = max(1, value["paymentDayOfMonth"].int)
     rate = String(Double(value["rateCents"].int) / 100)
     notes = value["houseNotes"].text
     billing = value["billingBasis"].text.isEmpty ? "continuous" : value["billingBasis"].text
@@ -137,6 +145,7 @@ struct TermsEditScreen: View {
       "graceDays": Double(lateFee ? (Int(grace) ?? 0) : 0), "houseNotes": notes
     ]
     if cadence == "weekly" { fields["paymentDayOfWeek"] = Double(weekday) }
+    if cadence == "monthly" { fields["paymentDayOfMonth"] = Double(paymentDayOfMonth) }
     fields["houseRules"] = Value.array(houseRules.map(\.value))
     fields["rewards"] = Value.object([
       "enabled": .bool(rewardEnabled), "coinName": .string(coinName),

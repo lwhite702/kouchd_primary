@@ -109,24 +109,31 @@ struct ScheduleScreen: View {
           .font(.subheadline).foregroundStyle(Palette.muted)
       }
       if !store.isHost && !store.isEnded {
-        Card {
-          Picker("New rhythm", selection: $cadence) {
-            Text("Daily").tag("daily"); Text("Weekly").tag("weekly")
-          }.pickerStyle(.segmented)
-          if cadence == "weekly" {
-            Picker("Due weekday", selection: $weekday) {
-              ForEach(0..<7) { day in
-                Text(Calendar.current.weekdaySymbols[day]).tag(day)
+        if store.bundle["terms"]["cadence"].text == "monthly" {
+          Card {
+            Text("Monthly agreements use a fixed monthly due date and can't be switched to daily or weekly schedules.")
+              .font(.subheadline).foregroundStyle(Palette.muted)
+          }
+        } else {
+          Card {
+            Picker("New rhythm", selection: $cadence) {
+              Text("Daily").tag("daily"); Text("Weekly").tag("weekly")
+            }.pickerStyle(.segmented)
+            if cadence == "weekly" {
+              Picker("Due weekday", selection: $weekday) {
+                ForEach(0..<7) { day in
+                  Text(Calendar.current.weekdaySymbols[day]).tag(day)
+                }
               }
             }
-          }
-          PrimaryButton(title: "Request change") {
-            Task {
-              var args: [String: ConvexEncodable?] = [
-                "stayId": store.selectedStayID, "cadence": cadence
-              ]
-              if cadence == "weekly" { args["paymentDayOfWeek"] = Double(weekday) }
-              _ = await store.mutate("paymentSchedule:requestChange", args)
+            PrimaryButton(title: "Request change") {
+              Task {
+                var args: [String: ConvexEncodable?] = [
+                  "stayId": store.selectedStayID, "cadence": cadence
+                ]
+                if cadence == "weekly" { args["paymentDayOfWeek"] = Double(weekday) }
+                _ = await store.mutate("paymentSchedule:requestChange", args)
+              }
             }
           }
         }

@@ -271,7 +271,11 @@ export function StayScreen({ state }: { state: WorkspaceState }) {
             <p className="overline">Contribution plan</p>
             <p>
               {formatMoney(displayedAgreementTerms.rateCents)} per{" "}
-              {displayedAgreementTerms.cadence === "weekly" ? "week" : "day"}
+              {displayedAgreementTerms.cadence === "monthly"
+                ? "month"
+                : displayedAgreementTerms.cadence === "weekly"
+                  ? "week"
+                  : "day"}
             </p>
           </article>
           <article className="details-card">
@@ -384,6 +388,7 @@ export function StayScreen({ state }: { state: WorkspaceState }) {
           hasAccepted={hasAccepted}
           cadence={terms.cadence}
           paymentDayOfWeek={terms.paymentDayOfWeek}
+          paymentDayOfMonth={terms.paymentDayOfMonth}
           ended={isEnded}
           onNotify={notify}
         />
@@ -435,7 +440,7 @@ export function StayScreen({ state }: { state: WorkspaceState }) {
                       <strong>{currentGuestName}</strong>
                       <span>
                         {guestTerms
-                          ? `${formatMoney(guestTerms.rateCents)} per ${guestTerms.cadence === "weekly" ? "week" : "day"} · ${guest.agreementOffer?.status === "auto_accepted" && guest.agreementOffer.systemAutoApprovedAt ? `system auto-approved ${new Date(guest.agreementOffer.systemAutoApprovedAt).toLocaleString()}` : guest.membership.acceptedTermsId === guestTerms._id ? "accepted" : "awaiting acceptance"}`
+                          ? `${formatMoney(guestTerms.rateCents)} per ${guestTerms.cadence === "monthly" ? "month" : guestTerms.cadence === "weekly" ? "week" : "day"} · ${guest.agreementOffer?.status === "auto_accepted" && guest.agreementOffer.systemAutoApprovedAt ? `system auto-approved ${new Date(guest.agreementOffer.systemAutoApprovedAt).toLocaleString()}` : guest.membership.acceptedTermsId === guestTerms._id ? "accepted" : "awaiting acceptance"}`
                           : "Agreement not available"}
                       </span>
                     </div>

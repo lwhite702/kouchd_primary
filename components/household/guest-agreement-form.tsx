@@ -5,7 +5,7 @@ import { FormEvent, useState } from "react";
 import type { Doc } from "@/convex/_generated/dataModel";
 
 export type GuestTerms = Pick<Doc<"terms">,
-  "startDate" | "endDate" | "cadence" | "paymentDayOfWeek" | "billingBasis" | "rateCents" | "earlyDiscountPercentage" | "earlyDiscountDays" | "lateFeeCents" | "graceDays" | "houseNotes" | "houseRules" | "rewards"
+  "startDate" | "endDate" | "cadence" | "paymentDayOfWeek" | "paymentDayOfMonth" | "billingBasis" | "rateCents" | "earlyDiscountPercentage" | "earlyDiscountDays" | "lateFeeCents" | "graceDays" | "houseNotes" | "houseRules" | "rewards"
 > & { earlyDiscountEnabled: boolean; lateFeeEnabled: boolean };
 
 export function GuestAgreementForm({
@@ -25,6 +25,7 @@ export function GuestAgreementForm({
   const [submitting, setSubmitting] = useState(false);
   const [cadence, setCadence] = useState(terms.cadence);
   const [paymentDayOfWeek, setPaymentDayOfWeek] = useState(terms.paymentDayOfWeek ?? 5);
+  const [paymentDayOfMonth, setPaymentDayOfMonth] = useState(terms.paymentDayOfMonth ?? 1);
   const [billingBasis, setBillingBasis] = useState<"continuous" | "occupied_nights">(terms.billingBasis ?? "continuous");
   const [error, setError] = useState("");
 
@@ -39,8 +40,9 @@ export function GuestAgreementForm({
       await onSubmit({
         startDate: String(form.get("startDate") ?? ""),
         endDate: String(form.get("endDate") ?? ""),
-        cadence: String(form.get("cadence")) as "daily" | "weekly",
+        cadence: String(form.get("cadence")) as "daily" | "weekly" | "monthly",
         ...(cadence === "weekly" ? { paymentDayOfWeek: Number(form.get("paymentDayOfWeek")) } : {}),
+        ...(cadence === "monthly" ? { paymentDayOfMonth: Number(form.get("paymentDayOfMonth")) } : {}),
         billingBasis: String(form.get("billingBasis")) as "continuous" | "occupied_nights",
         rateCents: Math.round(Number(form.get("rate")) * 100),
         earlyDiscountEnabled,
@@ -66,9 +68,10 @@ export function GuestAgreementForm({
       <div className="form-grid">
         <label><span>Start date</span><input name="startDate" type="date" defaultValue={terms.startDate} required /></label>
         <label><span>End date</span><input name="endDate" type="date" defaultValue={terms.endDate} required /></label>
-        <label><span>Contribution cadence</span><select name="cadence" value={cadence} onChange={(event) => setCadence(event.target.value as "daily" | "weekly")}><option value="weekly">Weekly</option><option value="daily">Daily</option></select></label>
+        <label><span>Contribution cadence</span><select name="cadence" value={cadence} onChange={(event) => setCadence(event.target.value as "daily" | "weekly" | "monthly")}>{terms.cadence === "monthly" && <option value="monthly">Monthly</option>}<option value="weekly">Weekly</option><option value="daily">Daily</option></select></label>
         {cadence === "weekly" && <label><span>Weekly payment day</span><select name="paymentDayOfWeek" value={paymentDayOfWeek} onChange={(event) => setPaymentDayOfWeek(Number(event.target.value))}>{["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"].map((day, index) => <option key={day} value={index}>{day}</option>)}</select></label>}
-        <label><span>Amount per {cadence === "weekly" ? "week" : "day"}</span><div className="money-input"><span>$</span><input name="rate" type="number" min="0" step="0.01" defaultValue={(terms.rateCents / 100).toFixed(2)} required /></div></label>
+        {cadence === "monthly" && <label><span>Monthly payment day (1–28)</span><input name="paymentDayOfMonth" type="number" min="1" max="28" value={paymentDayOfMonth} onChange={(event) => setPaymentDayOfMonth(Number(event.target.value))} required /></label>}
+        <label><span>Amount per {cadence === "monthly" ? "month" : cadence === "weekly" ? "week" : "day"}</span><div className="money-input"><span>$</span><input name="rate" type="number" min="0" step="0.01" defaultValue={(terms.rateCents / 100).toFixed(2)} required /></div></label>
         <label><span>Billable dates</span><select name="billingBasis" value={billingBasis} onChange={(event) => setBillingBasis(event.target.value as "continuous" | "occupied_nights")}><option value="continuous">Every day in the stay</option><option value="occupied_nights">Only nights the host records</option></select></label>
         {billingBasis === "occupied_nights" && <p className="muted full">The host records each overnight after it happens. Only recorded nights are billed; each night is prorated from the daily or weekly rate.</p>}
         <label className="check full"><input name="earlyDiscountEnabled" type="checkbox" defaultChecked={terms.earlyDiscountEnabled ?? terms.earlyDiscountPercentage > 0} /><span>Offer an early contribution discount</span></label>
