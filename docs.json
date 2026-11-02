@@ -97,6 +97,7 @@
         "pages": [
           "help/support/app-support",
           "help/support/plans-and-subscription",
+          "help/support/kouchd-vs-splitwise",
           "help/support/refund-policy",
           "help/support/delete-account"
         ]
