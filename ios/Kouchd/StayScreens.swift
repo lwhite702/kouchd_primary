@@ -128,6 +128,9 @@ struct AgreementScreen: View {
           DataRow(title: "Dates", detail: terms.startDate + " – " + terms.endDate)
           DataRow(title: "Amount", detail: Display.money(terms.rateCents))
           DataRow(title: "Cadence", detail: terms.cadence.capitalized)
+          if store.bundle["terms"]["cadence"].text == "monthly" {
+            DataRow(title: "Due day", detail: "Day \(max(1, store.bundle["terms"]["paymentDayOfMonth"].int)) of each month")
+          }
         } else {
           Text("Agreement details couldn't be read. Reopen this stay to try again.").foregroundStyle(Palette.muted)
         }
@@ -142,25 +145,29 @@ struct AgreementScreen: View {
       if !store.isHost && !store.isEnded &&
          store.bundle["membership"]["acceptedTermsId"].text != store.bundle["terms"]["_id"].text {
         Card {
-          Text("Choose your contribution rhythm").font(.headline)
-          Picker("Rhythm", selection: $cadence) {
-            Text("Weekly").tag("weekly")
-            Text("Daily").tag("daily")
-          }.pickerStyle(.segmented)
-          if cadence == "weekly" {
-            Picker("Due weekday", selection: $weekday) {
-              ForEach(0..<7) { day in
-                Text(Calendar.current.weekdaySymbols[day]).tag(day)
+          if store.bundle["terms"]["cadence"].text != "monthly" {
+            Text("Choose your contribution rhythm").font(.headline)
+            Picker("Rhythm", selection: $cadence) {
+              Text("Weekly").tag("weekly")
+              Text("Daily").tag("daily")
+            }.pickerStyle(.segmented)
+            if cadence == "weekly" {
+              Picker("Due weekday", selection: $weekday) {
+                ForEach(0..<7) { day in
+                  Text(Calendar.current.weekdaySymbols[day]).tag(day)
+                }
               }
             }
           }
           PrimaryButton(title: "Accept current agreement") {
             Task {
               var args: [String: ConvexEncodable?] = [
-                "stayId": store.selectedStayID,
-                "initialCadence": cadence
+                "stayId": store.selectedStayID
               ]
-              if cadence == "weekly" { args["initialPaymentDayOfWeek"] = Double(weekday) }
+              if store.bundle["terms"]["cadence"].text != "monthly" {
+                args["initialCadence"] = cadence
+                if cadence == "weekly" { args["initialPaymentDayOfWeek"] = Double(weekday) }
+              }
               _ = await store.mutate("terms:acceptCurrent", args)
             }
           }.disabled(store.typedAgreement == nil)
@@ -168,7 +175,8 @@ struct AgreementScreen: View {
       }
     }
     .onAppear {
-      cadence = store.bundle["terms"]["cadence"].text.isEmpty ? "weekly" : store.bundle["terms"]["cadence"].text
+      let currentCadence = store.bundle["terms"]["cadence"].text
+      cadence = currentCadence.isEmpty || currentCadence == "monthly" ? "weekly" : currentCadence
     }
   }
 }

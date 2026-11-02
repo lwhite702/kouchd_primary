@@ -118,7 +118,7 @@ export function JoinHouseholdCard({
                     <span>• Dates: {preview.startDate} to {preview.endDate}</span>
                   )}
                   {preview.rateCents !== undefined && (
-                    <span>• {money.format(preview.rateCents / 100)} / {preview.cadence === "weekly" ? "wk" : "day"}</span>
+                    <span>• {money.format(preview.rateCents / 100)} / {preview.cadence === "monthly" ? "mo" : preview.cadence === "weekly" ? "wk" : "day"}</span>
                   )}
                   {preview.houseRules && preview.houseRules.length > 0 && (
                     <span>• {preview.houseRules.length} house rules</span>

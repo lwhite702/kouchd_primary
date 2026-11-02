@@ -15,14 +15,16 @@ export function PaymentScheduleCard({
   hasAccepted,
   cadence,
   paymentDayOfWeek,
+  paymentDayOfMonth,
   ended = false,
   onNotify,
 }: {
   stayId: Id<"stays">;
   isHost: boolean;
   hasAccepted: boolean;
-  cadence: "daily" | "weekly";
+  cadence: "daily" | "weekly" | "monthly";
   paymentDayOfWeek?: number;
+  paymentDayOfMonth?: number;
   ended?: boolean;
   onNotify: (message: string) => void;
 }) {
@@ -60,7 +62,9 @@ export function PaymentScheduleCard({
 
   return <section className="section-block payment-schedule-card">
     <div className="section-heading"><div><p className="eyebrow">Payment timing</p><h2><CalendarClock size={20} /> {isHost ? "Schedule requests" : "Choose your payment schedule"}</h2></div></div>
-    {!isHost ? <>
+    {!isHost ? cadence === "monthly" ? (
+      <p className="muted">Current schedule: <strong>{`Monthly · due day ${paymentDayOfMonth ?? 1} of each month`}</strong>. Monthly sublease schedules are fixed by your agreement and cannot be switched to daily or weekly schedules.</p>
+    ) : <>
       <p className="muted">Current schedule: <strong>{cadence === "weekly" ? `Weekly${paymentDayOfWeek === undefined ? "" : ` · due ${weekdays[paymentDayOfWeek]}`}` : "Daily"}</strong>. Mixed and partial contributions count toward your balance. Daily contributions are due each day; weekly contributions must cover the full prorated weekly amount by the chosen weekday. Changes need host approval, require a $0 due balance, and are limited to one every 14 days.</p>
       {ended && <p className="muted">This stay has ended, so payment schedule changes are no longer available.</p>}
       {!ended && hasAccepted && !ownPending && <div className="form-grid">
@@ -73,6 +77,6 @@ export function PaymentScheduleCard({
       <div className="list-copy"><strong>{request.guestName} · {request.requestedCadence}{request.requestedCadence === "weekly" && request.requestedPaymentDayOfWeek !== undefined ? ` · ${weekdays[request.requestedPaymentDayOfWeek]}` : ""}</strong><span>Requested {new Date(request.requestedAt).toLocaleDateString()}</span></div>
       <div className="row-actions">{!ended && <button className="mini-button" type="button" disabled={busy} onClick={() => void decide(request._id, "approve")}>Approve</button>}<button className="mini-button danger" type="button" disabled={busy} onClick={() => void decide(request._id, "reject")}>Decline</button></div>
     </article>)}</div> : <p className="muted">No payment schedule requests are waiting for review.</p>}
-    <p className="muted small">Daily/weekly rates are adjusted to keep the same approximate weekly cost. A schedule change starts on its approval date, and charges crossing that date are prorated. When enabled, the $5 daily or $25 weekly late fee repeats every 7 days after the agreed grace period while an amount remains unpaid.</p>
+    {cadence !== "monthly" && <p className="muted small">Daily/weekly rates are adjusted to keep the same approximate weekly cost. A schedule change starts on its approval date, and charges crossing that date are prorated. When enabled, the $5 daily or $25 weekly late fee repeats every 7 days after the agreed grace period while an amount remains unpaid.</p>}
   </section>;
 }
