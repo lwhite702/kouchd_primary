@@ -110,12 +110,27 @@ describe("Replay QA: Content-Security-Policy & Canonical Metadata", () => {
       (h) => h.key === "Content-Security-Policy"
     );
     expect(cspHeader).toBeDefined();
-    expect(cspHeader?.value).toContain("default-src 'self'");
-    expect(cspHeader?.value).not.toContain("'unsafe-eval'");
-    expect(cspHeader?.value).toContain("https://clerk.kouchd.com");
-    expect(cspHeader?.value).toContain("https://challenges.cloudflare.com");
-    expect(cspHeader?.value).toContain("https://*.protect.clerk.com:*");
-    expect(cspHeader?.value).toContain("frame-ancestors 'none'");
+
+    // Parse CSP header directives to assert source placement per directive
+    const directives = Object.fromEntries(
+      (cspHeader?.value || "")
+        .split(";")
+        .map((d) => d.trim())
+        .filter(Boolean)
+        .map((d) => {
+          const [name, ...sources] = d.split(/\s+/);
+          return [name, sources];
+        })
+    );
+
+    expect(directives["default-src"]).toContain("'self'");
+    expect(directives["script-src"]).not.toContain("'unsafe-eval'");
+    expect(directives["script-src"]).toContain("https://challenges.cloudflare.com");
+    expect(directives["script-src"]).toContain("https://*.protect.clerk.com");
+    expect(directives["connect-src"]).toContain("https://challenges.cloudflare.com");
+    expect(directives["connect-src"]).toContain("https://*.protect.clerk.com:*");
+    expect(directives["frame-src"]).toContain("https://challenges.cloudflare.com");
+    expect(directives["frame-ancestors"]).toContain("'none'");
   });
 
   it("keeps Content-Security-Policy out of root layout markup", () => {

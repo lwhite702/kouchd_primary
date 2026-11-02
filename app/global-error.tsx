@@ -89,25 +89,23 @@ export default function GlobalError({
                 Reload app
               </button>
             )}
-            {attempts >= 2 && (
-              <Link
-                href="/"
-                style={{
-                  background: "transparent",
-                  color: "#1c3829",
-                  border: "1px solid #c9d1c7",
-                  borderRadius: "0.5rem",
-                  padding: "0.6rem 1.2rem",
-                  fontSize: "0.95rem",
-                  cursor: "pointer",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  textDecoration: "none",
-                }}
-              >
-                Return to home
-              </Link>
-            )}
+            <Link
+              href="/"
+              style={{
+                background: "transparent",
+                color: "#1c3829",
+                border: "1px solid #c9d1c7",
+                borderRadius: "0.5rem",
+                padding: "0.6rem 1.2rem",
+                fontSize: "0.95rem",
+                cursor: "pointer",
+                display: "inline-flex",
+                alignItems: "center",
+                textDecoration: "none",
+              }}
+            >
+              Return to home
+            </Link>
           </div>
         </main>
       </body>

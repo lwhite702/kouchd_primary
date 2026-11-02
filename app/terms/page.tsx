@@ -7,7 +7,7 @@ import {
   LegalCrossLinks,
 } from "@/components/legal/legal-article";
 import { MessageSquare, Scale } from "lucide-react";
-import { termsOfUse } from "@/lib/legal";
+import { termsOfUse, legalMeta } from "@/lib/legal";
 
 export const metadata: Metadata = {
   title: "Terms & Conditions | Kouchd",
@@ -33,7 +33,7 @@ export default function TermsAndConditionsPage() {
               margin: "0 0 0.5rem",
             }}
           >
-            Wrelik Brands LLC &middot; Legal Documentation
+            {legalMeta.provider} &middot; Legal Documentation
           </p>
           <h1
             style={{
@@ -47,7 +47,7 @@ export default function TermsAndConditionsPage() {
             Terms &amp; Conditions
           </h1>
           <p style={{ margin: 0, color: "var(--kouchd-muted, #59675f)", fontSize: "0.9rem" }}>
-            Effective Date: {termsOfUse.effectiveDate} &middot; Last updated: {termsOfUse.lastUpdated} &middot; Brand: <strong>Wrelik Brands LLC</strong> (operating <strong>Kouchd</strong>)
+            Effective Date: {termsOfUse.effectiveDate} &middot; Last updated: {termsOfUse.lastUpdated} &middot; Brand: <strong>{legalMeta.provider}</strong> (operating <strong>Kouchd</strong>)
           </p>
         </div>
 

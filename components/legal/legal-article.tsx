@@ -1,7 +1,6 @@
 import React from "react";
 import Link from "next/link";
 import type { LegalSection } from "@/lib/legal";
-import { legalMeta } from "@/lib/legal";
 
 interface LegalArticleProps {
   children: React.ReactNode;
@@ -12,60 +11,6 @@ export function LegalArticle({ children }: LegalArticleProps) {
     <article className="legal-article" style={{ lineHeight: 1.75 }}>
       {children}
     </article>
-  );
-}
-
-interface LegalArticleHeaderProps {
-  title: string;
-  effectiveDate: string;
-  lastUpdated: string;
-  provider?: string;
-  brand?: string;
-}
-
-export function LegalArticleHeader({
-  title,
-  effectiveDate,
-  lastUpdated,
-  provider = legalMeta.provider,
-  brand = "Kouchd",
-}: LegalArticleHeaderProps) {
-  return (
-    <div
-      style={{
-        borderBottom: "1px solid var(--kouchd-line, #ded8ce)",
-        paddingBottom: "1.25rem",
-        marginBottom: "1.75rem",
-      }}
-    >
-      <p
-        style={{
-          textTransform: "uppercase",
-          letterSpacing: "1.5px",
-          fontSize: "0.78rem",
-          fontWeight: 800,
-          color: "var(--kouchd-forest, #184f3a)",
-          margin: "0 0 0.5rem",
-        }}
-      >
-        {provider} &middot; Legal Documentation
-      </p>
-      <h1
-        style={{
-          fontSize: "2.25rem",
-          fontWeight: 800,
-          color: "var(--kouchd-forest, #184f3a)",
-          margin: "0 0 0.5rem",
-          letterSpacing: "-0.5px",
-        }}
-      >
-        {title}
-      </h1>
-      <p style={{ margin: 0, color: "var(--kouchd-muted, #59675f)", fontSize: "0.9rem" }}>
-        Effective Date: {effectiveDate} &middot; Last updated: {lastUpdated} &middot; Brand:{" "}
-        <strong>{provider}</strong> (operating <strong>{brand}</strong>)
-      </p>
-    </div>
   );
 }
 
@@ -189,7 +134,8 @@ export function LegalCrossLinks({
   ];
 
   return (
-    <div
+    <nav
+      aria-label="Legal documents"
       style={{
         borderTop: "1px solid var(--kouchd-line, #ded8ce)",
         paddingTop: "1.5rem",
@@ -216,6 +162,6 @@ export function LegalCrossLinks({
             &rarr; {l.label}
           </Link>
         ))}
-    </div>
+    </nav>
   );
 }

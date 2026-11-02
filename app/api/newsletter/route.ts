@@ -41,10 +41,11 @@ export async function POST(request: Request) {
   try {
     if (isRateLimited(ip)) return json("Please wait a minute before trying again.", 429);
   } catch (limiterError) {
-    console.warn("Newsletter rate limiter error; failing open", {
+    console.error("Newsletter rate limiter error; returning 503", {
       ip,
       error: limiterError instanceof Error ? limiterError.message : String(limiterError),
     });
+    return json("Signup is temporarily unavailable. Please try again later.", 503);
   }
 
   const apiKey = process.env.LOOPS_API_KEY;
@@ -73,6 +74,7 @@ export async function POST(request: Request) {
   for (let attempt = 1; attempt <= 2; attempt++) {
     try {
       response = await sendToLoops();
+      lastError = undefined;
       if (response.ok || response.status < 500) {
         break;
       }

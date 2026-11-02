@@ -184,8 +184,8 @@ describe("Newsletter API Route & Rate Limiter", () => {
       expect(data.message).toBe("Please wait a minute before trying again.");
     });
 
-    it("fails open and logs warning when rate limiter throws unexpectedly", async () => {
-      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+    it("returns 503 and logs error when rate limiter throws unexpectedly", async () => {
+      const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
       vi.stubGlobal(
         "fetch",
         vi.fn().mockResolvedValue(new Response(JSON.stringify({ success: true }), { status: 200 }))
@@ -204,9 +204,11 @@ describe("Newsletter API Route & Rate Limiter", () => {
       });
 
       const res = await POST(req);
-      expect(res.status).toBe(200);
-      expect(warnSpy).toHaveBeenCalledWith(
-        "Newsletter rate limiter error; failing open",
+      expect(res.status).toBe(503);
+      const data = await res.json();
+      expect(data.message).toBe("Signup is temporarily unavailable. Please try again later.");
+      expect(errorSpy).toHaveBeenCalledWith(
+        "Newsletter rate limiter error; returning 503",
         expect.objectContaining({ error: "Simulated storage/map corruption error" })
       );
       limiterSpy.mockRestore();
@@ -270,6 +272,9 @@ describe("Newsletter API Route & Rate Limiter", () => {
 
       const typeErr = new TypeError("fetch failed");
       expect(classifyUpstreamError(typeErr)).toBe("network");
+
+      const unrelatedTypeErr = new TypeError("Cannot read properties of undefined");
+      expect(classifyUpstreamError(unrelatedTypeErr)).toBe("unknown");
 
       const internalErr = new SyntaxError("Unexpected token");
       expect(classifyUpstreamError(internalErr)).toBe("unknown");

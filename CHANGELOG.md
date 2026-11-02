@@ -58,8 +58,10 @@
 
 - **Replay QA defect remediation and bot protection unblocking (WRE-271, 0.8.8)**:
   - **Cloudflare Turnstile & Clerk protect CSP allowances:** Added `https://challenges.cloudflare.com` and `https://*.protect.clerk.com:*` to `connect-src`, and `https://*.protect.clerk.com` to `script-src` and `frame-src` in `lib/security/csp.ts`. Previously, the absence of `challenges.cloudflare.com` in `connect-src` caused Cloudflare Turnstile token validation fetches to fail silently on `/sign-up`, locking Clerk's form in an inert state.
+  - **CSP hardening in production:** Removed `'unsafe-eval'` from `script-src` in production builds (`lib/security/csp.ts`), keeping it restricted exclusively to local development (`NODE_ENV === "development"`) for Next.js Fast Refresh and tooling.
+  - **Dynamic layout rendering for strict nonce-based CSP:** Documented that calling `headers()` in the root layout (`app/layout.tsx`) and configuring `<ClerkProvider dynamic>` renders routes dynamically to supply a per-request `x-nonce`, ensuring strict CSP script verification across all pages.
   - **Sign-up redirect fallbacks:** Added `fallbackRedirectUrl="/"` and `signInFallbackRedirectUrl="/"` on `<SignUp />` in `app/sign-up/[[...sign-up]]/page.tsx`.
-  - **Sign-in submit button CSS hardening:** Extended `.clerk-page` `:placeholder-shown` CSS rules in `app/production.css` to cover `input[name="identifier"]` and `input[type="email"]` selectors in addition to `#identifier-field`.
+  - **Sign-in submit button CSS hardening:** Scoped `.kouchd-submit-disabled` live-value fallback in `app/production.css` to `.kouchd-sign-in-container` and removed static `[value=""]` attribute checks to avoid disabling buttons after user input.
 
 - **Facebook sign-up no longer ends on a 404 (WRE-261, 0.8.4, branch only, not released)**:
   - A Facebook sign-up that Clerk moved over to sign-in (for example, when the Facebook email needs verifying or already belongs to an account) could return to `/sso-callback` at the site root, which had no page and showed the "Wrong couch" 404. Seen in Vercel's production request log on 2026-10-31.

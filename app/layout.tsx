@@ -72,8 +72,8 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         />
       </head>
       <body>
-        {/* Explicit auth URLs keep Clerk's sign-up → sign-in hand-off under /sign-in and /sign-up (WRE-261). */}
-        <ClerkProvider signInUrl="/sign-in" signUpUrl="/sign-up">
+        {/* Explicit auth URLs keep Clerk's sign-up → sign-in hand-off under /sign-in and /sign-up (WRE-261). Dynamic prop required for strict nonce-based CSP. */}
+        <ClerkProvider dynamic signInUrl="/sign-in" signUpUrl="/sign-up">
           <AppProviders>{children}</AppProviders>
         </ClerkProvider>
         <VercelAnalytics />

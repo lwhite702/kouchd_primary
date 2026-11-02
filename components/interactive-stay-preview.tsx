@@ -21,6 +21,7 @@ export function InteractiveStayPreview() {
   return (
     <div
       className="v21-product-preview"
+      role="region"
       aria-label="Interactive example Kouchd stay dashboard preview"
     >
       <div className="v21-preview-window">
@@ -36,7 +37,10 @@ export function InteractiveStayPreview() {
             <button
               type="button"
               role="tab"
+              id="v21-tab-calendar"
+              aria-controls="v21-panel-calendar"
               aria-selected={activeTab === "calendar"}
+              tabIndex={activeTab === "calendar" ? 0 : -1}
               className={`v21-tab-btn ${activeTab === "calendar" ? "active" : ""}`}
               onClick={() => setActiveTab("calendar")}
             >
@@ -45,7 +49,10 @@ export function InteractiveStayPreview() {
             <button
               type="button"
               role="tab"
+              id="v21-tab-record"
+              aria-controls="v21-panel-record"
               aria-selected={activeTab === "record"}
+              tabIndex={activeTab === "record" ? 0 : -1}
               className={`v21-tab-btn ${activeTab === "record" ? "active" : ""}`}
               onClick={() => setActiveTab("record")}
             >
@@ -54,7 +61,10 @@ export function InteractiveStayPreview() {
             <button
               type="button"
               role="tab"
+              id="v21-tab-ledger"
+              aria-controls="v21-panel-ledger"
               aria-selected={activeTab === "ledger"}
+              tabIndex={activeTab === "ledger" ? 0 : -1}
               className={`v21-tab-btn ${activeTab === "ledger" ? "active" : ""}`}
               onClick={() => setActiveTab("ledger")}
             >
@@ -63,7 +73,10 @@ export function InteractiveStayPreview() {
             <button
               type="button"
               role="tab"
+              id="v21-tab-chores"
+              aria-controls="v21-panel-chores"
               aria-selected={activeTab === "chores"}
+              tabIndex={activeTab === "chores" ? 0 : -1}
               className={`v21-tab-btn ${activeTab === "chores" ? "active" : ""}`}
               onClick={() => setActiveTab("chores")}
             >
@@ -72,7 +85,10 @@ export function InteractiveStayPreview() {
             <button
               type="button"
               role="tab"
+              id="v21-tab-updates"
+              aria-controls="v21-panel-updates"
               aria-selected={activeTab === "updates"}
+              tabIndex={activeTab === "updates" ? 0 : -1}
               className={`v21-tab-btn ${activeTab === "updates" ? "active" : ""}`}
               onClick={() => setActiveTab("updates")}
             >
@@ -88,8 +104,13 @@ export function InteractiveStayPreview() {
           <span className="v21-preview-kicker">EXAMPLE STAY · JUNIPER HOUSE</span>
 
           {activeTab === "calendar" && (
-            <>
-              <h3>Stay schedule & dates</h3>
+            <div
+              role="tabpanel"
+              id="v21-panel-calendar"
+              aria-labelledby="v21-tab-calendar"
+              tabIndex={0}
+            >
+              <strong className="v21-preview-title">Stay schedule & dates</strong>
               <div className="v21-preview-summary">
                 <span>
                   <strong>14</strong> nights
@@ -128,12 +149,17 @@ export function InteractiveStayPreview() {
                 </span>
                 <em className="tag-recorded">Scheduled</em>
               </div>
-            </>
+            </div>
           )}
 
           {activeTab === "record" && (
-            <>
-              <h3>Private shared record</h3>
+            <div
+              role="tabpanel"
+              id="v21-panel-record"
+              aria-labelledby="v21-tab-record"
+              tabIndex={0}
+            >
+              <strong className="v21-preview-title">Private shared record</strong>
               <div className="v21-preview-summary">
                 <span>
                   <strong>3</strong> agreed terms
@@ -172,12 +198,17 @@ export function InteractiveStayPreview() {
                 </span>
                 <em className="tag-ready">Agreed</em>
               </div>
-            </>
+            </div>
           )}
 
           {activeTab === "ledger" && (
-            <>
-              <h3>Contribution records</h3>
+            <div
+              role="tabpanel"
+              id="v21-panel-ledger"
+              aria-labelledby="v21-tab-ledger"
+              tabIndex={0}
+            >
+              <strong className="v21-preview-title">Contribution records</strong>
               <div className="v21-preview-summary">
                 <span>
                   <strong>$160.00</strong> confirmed
@@ -216,12 +247,17 @@ export function InteractiveStayPreview() {
                 </span>
                 <em className="tag-due">Pending</em>
               </div>
-            </>
+            </div>
           )}
 
           {activeTab === "chores" && (
-            <>
-              <h3>Shared household chores</h3>
+            <div
+              role="tabpanel"
+              id="v21-panel-chores"
+              aria-labelledby="v21-tab-chores"
+              tabIndex={0}
+            >
+              <strong className="v21-preview-title">Shared household chores</strong>
               <div className="v21-preview-summary">
                 <span>
                   <strong>2</strong> open
@@ -260,12 +296,17 @@ export function InteractiveStayPreview() {
                 </span>
                 <em className="tag-ready">Done</em>
               </div>
-            </>
+            </div>
           )}
 
           {activeTab === "updates" && (
-            <>
-              <h3>House announcements & check-ins</h3>
+            <div
+              role="tabpanel"
+              id="v21-panel-updates"
+              aria-labelledby="v21-tab-updates"
+              tabIndex={0}
+            >
+              <strong className="v21-preview-title">House announcements & check-ins</strong>
               <div className="v21-preview-summary">
                 <span>
                   <strong>1</strong> update
@@ -294,7 +335,7 @@ export function InteractiveStayPreview() {
                 </span>
                 <em className="tag-recorded">Active</em>
               </div>
-            </>
+            </div>
           )}
         </div>
       </div>

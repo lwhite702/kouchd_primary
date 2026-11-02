@@ -17,11 +17,7 @@ export function classifyUpstreamError(error: unknown): "timeout" | "network" | "
     }
   }
 
-  if (
-    error instanceof TypeError &&
-    (error.message.toLowerCase().includes("fetch") ||
-      error.message.toLowerCase().includes("network"))
-  ) {
+  if (error instanceof TypeError && error.message === "fetch failed") {
     return "network";
   }
 

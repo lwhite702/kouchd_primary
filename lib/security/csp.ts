@@ -7,11 +7,14 @@
  * it; the PostHog hosts stay listed for clients that load before the proxy is
  * deployed.
  */
+const isDevelopment = process.env.NODE_ENV === "development";
+
 export const cspDirectives: Record<string, string[]> = {
   "default-src": ["'self'"],
   "script-src": [
     "'self'",
     "'unsafe-inline'",
+    ...(isDevelopment ? ["'unsafe-eval'"] : []),
     "https://clerk.kouchd.com",
     "https://*.clerk.accounts.dev",
     "https://challenges.cloudflare.com",

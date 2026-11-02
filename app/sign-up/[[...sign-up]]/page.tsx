@@ -2,6 +2,7 @@ import { SignUp } from "@clerk/nextjs";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { MessageSquare, ShieldCheck } from "lucide-react";
+import { SignInFormGuard } from "@/components/sign-in-form-guard";
 
 export const metadata: Metadata = {
   title: "Create an account",
@@ -18,13 +19,15 @@ export default function SignUpPage() {
 
   return (
     <main className="clerk-page" style={{ display: "flex", flexDirection: "column", alignItems: "center", padding: "2rem 1rem" }}>
-      <SignUp
-        routing="path"
-        path="/sign-up"
-        signInUrl="/sign-in"
-        fallbackRedirectUrl="/"
-        signInFallbackRedirectUrl="/"
-      />
+      <SignInFormGuard>
+        <SignUp
+          routing="path"
+          path="/sign-up"
+          signInUrl="/sign-in"
+          fallbackRedirectUrl="/"
+          signInFallbackRedirectUrl="/"
+        />
+      </SignInFormGuard>
 
       {/* SMS & Legal Disclosure Card for New Registrations */}
       <div

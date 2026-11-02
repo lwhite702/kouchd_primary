@@ -6,7 +6,11 @@
 The `.well-known/replay-qa-security-nonce` file contains a public site-ownership verification token (`loopqa-sec-...`) utilized by the Replay QA automated testing infrastructure (`qa.replay.io`).
 
 ## Security Assessment
-- **Nature of Token**: Public domain-ownership verification challenge response (analogous to ACME Let's Encrypt challenges or Google site verification HTML/DNS tokens).
-- **Permissions**: This token does **not** authenticate users, authorize administrative actions, grant Convex/database access, or expose private keys or customer data.
+- **Nature of Token**: Public domain-ownership verification string used exclusively by Replay QA (`qa.replay.io`) to verify domain control for automated QA probes and replays.
+- **Permissions**: This token confers no privileges: it does not authenticate users, authorize administrative actions, grant Convex/database access, or expose private keys or customer data. It is assumed and verified to be a passive validation challenge.
 - **Exposure**: Serving this file over HTTPS is intentional and required by Replay QA for cryptographic handshake and active security probes.
-- **Scanning Exemption**: Static analysis tools flagging this file as a secret leak can safely mark it as an intended public verification asset.
+- **Scoped Secret Scanner Allowlist**:
+  - **Allowed Paths**: `public/.well-known/replay-qa-security-nonce`, `app/.well-known/replay-qa-security-nonce/route.ts`
+  - **Token Prefix**: `loopqa-sec-`
+  - **Owner**: Wrelik Engineering Lead (`@lwhite702`)
+  - **Rotation Procedure**: If the token needs rotation or the Replay QA project is replaced, the owner updates the token value in both paths and confirms verification in the Replay QA dashboard. Broad suppression of secret scanners is prohibited; only this exact file path and prefix are allowlisted.

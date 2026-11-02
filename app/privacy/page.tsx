@@ -6,7 +6,7 @@ import {
   LegalCrossLinks,
 } from "@/components/legal/legal-article";
 import { ShieldCheck, Lock } from "lucide-react";
-import { privacyPolicy } from "@/lib/legal";
+import { privacyPolicy, legalMeta } from "@/lib/legal";
 
 export const metadata: Metadata = {
   title: "Privacy Policy | Kouchd",
@@ -32,7 +32,7 @@ export default function PrivacyPolicyPage() {
               margin: "0 0 0.5rem",
             }}
           >
-            Wrelik Brands LLC &middot; Legal Documentation
+            {legalMeta.provider} &middot; Legal Documentation
           </p>
           <h1
             style={{
@@ -46,7 +46,7 @@ export default function PrivacyPolicyPage() {
             Privacy Policy
           </h1>
           <p style={{ margin: 0, color: "var(--kouchd-muted, #59675f)", fontSize: "0.9rem" }}>
-            Effective Date: {privacyPolicy.effectiveDate} &middot; Last updated: {privacyPolicy.lastUpdated} &middot; Brand: <strong>Wrelik Brands LLC</strong> (operating <strong>Kouchd</strong>)
+            Effective Date: {privacyPolicy.effectiveDate} &middot; Last updated: {privacyPolicy.lastUpdated} &middot; Brand: <strong>{legalMeta.provider}</strong> (operating <strong>Kouchd</strong>)
           </p>
         </div>
 

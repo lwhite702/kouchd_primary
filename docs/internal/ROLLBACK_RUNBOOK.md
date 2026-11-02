@@ -56,12 +56,12 @@ To ensure the repository history matches production:
 3. Push branch and open emergency PR to `main`.
 
 ### C. Convex Backend & Schema Rollback Considerations
-- **Additive Migrations**: Convex schema rules require all migrations to be additive (new optional fields, new indexes).
-- **Breaking Schema Changes**: Never delete a table or field while in-flight or rolled-back clients might still read or write to it.
-- If a new Convex mutation contains a bug:
-  - Rolling back the web app (Step A) ensures clients stop invoking the faulty mutation.
-  - Apply a hotfix to the Convex mutation code rather than rolling back database state destructively.
-- Plan limits & environment: ensure `SUBSCRIPTION_EXPECTED_ENVIRONMENT` is set to `production` in Convex environment variables.
+- **Schema Evolution Sequence**: Convex schema migrations must follow an expand-and-contract sequence. Fields to be modified or deprecated should first be made optional in schema validators. Data backfills or migrations run next. Deprecated fields and tables are only removed in a subsequent release after all active client versions stop reading and writing them.
+- **Backend Deployment Scope**: In this repository, the `vercel-build` script (`convex deploy --cmd 'npm run verify && npm run build'`) deploys Convex schema and backend functions with every web build. An instant Vercel rollback (Step A) only rolls back the Next.js frontend/edge deployment; it does **not** roll back deployed Convex backend functions or mutations.
+- If a new Convex mutation or schema introduces a runtime fault:
+  - Rolling back the web app (Step A) stops new web clients from calling changed interfaces.
+  - However, because Convex backend code remains at the latest deploy, backend functions require their own hotfix or a code revert deployed via `git revert` and `git push` so `convex deploy` pushes the corrected backend code.
+- **Subscription Environment**: Ensure `SUBSCRIPTION_EXPECTED_ENVIRONMENT` is set to `production` in Convex deployment environment variables as well as Vercel.
 
 ---
 
