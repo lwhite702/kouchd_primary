@@ -15,8 +15,8 @@
 | Step | Plan | Status |
 | --- | --- | --- |
 | 1 | Access code protection | Shipped in PR #132 (0.8.8, WRE-266) |
-| 2 | Bill splitting on Plus | This document |
-| 3 | Monthly rent | Not written |
+| 2 | Bill splitting on Plus | Completed (`WRE-268`, PR #137, this document) |
+| 3 | Monthly rent | Completed (`WRE-270`, `docs/superpowers/plans/2026-11-02-sublease-step-3-monthly-rent.md`) |
 | 4 | Sublease type, setup, consent, and lock | Not written |
 | 5 | Checklists and deposit record | Not written |
 | 6 | Blog post, sublease page, and help articles | Not written |
