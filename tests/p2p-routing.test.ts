@@ -4,17 +4,37 @@ import {
   buildNetworkRouteUri,
   buildTransactionInputFromStay,
   calculateContributionWithRewards,
-  DEFAULT_P2P_TRANSACTION,
   detectMobileUserAgent,
   formatRecipientHandle,
+  hasUsableRecipient,
+  type P2PTransactionInput,
 } from "@/lib/domain/p2pRouting";
 import { generateQrMatrixLevelH } from "@/lib/domain/qrCodeLevelH";
+
+const BASE_TRANSACTION: P2PTransactionInput = {
+  amount: "45.00",
+  memo: "House stay contribution",
+  recipientVenmo: "maple-host",
+  recipientCashApp: "maplehost",
+  recipientChime: "maple-host-chime",
+  recipientZelle: "host@maple.example",
+  recipientCashNote: "Envelope on entry table",
+  recipientPayPal: "maplehost",
+};
+
+const NO_HANDLES: P2PTransactionInput = {
+  amount: "45.00",
+  memo: "House stay contribution",
+  recipientVenmo: "",
+  recipientCashApp: "",
+  recipientChime: "",
+  recipientZelle: "",
+};
 
 describe("P2P Payment Router & Level-H QR Engine", () => {
   it("compiles exact deep-link and QR payloads for Venmo, Cash App, Chime, PayPal, Zelle, and Cash", () => {
     const tx = {
-      ...DEFAULT_P2P_TRANSACTION,
-      transactionId: "TXN-994827",
+      ...BASE_TRANSACTION,
       amount: "45.00",
       memo: "Marketplace Order #991",
       recipientVenmo: "johndoe",
@@ -37,7 +57,7 @@ describe("P2P Payment Router & Level-H QR Engine", () => {
 
   it("normalizes leading @ or $ prefixes on handles and formats display handles", () => {
     const tx = {
-      ...DEFAULT_P2P_TRANSACTION,
+      ...BASE_TRANSACTION,
       recipientVenmo: "@lee_host",
       recipientCashApp: "$leeCash",
       recipientChime: "$lee-chime",
@@ -107,8 +127,9 @@ describe("P2P Payment Router & Level-H QR Engine", () => {
   });
 
   it("builds a Level-H QR matrix with valid finder patterns for all P2P URIs", () => {
-    const venmoUri = buildNetworkRouteUri("venmo", DEFAULT_P2P_TRANSACTION);
-    const qr = generateQrMatrixLevelH(venmoUri);
+    const venmoUri = buildNetworkRouteUri("venmo", BASE_TRANSACTION);
+    expect(venmoUri).not.toBeNull();
+    const qr = generateQrMatrixLevelH(venmoUri as string);
 
     expect(qr.errorCorrectionLevel).toBe("H");
     expect(qr.size).toBe(qr.version * 4 + 17);
@@ -123,7 +144,6 @@ describe("P2P Payment Router & Level-H QR Engine", () => {
 
   it("maps stay paymentOptions into a unified P2PTransactionInput", () => {
     const mapped = buildTransactionInputFromStay({
-      stayId: "stay_abc123",
       stayName: "Maple House",
       suggestedAmountCents: 15000,
       paymentOptions: [
@@ -135,12 +155,88 @@ describe("P2P Payment Router & Level-H QR Engine", () => {
       ],
     });
 
-    expect(mapped.transactionId).toBe("KCH-ABC123");
+    expect(mapped).not.toHaveProperty("transactionId");
     expect(mapped.amount).toBe("150.00");
     expect(mapped.recipientVenmo).toBe("maple-lee");
     expect(mapped.recipientCashApp).toBe("$maplelee");
     expect(mapped.recipientChime).toBe("maple-chime");
     expect(mapped.recipientZelle).toBe("lee@maple.org");
     expect(mapped.recipientCashNote).toBe("Envelope on entry table");
+  });
+
+  it("blocks every route to a person when there is no real handle", () => {
+    const channels = ["venmo", "cashapp", "chime", "paypal", "zelle", "applepay"] as const;
+
+    for (const channel of channels) {
+      expect(hasUsableRecipient(channel, NO_HANDLES)).toBe(false);
+      expect(buildNetworkRouteUri(channel, NO_HANDLES)).toBeNull();
+      expect(formatRecipientHandle(channel, NO_HANDLES)).toBe("Not set by host");
+    }
+  });
+
+  it("treats a bare prefix or an empty paypal.me link as no handle", () => {
+    const bare: P2PTransactionInput = {
+      ...NO_HANDLES,
+      recipientVenmo: " @ ",
+      recipientCashApp: " $ ",
+      recipientChime: "$",
+      recipientZelle: "   ",
+      recipientPayPal: "https://paypal.me/",
+      recipientApplePay: "  ",
+    };
+
+    for (const channel of ["venmo", "cashapp", "chime", "paypal", "zelle", "applepay"] as const) {
+      expect(hasUsableRecipient(channel, bare)).toBe(false);
+      expect(buildNetworkRouteUri(channel, bare)).toBeNull();
+    }
+  });
+
+  it.each([
+    "paypal.me",
+    "paypal.me/",
+    "www.paypal.me",
+    "https://paypal.me",
+    "https://paypal.me/",
+    "https://www.paypal.me",
+    "https://www.paypal.me/",
+  ])("treats the bare PayPal root %s as no handle", (recipientPayPal) => {
+    const tx = { ...NO_HANDLES, recipientPayPal };
+
+    expect(hasUsableRecipient("paypal", tx)).toBe(false);
+    expect(buildNetworkRouteUri("paypal", tx)).toBeNull();
+  });
+
+  it("keeps a PayPal handle that only starts like the domain", () => {
+    const tx = { ...NO_HANDLES, recipientPayPal: "paypal.meow" };
+
+    expect(buildNetworkRouteUri("paypal", tx)).toBe("https://paypal.me/paypal.meow/45.00");
+  });
+
+  it("strips a prefix behind leading spaces instead of encoding it into the link", () => {
+    const tx = { ...NO_HANDLES, recipientCashApp: " $maplehost", recipientVenmo: " @maple-host" };
+
+    expect(buildNetworkRouteUri("cashapp", tx)).toBe("https://cash.app/$maplehost/45.00");
+    expect(buildNetworkRouteUri("venmo", tx)).toContain("recipients=maple-host&");
+  });
+
+  it("does not need a handle for cash", () => {
+    expect(hasUsableRecipient("cash", NO_HANDLES)).toBe(true);
+    expect(buildNetworkRouteUri("cash", NO_HANDLES)).toBe("In-person cash handoff with your host");
+  });
+
+  it("uses the saved Apple Cash handle as a copy value, not an app link", () => {
+    const tx = { ...NO_HANDLES, recipientApplePay: " host@maple.example " };
+
+    expect(hasUsableRecipient("applepay", tx)).toBe(true);
+    expect(buildNetworkRouteUri("applepay", tx)).toBe("host@maple.example");
+  });
+
+  it("does not make up a reference or an amount for a stay", () => {
+    const mapped = buildTransactionInputFromStay({ stayName: "Maple House" });
+
+    expect(mapped.amount).toBe("");
+    expect(mapped).not.toHaveProperty("transactionId");
+    expect(mapped.recipientVenmo).toBe("");
+    expect(hasUsableRecipient("venmo", mapped)).toBe(false);
   });
 });

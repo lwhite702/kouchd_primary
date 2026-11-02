@@ -74,7 +74,62 @@ export type Panel =
   | "houseInfo"
   | "paymentOptions"
   | "guestTerms"
+  | "householdTerms"
+  | "stayName"
   | null;
+
+/** Actions that need an explicit confirmation; voided records keep their history. */
+export type DestructiveAction =
+  | { type: "end" }
+  | { type: "cancelCharge"; obligationId: Id<"obligations">; title: string }
+  | {
+      type: "voidContribution";
+      contributionId: Id<"contributions">;
+      title: string;
+    }
+  | { type: "voidChore"; choreId: Id<"chores">; title: string }
+  | { type: "voidClaim"; claimId: Id<"pointClaims">; title: string }
+  | { type: "regenerateCode" };
+
+const VOID_DESCRIPTION =
+  "The record stays in the history but no longer counts toward the balance or current activity.";
+
+export function destructiveActionCopy(action: DestructiveAction): {
+  title: string;
+  description: string;
+  confirmLabel: string;
+} {
+  switch (action.type) {
+    case "end":
+      return {
+        title: "End this stay?",
+        description:
+          "Guests will no longer be able to add to this stay. Its agreements and history will remain available under Past stays, and you can start another stay.",
+        confirmLabel: "End stay",
+      };
+    case "cancelCharge":
+      return {
+        title: `Cancel “${action.title}”?`,
+        description: `This removes “${action.title}” from the guest’s balance. The charge history will be retained.`,
+        confirmLabel: "Cancel charge",
+      };
+    case "voidContribution":
+    case "voidChore":
+    case "voidClaim":
+      return {
+        title: `Void “${action.title}”?`,
+        description: VOID_DESCRIPTION,
+        confirmLabel: "Void record",
+      };
+    case "regenerateCode":
+      return {
+        title: "Create a new join code?",
+        description:
+          "The current code stops working right away. Anyone who hasn’t joined yet will need the new code. People already in the stay aren’t affected.",
+        confirmLabel: "Create new code",
+      };
+  }
+}
 
 export type GuideProgressState = {
   step: number;

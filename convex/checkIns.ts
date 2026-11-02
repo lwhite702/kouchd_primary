@@ -7,7 +7,7 @@ import { mutation, query } from "./_generated/server";
 import { requireMembership } from "./lib/auth";
 import { recordActivity } from "./lib/activity";
 import { assertCalendarDate } from "./lib/validation";
-import { isFeatureEnabled } from "./flags";
+import { isFeatureEnabled, requireFeature } from "./flags";
 import { FEATURE_FLAGS } from "../lib/flags/config";
 
 function validateText(topic: string, note: string) {
@@ -66,6 +66,7 @@ export const respond = mutation({
   args: { checkInId: v.id("checkIns"), body: v.string() },
   returns: v.null(),
   handler: async (ctx, { checkInId, body }) => {
+    await requireFeature(ctx, FEATURE_FLAGS.CHECK_IN_BOARD, "Weekly check-in board is currently disabled by platform policy.");
     const item = await ctx.db.get(checkInId);
     if (!item) throw new Error("Check-in not found");
     const { user } = await requireCheckInAccess(ctx, item.stayId, item.guestUserId);
@@ -83,6 +84,7 @@ export const setStatus = mutation({
   args: { checkInId: v.id("checkIns"), status: v.union(v.literal("open"), v.literal("follow_up"), v.literal("resolved")) },
   returns: v.null(),
   handler: async (ctx, { checkInId, status }) => {
+    await requireFeature(ctx, FEATURE_FLAGS.CHECK_IN_BOARD, "Weekly check-in board is currently disabled by platform policy.");
     const item = await ctx.db.get(checkInId);
     if (!item) throw new Error("Check-in not found");
     const { user } = await requireCheckInAccess(ctx, item.stayId, item.guestUserId);

@@ -55,8 +55,9 @@ export interface PlanLimits {
 
 export const PLAN_LIMITS: Readonly<Record<SubscriptionPlan, PlanLimits>> = {
   starter: { maxActiveStays: 1, maxActiveGuests: 1 },
-  // Capacity is shared across the host billing account.
-  hostPlus: { maxActiveStays: 3, maxActiveGuests: 3 },
+  // Capacity is shared across the host billing account: guests are one pool
+  // across all of the host's active and pending stays, not a per-stay count.
+  hostPlus: { maxActiveStays: 3, maxActiveGuests: 5 },
   // TODO(product/engineering): define finite abuse and system guardrails before
   // launch. These null values mean no commercial product cap, not infinity.
   householdPro: { maxActiveStays: null, maxActiveGuests: null },

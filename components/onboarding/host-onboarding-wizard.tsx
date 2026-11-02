@@ -14,6 +14,7 @@ import { SUGGESTED_CONTRIBUTION_TASKS, SuggestedContributionTask } from "@/lib/d
 import { calculateStayChargeCents } from "@/lib/domain/pricing";
 import { HelpTip } from "@/components/onboarding/help-tip";
 import { HELP_LINKS } from "@/lib/help-links";
+import { planLimitError } from "@/lib/planLimitError";
 
 const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
 
@@ -185,7 +186,7 @@ export function HostOnboardingWizard({
       });
       onComplete?.(stayId);
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : "Could not create the stay");
+      setError(planLimitError(reason)?.message ?? (reason instanceof Error ? reason.message : "Could not create the stay"));
       setSaving(false);
     }
   }

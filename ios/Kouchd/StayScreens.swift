@@ -10,7 +10,8 @@ struct StayScreen: View {
   @State private var showingEdit = false
   @State private var showingContributionRouter = false
   var body: some View {
-    Page(title: "Your stay") {
+    Page(title: "Your stay", width: .wide) {
+      TwoColumnLayout {
       Card {
         HStack { Pill(text: store.isHost ? "Host" : "Guest"); Spacer(); Pill(text: store.bundle["stay"]["status"].text) }
         Text(store.stayName).font(.title2.bold())
@@ -30,9 +31,16 @@ struct StayScreen: View {
                   detail: member["membership"]["role"].text.capitalized)
         }
         if store.isHost && !store.isEnded {
+          if let usage = store.planUsage { GuestSpotsRow(usage: usage) }
           PrimaryButton(title: "Invite a guest") { showingInvite = true }
         }
       }
+      if store.isHost && !store.isEnded, let usage = store.planUsage {
+        ForEach(usage.blockedJoins(inStay: store.selectedStayID)) { blocked in
+          BlockedJoinCard(store: store, usage: usage, blocked: blocked)
+        }
+      }
+      } trailing: {
       Card {
         Text("House notes").font(.headline)
         Text(store.bundle["terms"]["houseNotes"].text.isEmpty
@@ -62,6 +70,7 @@ struct StayScreen: View {
           }
         }
       }
+      }
     }
     .toolbar {
       if store.isHost && !store.isEnded {
@@ -85,6 +94,13 @@ struct StayScreen: View {
       }
     }
     .sheet(isPresented: $showingInvite) { InviteForm(store: store) }
+    .task(id: store.opensInviteOnStay) {
+      guard store.opensInviteOnStay else { return }
+      // Wait for the Plus sheet to finish closing, or this one can't present.
+      try? await Task.sleep(for: .milliseconds(600))
+      showingInvite = true
+      store.opensInviteOnStay = false
+    }
     .sheet(isPresented: $showingEdit) { RenameStayForm(store: store) }
     .sheet(isPresented: $showingContributionRouter) { ContributionForm(store: store) }
   }
@@ -178,6 +194,7 @@ struct InvitationScreen: View {
         }
       }
     }
+    .planLimitPresentation(store: store)
   }
 }
 
@@ -186,9 +203,20 @@ struct InviteForm: View {
   @Environment(\.dismiss) private var dismiss
   @State private var email = ""
   @State private var link: URL?
+  @State private var plusEntry: PlusEntry?
+  var purchasesEnabled = AppConfig.purchasesEnabled
   var body: some View {
     NavigationStack {
       Form {
+        if let usage = store.planUsage,
+           let line = PlanCopy.inviteSpotsLine(usage, guestsInThisStay: usage.guestSpots(inStay: store.selectedStayID).count) {
+          Section {
+            Text(line)
+            if usage.isFree && usage.guests.isFull && purchasesEnabled {
+              Button("Make room with Plus") { plusEntry = .guestLimit }
+            }
+          }
+        }
         Section {
           TextField("Guest email (optional)", text: $email)
             .keyboardType(.emailAddress).textInputAutocapitalization(.never)
@@ -203,6 +231,8 @@ struct InviteForm: View {
       }
       .navigationTitle("Invite a guest")
       .kouchdNavigationBar()
+      .tint(Palette.forest)
+      .sheet(item: $plusEntry) { PlusSheet(store: store, entry: $0, returnsToInvite: true) }
       .toolbar {
         ToolbarItem(placement: .cancellationAction) { Button("Done") { dismiss() } }
         ToolbarItem(placement: .confirmationAction) {
@@ -294,6 +324,7 @@ struct CreateStayScreen: View {
         }.disabled(isInvalid)
       }
     }
+    .kouchdFormWidth()
     .kouchdNavigationBar(title: "Create stay")
     .toolbar {
       ToolbarItem(placement: .confirmationAction) {
@@ -346,6 +377,7 @@ struct JoinCodeScreen: View {
         }.disabled(busy || code.trimmingCharacters(in: .whitespaces).isEmpty)
       } footer: { Text("Ask your host for their household code.") }
     }
+    .kouchdFormWidth()
     .kouchdNavigationBar(title: "Join a stay")
     .toolbar {
       ToolbarItem(placement: .confirmationAction) {

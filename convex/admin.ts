@@ -165,7 +165,7 @@ export const getUserDetail = query({
     const user = await ctx.db.get(args.userId);
     if (!user) return null;
 
-    const [memberships, smsEvents] = await Promise.all([
+    const [memberships, smsEvents, householdAccounts, notificationEvents, marketingEvents] = await Promise.all([
       ctx.db
         .query("memberships")
         .withIndex("by_user", (q) => q.eq("userId", user._id))
@@ -175,7 +175,70 @@ export const getUserDetail = query({
         .withIndex("by_user_recorded_at", (q) => q.eq("userId", user._id))
         .order("desc")
         .take(50),
+      ctx.db
+        .query("householdAccounts")
+        .withIndex("by_owner_user_id", (q) => q.eq("ownerUserId", user._id))
+        .collect(),
+      ctx.db
+        .query("notificationEvents")
+        .withIndex("by_user_occurred_at", (q) => q.eq("userId", user._id))
+        .order("desc")
+        .take(10),
+      user.email
+        ? ctx.db
+            .query("marketingConsentEvents")
+            .withIndex("by_email", (q) => q.eq("email", user.email!.trim().toLowerCase()))
+            .collect()
+        : Promise.resolve([]),
     ]);
+
+    const billing = (
+      await Promise.all(
+        householdAccounts.map(async (account) => {
+          const snapshots = await ctx.db
+            .query("subscriptionSnapshots")
+            .withIndex("by_household_account", (q) => q.eq("householdAccountId", account._id))
+            .collect();
+          if (!snapshots.length) {
+            return [
+              {
+                status: "no_subscription" as const,
+                productId: undefined,
+                entitlement: undefined,
+                environment: undefined,
+                currentPeriodEndsAt: undefined,
+                willRenew: undefined,
+                updatedAt: account.updatedAt,
+              },
+            ];
+          }
+          const byEnv = new Map<string, (typeof snapshots)[0]>();
+          for (const s of snapshots) {
+            const existing = byEnv.get(s.environment);
+            if (!existing || s.updatedAt > existing.updatedAt) {
+              byEnv.set(s.environment, s);
+            }
+          }
+          return Array.from(byEnv.values())
+            .sort((a, b) => {
+              if (a.environment === "production" && b.environment !== "production") return -1;
+              if (b.environment === "production" && a.environment !== "production") return 1;
+              return b.updatedAt - a.updatedAt;
+            })
+            .map((latest) => ({
+              status: latest.status,
+              productId: latest.productId,
+              entitlement: latest.entitlement,
+              environment: latest.environment,
+              currentPeriodEndsAt: latest.currentPeriodEndsAt,
+              willRenew: latest.willRenew,
+              updatedAt: latest.updatedAt,
+            }));
+        })
+      )
+    ).flat();
+
+    const latestMarketingEvent = marketingEvents.sort((a, b) => b.updatedAt - a.updatedAt)[0];
 
     const enrichedMemberships = await Promise.all(
       memberships.map(async (m) => {
@@ -194,6 +257,27 @@ export const getUserDetail = query({
       user,
       memberships: enrichedMemberships,
       smsEvents,
+      providerContext: {
+        billing,
+        notifications: notificationEvents.map((event) => ({
+          workflow: event.workflow,
+          status: event.status,
+          occurredAt: event.occurredAt,
+          lastAttemptAt: event.lastAttemptAt,
+          attemptCount: event.attemptCount,
+        })),
+        marketing: latestMarketingEvent
+          ? {
+              status: latestMarketingEvent.status,
+              source: latestMarketingEvent.source,
+              consentConfirmed: latestMarketingEvent.consentConfirmed,
+              updatedAt: latestMarketingEvent.updatedAt,
+              confirmedAt: latestMarketingEvent.confirmedAt,
+              unsubscribedAt: latestMarketingEvent.unsubscribedAt,
+              suppressedAt: latestMarketingEvent.suppressedAt,
+            }
+          : null,
+      },
     };
   },
 });

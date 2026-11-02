@@ -1,5 +1,5 @@
 import { convexTest } from "convex-test";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { api } from "../convex/_generated/api";
 import schema from "../convex/schema";
@@ -93,6 +93,10 @@ describe("Client Developer / QA Overrides", () => {
   let mockStorage: Map<string, string>;
 
   beforeEach(() => {
+    // Vercel production builds run these tests with NEXT_PUBLIC_VERCEL_ENV=production,
+    // where overrides are off by design; pin a development environment here.
+    vi.stubEnv("NEXT_PUBLIC_VERCEL_ENV", "development");
+    vi.stubEnv("NODE_ENV", "test");
     mockStorage = new Map();
     (globalThis as unknown as { window: unknown }).window = {
       location: { search: "" },
@@ -106,6 +110,7 @@ describe("Client Developer / QA Overrides", () => {
   });
 
   afterEach(() => {
+    vi.unstubAllEnvs();
     delete (globalThis as unknown as { window?: unknown }).window;
   });
 
@@ -120,6 +125,23 @@ describe("Client Developer / QA Overrides", () => {
 
     win.location.search = `?flag:${FEATURE_FLAGS.SHOPPING_LIST}=true`;
     expect(getLocalDevOverride(FEATURE_FLAGS.SHOPPING_LIST)).toBe(true);
+  });
+
+  it("ignores URL and localStorage overrides in production", () => {
+    const win = (globalThis as unknown as { window: { location: { search: string } } }).window;
+    win.location.search = `?flag:${FEATURE_FLAGS.BILLING_PORTAL}=true`;
+    setLocalDevOverride(FEATURE_FLAGS.SHOPPING_LIST, false);
+
+    vi.stubEnv("NEXT_PUBLIC_VERCEL_ENV", "production");
+    expect(getLocalDevOverride(FEATURE_FLAGS.BILLING_PORTAL)).toBeNull();
+    expect(getLocalDevOverride(FEATURE_FLAGS.SHOPPING_LIST)).toBeNull();
+
+    vi.stubEnv("NEXT_PUBLIC_VERCEL_ENV", "preview");
+    expect(getLocalDevOverride(FEATURE_FLAGS.BILLING_PORTAL)).toBe(true);
+
+    vi.stubEnv("NEXT_PUBLIC_VERCEL_ENV", "");
+    vi.stubEnv("NODE_ENV", "production");
+    expect(getLocalDevOverride(FEATURE_FLAGS.BILLING_PORTAL)).toBeNull();
   });
 
   it("evaluates localStorage override when set", () => {
@@ -316,5 +338,46 @@ describe("Backend Mutation Gating via Feature Flags", () => {
         visibility: "shared",
       })
     ).rejects.toThrow(/disabled by platform policy/i);
+  });
+});
+
+describe("Server kill switches cover every write", () => {
+  const originalEnv = { ...process.env };
+  afterEach(() => {
+    process.env = { ...originalEnv };
+  });
+
+  it("refuses rewards writes when the rewards flag is switched off", async () => {
+    process.env = { ...originalEnv, PLATFORM_ADMIN_EMAILS: "operator@kouchd.com" };
+    const t = convexTest(schema, modules);
+    const admin = t.withIdentity({ subject: "flag-admin", name: "Operator", email: "operator@kouchd.com" });
+    await admin.mutation(api.users.syncCurrent, {});
+    const host = t.withIdentity({ subject: "flag-host", name: "Host", email: "host@example.com" });
+    await host.mutation(api.users.syncCurrent, {});
+    const stayId = await host.mutation(api.stays.create, {
+      timezone: "America/New_York",
+      terms: {
+        startDate: "2026-09-01",
+        endDate: "2026-09-21",
+        cadence: "weekly",
+        paymentDayOfWeek: 1,
+        rateCents: 20_000,
+        earlyDiscountEnabled: false,
+        earlyDiscountPercentage: 0,
+        earlyDiscountDays: 0,
+        lateFeeEnabled: false,
+        lateFeeCents: 0,
+        graceDays: 0,
+        houseNotes: "",
+      },
+    });
+    await admin.mutation(api.flags.setOverride, {
+      key: FEATURE_FLAGS.REWARDS_SYSTEM,
+      override: "disabled",
+      reason: "Pausing rewards for a data fix",
+    });
+    await expect(
+      host.mutation(api.rewards.createRule, { stayId, title: "Dishes", category: "cleaning", pointsAwarded: 5, description: "" })
+    ).rejects.toThrow("Contribution rewards are currently disabled");
   });
 });

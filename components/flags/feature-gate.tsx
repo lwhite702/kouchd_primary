@@ -1,47 +1,54 @@
 "use client";
 
 import { useQuery } from "convex/react";
-import { useFeatureFlagEnabled } from "posthog-js/react";
-import { type ReactNode, useMemo } from "react";
+import { useFeatureFlagEnabled, usePostHog } from "posthog-js/react";
+import { type ReactNode, useEffect, useState } from "react";
 
 import { api } from "@/convex/_generated/api";
 import { FEATURE_FLAGS_REGISTRY, type FeatureFlagKey } from "@/lib/flags/config";
 import { getLocalDevOverride } from "@/lib/flags/client";
+import { resolveFlag } from "@/lib/flags/resolve";
+
+/** How long to wait for PostHog flags before falling back to registry defaults. */
+const POSTHOG_FLAG_TIMEOUT_MS = 2500;
+
+function usePostHogFlagsSettled(): boolean {
+  const posthog = usePostHog();
+  const configured = Boolean(process.env.NEXT_PUBLIC_POSTHOG_KEY);
+  const [settled, setSettled] = useState(
+    () => !configured || Boolean(posthog?.featureFlags?.hasLoadedFlags),
+  );
+
+  useEffect(() => {
+    if (settled || !posthog) return;
+    const stop = posthog.onFeatureFlags(() => setSettled(true));
+    // Blocked or failed flag requests must not hide default-on features forever.
+    const timer = window.setTimeout(() => setSettled(true), POSTHOG_FLAG_TIMEOUT_MS);
+    return () => {
+      stop();
+      window.clearTimeout(timer);
+    };
+  }, [posthog, settled]);
+
+  return settled;
+}
 
 /**
- * React hook to evaluate a feature flag across the multi-tier hierarchy:
- * 1. Local / URL Dev override (?flag:key=true or localStorage)
- * 2. Convex Database override (Platform Console kill switch)
- * 3. PostHog remote targeting / percentage rollout
- * 4. Typesafe code default
+ * Evaluates a feature flag. See resolveFlag (lib/flags/resolve.ts) for the
+ * order: dev/preview override, Convex kill switch, PostHog, registry default.
  */
 export function useFeatureFlag(key: FeatureFlagKey): boolean {
-  const meta = FEATURE_FLAGS_REGISTRY[key];
   const posthogFlag = useFeatureFlagEnabled(key);
+  const posthogSettled = usePostHogFlagsSettled();
   const dbOverrides = useQuery(api.flags.list);
 
-  return useMemo(() => {
-    // 1. Local dev / URL query param override
-    const devOverride = getLocalDevOverride(key);
-    if (devOverride !== null) {
-      return devOverride;
-    }
-
-    // 2. Database override (emergency kill switch)
-    if (dbOverrides) {
-      const match = dbOverrides.find((entry) => entry.key === key);
-      if (match?.override === "enabled") return true;
-      if (match?.override === "disabled") return false;
-    }
-
-    // 3. PostHog remote flag (boolean)
-    if (typeof posthogFlag === "boolean") {
-      return posthogFlag;
-    }
-
-    // 4. Code baseline default
-    return meta?.defaultValue ?? true;
-  }, [key, meta, posthogFlag, dbOverrides]);
+  return resolveFlag({
+    devOverride: getLocalDevOverride(key),
+    dbOverride: dbOverrides === undefined ? undefined : (dbOverrides.find((entry) => entry.key === key)?.override ?? null),
+    posthogFlag,
+    posthogSettled,
+    defaultValue: FEATURE_FLAGS_REGISTRY[key]?.defaultValue ?? true,
+  });
 }
 
 export interface FeatureGateProps {

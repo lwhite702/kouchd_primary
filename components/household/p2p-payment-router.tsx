@@ -6,10 +6,10 @@ import { Check, Coins, Copy, ExternalLink, QrCode, Smartphone, Sparkles, Wallet 
 import {
   buildNetworkRouteUri,
   calculateContributionWithRewards,
-  DEFAULT_P2P_TRANSACTION,
   detectMobileUserAgent,
   ExtendedPaymentChannelId,
   formatRecipientHandle,
+  hasUsableRecipient,
   P2PTransactionInput,
 } from "@/lib/domain/p2pRouting";
 import { generateQrMatrixLevelH } from "@/lib/domain/qrCodeLevelH";
@@ -17,8 +17,8 @@ import { generateQrMatrixLevelH } from "@/lib/domain/qrCodeLevelH";
 export type LifecyclePhase =
   | "SELECT_AND_ROUTE"
   | "OUTBOUND_CONFIRMATION"
-  | "PROCESSING_VERIFICATION"
-  | "SUCCESS_COMPLETION";
+  | "SAVING"
+  | "SAVED";
 
 export type ContributionCategory =
   | "payment"
@@ -36,7 +36,6 @@ export interface RewardWalletConfig {
 }
 
 export interface LoggedContributionPayload {
-  transactionId: string;
   type: ContributionCategory;
   channelId: ExtendedPaymentChannelId | "rewards_only" | "non_cash";
   channelLabel: string;
@@ -49,25 +48,16 @@ export interface LoggedContributionPayload {
   countsTowardBalance: boolean;
 }
 
-export interface P2PConfirmationReceipt {
-  transactionId: string;
-  timestamp: string;
-  settledAmount: string;
-  rewardCreditFormatted?: string;
-  pointsRedeemed?: number;
-  networkId: string;
-  networkLabel: string;
-  recipientHandle: string;
-}
-
 export interface P2PPaymentRouterProps {
-  transaction?: P2PTransactionInput;
+  transaction: P2PTransactionInput;
+  /** Who confirms the saved record, such as a first name. */
+  otherPerson?: string;
   defaultDate?: string;
   allowEditingDetails?: boolean;
   rewardWallet?: RewardWalletConfig;
   forceMobileDevice?: boolean;
-  onLogContribution?: (payload: LoggedContributionPayload) => Promise<void> | void;
-  onComplete?: (receipt: P2PConfirmationReceipt) => void;
+  onLogContribution: (payload: LoggedContributionPayload) => Promise<void> | void;
+  onComplete?: () => void;
   onCancel?: () => void;
 }
 
@@ -139,13 +129,14 @@ const CHANNEL_META: Record<ExtendedPaymentChannelId, ChannelMeta> = {
   },
 };
 
-const CASUAL_VERIFICATION_STEPS = [
+const SAVING_STEPS = [
   "Writing down your note for the house...",
   "Adding your contribution to the shared Ledger...",
-  "Giving your host a quick heads-up...",
+  "Marking it for confirmation...",
 ];
 
-const PROCESSING_DURATION_MS = 4500;
+// Paces the saving screen. Nothing is checked during this pause.
+const SAVING_PAUSE_MS = 4500;
 
 function LevelHQrCodeSvg({
   value,
@@ -164,7 +155,7 @@ function LevelHQrCodeSvg({
       height={size}
       viewBox={`0 0 ${totalModules} ${totalModules}`}
       role="img"
-      aria-label={`Level-H QR code for ${value}`}
+      aria-label={`QR code for ${value}`}
       style={{ display: "block", borderRadius: "12px", background: "#fffdf8" }}
     >
       <rect width={totalModules} height={totalModules} fill="#fffdf8" />
@@ -187,7 +178,8 @@ function LevelHQrCodeSvg({
 }
 
 export const P2PPaymentRouter: React.FC<P2PPaymentRouterProps> = ({
-  transaction = DEFAULT_P2P_TRANSACTION,
+  transaction,
+  otherPerson = "the other person",
   defaultDate,
   allowEditingDetails = false,
   rewardWallet,
@@ -200,7 +192,7 @@ export const P2PPaymentRouter: React.FC<P2PPaymentRouterProps> = ({
   const [contributionType, setContributionType] = useState<ContributionCategory>("payment");
   const [selectedChannel, setSelectedChannel] = useState<ExtendedPaymentChannelId>("venmo");
 
-  // Editable amount, memo, date, and fallback handle when hosts haven't configured one yet
+  // Editable amount, memo, date, and a handle entered when the host hasn't saved one
   const [amountInput, setAmountInput] = useState<string>(transaction.amount);
   const [memoInput, setMemoInput] = useState<string>(transaction.memo);
   const [dateInput, setDateInput] = useState<string>(
@@ -225,42 +217,66 @@ export const P2PPaymentRouter: React.FC<P2PPaymentRouterProps> = ({
         : detectMobileUserAgent();
 
   const [copiedCredential, setCopiedCredential] = useState<boolean>(false);
-  const [verificationStepIndex, setVerificationStepIndex] = useState<number>(0);
+  const [savingStepIndex, setSavingStepIndex] = useState<number>(0);
   const [progressPercent, setProgressPercent] = useState<number>(0);
-  const [completionTimestamp, setCompletionTimestamp] = useState<string>("");
+  const [savedAt, setSavedAt] = useState<string>("");
   const [persistError, setPersistError] = useState<string>("");
 
   const copyTimeoutRef = useRef<number | null>(null);
-  const hasLoggedRef = useRef<boolean>(false);
+  const isSavingRef = useRef<boolean>(false);
+  const savingPauseRef = useRef<number | null>(null);
 
   useEffect(() => {
     return () => {
       if (copyTimeoutRef.current) {
         window.clearTimeout(copyTimeoutRef.current);
       }
+      // Closing during the pause cancels the save.
+      if (savingPauseRef.current) {
+        window.clearTimeout(savingPauseRef.current);
+      }
     };
   }, []);
+
+  useEffect(() => {
+    if (phase !== "SAVING") {
+      return;
+    }
+
+    const startTime = performance.now();
+    const stepDuration = SAVING_PAUSE_MS / SAVING_STEPS.length;
+    const progressInterval = window.setInterval(() => {
+      const elapsed = performance.now() - startTime;
+      setProgressPercent(Math.round(Math.min(elapsed / SAVING_PAUSE_MS, 1) * 100));
+      setSavingStepIndex(Math.min(Math.floor(elapsed / stepDuration), SAVING_STEPS.length - 1));
+    }, 60);
+
+    return () => window.clearInterval(progressInterval);
+  }, [phase]);
 
   // Build effective transaction object combining props + any inline edits
   const effectiveTransaction: P2PTransactionInput = useMemo(
     () => ({
       ...transaction,
-      amount: amountInput || transaction.amount,
+      amount: amountInput,
       memo: memoInput || transaction.memo,
-      recipientVenmo:
-        customHandleOverride.venmo ?? (transaction.recipientVenmo || "johndoe"),
-      recipientCashApp:
-        customHandleOverride.cashapp ?? (transaction.recipientCashApp || "johndoe33"),
-      recipientChime:
-        customHandleOverride.chime ?? (transaction.recipientChime || "john-doe-chime"),
-      recipientZelle:
-        customHandleOverride.zelle ?? (transaction.recipientZelle || "johndoe@email.com"),
-      recipientCashNote:
-        customHandleOverride.cash ??
-        (transaction.recipientCashNote || "Hand directly to your host or leave in the agreed spot"),
-      recipientPayPal:
-        customHandleOverride.paypal ?? (transaction.recipientPayPal || "johndoe"),
-      recipientApplePay: customHandleOverride.applepay ?? transaction.recipientApplePay,
+      // The host's saved handle wins. Never fall back to a placeholder: a made-up
+      // handle can belong to a real stranger.
+      recipientVenmo: hasUsableRecipient("venmo", transaction)
+        ? transaction.recipientVenmo
+        : customHandleOverride.venmo ?? "",
+      recipientCashApp: hasUsableRecipient("cashapp", transaction)
+        ? transaction.recipientCashApp
+        : customHandleOverride.cashapp ?? "",
+      recipientChime: hasUsableRecipient("chime", transaction)
+        ? transaction.recipientChime
+        : customHandleOverride.chime ?? "",
+      recipientZelle: hasUsableRecipient("zelle", transaction)
+        ? transaction.recipientZelle
+        : customHandleOverride.zelle ?? "",
+      recipientPayPal: hasUsableRecipient("paypal", transaction)
+        ? transaction.recipientPayPal
+        : customHandleOverride.paypal ?? "",
     }),
     [transaction, amountInput, memoInput, customHandleOverride],
   );
@@ -272,7 +288,7 @@ export const P2PPaymentRouter: React.FC<P2PPaymentRouterProps> = ({
       contributionType === "payment",
   );
 
-  const rewardSummary = useMemo(() => {
+  const liveRewardSummary = useMemo(() => {
     if (!canUseRewards || !applyRewards || !rewardWallet) {
       const grossCents = Math.max(0, Math.round((Number(effectiveTransaction.amount) || 0) * 100));
       return {
@@ -292,6 +308,10 @@ export const P2PPaymentRouter: React.FC<P2PPaymentRouterProps> = ({
     });
   }, [canUseRewards, applyRewards, rewardWallet, effectiveTransaction.amount, pointsToUse]);
 
+  // Saving can change the wallet passed in, so the saved screen keeps what was submitted.
+  const [submittedSummary, setSubmittedSummary] = useState<typeof liveRewardSummary | null>(null);
+  const rewardSummary = submittedSummary ?? liveRewardSummary;
+
   const isCoveredEntirelyByRewards =
     canUseRewards &&
     applyRewards &&
@@ -307,9 +327,9 @@ export const P2PPaymentRouter: React.FC<P2PPaymentRouterProps> = ({
       "zelle",
       "cash",
     ];
-    if (effectiveTransaction.recipientApplePay) base.push("applepay");
+    if (hasUsableRecipient("applepay", transaction)) base.push("applepay");
     return base;
-  }, [effectiveTransaction.recipientApplePay]);
+  }, [transaction]);
 
   const activeChannelMeta = CHANNEL_META[selectedChannel];
   const activeRouteUri = useMemo(
@@ -326,120 +346,79 @@ export const P2PPaymentRouter: React.FC<P2PPaymentRouterProps> = ({
     [selectedChannel, effectiveTransaction],
   );
 
-  const startVerificationPhase = useCallback(() => {
+  const hasRecipient = hasUsableRecipient(selectedChannel, effectiveTransaction);
+  const hasAmount = rewardSummary.netPayableCents > 0;
+  const canRoute = hasRecipient && hasAmount;
+  const isCopyChannel = selectedChannel === "zelle" || selectedChannel === "applepay";
+
+  // Kouchd can't see or check a transfer, so the pause before the save verifies nothing.
+  const saveContribution = async () => {
+    if (isSavingRef.current) return;
+    isSavingRef.current = true;
     setPersistError("");
-    setVerificationStepIndex(0);
+    setSavingStepIndex(0);
     setProgressPercent(0);
-    setPhase("PROCESSING_VERIFICATION");
-  }, []);
+    setPhase("SAVING");
 
-  // Phase 3: 4.5-second internal timer + casual cycling status microcopy + persistence hook
-  useEffect(() => {
-    if (phase !== "PROCESSING_VERIFICATION") {
-      return;
-    }
+    await new Promise((resolve) => {
+      savingPauseRef.current = window.setTimeout(resolve, SAVING_PAUSE_MS);
+    });
 
-    hasLoggedRef.current = false;
+    setSubmittedSummary(rewardSummary);
 
-    const startTime = performance.now();
-    const stepDuration = PROCESSING_DURATION_MS / CASUAL_VERIFICATION_STEPS.length;
+    try {
+      const channelLabel =
+        contributionType !== "payment"
+          ? contributionType.replaceAll("_", " ")
+          : isCoveredEntirelyByRewards
+            ? `${rewardWallet?.coinName ?? "Reward"} credit`
+            : activeChannelMeta.name;
 
-    const progressInterval = window.setInterval(() => {
-      const elapsed = performance.now() - startTime;
-      const ratio = Math.min(elapsed / PROCESSING_DURATION_MS, 1);
-      setProgressPercent(Math.round(ratio * 100));
-
-      const nextIdx = Math.min(
-        Math.floor(elapsed / stepDuration),
-        CASUAL_VERIFICATION_STEPS.length - 1,
-      );
-      setVerificationStepIndex(nextIdx);
-    }, 60);
-
-    const completionTimer = window.setTimeout(async () => {
-      if (hasLoggedRef.current) return;
-      hasLoggedRef.current = true;
-
-      const settledAt = new Date().toISOString();
-      setCompletionTimestamp(settledAt);
-      setProgressPercent(100);
-
-      if (onLogContribution) {
-        try {
-          const channelLabel =
-            contributionType !== "payment"
-              ? contributionType.replaceAll("_", " ")
-              : isCoveredEntirelyByRewards
-                ? `${rewardWallet?.coinName ?? "Reward"} credit`
-                : activeChannelMeta.name;
-
-          const noteParts = [effectiveTransaction.memo.trim()];
-          if (contributionType === "payment") {
-            if (isCoveredEntirelyByRewards) {
-              noteParts.push(`Covered with ${rewardSummary.pointsApplied} ${rewardWallet?.coinName ?? "Coins"}`);
-            } else if (rewardSummary.pointsApplied > 0) {
-              noteParts.push(
-                `Sent $${rewardSummary.netPayableFormatted} via ${activeChannelMeta.name} + ${rewardSummary.pointsApplied} ${rewardWallet?.coinName ?? "Coins"}`,
-              );
-            } else {
-              noteParts.push(`via ${activeChannelMeta.name}`);
-            }
-          }
-
-          await onLogContribution({
-            transactionId: effectiveTransaction.transactionId,
-            type: contributionType,
-            channelId:
-              contributionType !== "payment"
-                ? "non_cash"
-                : isCoveredEntirelyByRewards
-                  ? "rewards_only"
-                  : selectedChannel,
-            channelLabel,
-            grossAmountCents: rewardSummary.grossAmountCents,
-            netPaymentAmountCents: rewardSummary.netPayableCents,
-            pointsRedeemed: rewardSummary.pointsApplied,
-            rewardCreditCents: rewardSummary.rewardCreditCents,
-            date: dateInput,
-            note: noteParts.filter(Boolean).join(" · "),
-            countsTowardBalance,
-          });
-        } catch (err) {
-          setPersistError(
-            err instanceof Error
-              ? err.message
-              : "Could not save this contribution to the Ledger.",
+      const noteParts = [effectiveTransaction.memo.trim()];
+      if (contributionType === "payment") {
+        if (isCoveredEntirelyByRewards) {
+          noteParts.push(`Covered with ${rewardSummary.pointsApplied} ${rewardWallet?.coinName ?? "Coins"}`);
+        } else if (rewardSummary.pointsApplied > 0) {
+          noteParts.push(
+            `$${rewardSummary.netPayableFormatted} via ${activeChannelMeta.name} + ${rewardSummary.pointsApplied} ${rewardWallet?.coinName ?? "Coins"}`,
           );
-          setPhase("SELECT_AND_ROUTE");
-          return;
+        } else {
+          noteParts.push(`via ${activeChannelMeta.name}`);
         }
       }
 
-      setPhase("SUCCESS_COMPLETION");
-    }, PROCESSING_DURATION_MS);
+      await onLogContribution({
+        type: contributionType,
+        channelId:
+          contributionType !== "payment"
+            ? "non_cash"
+            : isCoveredEntirelyByRewards
+              ? "rewards_only"
+              : selectedChannel,
+        channelLabel,
+        grossAmountCents: rewardSummary.grossAmountCents,
+        netPaymentAmountCents: rewardSummary.netPayableCents,
+        pointsRedeemed: rewardSummary.pointsApplied,
+        rewardCreditCents: rewardSummary.rewardCreditCents,
+        date: dateInput,
+        note: noteParts.filter(Boolean).join(" · "),
+        countsTowardBalance,
+      });
 
-    return () => {
-      window.clearInterval(progressInterval);
-      window.clearTimeout(completionTimer);
-    };
-  }, [
-    phase,
-    onLogContribution,
-    contributionType,
-    isCoveredEntirelyByRewards,
-    rewardWallet?.coinName,
-    activeChannelMeta.name,
-    effectiveTransaction.memo,
-    effectiveTransaction.transactionId,
-    rewardSummary.pointsApplied,
-    rewardSummary.netPayableFormatted,
-    rewardSummary.grossAmountCents,
-    rewardSummary.netPayableCents,
-    rewardSummary.rewardCreditCents,
-    selectedChannel,
-    dateInput,
-    countsTowardBalance,
-  ]);
+      setSavedAt(new Date().toISOString());
+      setPhase("SAVED");
+    } catch (err) {
+      setPersistError(
+        err instanceof Error
+          ? err.message
+          : "Could not save this contribution to the Ledger.",
+      );
+      setSubmittedSummary(null);
+      setPhase("SELECT_AND_ROUTE");
+    } finally {
+      isSavingRef.current = false;
+    }
+  };
 
   const handleCopyCredential = useCallback(async (textToCopy: string) => {
     try {
@@ -468,65 +447,24 @@ export const P2PPaymentRouter: React.FC<P2PPaymentRouterProps> = ({
   }, []);
 
   const handleLaunchOutboundRoute = useCallback(() => {
+    if (!canRoute || !activeRouteUri) return;
     if (
-      contributionType === "payment" &&
-      !isCoveredEntirelyByRewards &&
       (selectedChannel === "venmo" ||
         selectedChannel === "cashapp" ||
         selectedChannel === "chime" ||
-        selectedChannel === "paypal")
+        selectedChannel === "paypal") &&
+      isMobile
     ) {
-      if (isMobile) {
-        window.open(activeRouteUri, "_blank", "noopener,noreferrer");
-      }
+      window.open(activeRouteUri, "_blank", "noopener,noreferrer");
     }
     setPhase("OUTBOUND_CONFIRMATION");
-  }, [contributionType, isCoveredEntirelyByRewards, selectedChannel, activeRouteUri, isMobile]);
-
-  const handleDirectLogWithoutAppSwitch = useCallback(() => {
-    startVerificationPhase();
-  }, [startVerificationPhase]);
+  }, [canRoute, selectedChannel, activeRouteUri, isMobile]);
 
   const handleFinishAndClose = useCallback(() => {
-    const receipt: P2PConfirmationReceipt = {
-      transactionId: effectiveTransaction.transactionId,
-      timestamp: completionTimestamp || new Date().toISOString(),
-      settledAmount: rewardSummary.netPayableFormatted,
-      rewardCreditFormatted:
-        rewardSummary.rewardCreditCents > 0
-          ? (rewardSummary.rewardCreditCents / 100).toFixed(2)
-          : undefined,
-      pointsRedeemed: rewardSummary.pointsApplied > 0 ? rewardSummary.pointsApplied : undefined,
-      networkId:
-        contributionType !== "payment"
-          ? contributionType
-          : isCoveredEntirelyByRewards
-            ? "rewards"
-            : selectedChannel,
-      networkLabel:
-        contributionType !== "payment"
-          ? contributionType.replaceAll("_", " ")
-          : isCoveredEntirelyByRewards
-            ? `${rewardWallet?.coinName ?? "Reward"} credit`
-            : activeChannelMeta.name,
-      recipientHandle: activeHandle,
-    };
-    onComplete?.(receipt);
+    onComplete?.();
+    setSubmittedSummary(null);
     setPhase("SELECT_AND_ROUTE");
-  }, [
-    effectiveTransaction.transactionId,
-    completionTimestamp,
-    rewardSummary.netPayableFormatted,
-    rewardSummary.rewardCreditCents,
-    rewardSummary.pointsApplied,
-    contributionType,
-    isCoveredEntirelyByRewards,
-    selectedChannel,
-    rewardWallet?.coinName,
-    activeChannelMeta.name,
-    activeHandle,
-    onComplete,
-  ]);
+  }, [onComplete]);
 
   return (
     <div style={styles.wrapper}>
@@ -545,7 +483,6 @@ export const P2PPaymentRouter: React.FC<P2PPaymentRouterProps> = ({
         {/* Top Summary Header */}
         <header style={styles.header}>
           <div style={styles.headerBadgeRow}>
-            <span style={styles.refPill}>Ref · {effectiveTransaction.transactionId}</span>
             <button
               type="button"
               onClick={() => setDeviceOverride(!isMobile)}
@@ -600,7 +537,7 @@ export const P2PPaymentRouter: React.FC<P2PPaymentRouterProps> = ({
                 <div style={styles.modePillsRow} role="tablist" aria-label="Contribution kind">
                   {(
                     [
-                      { id: "payment", label: "Send money / Cash" },
+                      { id: "payment", label: "Money or cash" },
                       { id: "groceries", label: "Groceries" },
                       { id: "supplies", label: "Supplies" },
                       { id: "house_work", label: "House work" },
@@ -731,14 +668,18 @@ export const P2PPaymentRouter: React.FC<P2PPaymentRouterProps> = ({
               <div style={styles.routingViewport}>
                 <p style={styles.casualHelperCopy}>
                   Logging <strong>{contributionType.replaceAll("_", " ")}</strong> ($
-                  {rewardSummary.netPayableFormatted}) on the shared Ledger. Your host will get a
-                  quick note to confirm it.
+                  {rewardSummary.netPayableFormatted}) on the shared Ledger. It stays pending until{" "}
+                  {otherPerson} confirms it.
                 </p>
                 <button
                   type="button"
-                  onClick={handleDirectLogWithoutAppSwitch}
+                  onClick={saveContribution}
                   disabled={rewardSummary.grossAmountCents <= 0}
-                  style={styles.primaryForestButton}
+                  style={
+                    rewardSummary.grossAmountCents <= 0
+                      ? { ...styles.primaryForestButton, ...styles.disabledButton }
+                      : styles.primaryForestButton
+                  }
                 >
                   Log {contributionType.replaceAll("_", " ")} on Ledger
                 </button>
@@ -750,15 +691,15 @@ export const P2PPaymentRouter: React.FC<P2PPaymentRouterProps> = ({
                   <Sparkles size={18} color="#184f3a" />
                   <span>
                     Covered in full with <strong>{rewardSummary.pointsApplied}</strong>{" "}
-                    {rewardWallet?.coinName ?? "Coins"}! No outside transfer needed.
+                    {rewardWallet?.coinName ?? "Coins"}. There&apos;s nothing else to send.
                   </span>
                 </div>
                 <button
                   type="button"
-                  onClick={handleDirectLogWithoutAppSwitch}
+                  onClick={saveContribution}
                   style={styles.primaryForestButton}
                 >
-                  Redeem {rewardSummary.pointsApplied} {rewardWallet?.coinName ?? "Coins"} &amp; Log
+                  Use {rewardSummary.pointsApplied} {rewardWallet?.coinName ?? "Coins"} and save
                 </button>
               </div>
             ) : (
@@ -769,7 +710,7 @@ export const P2PPaymentRouter: React.FC<P2PPaymentRouterProps> = ({
                   <span style={styles.stepPill}>Step 1 of 3</span>
                 </div>
 
-                <div role="tablist" aria-label="Payment Channels" style={styles.channelGrid}>
+                <div role="tablist" aria-label="Ways to send" style={styles.channelGrid}>
                   {availableChannels.map((chanId) => {
                     const meta = CHANNEL_META[chanId];
                     const isSelected = selectedChannel === chanId;
@@ -815,12 +756,16 @@ export const P2PPaymentRouter: React.FC<P2PPaymentRouterProps> = ({
                     <span style={styles.channelBadgePill}>{activeChannelMeta.name}</span>
                   </div>
 
-                  {/* Allow setting a handle inline if host hasn't configured one */}
-                  {activeHandle === "Not set by host" && selectedChannel !== "cash" && (
+                  {/* Ask for a handle when the host hasn't saved one. Kept visible while typing. */}
+                  {!hasUsableRecipient(selectedChannel, transaction) && (
                     <label style={{ ...styles.fieldLabel, marginBottom: "10px", textAlign: "left" }}>
-                      <span>Enter host&apos;s {activeChannelMeta.name} handle to route</span>
+                      <span>
+                        No {activeChannelMeta.name} handle is saved for this stay. Enter the host&apos;s
+                        handle, exactly as they gave it to you, to continue.
+                      </span>
                       <input
                         type="text"
+                        autoComplete="off"
                         placeholder={
                           selectedChannel === "zelle"
                             ? "host@email.com or phone"
@@ -838,21 +783,38 @@ export const P2PPaymentRouter: React.FC<P2PPaymentRouterProps> = ({
                     </label>
                   )}
 
-                  {/* ZELLE: Both Mobile & Desktop display credential field + Copy to Clipboard */}
-                  {selectedChannel === "zelle" ? (
+                  {/* No app link, QR code, or copy step until there is a real handle and an amount */}
+                  {!hasRecipient || activeRouteUri === null ? (
+                    <button
+                      type="button"
+                      disabled
+                      style={{ ...styles.primaryForestButton, ...styles.disabledButton }}
+                    >
+                      Enter a handle to continue
+                    </button>
+                  ) : !hasAmount ? (
+                    <button
+                      type="button"
+                      disabled
+                      style={{ ...styles.primaryForestButton, ...styles.disabledButton }}
+                    >
+                      Enter an amount to continue
+                    </button>
+                  ) : isCopyChannel ? (
+                    /* ZELLE & APPLE CASH: Both Mobile & Desktop display credential field + Copy to Clipboard */
                     <div style={styles.channelBodyStack}>
                       <div style={styles.copyFieldRow}>
                         <input
                           type="text"
                           readOnly
-                          aria-label="Zelle recipient credential"
-                          value={effectiveTransaction.recipientZelle}
+                          aria-label={`${activeChannelMeta.name} recipient credential`}
+                          value={activeRouteUri}
                           onFocus={(e) => e.currentTarget.select()}
                           style={styles.readonlyCodeInput}
                         />
                         <button
                           type="button"
-                          onClick={() => handleCopyCredential(effectiveTransaction.recipientZelle)}
+                          onClick={() => handleCopyCredential(activeRouteUri)}
                           style={{
                             ...styles.copyActionBtn,
                             backgroundColor: copiedCredential ? "#184f3a" : "#17251f",
@@ -864,9 +826,10 @@ export const P2PPaymentRouter: React.FC<P2PPaymentRouterProps> = ({
                       </div>
 
                       <p style={styles.casualHelperCopy}>
-                        Copy your host&apos;s Zelle info above, send{" "}
-                        <strong>${rewardSummary.netPayableFormatted}</strong> in your bank&apos;s
-                        Zelle app, then tap below so we can log it.
+                        Copy your host&apos;s {activeChannelMeta.name} info above, send{" "}
+                        <strong>${rewardSummary.netPayableFormatted}</strong> in{" "}
+                        {selectedChannel === "zelle" ? "your bank's Zelle app" : "Messages or Wallet"},
+                        then tap below to log it.
                       </p>
 
                       <button
@@ -874,7 +837,7 @@ export const P2PPaymentRouter: React.FC<P2PPaymentRouterProps> = ({
                         onClick={handleLaunchOutboundRoute}
                         style={styles.primaryForestButton}
                       >
-                        I&apos;m ready to send via Zelle
+                        I&apos;m ready to send via {activeChannelMeta.name}
                       </button>
                     </div>
                   ) : selectedChannel === "cash" ? (
@@ -897,12 +860,12 @@ export const P2PPaymentRouter: React.FC<P2PPaymentRouterProps> = ({
                       </button>
                     </div>
                   ) : isMobile ? (
-                    /* MOBILE: Outbound Deep Link for Venmo, Cash App, Chime, PayPal, Apple Cash */
+                    /* MOBILE: Outbound Deep Link for Venmo, Cash App, Chime, PayPal */
                     <div style={styles.channelBodyStack}>
                       <p style={styles.casualHelperCopy}>
-                        Tap below to open <strong>{activeChannelMeta.name}</strong> with{" "}
-                        <strong>${rewardSummary.netPayableFormatted}</strong> and your note ready to
-                        go.
+                        Tap below to open <strong>{activeChannelMeta.name}</strong>, then send{" "}
+                        <strong>${rewardSummary.netPayableFormatted}</strong> to{" "}
+                        <strong>{activeHandle}</strong>.
                       </p>
 
                       <a
@@ -922,13 +885,9 @@ export const P2PPaymentRouter: React.FC<P2PPaymentRouterProps> = ({
                         <ExternalLink size={15} />
                       </a>
 
-                      <div style={styles.uriPillBox}>
-                        <span style={styles.uriPillTitle}>App Route</span>
-                        <code style={styles.uriCodeString}>{activeRouteUri}</code>
-                      </div>
                     </div>
                   ) : (
-                    /* DESKTOP: Level-H QR Code for Venmo, Cash App, Chime */
+                    /* DESKTOP: QR Code for Venmo, Cash App, Chime, PayPal */
                     <div style={styles.channelBodyStack}>
                       <div
                         role="button"
@@ -945,20 +904,16 @@ export const P2PPaymentRouter: React.FC<P2PPaymentRouterProps> = ({
                       >
                         <LevelHQrCodeSvg value={activeRouteUri} size={180} />
                         <span style={styles.qrBadgeCaption}>
-                          Level-H QR · Scan with your phone camera
+                          Scan with your phone camera
                         </span>
                       </div>
 
                       <p style={styles.casualHelperCopy}>
                         Point your phone camera at the QR code to open{" "}
-                        <strong>{activeChannelMeta.name}</strong> with{" "}
-                        <strong>${rewardSummary.netPayableFormatted}</strong> pre-filled.
+                        <strong>{activeChannelMeta.name}</strong>, then send{" "}
+                        <strong>${rewardSummary.netPayableFormatted}</strong> to{" "}
+                        <strong>{activeHandle}</strong>.
                       </p>
-
-                      <div style={styles.uriPillBox}>
-                        <span style={styles.uriPillTitle}>Compiled Link</span>
-                        <code style={styles.uriCodeString}>{activeRouteUri}</code>
-                      </div>
 
                       <button
                         type="button"
@@ -999,20 +954,20 @@ export const P2PPaymentRouter: React.FC<P2PPaymentRouterProps> = ({
               <h3 id="kouchd-outbound-title" style={styles.promptTitle}>
                 {selectedChannel === "cash"
                   ? "Hand off your cash contribution"
-                  : `Finish up in ${activeChannelMeta.name}`}
+                  : `Send it in ${activeChannelMeta.name}`}
               </h3>
 
               <p style={styles.promptCasualCopy}>
                 {selectedChannel === "cash" ? (
                   <>
                     Once you hand over <strong>${rewardSummary.netPayableFormatted}</strong> (or
-                    leave it in the agreed spot), tap below so we can put it on the shared Ledger.
+                    leave it in the agreed spot), tap below to save it to the shared Ledger.
                   </>
                 ) : (
                   <>
-                    We&apos;ve opened <strong>{activeChannelMeta.name}</strong>. Please complete
-                    your transfer of <strong>${rewardSummary.netPayableFormatted}</strong> inside
-                    their app, then pop right back here to log it.
+                    Send <strong>${rewardSummary.netPayableFormatted}</strong> in{" "}
+                    <strong>{activeChannelMeta.name}</strong>, then come back here to save it. Kouchd
+                    can&apos;t see or check the transfer.
                   </>
                 )}
               </p>
@@ -1023,7 +978,7 @@ export const P2PPaymentRouter: React.FC<P2PPaymentRouterProps> = ({
                   <strong>{activeHandle}</strong>
                 </div>
                 <div style={styles.miniSummaryRow}>
-                  <span>Amount sent</span>
+                  <span>Amount</span>
                   <strong>${rewardSummary.netPayableFormatted}</strong>
                 </div>
                 {rewardSummary.pointsApplied > 0 && (
@@ -1044,57 +999,52 @@ export const P2PPaymentRouter: React.FC<P2PPaymentRouterProps> = ({
               <div style={styles.buttonStack}>
                 <button
                   type="button"
-                  onClick={startVerificationPhase}
+                  onClick={saveContribution}
                   style={styles.primaryForestButton}
                 >
-                  I Have Sent the Money
+                  {selectedChannel === "cash"
+                    ? "I handed it over. Save to Ledger"
+                    : "I sent it. Save to Ledger"}
                 </button>
                 <button
                   type="button"
                   onClick={() => setPhase("SELECT_AND_ROUTE")}
                   style={styles.secondaryCreamButton}
                 >
-                  Cancel / Go Back
+                  Go back
                 </button>
               </div>
             </div>
           </div>
         )}
 
-        {/* PHASE 3: SIMULATED PROCESSING VERIFICATION (4.5s) */}
-        {phase === "PROCESSING_VERIFICATION" && (
+        {/* PHASE 3: PACED SAVING, a pause and then the Ledger save */}
+        {phase === "SAVING" && (
           <div style={styles.phaseBody}>
-            <div style={styles.processingStack}>
+            <div style={styles.processingStack} role="status">
               <div style={styles.spinnerContainer}>
                 <div style={styles.spinnerRing} />
               </div>
 
-              <p style={styles.cyclingCasualTitle}>
-                {CASUAL_VERIFICATION_STEPS[verificationStepIndex]}
-              </p>
+              <p style={styles.savingTitle}>{SAVING_STEPS[savingStepIndex]}</p>
 
               <p style={styles.processingSubcopy}>
                 Saving a shared contribution record for{" "}
-                <strong>${(rewardSummary.grossAmountCents / 100).toFixed(2)}</strong> — Kouchd
-                keeps the house in sync while payments stay between you two.
+                <strong>${(rewardSummary.grossAmountCents / 100).toFixed(2)}</strong>. Kouchd keeps the
+                house in sync while payments stay between you two.
               </p>
 
               <div style={styles.progressTrack} aria-hidden="true">
-                <div
-                  style={{
-                    ...styles.progressFill,
-                    width: `${progressPercent}%`,
-                  }}
-                />
+                <div style={{ ...styles.progressFill, width: `${progressPercent}%` }} />
               </div>
 
               <div style={styles.dotsRow}>
-                {CASUAL_VERIFICATION_STEPS.map((stepText, idx) => (
+                {SAVING_STEPS.map((stepText, idx) => (
                   <span
                     key={stepText}
                     style={{
                       ...styles.stepDot,
-                      backgroundColor: idx <= verificationStepIndex ? "#184f3a" : "#ded8ce",
+                      backgroundColor: idx <= savingStepIndex ? "#184f3a" : "#ded8ce",
                     }}
                   />
                 ))}
@@ -1103,71 +1053,91 @@ export const P2PPaymentRouter: React.FC<P2PPaymentRouterProps> = ({
           </div>
         )}
 
-        {/* PHASE 4: SUCCESS & ORDER COMPLETION */}
-        {phase === "SUCCESS_COMPLETION" && (
+        {/* PHASE 4: SAVED SHARED RECORD */}
+        {phase === "SAVED" && (
           <div style={styles.phaseBody}>
             <div style={styles.successStack}>
               <div style={styles.successBadgeCircle} aria-hidden="true">
                 <Check size={32} color="#17251f" strokeWidth={3} />
               </div>
 
-              <h3 style={styles.successHeading}>On the Ledger!</h3>
+              <h3 style={styles.successHeading}>Saved to the Ledger</h3>
 
               <p style={styles.successCasualCopy}>
-                All set — your contribution is saved and we gave your host a heads-up so they can
-                confirm it once they check their app.
+                {hasAmount ? (
+                  <>Your contribution is saved and waiting for {otherPerson} to confirm it.</>
+                ) : (
+                  <>
+                    Your {rewardSummary.pointsApplied} {rewardWallet?.coinName ?? "Coins"} are on the
+                    Ledger as a stay credit. There&apos;s nothing else to send.
+                  </>
+                )}
               </p>
 
               <div style={styles.immutableCard}>
                 <div style={styles.immutableCardHeader}>
                   <span style={styles.immutableHeaderLabel}>SHARED CONTRIBUTION RECORD</span>
-                  <span style={styles.loggedStatusPill}>AWAITING HOST CONFIRMATION</span>
+                  <span style={styles.loggedStatusPill}>{hasAmount ? "PENDING" : "SAVED"}</span>
                 </div>
 
                 <div style={styles.immutableCardBody}>
                   <div style={styles.receiptRow}>
-                    <span style={styles.receiptKey}>Transaction ID</span>
-                    <span style={styles.receiptMonoVal}>{effectiveTransaction.transactionId}</span>
-                  </div>
-                  <div style={styles.receiptRow}>
-                    <span style={styles.receiptKey}>Timestamp</span>
-                    <span style={styles.receiptMonoVal}>
-                      {completionTimestamp ? new Date(completionTimestamp).toLocaleString() : "Just now"}
-                    </span>
-                  </div>
-                  <div style={styles.receiptRow}>
-                    <span style={styles.receiptKey}>Settled Amount</span>
+                    <span style={styles.receiptKey}>Saved on</span>
                     <span style={styles.receiptStrongVal}>
-                      ${(rewardSummary.grossAmountCents / 100).toFixed(2)} USD
+                      {savedAt ? new Date(savedAt).toLocaleString() : "Just now"}
                     </span>
                   </div>
+                  {hasAmount && (
+                    <>
+                      <div style={styles.receiptRow}>
+                        <span style={styles.receiptKey}>Amount</span>
+                        <span style={styles.receiptStrongVal}>
+                          ${rewardSummary.netPayableFormatted}
+                        </span>
+                      </div>
+                      <div style={styles.receiptRow}>
+                        <span style={styles.receiptKey}>Status</span>
+                        <span style={styles.receiptStrongVal}>
+                          Waiting for {otherPerson} to confirm
+                        </span>
+                      </div>
+                    </>
+                  )}
                   {rewardSummary.pointsApplied > 0 && (
                     <div style={styles.receiptRow}>
                       <span style={styles.receiptKey}>
-                        {rewardWallet?.coinName ?? "Coins"} Redeemed
+                        {rewardWallet?.coinName ?? "Coins"} credit
                       </span>
                       <span style={styles.receiptStrongVal}>
-                        {rewardSummary.pointsApplied} (−$
-                        {(rewardSummary.rewardCreditCents / 100).toFixed(2)})
+                        {rewardSummary.pointsApplied} (${(rewardSummary.rewardCreditCents / 100).toFixed(2)})
                       </span>
                     </div>
                   )}
-                  <div style={styles.receiptRow}>
-                    <span style={styles.receiptKey}>Selected Network Routing Channel</span>
-                    <span style={styles.receiptStrongVal}>
-                      {contributionType !== "payment"
-                        ? contributionType.replaceAll("_", " ")
-                        : isCoveredEntirelyByRewards
-                          ? `${rewardWallet?.coinName ?? "Reward"} credit`
-                          : `${activeChannelMeta.name} (${activeHandle})`}
-                    </span>
-                  </div>
+                  {contributionType !== "payment" ? (
+                    <div style={styles.receiptRow}>
+                      <span style={styles.receiptKey}>Type</span>
+                      <span style={styles.receiptStrongVal}>
+                        {contributionType.replaceAll("_", " ")}
+                      </span>
+                    </div>
+                  ) : (
+                    hasAmount && (
+                      <div style={styles.receiptRow}>
+                        <span style={styles.receiptKey}>Sent with</span>
+                        <span style={styles.receiptStrongVal}>
+                          {selectedChannel === "cash"
+                            ? activeChannelMeta.name
+                            : `${activeChannelMeta.name} (${activeHandle})`}
+                        </span>
+                      </div>
+                    )
+                  )}
                 </div>
               </div>
 
               <p style={styles.complianceDisclaimer}>
-                A contribution is a shared household record — Kouchd never collects, holds, or
-                moves money itself.
+                A contribution is a shared record, not proof that money moved. Kouchd never collects,
+                holds, or moves money.
               </p>
 
               <button
@@ -1208,20 +1178,10 @@ const styles: Record<string, React.CSSProperties> = {
   },
   headerBadgeRow: {
     display: "flex",
-    justifyContent: "space-between",
+    justifyContent: "flex-end",
     alignItems: "center",
     gap: "8px",
     marginBottom: "10px",
-  },
-  refPill: {
-    fontSize: "11px",
-    fontWeight: 700,
-    letterSpacing: "0.04em",
-    textTransform: "uppercase",
-    backgroundColor: "rgba(255, 255, 255, 0.12)",
-    color: "#e5edde",
-    padding: "4px 10px",
-    borderRadius: "999px",
   },
   deviceTogglePill: {
     display: "inline-flex",
@@ -1538,29 +1498,6 @@ const styles: Record<string, React.CSSProperties> = {
     margin: 0,
     textAlign: "center",
   },
-  uriPillBox: {
-    width: "100%",
-    backgroundColor: "#ece5da",
-    border: "1px dashed #c4bdad",
-    borderRadius: "10px",
-    padding: "8px 10px",
-    textAlign: "left",
-  },
-  uriPillTitle: {
-    display: "block",
-    fontSize: "10px",
-    fontWeight: 800,
-    textTransform: "uppercase",
-    color: "#59675f",
-    marginBottom: "2px",
-  },
-  uriCodeString: {
-    display: "block",
-    fontSize: "11px",
-    color: "#17251f",
-    wordBreak: "break-all",
-    fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
-  },
   primaryForestButton: {
     width: "100%",
     display: "inline-flex",
@@ -1575,6 +1512,10 @@ const styles: Record<string, React.CSSProperties> = {
     border: "none",
     borderRadius: "14px",
     cursor: "pointer",
+  },
+  disabledButton: {
+    opacity: 0.55,
+    cursor: "not-allowed",
   },
   secondaryCreamButton: {
     width: "100%",
@@ -1677,7 +1618,7 @@ const styles: Record<string, React.CSSProperties> = {
     borderTopColor: "#184f3a",
     animation: "kouchdRouterSpin 0.85s linear infinite",
   },
-  cyclingCasualTitle: {
+  savingTitle: {
     fontSize: "16px",
     fontWeight: 800,
     color: "#17251f",

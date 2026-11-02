@@ -16,12 +16,10 @@ type ShoppingItem = Doc<"shoppingItems">;
 export function ShoppingList({
   stayId,
   viewerId,
-  isHost,
   isEnded,
 }: {
   stayId: Id<"stays">;
   viewerId: Id<"users">;
-  isHost: boolean;
   isEnded: boolean;
 }) {
   const items = useQuery(api.shopping.list, { stayId }) as
@@ -124,7 +122,7 @@ export function ShoppingList({
               <span>List</span>
               <select name="visibility">
                 <option value="shared">Shared with the house</option>
-                <option value="personal">Personal to me</option>
+                <option value="personal">Personal (only you can see it)</option>
               </select>
             </label>
             <label>
@@ -167,10 +165,9 @@ export function ShoppingList({
         ) : (
           <div className="ledger-list">
             {items.map((item) => {
-              const canEdit =
-                item.visibility === "shared" ||
-                isHost ||
-                item.createdBy === viewerId;
+              // Personal items are private to their creator, hosts included.
+              const isCreator = item.createdBy === viewerId;
+              const canEdit = item.visibility === "shared" || isCreator;
               if (editingId === item._id)
                 return (
                   <form
@@ -196,13 +193,15 @@ export function ShoppingList({
                         required
                       />
                     </label>
-                    <label>
-                      <span>List</span>
-                      <select name="visibility" defaultValue={item.visibility}>
-                        <option value="shared">Shared with the house</option>
-                        <option value="personal">Personal to me</option>
-                      </select>
-                    </label>
+                    {isCreator && (
+                      <label>
+                        <span>List</span>
+                        <select name="visibility" defaultValue={item.visibility}>
+                          <option value="shared">Shared with the house</option>
+                          <option value="personal">Personal (only you can see it)</option>
+                        </select>
+                      </label>
+                    )}
                     <label>
                       <span>Note</span>
                       <input
@@ -240,13 +239,15 @@ export function ShoppingList({
                       type="button"
                       disabled={busy}
                       onClick={() => {
+                        const checkingOff = !item.checkedAt;
                         void run(
                           () => toggleItem({ itemId: item._id }),
                           "Could not update this item.",
-                        );
-                        if (!item.checkedAt) {
-                          trackEvent(ANALYTICS_EVENTS.SHOPPING_ITEM_PURCHASED, { stayId, itemId: item._id });
-                        }
+                        ).then((saved) => {
+                          if (saved && checkingOff) {
+                            trackEvent(ANALYTICS_EVENTS.SHOPPING_ITEM_PURCHASED, { stayId, itemId: item._id });
+                          }
+                        });
                       }}
                       aria-label={`${item.checkedAt ? "Uncheck" : "Check off"} ${item.title}`}
                     >

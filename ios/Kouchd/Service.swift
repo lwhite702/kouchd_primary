@@ -147,6 +147,8 @@ private enum KouchdAuthError: LocalizedError {
   var bundle: Value = .null
   var typedAgreement: AgreementRecord?
   var ledger: [Value] = []
+  var ledgerSummary: Value = .null
+  private var ledgerRecord: Value = .null
   var contributions: [Value] = []
   var chores: [Value] = []
   var announcements: [Value] = []
@@ -159,6 +161,22 @@ private enum KouchdAuthError: LocalizedError {
   var checkins: [Value] = []
   var subscriptionSummary: Value = .null
   var typedSubscriptionSummary: AccountSubscriptionSummary?
+  private var planUsageValue: Value = .null
+  /// Host-only guest spots; nil for guests and while loading.
+  var planUsage: PlanUsage?
+  /// Set when the backend refused a stay or guest for plan limits. Screens
+  /// show their own copy for it instead of the generic error alert.
+  var planLimit: PlanLimitError?
+  /// Opens the Plus sheet (host only) from wherever the root view is presenting.
+  var plusEntry: PlusEntry?
+  /// The stay a guest was blocked from, so "Invite your next guest" returns to it.
+  var plusEntryStayID: String?
+  /// Set by the Plus sheet; the stay screen opens its invite form and clears it.
+  var opensInviteOnStay = false
+  /// A screen the Plus sheet wants to continue on once it closes.
+  var planRoute: KouchdRoute?
+  /// A purchase Apple finished that the backend hasn't confirmed yet.
+  let plusSetup = PlusSetupTracker(sync: { try await RevenueCatBillingClient.shared.syncPurchases() })
   var typedLedger: [LedgerRecord] = []
   var isSubscriptionSummaryLoading = true
   var subscriptionSummaryError = ""
@@ -197,6 +215,18 @@ private enum KouchdAuthError: LocalizedError {
   var featureLoading: Set<StayFeature> = []
   private var adminSubscriptions: [String: [AnyCancellable]] = [:]
   private var adminVersions: [String: Int] = [:]
+  #if DEBUG
+  /// Set only by the layout test host. A seeded store never subscribes or mutates.
+  private var isSeeded = false
+
+  init(seed: (KouchdStore) -> Void) {
+    client = ConvexClientWithAuth(deploymentUrl: "https://seed.invalid", authProvider: KouchdAuthProvider())
+    isSeeded = true
+    isLoading = false
+    isSubscriptionSummaryLoading = false
+    seed(self)
+  }
+  #endif
 
   init() {
     client = ConvexClientWithAuth(
@@ -278,6 +308,7 @@ private enum KouchdAuthError: LocalizedError {
     watch("stays:listMine", into: \.stays, account: true)
     watch("admin:canAccess", into: \.adminAccess, account: true)
     watch("subscriptions:currentAccountSummary", into: \.subscriptionSummary, account: true)
+    watch("subscriptions:planUsage", into: \.planUsageValue, account: true)
   }
 
   func reset() {
@@ -303,6 +334,7 @@ private enum KouchdAuthError: LocalizedError {
     bundle = .null
     typedAgreement = nil
     ledger = []
+    ledgerSummary = .null
     typedLedger = []
     contributions = []
     chores = []
@@ -316,6 +348,14 @@ private enum KouchdAuthError: LocalizedError {
     checkins = []
     subscriptionSummary = .null
     typedSubscriptionSummary = nil
+    planUsageValue = .null
+    planUsage = nil
+    planLimit = nil
+    plusEntry = nil
+    plusEntryStayID = nil
+    opensInviteOnStay = false
+    planRoute = nil
+    plusSetup.signedOut()
     isSubscriptionSummaryLoading = true
     subscriptionSummaryError = ""
     clearAdmin()
@@ -401,6 +441,9 @@ private enum KouchdAuthError: LocalizedError {
 
   func selectStay(_ id: String) {
     guard !id.isEmpty else { return }
+    #if DEBUG
+    if isSeeded { selectedStayID = id; return }
+    #endif
     stayGeneration += 1
     financialGeneration += 1
     isStayLoading = true
@@ -415,6 +458,7 @@ private enum KouchdAuthError: LocalizedError {
     bundle = .null
     typedAgreement = nil
     ledger = []
+    ledgerSummary = .null
     typedLedger = []
     contributions = []
     chores = []
@@ -436,18 +480,22 @@ private enum KouchdAuthError: LocalizedError {
 
   func selectGuest(_ id: String) {
     selectedGuestID = id
+    #if DEBUG
+    if isSeeded { return }
+    #endif
     loadGuestData()
   }
 
   private func loadGuestData() {
     guard !selectedStayID.isEmpty else { return }
     financialGeneration += 1
-    pendingFinancialQueries = ["contributions:list", "rewards:getWallet", "obligations:list"]
+    pendingFinancialQueries = ["contributions:list", "rewards:getWallet", "obligations:ledgerWithTotals"]
     isFinancialLoading = true
     financialError = ""
     financialSubscriptions.removeAll()
     contributions = []
     ledger = []
+    ledgerSummary = .null
     typedLedger = []
     nights = []
     wallet = .null
@@ -456,7 +504,8 @@ private enum KouchdAuthError: LocalizedError {
     watch("contributions:list", args: args, into: \.contributions, financial: true)
     watch("rewards:getWallet", args: args, into: \.wallet, financial: true)
     args["asOfDate"] = Display.date(timezone: bundle["stay"]["timezone"].text)
-    watch("obligations:list", args: args, into: \.ledger, financial: true)
+    // One subscription computes the ledger once and returns its rows and totals together.
+    watch("obligations:ledgerWithTotals", args: args, into: \.ledgerRecord, financial: true)
     reloadFeatures()
   }
 
@@ -485,6 +534,9 @@ private enum KouchdAuthError: LocalizedError {
   }
 
   private func loadFeature(_ feature: StayFeature) {
+    #if DEBUG
+    if isSeeded { return }
+    #endif
     guard !selectedStayID.isEmpty, !isStayLoading else { return }
     featureLoading.insert(feature)
     featureVersions[feature, default: 0] += 1
@@ -513,6 +565,9 @@ private enum KouchdAuthError: LocalizedError {
     adminScope: String = "",
     feature: StayFeature? = nil
   ) {
+    #if DEBUG
+    if isSeeded { return }
+    #endif
     let featureEpoch = featureGeneration
     let adminVersion = adminVersions[adminScope, default: 0]
     let featureVersion = feature.map { featureVersions[$0, default: 0] }
@@ -557,8 +612,16 @@ private enum KouchdAuthError: LocalizedError {
         }
         if name == "subscriptions:currentAccountSummary", let summary = value as? Value {
           self.typedSubscriptionSummary = summary.decoded(AccountSubscriptionSummary.self)
+          self.refreshPlusSetup()
         }
-        if name == "obligations:list", let rows = value as? [Value] {
+        if name == "users:viewer" { self.refreshPlusSetup() }
+        if name == "subscriptions:planUsage", let usage = value as? Value {
+          self.planUsage = usage.decoded(PlanUsage.self)
+        }
+        if name == "obligations:ledgerWithTotals", let record = value as? Value {
+          let rows = record["rows"].items
+          self.ledger = rows
+          self.ledgerSummary = record["totals"]
           if let decoded = Value.array(rows).decoded([LedgerRecord].self) {
             self.typedLedger = decoded
           } else {
@@ -597,11 +660,15 @@ private enum KouchdAuthError: LocalizedError {
   }
 
   func mutateValue(_ name: String, _ args: [String: ConvexEncodable?]) async -> Value? {
+    #if DEBUG
+    if isSeeded { return .null }
+    #endif
     let accountEpoch = accountGeneration
     let stayEpoch = stayGeneration
     let guestEpoch = financialGeneration
     let scoped = !name.hasPrefix("users:") && !name.hasPrefix("admin:") &&
       !["stays:create", "referral:joinWithCode", "invites:accept"].contains(name)
+    planLimit = nil
     do {
       let result: Value = try await client.mutation(name, with: args)
       guard accountEpoch == accountGeneration, !scoped || (stayEpoch == stayGeneration && guestEpoch == financialGeneration) else { return nil }
@@ -609,8 +676,55 @@ private enum KouchdAuthError: LocalizedError {
       return result
     } catch {
       guard accountEpoch == accountGeneration, !scoped || (stayEpoch == stayGeneration && guestEpoch == financialGeneration) else { return nil }
-      self.error = error.localizedDescription
+      if let limit = Self.planLimit(from: error) {
+        planLimit = limit
+      } else {
+        self.error = Self.message(for: error)
+      }
       return nil
+    }
+  }
+
+  /// Reads the stable `plan_limit` code the backend attaches to limit refusals.
+  nonisolated static func planLimit(from error: Error) -> PlanLimitError? {
+    guard case ClientError.ConvexError(let data) = error,
+          let limit = try? JSONDecoder().decode(PlanLimitError.self, from: Data(data.utf8)),
+          limit.code == "plan_limit" else { return nil }
+    return limit
+  }
+
+  /// Prefers the readable message inside `ConvexError` data over its raw JSON.
+  nonisolated static func message(for error: Error) -> String {
+    if case ClientError.ConvexError(let data) = error {
+      if let object = try? JSONSerialization.jsonObject(with: Data(data.utf8)) as? [String: Any],
+         let message = object["message"] as? String { return message }
+      if let text = try? JSONDecoder().decode(String.self, from: Data(data.utf8)) { return text }
+    }
+    return error.localizedDescription
+  }
+
+  private func refreshPlusSetup() {
+    guard !viewer["id"].text.isEmpty else { return }
+    plusSetup.refresh(userID: viewer["id"].text, hasPlus: typedSubscriptionSummary?.hasPlus)
+  }
+
+  /// Notes a refused join so the host can see it. Errors are ignored: it is not the guest's problem.
+  func recordBlockedJoin(_ args: [String: ConvexEncodable?]) async {
+    _ = try? await client.mutation("subscriptions:recordBlockedJoin", with: args) as Value
+  }
+
+  /// Kouchd's cross-platform trial answer plus Apple's signed JWS for it.
+  /// `eligible == nil` means the backend could not answer.
+  func introOfferEligibility(productID: String, appTransactionID: String?) async -> (eligible: Bool?, jws: String?) {
+    var args: [String: ConvexEncodable?] = ["productId": productID]
+    if let appTransactionID { args["appTransactionId"] = appTransactionID }
+    guard let result: Value = try? await client.action("introOffer:signEligibility", with: args) else {
+      return (nil, nil)
+    }
+    let jws = result["jws"].text
+    switch result["eligible"] {
+    case .bool(let eligible): return (eligible, jws.isEmpty ? nil : jws)
+    default: return (nil, nil)
     }
   }
 
@@ -621,11 +735,32 @@ private enum KouchdAuthError: LocalizedError {
 
   func joinOrCreateStay(_ name: String, _ args: [String: ConvexEncodable?]) async -> Bool {
     let stayEpoch = stayGeneration
-    guard let result = await mutateValue(name, args) else { return false }
+    guard let result = await mutateValue(name, args) else {
+      // A guest's refused join rolls back, so note it for the host separately.
+      if planLimit?.isGuest == true, name != "stays:create" {
+        var attempt: [String: ConvexEncodable?] = [:]
+        if let code = args["referralCode"] { attempt["referralCode"] = code }
+        if let hash = args["tokenHash"] { attempt["tokenHash"] = hash }
+        await recordBlockedJoin(attempt)
+      }
+      return false
+    }
     let id = result.text.isEmpty ? result["stayId"].text : result.text
     guard stayEpoch == stayGeneration || selectedStayID == id else { return false }
     if !id.isEmpty { selectStay(id) }
     return true
+  }
+
+  /// The stay "End current stay instead" acts on: one this person hosts that hasn't ended.
+  var hostedStayToEnd: String? {
+    Self.hostedStayToEnd(selected: selectedStayID, stays: stays.map {
+      (id: $0["stay"]["_id"].text, role: $0["membership"]["role"].text, status: $0["stay"]["status"].text)
+    })
+  }
+
+  nonisolated static func hostedStayToEnd(selected: String, stays: [(id: String, role: String, status: String)]) -> String? {
+    let hosted = stays.filter { $0.role == "host" && $0.status != "ended" }.map(\.id)
+    return hosted.contains(selected) ? selected : hosted.first
   }
 
   var isHost: Bool { bundle["membership"]["role"].text == "host" }

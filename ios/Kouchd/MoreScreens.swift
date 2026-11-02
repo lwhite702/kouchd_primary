@@ -6,10 +6,6 @@ import SwiftUI
 struct MoreScreen: View {
   let store: KouchdStore
 
-  private var usesOccupiedNights: Bool {
-    store.bundle["terms"]["billingBasis"].text == "occupied_nights"
-  }
-
   var body: some View {
     Page(title: "More", navigationTitle: "More") {
       Card {
@@ -17,58 +13,33 @@ struct MoreScreen: View {
         Text("Home, Ledger, Chores, and Stay keep everyday tasks close. Use these tools for agreements, requests, rewards, and account details.")
           .font(.subheadline).foregroundStyle(Palette.muted)
       }
+      toolCard(store.isHost ? "Manage this stay" : "Your stay", [.hostControls, .agreement, .schedule, .occupancy, .rewards, .activity])
+      toolCard("Household coordination", [.shopping, .checkins])
+      toolCard("Account & help", [.plan, .settings, .guide, .about, .help])
+      toolCard("Another stay", [.createStay, .joinStay])
+      toolCard("Administration", [.admin])
+    }
+  }
 
-      if store.isHost {
-        Card {
-          Text("Manage this stay").font(.headline)
-          if !store.isEnded {
-            MoreActionRow(title: "Host controls", detail: "Edit the agreement, house details, and contribution options.", symbol: "slider.horizontal.3", route: .hostControls)
-          }
-          MoreActionRow(title: "Schedule requests", detail: "Review requests to change the contribution rhythm.", symbol: "calendar", route: .schedule)
-          if usesOccupiedNights {
-            MoreActionRow(title: "Occupied nights", detail: "Record or review nights included in the agreement.", symbol: "moon", route: .occupancy)
-          }
-          MoreActionRow(title: "Contribution rewards", detail: "Review submitted contributions and reward points.", symbol: "sparkles", route: .rewards)
-          MoreActionRow(title: "Household activity", detail: "See recent changes and shared updates.", symbol: "clock.arrow.circlepath", route: .activity)
-        }
-      } else {
-        Card {
-          Text("Your stay").font(.headline)
-          MoreActionRow(title: "Guest agreement", detail: "Read the shared expectations and review any changes.", symbol: "doc.text", route: .agreement)
-          MoreActionRow(title: "Schedule requests", detail: "Ask your host to change the contribution rhythm.", symbol: "calendar", route: .schedule)
-          if usesOccupiedNights {
-            MoreActionRow(title: "Occupied nights", detail: "Review nights recorded for this stay.", symbol: "moon", route: .occupancy)
-          }
-          MoreActionRow(title: "Contribution rewards", detail: "Submit contributions for review or use available points.", symbol: "sparkles", route: .rewards)
-          MoreActionRow(title: "Household activity", detail: "See recent changes and shared updates.", symbol: "clock.arrow.circlepath", route: .activity)
-        }
-      }
-
+  @ViewBuilder private func toolCard(_ title: String, _ tools: [StayTool]) -> some View {
+    let visible = StayTool.visible(tools, in: store.toolContext)
+    if !visible.isEmpty {
       Card {
-        Text("Household coordination").font(.headline)
-        MoreActionRow(title: "Shopping list", detail: "Keep shared items and your own list together.", symbol: "basket", route: .shopping)
-        MoreActionRow(title: "Check-ins", detail: "Share updates and follow up with your host or guest.", symbol: "bubble.left.and.bubble.right", route: .checkins)
-      }
-      Card {
-        Text("Account & help").font(.headline)
-        MoreActionRow(title: "Profile & reminders", detail: "Update your name, phone number, and notifications.", symbol: "person.crop.circle", route: .settings)
-        MoreActionRow(title: "Household guide", detail: "Learn how shared stay tools work.", symbol: "book.closed", route: .householdGuide)
-        MoreActionRow(title: "About Kouchd", detail: "See what Kouchd helps hosts and guests manage.", symbol: "info.circle", route: .about)
-        Link(destination: URL(string: "https://help.kouchd.com")!) {
-          MoreExternalRow(title: "Help center", detail: "Find answers and contact support.", symbol: "questionmark.circle")
-        }
-      }
-
-      Card {
-        Text("Another stay").font(.headline)
-        MoreActionRow(title: "Create a stay", detail: "Set up a new shared stay and its agreement.", symbol: "plus.circle", route: .createStay)
-        MoreActionRow(title: "Join a stay", detail: "Enter an invitation code from your host.", symbol: "person.badge.plus", route: .joinCode)
-      }
-
-      if store.adminAccess.flag {
-        Card {
-          Text("Administration").font(.headline)
-          MoreActionRow(title: "Platform administration", detail: "Review platform tools and audit records.", symbol: "shield.lefthalf.filled", route: .admin)
+        Text(title).font(.headline)
+        ForEach(visible, id: \.self) { tool in
+          // At the limit, nothing gets typed before the host knows why it can't be saved.
+          if tool == .createStay, let limit = store.planUsage.flatMap(PlanLimitError.stayLimit) {
+            Button { store.planLimit = limit } label: {
+              MoreRowLabel(title: tool.title, detail: tool.detail(isHost: store.isHost), symbol: tool.symbol, showsChevron: true)
+            }
+            .buttonStyle(.plain)
+          } else if let route = tool.route {
+            MoreActionRow(title: tool.title, detail: tool.detail(isHost: store.isHost), symbol: tool.symbol, route: route)
+          } else {
+            Link(destination: StayTool.helpURL) {
+              MoreExternalRow(title: tool.title, detail: tool.detail(isHost: store.isHost), symbol: tool.symbol)
+            }
+          }
         }
       }
     }
@@ -131,7 +102,7 @@ struct ScheduleScreen: View {
   @State private var cadence = "daily"
   @State private var weekday = 1
   var body: some View {
-    Page(title: "Schedule changes") {
+    Page(title: "Schedule changes", width: .wide) {
       Card {
         Text("Change your contribution rhythm").font(.headline)
         Text("Guests can request a change. The host reviews it before it takes effect.")
@@ -163,6 +134,7 @@ struct ScheduleScreen: View {
       if store.schedule.isEmpty {
         EmptyCard(title: "No requests", message: "Schedule requests will appear here.")
       }
+      AdaptiveGrid {
       ForEach(store.schedule, id: \.id) { request in
         Card {
           HStack {
@@ -186,6 +158,7 @@ struct ScheduleScreen: View {
           }
         }
       }
+      }
     }
     .stayFeature(.schedule, store: store)
   }
@@ -195,7 +168,7 @@ struct OccupancyScreen: View {
   let store: KouchdStore
   @State private var date = Date.now
   var body: some View {
-    Page(title: "Occupied nights") {
+    Page(title: "Occupied nights", width: .wide) {
       Card {
         Text("Nights spent at the stay").font(.headline)
         Text("When the agreement uses occupied nights, the host records each night here.")
@@ -218,6 +191,7 @@ struct OccupancyScreen: View {
       if store.nights.isEmpty {
         EmptyCard(title: "No nights recorded", message: "Recorded nights appear here with their agreed amount.")
       }
+      AdaptiveGrid {
       ForEach(store.nights, id: \.id) { night in
         Card {
           DataRow(title: night["nightDate"].text, detail: Display.money(night["amountCents"].int))
@@ -229,6 +203,7 @@ struct OccupancyScreen: View {
             }.tint(.red)
           }
         }
+      }
       }
     }
     .stayFeature(.occupancy, store: store)
@@ -243,7 +218,7 @@ struct RewardsScreen: View {
   @State private var redeemPoints = ""
   @State private var selectedRule = ""
   var body: some View {
-    Page(title: "Contribution rewards") {
+    Page(title: "Contribution rewards", width: .wide) {
       if store.isHost && store.guests.count > 1 { GuestPicker(store: store) }
       Card {
         Pill(text: store.wallet["settings"]["coinName"].text.isEmpty
@@ -292,6 +267,7 @@ struct RewardsScreen: View {
       if store.wallet["claims"].items.isEmpty {
         EmptyCard(title: "No reward claims", message: "Household contributions can earn points after review.")
       }
+      AdaptiveGrid {
       ForEach(store.wallet["claims"].items, id: \.id) { claim in
         Card {
           HStack {
@@ -315,6 +291,7 @@ struct RewardsScreen: View {
             }.buttonStyle(.bordered)
           }
         }
+      }
       }
     }
     .stayFeature(.rewards, store: store)
@@ -381,7 +358,7 @@ struct SettingsScreen: View {
             .foregroundStyle(Palette.muted)
           Button("Try again") { store.loadAccount() }
         } else if store.subscriptionSummary["canManageSubscription"].flag {
-          NavigationLink("Subscription", value: KouchdRoute.subscription)
+          NavigationLink("Plan", value: KouchdRoute.subscription)
         }
         NavigationLink("About Kouchd", value: KouchdRoute.about)
         Button("Manage account & security") { showAccount = true }
@@ -409,7 +386,7 @@ struct SettingsScreen: View {
       email = store.viewer["notifyEmail"].flag
       sms = store.viewer["notifySms"].flag
     }
-    .sheet(isPresented: $showAccount) { UserProfileView() }
+    .sheet(isPresented: $showAccount) { UserProfileView().environment(\.clerkTheme, .kouchd) }
   }
 
   private func savePreferences() {
@@ -592,6 +569,83 @@ struct AdminStayScreen: View {
   }
 }
 
+/// Mirrors the web "Automatic acceptance" setting backed by `stays:updateAgreementAutoAccept`.
+private struct AgreementAutoAcceptCard: View {
+  let store: KouchdStore
+  @State private var enabled: Bool
+  @State private var hours: Int
+  @State private var saving = false
+
+  init(store: KouchdStore) {
+    self.store = store
+    let stay = store.bundle["stay"]
+    // Stays created before this setting existed default to on, 24 hours, as on web.
+    _enabled = State(initialValue: HouseholdSettings.autoAcceptEnabled(stay["agreementAutoAcceptEnabled"]))
+    _hours = State(initialValue: HouseholdSettings.autoAcceptHours(stay["agreementAutoAcceptHours"].int))
+  }
+
+  var body: some View {
+    Card {
+      Text("Automatic acceptance").font(.headline)
+      Text("If a guest doesn't respond, their pending agreement is accepted after this many hours. Turn it off to require each guest to accept.")
+        .font(.subheadline).foregroundStyle(Palette.muted)
+      Toggle("Accept pending agreements automatically", isOn: $enabled)
+      if enabled {
+        Stepper("After \(hours) \(hours == 1 ? "hour" : "hours")", value: $hours, in: HouseholdSettings.autoAcceptHourRange)
+      }
+      PrimaryButton(title: saving ? "Saving…" : "Save") {
+        guard !saving else { return }
+        saving = true
+        Task {
+          _ = await store.mutate("stays:updateAgreementAutoAccept", [
+            "stayId": store.selectedStayID, "enabled": enabled, "hours": Double(hours)
+          ])
+          saving = false
+        }
+      }.disabled(saving)
+    }
+  }
+}
+
+/// Mirrors the web guest preferred-name field backed by `stays:updateGuestPreferredName`.
+private struct GuestNamesCard: View {
+  let store: KouchdStore
+  @State private var names: [String: String] = [:]
+  @State private var savingID = ""
+
+  /// `stays:updateGuestPreferredName` only accepts active guests.
+  private var activeGuests: [Value] { store.guests.filter { $0["membership"]["status"].text == "active" } }
+
+  var body: some View {
+    Card {
+      Text("Guest display names").font(.headline)
+      Text("Choose the name everyone in the stay sees for each guest.")
+        .font(.subheadline).foregroundStyle(Palette.muted)
+      ForEach(activeGuests, id: \.guestPersonID) { guest in
+        let id = guest.guestPersonID
+        HStack {
+          TextField("Display name", text: Binding(
+            get: { names[id] ?? guest["person"]["name"].text },
+            set: { names[id] = $0 }
+          )).textFieldStyle(.roundedBorder)
+          Button(savingID == id ? "Saving…" : "Save") {
+            let name = names[id] ?? guest["person"]["name"].text
+            savingID = id
+            Task {
+              _ = await store.mutate("stays:updateGuestPreferredName", [
+                "stayId": store.selectedStayID, "guestUserId": id, "preferredName": name
+              ])
+              savingID = ""
+            }
+          }
+          .buttonStyle(.bordered)
+          .disabled(!savingID.isEmpty || !HouseholdSettings.isValidPreferredName(names[id] ?? guest["person"]["name"].text))
+        }
+      }
+    }
+  }
+}
+
 struct HostControlsScreen: View {
   let store: KouchdStore
   @State private var announcementTitle = ""
@@ -619,6 +673,11 @@ struct HostControlsScreen: View {
             "stayId": store.selectedStayID
           ]) }
         }
+      }
+      if !store.isEnded {
+        AgreementAutoAcceptCard(store: store)
+          .id("\(store.bundle["stay"]["agreementAutoAcceptEnabled"].flag)-\(store.bundle["stay"]["agreementAutoAcceptHours"].int)")
+        if store.guests.contains(where: { $0["membership"]["status"].text == "active" }) { GuestNamesCard(store: store) }
       }
       Card {
         Text("Stay management").font(.headline)

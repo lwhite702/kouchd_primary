@@ -12,6 +12,12 @@ if (classification.version !== version || !classification.reason?.trim()) {
   throw new Error("Release classification must name VERSION and give a factual reason");
 }
 
+// Versions recorded under a retired number (release/version-history.json) compare by their current number.
+const renamed = hasFile("release/version-history.json")
+  ? (JSON.parse(read("release/version-history.json")).renamed ?? {})
+  : {};
+const canonicalVersion = (value) => renamed[value] ?? value;
+
 const currentBranch = (() => {
   try {
     return (
@@ -142,14 +148,20 @@ if (runtime && (!unreleased || unreleased.length < 60)) {
 if (runtime && tags) {
   throw new Error(`Version ${version} has already been released; prepare a unique version`);
 }
-if (runtime && baseVersion) {
+// Renaming the base release to its current number is not a new release.
+const isRenumberOnly =
+  Boolean(baseVersion) &&
+  classification.type === "none" &&
+  baseVersion !== version &&
+  canonicalVersion(baseVersion) === version;
+if (runtime && baseVersion && !isRenumberOnly) {
   const parseSemver = (value) => {
     const [core, rcPart] = value.split("-rc.");
     const [maj, min, pat] = core.split(".").map(Number);
     return { maj, min, pat, rc: rcPart ? Number(rcPart) : null };
   };
   const next = parseSemver(version);
-  const previous = parseSemver(baseVersion);
+  const previous = parseSemver(canonicalVersion(baseVersion));
   const type = classification.type;
 
   const isValidRcStep =

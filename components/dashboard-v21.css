@@ -28,8 +28,19 @@
   align-items: stretch;
   background: var(--v21-paper);
   color: var(--v21-ink);
-  font-family: var(--font-manrope), "Manrope", sans-serif;
+  font-family: var(--font-inter), "Inter", sans-serif;
   box-sizing: border-box;
+}
+
+/* Body copy inherits Inter from the shell; display text keeps Manrope. */
+.v21-sidebar-section-title,
+.v21-stay-title,
+.v21-tile-label,
+.v21-tile-metric,
+.v21-section-heading,
+.v21-attention-title,
+.v21-activity-title {
+  font-family: var(--font-manrope), "Manrope", sans-serif;
 }
 
 .v21-workspace-root * {
@@ -167,7 +178,7 @@
   color: rgba(255, 255, 255, 0.86);
   font-size: 14px;
   font-weight: 650;
-  font-family: inherit;
+  font-family: var(--font-manrope), "Manrope", sans-serif;
   cursor: pointer;
   text-decoration: none;
   transition: background 0.15s ease, color 0.15s ease;
@@ -471,7 +482,7 @@
   cursor: pointer;
   box-shadow: 0 6px 18px rgba(24, 79, 58, 0.16);
   transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
-  font-family: inherit;
+  font-family: var(--font-manrope), "Manrope", sans-serif;
   flex-shrink: 0;
 }
 
@@ -593,7 +604,7 @@
   border: 1px solid var(--v21-line);
   border-top-width: 3px;
   transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease;
-  font-family: inherit;
+  font-family: var(--font-manrope), "Manrope", sans-serif;
   background: var(--v21-surface);
   box-shadow: 0 4px 16px rgba(23, 37, 31, 0.04);
   min-width: 0;
@@ -679,7 +690,7 @@
   border-radius: 999px;
   cursor: pointer;
   transition: background 0.15s ease, transform 0.15s ease;
-  font-family: inherit;
+  font-family: var(--font-manrope), "Manrope", sans-serif;
   flex-shrink: 0;
 }
 
@@ -783,7 +794,7 @@
   font-weight: 800;
   color: var(--v21-forest);
   cursor: pointer;
-  font-family: inherit;
+  font-family: var(--font-manrope), "Manrope", sans-serif;
   transition: transform 0.15s ease, background 0.15s ease, border-color 0.15s ease;
 }
 
@@ -1337,6 +1348,7 @@
   color: var(--v21-forest);
   cursor: pointer;
   font: inherit;
+  font-family: var(--font-manrope), "Manrope", sans-serif;
   font-size: 12px;
   font-weight: 750;
   line-height: 1.4;
@@ -1481,7 +1493,7 @@
 }
 
 .host-workspace-checkin-card p { margin: 2px 0 8px; color: var(--v21-ink); font-size: 13px; line-height: 1.55; overflow-wrap: anywhere; }
-.host-workspace-checkin-card button { display: inline-flex; align-items: center; gap: 7px; padding: 0; border: 0; background: transparent; color: var(--v21-forest); font: inherit; font-size: 12px; font-weight: 800; cursor: pointer; }
+.host-workspace-checkin-card button { display: inline-flex; align-items: center; gap: 7px; padding: 0; border: 0; background: transparent; color: var(--v21-forest); font: inherit; font-family: var(--font-manrope), "Manrope", sans-serif; font-size: 12px; font-weight: 800; cursor: pointer; }
 .host-workspace-empty { margin: 0; padding: 14px; border-radius: 14px; background: rgba(255, 253, 248, 0.65); color: var(--v21-muted); font-size: 13px; line-height: 1.55; overflow-wrap: anywhere; }
 
 @media (max-width: 1180px) {
@@ -1585,4 +1597,23 @@ button.host-workspace-activity-row {
 button.host-workspace-activity-row:focus-visible {
   outline: 2px solid var(--green, #184f3a);
   outline-offset: 3px;
+}
+
+/* Display values, labels, and initials keep Manrope; body copy inherits Inter. */
+.v21-sidebar-mark,
+.v21-sidebar-wordmark,
+.v21-stay-switcher-name,
+.v21-sidebar-user-name,
+.v21-panel-overline,
+.v21-panel-headline,
+.v21-attention-kicker,
+.v21-activity-avatar,
+.v21-activity-status,
+.host-workspace-avatar,
+.host-workspace-summary-card > strong,
+.host-workspace-contribution-amount,
+.host-workspace-status,
+.host-workspace-mobile-summary > span,
+.host-workspace-mobile-summary > strong {
+  font-family: var(--font-manrope), "Manrope", sans-serif;
 }

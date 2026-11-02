@@ -2,6 +2,18 @@
 
 import { useEffect, useRef } from "react";
 
+// Write only on a real change: the observer below watches these attributes, so
+// a write that repeats the current value would re-trigger it forever.
+export function syncSubmitState(submitBtn: HTMLButtonElement, disabled: boolean) {
+  if (submitBtn.disabled !== disabled) submitBtn.disabled = disabled;
+  if (submitBtn.getAttribute("aria-disabled") !== String(disabled)) {
+    submitBtn.setAttribute("aria-disabled", String(disabled));
+  }
+  if (submitBtn.classList.contains("kouchd-submit-disabled") !== disabled) {
+    submitBtn.classList.toggle("kouchd-submit-disabled", disabled);
+  }
+}
+
 export function SignInFormGuard({ children }: { children: React.ReactNode }) {
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -24,18 +36,9 @@ export function SignInFormGuard({ children }: { children: React.ReactNode }) {
       const { input, submitBtn } = findElements();
       if (!submitBtn) return;
 
-      const hasValue = Boolean(input && input.value.trim().length > 0);
-      if (hasValue) {
-        submitBtn.disabled = false;
-        submitBtn.removeAttribute("disabled");
-        submitBtn.setAttribute("aria-disabled", "false");
-        submitBtn.classList.remove("kouchd-submit-disabled");
-      } else {
-        submitBtn.disabled = true;
-        submitBtn.setAttribute("disabled", "true");
-        submitBtn.setAttribute("aria-disabled", "true");
-        submitBtn.classList.add("kouchd-submit-disabled");
-      }
+      // Only guard the initial identifier step if an identifier input exists.
+      // On password, OTP code, or MFA steps, do not interfere with Clerk's native button state.
+      syncSubmitState(submitBtn, Boolean(input) && !input?.value.trim());
     };
 
     // Run immediately

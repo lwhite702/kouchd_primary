@@ -72,8 +72,31 @@ account deletion need authenticated verification.
 4. Verify production RevenueCat app identity, webhook authentication and expected
    environment, monthly/yearly prices, purchase/restore, cancellation, expiry,
    refund, duplicate and out-of-order events, and account switching.
-5. Enable `SUBSCRIPTION_LIMITS_ENFORCED=true` in the intended Convex deployment
-   only after ownership and billing checks. It defaults off in this candidate.
+5. Free/Plus limits (Free: 1 active stay and 1 guest; Plus: 3 stays and 5
+   guests, across the host billing account) are enforced as soon as the
+   WRE-250 backend deploys. There is no `SUBSCRIPTION_LIMITS_ENFORCED` switch
+   any more; the team chose immediate enforcement. Before or with that deploy:
+   - Run the step 2 ownership backfill. Stays without a billing account are
+     counted against their host as Free.
+   - Set `SUBSCRIPTION_EXPECTED_ENVIRONMENT`. Without it a paid plan cannot be
+     read, and any host above the Free limits is refused.
+   - Rollout risk: iOS builds older than the WRE-250 client cannot show the
+     structured "plan full" refusal. A host or guest on an old build sees a
+     generic error when a stay or join is refused. Hosts who are already over
+     the Free limits keep their existing stays and guests but cannot add more
+     until they move to Plus or make room.
+   - iPhone one-trial-per-host signing (Convex env, never committed): set
+     `APP_STORE_IAP_KEY_ID`, `APP_STORE_IAP_ISSUER_ID`, `APP_STORE_BUNDLE_ID`, and
+     `APP_STORE_IAP_PRIVATE_KEY` from an App Store Connect In-App Purchase key.
+     Without all four, the app shows no trial wording of its own and refuses a
+     purchase when Apple's sheet could disagree with Kouchd.
+   - App Store Connect: `kouchd_plus_monthly` and `kouchd_plus_yearly` at the
+     agreed prices, a 7-day free-trial introductory offer on yearly only, and
+     Family Sharing off.
+   - RevenueCat: both products in the current offering, and the webhook pointed
+     at this deployment.
+   - Knock: a `plus-trial-ending` workflow that sends email. The backend only
+     triggers it.
 6. Newsletter: verify the confirmed, subscribed website-source segment, double opt-in, existing opt-out
    behavior and provider rate limiting before setting `PUBLIC_NEWSLETTER_ENABLED`.
    No server API key is used by the public marketing form.

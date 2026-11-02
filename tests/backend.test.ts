@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 
 import { api } from "../convex/_generated/api";
 import schema from "../convex/schema";
+import { grantPlus } from "./helpers/plans";
 
 const modules = import.meta.glob([
   "../convex/**/*.ts",
@@ -120,6 +121,7 @@ describe("shared stay authorization and audit rules", () => {
       ],
       terms: { ...firstTerms, startDate, endDate },
     });
+    await grantPlus(t, stayId);
     const firstInviteHash = "1".repeat(64);
     const secondInviteHash = "2".repeat(64);
     await host.mutation(api.invites.create, { stayId, tokenHash: firstInviteHash, expiresAt: Date.now() + 86_400_000 });
@@ -463,6 +465,20 @@ describe("shared stay authorization and audit rules", () => {
     const afterWaiver = await host.query(api.obligations.list, { stayId, asOfDate: "2026-09-30" });
     expect(afterWaiver[1]).toMatchObject({ lateFeeCents: 0, lateFeeWaived: true });
 
+    // The combined query used by iOS matches the separate list and summary queries.
+    const combined = await host.query(api.obligations.ledgerWithTotals, { stayId, asOfDate: "2026-09-30" });
+    const summary = await host.query(api.obligations.summary, { stayId, asOfDate: "2026-09-30" });
+    expect(combined.rows).toEqual(afterWaiver);
+    expect(combined.totals).toEqual({
+      chargesCents: summary.chargesCents,
+      creditCents: summary.creditCents,
+      balanceCents: summary.balanceCents,
+      pendingCount: summary.pendingCount,
+      dueCount: summary.dueCount,
+    });
+    expect(combined.totals.creditCents).toBe(19_000);
+    await expect(outsider.query(api.obligations.ledgerWithTotals, { stayId, asOfDate: "2026-09-30" })).rejects.toThrow("Not authorized");
+
     const activity = await host.query(api.activity.list, { stayId });
     expect(activity.filter((item: { action: string }) => item.action === "late_fee_waived")).toHaveLength(1);
   });
@@ -473,6 +489,7 @@ describe("shared stay authorization and audit rules", () => {
     const guestA = await createUser(t, "guest-private-a", "Marcus");
     const guestB = await createUser(t, "guest-private-b", "Avery");
     const stayId = await host.mutation(api.stays.create, { timezone: "America/New_York", terms: firstTerms });
+    await grantPlus(t, stayId);
 
     await host.mutation(api.invites.create, { stayId, tokenHash: "d".repeat(64), expiresAt: Date.now() + 86_400_000 });
     await guestA.mutation(api.invites.accept, { tokenHash: "d".repeat(64) });

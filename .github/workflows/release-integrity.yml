@@ -5,7 +5,32 @@ on:
   push:
     branches: [main]
 jobs:
+  web:
+    name: Web verification and build
+    runs-on: ubuntu-latest
+    # Placeholder values so the environment check and build run without real keys.
+    env:
+      NEXT_PUBLIC_CONVEX_URL: https://dummy-test.convex.cloud
+      NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_dummy
+      CLERK_SECRET_KEY: sk_test_dummy
+      CLERK_JWT_ISSUER_DOMAIN: https://dummy.clerk.accounts.dev
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run verify:env
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+
   verify:
+    name: iOS release integrity and simulator build
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4

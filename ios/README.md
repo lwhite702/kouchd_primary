@@ -19,8 +19,9 @@ CONVEX_URL = https:/$()/your-deployment.convex.cloud
 ```
 
 Do not commit either local file. The tracked configs contain nonworking
-placeholders, and the app shows a setup message until valid settings are
-present. Confirm each pair belongs to the same environment. A publishable key
+placeholders for Clerk, Convex and RevenueCat, and the app shows a setup message
+until valid settings are present. The tracked `POSTHOG_API_KEY` is the real
+public project token. Confirm each pair belongs to the same environment. A publishable key
 is an app identifier, but these local files also prevent accidental environment
 mixups.
 
@@ -61,11 +62,13 @@ environments. Native analytics use the same PostHog project through
 `POSTHOG_API_KEY` and `POSTHOG_HOST` in ignored `Local.xcconfig` and
 `Production.local.xcconfig` files, or optional `PROD_POSTHOG_API_KEY` and
 `PROD_POSTHOG_HOST` Xcode Cloud variables. The project token is a public client
-key; do not put a PostHog personal API key in the app. Both clients disable
-autocapture, session replay, and automatic screen/lifecycle capture. They send
-only manually curated screen and page events with a pseudonymous Clerk ID for
-signed-in users. Household text, names, URLs with query strings, and contribution
-amounts are not event properties.
+key; do not put a PostHog personal API key in the app. The iPhone app disables
+autocapture, session replay, and automatic screen/lifecycle capture. It sends
+only manually curated screen events with a pseudonymous Clerk ID for signed-in
+users; household text, names, URLs with query strings, and contribution amounts
+are not event properties. The web client is different: it uses autocapture and
+session replay (typed input masked) and identifies signed-in users with their
+Clerk ID, name and email, as the in-app Privacy Policy says.
 
 ## Verification
 

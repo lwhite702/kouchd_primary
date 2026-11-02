@@ -41,7 +41,7 @@ export default function TermsAndConditionsPage() {
             Terms &amp; Conditions
           </h1>
           <p style={{ margin: 0, color: "var(--kouchd-muted, #59675f)", fontSize: "0.9rem" }}>
-            Effective Date: {legalMeta.effectiveDate} &middot; Last updated: {legalMeta.lastUpdated} &middot; Brand: <strong>{legalMeta.provider}</strong> (operating <strong>Kouchd</strong>)
+            Effective Date: {termsOfUse.effectiveDate} &middot; Last updated: {termsOfUse.lastUpdated} &middot; Brand: <strong>{legalMeta.provider}</strong> (operating <strong>Kouchd</strong>)
           </p>
         </div>
 

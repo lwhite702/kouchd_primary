@@ -76,6 +76,17 @@ export function StayScreen({ state }: { state: WorkspaceState }) {
             </button>
           </div>
         )}
+        {!isEnded && isHost && (
+          <div className="heading-actions">
+            <button
+              className="button soft"
+              type="button"
+              onClick={() => setPanel("stayName")}
+            >
+              Rename stay
+            </button>
+          </div>
+        )}
       </div>
       {isHost && guestMembers.length > 0 && (
         <GuestTabs
@@ -367,6 +378,14 @@ export function StayScreen({ state }: { state: WorkspaceState }) {
               <p className="eyebrow">Individual agreements</p>
               <h2>Guest terms</h2>
             </div>
+            <button
+              className="mini-button"
+              type="button"
+              disabled={!terms}
+              onClick={() => setPanel("householdTerms")}
+            >
+              Edit household defaults
+            </button>
           </div>
           {guestMembers.length ? (
             <div className="ledger-list">

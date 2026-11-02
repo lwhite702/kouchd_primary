@@ -17,12 +17,12 @@ describe("Analytics Event Taxonomy & Types", () => {
     expect(ANALYTICS_EVENTS.STAY_SWITCHED).toBe("stay_switched");
     expect(ANALYTICS_EVENTS.INVITE_CREATED).toBe("invite_created");
     expect(ANALYTICS_EVENTS.TERMS_ACCEPTED).toBe("terms_accepted");
-    expect(ANALYTICS_EVENTS.PAYMENT_RECORDED).toBe("payment_recorded");
+    expect(ANALYTICS_EVENTS.CONTRIBUTION_RECORDED).toBe("contribution_recorded");
     expect(ANALYTICS_EVENTS.CHORE_COMPLETED).toBe("chore_completed");
     expect(ANALYTICS_EVENTS.SHOPPING_ITEM_ADDED).toBe("shopping_item_added");
     expect(ANALYTICS_EVENTS.CHECK_IN_SUBMITTED).toBe("check_in_submitted");
     expect(ANALYTICS_EVENTS.PAYWALL_VIEWED).toBe("paywall_viewed");
-    expect(ANALYTICS_EVENTS.SUBSCRIPTION_ACTIVATED).toBe("subscription_activated");
+    expect(ANALYTICS_EVENTS.USER_SIGNED_UP).toBe("user_signed_up");
   });
 
   it("constructs type-safe event payloads matching expectations", () => {
@@ -106,5 +106,44 @@ describe("Client Telemetry Dispatcher (track.ts)", () => {
 
     resetStayGroup();
     expect(resetGroupsSpy).toHaveBeenCalled();
+  });
+});
+
+describe("Event coverage", () => {
+  // Defined for planned work; remove from this list when a call site lands.
+  const NOT_YET_SENT = new Set([
+    "STAY_RENAMED",
+    "HOUSE_INFO_UPDATED",
+    "AGREEMENT_VIEWED",
+    "TERMS_UPDATED",
+    "ADHOC_CHARGE_CREATED",
+    "PAYMENT_METHOD_ADDED",
+    "GUIDED_TOUR_ACTION",
+    "PAYWALL_VIEWED",
+    "CUSTOMER_CENTER_OPENED",
+  ]);
+
+  it("sends every defined event from at least one call site", async () => {
+    const { readdirSync, readFileSync, statSync } = await import("node:fs");
+    const { join } = await import("node:path");
+    const root = new URL("..", import.meta.url).pathname;
+    const sources: string[] = [];
+    const walk = (dir: string) => {
+      for (const name of readdirSync(dir)) {
+        const path = join(dir, name);
+        if (name === "_generated" || name === "node_modules") continue;
+        if (statSync(path).isDirectory()) walk(path);
+        else if (/\.tsx?$/.test(name)) sources.push(readFileSync(path, "utf8"));
+      }
+    };
+    for (const dir of ["app", "components", "convex"]) walk(join(root, dir));
+    const code = sources.join("\n");
+
+    const unsent = Object.keys(ANALYTICS_EVENTS).filter(
+      (key) => !NOT_YET_SENT.has(key) && !code.includes(`ANALYTICS_EVENTS.${key}`)
+    );
+    expect(unsent).toEqual([]);
+    const nowSent = [...NOT_YET_SENT].filter((key) => code.includes(`ANALYTICS_EVENTS.${key}`));
+    expect(nowSent).toEqual([]);
   });
 });

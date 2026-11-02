@@ -10,7 +10,7 @@
   --v21-sky: #dcece4;
   color: var(--v21-ink);
   background: var(--v21-paper);
-  font-family: var(--font-manrope), Manrope, sans-serif;
+  font-family: var(--font-inter), "Inter", sans-serif;
   overflow: hidden;
   width: 100%;
   max-width: none;
@@ -47,7 +47,7 @@
   letter-spacing: 0.02em;
 }
 .v21-header-actions { display: flex; align-items: center; gap: 16px; }
-.v21-sign-in { border: 0; background: transparent; padding: 10px 0; cursor: pointer; font-family: inherit; }
+.v21-sign-in { border: 0; background: transparent; padding: 10px 0; cursor: pointer; font-family: var(--font-manrope), "Manrope", sans-serif; }
 .v21-button { display: inline-flex; justify-content: center; align-items: center; gap: 10px; min-height: 48px; padding: 0 21px; border-radius: 999px; font: 750 14px/1 var(--font-manrope), Manrope, sans-serif; text-decoration: none; cursor: pointer; transition: transform .18s ease, box-shadow .18s ease, background .18s ease; }
 .v21-button:hover { transform: translateY(-1px); }
 .v21-button-lime { background: var(--v21-lime); border: 1px solid var(--v21-lime); color: #203527; box-shadow: 0 5px 14px #1c3b2312; }
@@ -252,7 +252,7 @@
 .newsletter-input-row { display: flex; gap: 8px; }
 .newsletter-input-row input { min-width: 0; flex: 1; padding: 11px 12px; border: 1px solid #cbd6c9; border-radius: 10px; color: #26372d; background: #fffefa; font: inherit; font-size: 12px; }
 .newsletter-input-row input:focus-visible, .newsletter-consent input:focus-visible, .newsletter-input-row button:focus-visible { outline: 3px solid #98b65a; outline-offset: 2px; }
-.newsletter-input-row button { flex: 0 0 auto; padding: 0 13px; border: 0; border-radius: 10px; color: #173c2d; background: #dff26b; font: inherit; font-size: 11px; font-weight: 800; cursor: pointer; }
+.newsletter-input-row button { flex: 0 0 auto; padding: 0 13px; border: 0; border-radius: 10px; color: #173c2d; background: #dff26b; font: inherit; font-family: var(--font-manrope), "Manrope", sans-serif; font-size: 11px; font-weight: 800; cursor: pointer; }
 .newsletter-input-row button:disabled { opacity: .65; cursor: wait; }
 .newsletter-consent { display: flex; align-items: flex-start; gap: 8px; color: #55645a; font-size: 10px; line-height: 1.5; cursor: pointer; }
 .newsletter-consent input { width: 14px; height: 14px; flex: 0 0 auto; margin: 1px 0 0; accent-color: #174b37; }
@@ -316,7 +316,7 @@
   color: var(--v21-muted);
   cursor: pointer;
   transition: all 0.15s ease;
-  font-family: inherit;
+  font-family: var(--font-manrope), "Manrope", sans-serif;
 }
 .v21-preview-tab-controls .v21-tab-btn:hover {
   color: var(--v21-forest);
@@ -330,7 +330,7 @@
   border: none;
   background: transparent;
   cursor: pointer;
-  font-family: inherit;
+  font-family: var(--font-manrope), "Manrope", sans-serif;
   font-size: 11px;
   font-weight: 600;
   color: #5d6d63;
@@ -609,4 +609,26 @@
   .v21-header-actions > .v21-button { min-height: 40px; padding: 0 12px; font-size: 12px; white-space: nowrap; }
   .v21-header-actions > .v21-button svg { display: none; }
   .v21-hero h1 { font-size: clamp(42px, 10.8vw, 60px); }
+}
+
+/* Display values, labels, and initials keep Manrope; body copy inherits Inter. */
+.v21-header-badge,
+.v21-text-link,
+.v21-proof-card strong,
+.v21-preview-avatar,
+.v21-preview-kicker,
+.v21-feature-index,
+.v21-scene-top,
+.scene-date,
+.scene-section-label,
+.scene-info-grid span,
+.scene-avatar,
+.scene-ledger-summary > span,
+.scene-task-count,
+.scene-due,
+.scene-done,
+.v21-step-number,
+.newsletter-email-label,
+.v21-faq-list summary {
+  font-family: var(--font-manrope), "Manrope", sans-serif;
 }

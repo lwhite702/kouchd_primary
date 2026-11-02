@@ -8,6 +8,9 @@ import { recordActivity } from "./lib/activity";
 import { assertInvite, assertInviteHash } from "./lib/validation";
 import { ensureGuestTerms, offerGuestAgreement } from "./lib/stayTerms";
 import { scheduleSubscriptionLimitShadow } from "./subscriptionShadow";
+import { clearBlockedJoins } from "./subscriptions";
+import { ANALYTICS_EVENTS } from "../lib/analytics/events";
+import { trackServerEvent } from "./lib/posthog";
 
 export const preview = query({
   args: { tokenHash: v.string() },
@@ -73,6 +76,7 @@ export const create = mutation({
     if (existing) throw new Error("Invite token already exists");
     const inviteId = await ctx.db.insert("invites", { stayId: args.stayId, tokenHash: args.tokenHash, invitedEmail: args.invitedEmail, expiresAt: args.expiresAt, createdBy: user._id, createdAt: Date.now() });
     await recordActivity(ctx, { stayId: args.stayId, actorUserId: user._id, kind: "invite", action: "created", detail: "Guest invite created", entityId: inviteId });
+    trackServerEvent(ctx, user, ANALYTICS_EVENTS.INVITE_CREATED, { stayId: args.stayId, inviteId }, args.stayId);
     if (args.invitedEmail && args.inviteUrl) {
       await ctx.scheduler.runAfter(0, internal.knock.triggerInvitation, {
         recipientEmail: args.invitedEmail,
@@ -106,6 +110,7 @@ export const accept = mutation({
     await assertPlanCapacity(ctx, joiningStay.hostUserId, "guest", joiningStay.householdAccountId);
     const now = Date.now();
     await ctx.db.insert("memberships", { stayId: invite.stayId, userId: user._id, role: "guest", status: "active", joinedAt: now });
+    await clearBlockedJoins(ctx, invite.stayId, user._id);
     const stay = await ctx.db.get(invite.stayId);
     if (!stay) throw new Error("Stay not found");
     const guestTerms = await ensureGuestTerms(ctx, invite.stayId, user._id, stay.hostUserId);
@@ -115,6 +120,7 @@ export const accept = mutation({
       await scheduleSubscriptionLimitShadow(ctx, stay._id, "guest_joined", "active_guest_memberships");
     }
     await recordActivity(ctx, { stayId: invite.stayId, actorUserId: user._id, kind: "invite", action: "accepted", detail: "Guest joined the stay", entityId: invite._id });
+    trackServerEvent(ctx, user, ANALYTICS_EVENTS.INVITE_ACCEPTED, { stayId: invite.stayId }, invite.stayId);
     return invite.stayId;
   },
 });

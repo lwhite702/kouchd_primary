@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("next/font/google", () => ({
@@ -112,6 +113,11 @@ describe("Replay QA: Content-Security-Policy & Canonical Metadata", () => {
     expect(cspHeader?.value).toContain("default-src 'self'");
     expect(cspHeader?.value).toContain("https://clerk.kouchd.com");
     expect(cspHeader?.value).toContain("frame-ancestors 'none'");
+  });
+
+  it("keeps Content-Security-Policy out of root layout markup", () => {
+    const layoutSource = readFileSync(new URL("../app/layout.tsx", import.meta.url), "utf8");
+    expect(layoutSource).not.toMatch(/httpEquiv=["']Content-Security-Policy["']/i);
   });
 
   it("configures canonical metadata on root layout and page", () => {

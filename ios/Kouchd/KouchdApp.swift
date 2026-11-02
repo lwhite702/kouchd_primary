@@ -2,29 +2,23 @@ import ClerkKit
 import ClerkKitUI
 import ConvexMobile
 import CryptoKit
-import PostHog
 import RevenueCat
 import SwiftUI
 
 @main struct KouchdApp: App {
   init() {
     #if DEBUG
-    if IntroductionTestHost.isEnabled { return }
+    if IntroductionTestHost.isEnabled || StayLayoutTestHost.scenario != nil { return }
     initConvexLogging()
     #endif
     if AppConfig.isConfigured {
       Clerk.configure(publishableKey: AppConfig.clerkKey)
     }
-    if AppConfig.posthogEnabled {
-      let phConfig = PostHogConfig(
-        projectToken: AppConfig.posthogKey,
-        host: AppConfig.posthogHost
-      )
-      phConfig.captureScreenViews = true
-      phConfig.sessionReplay = true
-      phConfig.sessionReplayConfig.maskAllTextInputs = true
-      PostHogSDK.shared.setup(phConfig)
-    }
+    #if DEBUG
+    // The plan host builds a signed-out store, which reads Clerk, but skips analytics and purchases.
+    if PlanScreensTestHost.scenario != nil || ContributionFormTestHost.scenario != nil { return }
+    #endif
+    KouchdAnalytics.configure()
     if AppConfig.purchasesEnabled {
       #if DEBUG
       Purchases.logLevel = .debug
@@ -37,6 +31,12 @@ import SwiftUI
       #if DEBUG
       if IntroductionTestHost.isEnabled {
         IntroductionTestHost()
+      } else if let scenario = PlanScreensTestHost.scenario {
+        PlanScreensTestHost(scenario: scenario)
+      } else if let scenario = ContributionFormTestHost.scenario {
+        ContributionFormTestHost(scenario: scenario)
+      } else if let scenario = StayLayoutTestHost.scenario {
+        StayLayoutTestHost(scenario: scenario)
       } else {
         configuredContent
       }
@@ -44,6 +44,7 @@ import SwiftUI
       configuredContent
       #endif
     }
+    .commands { KouchdCommands() }
   }
 
   @ViewBuilder private var configuredContent: some View {
@@ -57,19 +58,6 @@ import SwiftUI
         systemImage: "gearshape",
         description: Text("Add the Clerk and Convex development settings to Local.xcconfig.")
       )
-    }
-  }
-}
-
-private enum Tab: String, CaseIterable {
-  case home = "Home", ledger = "Ledger", chores = "Chores", stay = "Stay", more = "More"
-  var symbol: String {
-    switch self {
-    case .home: "house.fill"
-    case .ledger: "list.bullet.rectangle"
-    case .chores: "checkmark.circle"
-    case .stay: "bed.double"
-    case .more: "ellipsis.circle"
     }
   }
 }
@@ -97,29 +85,8 @@ struct RootView: View {
   @State private var activeSheet: ActiveSheet?
   @State private var inviteToken = ""
   @State private var invitePreview: Value = .null
-  @State private var tab: Tab = .home
+  @State private var navigator = ShellNavigator()
   @State private var billing = BillingModel(client: RevenueCatBillingClient.shared)
-  @State private var morePath = NavigationPath()
-
-  private func openMore(_ route: KouchdRoute? = nil) {
-    morePath = NavigationPath()
-    if let route { morePath.append(route) }
-    tab = .more
-  }
-
-  private func openActivity(_ kind: String, action: String = "") {
-    switch kind {
-    case "contribution", "obligation": tab = .ledger
-    case "chore": tab = .chores
-    case "check_in": openMore(.checkins)
-    case "shopping": openMore(.shopping)
-    case "reward": openMore(.rewards)
-    case "terms": openMore(action.hasPrefix("payment_schedule_") ? .schedule : .agreement)
-    case "stay", "invite": tab = .stay
-    case "announcement": tab = .home
-    default: openMore(.activity)
-    }
-  }
 
   private func markIntroductionComplete() {
     introductionRevision = 1
@@ -132,12 +99,12 @@ struct RootView: View {
     .task { await hideSplashScreen() }
     .onChange(of: store.isLoading) { _, loading in handleLoadingChange(loading) }
     .onChange(of: clerk.user?.id) { _, userID in handleAnalyticsUserChange(userID) }
-    .onChange(of: store.selectedStayID) { _, stayID in handleSelectedStayChange(stayID) }
+    .onChange(of: phase, initial: true) { _, screen in KouchdAnalytics.screenViewed(screen) }
     .onChange(of: activeSheet?.id) { _, sheetID in handleActiveSheetChange(sheetID) }
     .sheet(item: $activeSheet) { sheet in
       switch sheet {
       case .auth:
-        AuthView()
+        AuthView().environment(\.clerkTheme, .kouchd)
       case .invitation(let token, let preview):
         InvitationScreen(store: store, token: token, preview: preview) {
           inviteToken = ""
@@ -151,6 +118,13 @@ struct RootView: View {
     )) {
       Button("OK") { store.error = "" }
     } message: { Text(store.error) }
+    .planLimitPresentation(store: store)
+    .plusSetupBanner(store.plusSetup)
+    .onChange(of: store.planRoute) { _, route in
+      guard let route else { return }
+      store.planRoute = nil
+      navigator.openMore(route)
+    }
     .onOpenURL(perform: handleOpenURL)
     .onChange(of: clerk.user?.id, initial: true) { _, userID in handleSessionUserChange(userID) }
     .onChange(of: store.stays.count) { _, count in handleStayCountChange(count) }
@@ -173,54 +147,8 @@ struct RootView: View {
     } else if store.stays.isEmpty {
       onboarding
     } else {
-      authenticatedTabs
+      AuthenticatedShell(store: store, navigator: navigator)
     }
-  }
-
-  private var authenticatedTabs: some View {
-    TabView(selection: $tab) {
-      NavigationStack {
-        LoadedStayContent(loading: store.isStayLoading || store.isFinancialLoading) {
-          HomeScreen(
-            store: store,
-            openLedger: { tab = .ledger },
-            openMore: { openMore($0) },
-            openActivity: { openActivity($0, action: $1) }
-          )
-        }
-        .kouchdDestinations(store: store)
-      }
-      .tabItem { Label(Tab.home.rawValue, systemImage: Tab.home.symbol) }.tag(Tab.home)
-      NavigationStack {
-        LoadedStayContent(loading: store.isStayLoading || store.isFinancialLoading) {
-          LedgerScreen(store: store)
-        }
-        .kouchdDestinations(store: store)
-      }
-      .tabItem { Label(Tab.ledger.rawValue, systemImage: Tab.ledger.symbol) }.tag(Tab.ledger)
-      NavigationStack {
-        LoadedStayContent(loading: store.isStayLoading) {
-          ChoresScreen(store: store)
-        }
-        .kouchdDestinations(store: store)
-      }
-      .tabItem { Label(Tab.chores.rawValue, systemImage: Tab.chores.symbol) }.tag(Tab.chores)
-      NavigationStack {
-        LoadedStayContent(loading: store.isStayLoading) {
-          StayScreen(store: store)
-        }
-        .kouchdDestinations(store: store)
-      }
-      .tabItem { Label(Tab.stay.rawValue, systemImage: Tab.stay.symbol) }.tag(Tab.stay)
-      NavigationStack(path: $morePath) {
-        LoadedStayContent(loading: store.isStayLoading) {
-          MoreScreen(store: store)
-        }
-        .kouchdDestinations(store: store)
-      }
-      .tabItem { Label(Tab.more.rawValue, systemImage: Tab.more.symbol) }.tag(Tab.more)
-    }
-    .tint(Palette.forest)
   }
 
   private func hideSplashScreen() async {
@@ -245,22 +173,8 @@ struct RootView: View {
   }
 
   private func handleAnalyticsUserChange(_ userID: String?) {
-    guard let userID else {
-      PostHogSDK.shared.reset()
-      return
-    }
-
-    var properties: [String: Any] = [:]
-    if let email = clerk.user?.primaryEmailAddress?.emailAddress {
-      properties["email"] = email
-    }
-    let firstName = clerk.user?.firstName ?? ""
-    let lastName = clerk.user?.lastName ?? ""
-    let name = "\(firstName) \(lastName)".trimmingCharacters(in: .whitespaces)
-    if !name.isEmpty {
-      properties["name"] = name
-    }
-    PostHogSDK.shared.identify(userID, userProperties: properties)
+    // Only the pseudonymous Clerk ID; never names, email, or household details.
+    KouchdAnalytics.identify(userID)
   }
 
   private func handleSessionUserChange(_ userID: String?) {
@@ -285,15 +199,6 @@ struct RootView: View {
     } else {
       Task { await loadInvitation() }
     }
-  }
-
-  private func handleSelectedStayChange(_ stayID: String) {
-    guard !stayID.isEmpty else { return }
-    PostHogSDK.shared.group(type: "stay", key: stayID, groupProperties: [
-      "name": store.stayName,
-      "isHost": store.isHost,
-      "isEnded": store.isEnded,
-    ])
   }
 
   private func handleActiveSheetChange(_ sheetID: String?) {
@@ -357,7 +262,8 @@ struct RootView: View {
 
   private var onboarding: some View {
     NavigationStack {
-      Page(title: "Welcome to Kouchd") {
+      Page(title: "Welcome to Kouchd", width: .wide) {
+        TwoColumnLayout {
         Card {
           Text("Start a shared stay").font(.title3.bold())
           Text("Set the dates, contribution rhythm, and house notes for your guests.")
@@ -365,10 +271,12 @@ struct RootView: View {
           NavigationLink("Create a stay", value: KouchdRoute.createStay)
             .buttonStyle(.borderedProminent).tint(Palette.forest)
         }
+        } trailing: {
         Card {
           Text("Joining someone?").font(.title3.bold())
           Text("Open their invite link or enter their referral code.")
           NavigationLink("Join with a code", value: KouchdRoute.joinCode)
+        }
         }
         NavigationLink("Profile and optional reminders", value: KouchdRoute.settings)
         Link("Terms & Conditions", destination: URL(string: "https://kouchd.com/terms")!)

@@ -45,5 +45,11 @@ if (missing.length > 0) {
   process.exit(1);
 }
 
+// Without an auth token, withSentryConfig silently skips the source-map upload,
+// so production stack traces in Sentry come out minified.
+if (process.env.VERCEL_ENV === "production" && !process.env.SENTRY_AUTH_TOKEN) {
+  console.warn("Warning: SENTRY_AUTH_TOKEN is not set; Sentry source maps will not be uploaded for this production build.");
+}
+
 console.log("Required deployment environment variables are present and security guards passed.");
 

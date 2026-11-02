@@ -31,6 +31,9 @@ if (mode === "prepare") {
   const featureLockPath = join(root, "release/feature-lock.json");
   if (existsSync(featureLockPath) && version.includes("-rc.")) {
     const featureLock = JSON.parse(readFileSync(featureLockPath, "utf8"));
+    if (!featureLock.enabled) {
+      throw new Error("Release candidates start when the 1.0 feature lock is turned on. Use a 0.7.x prerelease number.");
+    }
     featureLock.currentCandidate = version;
     writeFileSync(featureLockPath, `${JSON.stringify(featureLock, null, 2)}\n`);
   }

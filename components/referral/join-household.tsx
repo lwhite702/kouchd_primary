@@ -9,6 +9,7 @@ import type { Id } from "@/convex/_generated/dataModel";
 import { normalizeReferralCode } from "@/lib/referral";
 import { HelpTip } from "@/components/onboarding/help-tip";
 import { HELP_LINKS } from "@/lib/help-links";
+import { planLimitError, STAY_FULL_MESSAGE } from "@/lib/planLimitError";
 
 const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
 
@@ -20,6 +21,7 @@ export function JoinHouseholdCard({
   onCancel?: () => void;
 }) {
   const joinWithCode = useMutation(api.referral.joinWithCode);
+  const recordBlockedJoin = useMutation(api.subscriptions.recordBlockedJoin);
   const [code, setCode] = useState("");
   const [joining, setJoining] = useState(false);
   const [joinError, setJoinError] = useState("");
@@ -41,7 +43,13 @@ export function JoinHouseholdCard({
       const result = await joinWithCode({ referralCode: normalized });
       onJoined(result.stayId);
     } catch (reason) {
-      setJoinError(reason instanceof Error ? reason.message : "Could not join with this code");
+      if (planLimitError(reason)) {
+        setJoinError(STAY_FULL_MESSAGE);
+        // Lets the host see who tried to join; failure here is not the guest's problem.
+        void recordBlockedJoin({ referralCode: normalized }).catch(() => undefined);
+      } else {
+        setJoinError(reason instanceof Error ? reason.message : "Could not join with this code");
+      }
       setJoining(false);
     }
   }

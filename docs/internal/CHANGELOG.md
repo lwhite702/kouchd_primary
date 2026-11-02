@@ -2,15 +2,303 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
-## 2026-10-28 — Simplified landing page, post-1.0 branch only (WRE-243)
+## 2026-11-02 — Simplified landing page & Brand Kit password protection (WRE-243)
 
-- Branch `codex/post-v1-WRE-243-simplified-landing` (isolated worktree, per 1.0 feature lock). Not on the RC launch line.
-- Added `/simple` (`app/simple/page.tsx`, `components/simplified-landing-page.tsx` + `.css`): app-icon hero, tabbed "See it in action" previews with synthetic sample data, six-feature grid, closing CTA, shared `MarketingFooter`.
-- Page is `noindex` until approved for public launch; added `/simple` to the telemetry route allow-list.
-- Added roadmap entry under "Being explored" without an ETA.
-- Evidence: `tsc --noEmit`, targeted ESLint, `tests/telemetry-privacy.test.ts`, `git diff --check`, and local desktop/390px render checks (no horizontal overflow). No deployment.
-- Open: the requested 5-star "(100 reviews)" badge was left out because there is no verified review source.
-- Decision (2026-10-28, product owner): keep the Check-ins feature card. Check-ins are on `main` (`components/workspace/live-stay.tsx` renders `CheckInBoard`) behind the `CHECK_IN_BOARD` feature flag. The production flag state hasn't been verified, and the public roadmap still lists check-ins as "Being explored". Before `/simple` is made indexable, confirm the flag is on in production, then move check-ins to "Available" on the roadmap.
+- Added `/simple` (`app/simple/page.tsx`, `components/simplified-landing-page.tsx` + `.css`): aligned with authentic Kouchd design system, using `MarketingHeader`, `MarketingFooter`, `v21-hero` with living room art and app icon badge, interactive preview window with tabs (`v21-product`), 6-card feature grid (`v21-how` / `.v21-steps`), and `v21-cta`.
+- Added password protection to Brand & Press Kit (`/brand` and `/brandkit`) requiring `Wrelik2026!`, via `<BrandKitGate />` with session persistence.
+- Updated `lib/telemetry-privacy.ts` route allowlist for `/simple`, `/brand`, and `/brandkit`.
+- Evidence: `tsc --noEmit`, ESLint, `tests/telemetry-privacy.test.ts` (3/3 passed), and local server validation (HTTP 200).
+
+## 2026-11-01 — Platform Console user provider context (WRE-263)
+
+- Added connected provider context (RevenueCat subscriptions, Knock notifications, and Loops marketing consent) to the Platform Console user detail view in `components/platform/users-explorer.tsx` and `convex/admin.ts`.
+- Preserved privacy boundaries: no notification message payloads, template parameters, or marketing contact emails are exposed in operator support views.
+- Environment segregation: RevenueCat subscription snapshots are grouped and presented per environment (`production` and `sandbox`), with production prioritized so sandbox tests never mask live subscriptions.
+- Added composite database index `by_user_occurred_at` on `notificationEvents` in `convex/schema.ts` for efficient pagination.
+- Version 0.8.5.
+
+## 2026-10-31 — Facebook sign-up 404 at /sso-callback (WRE-261)
+
+- Report: Facebook sign-up ended on the "Wrong couch" 404 page.
+- Evidence (Vercel production request log, project `kouchd`, deployment `dpl_BWx3jhxvmt29ufwicbuHkfkKkrzx`, 22:33 UTC): `/sign-up/sso-callback` → `/sign-up/continue` → `/sign-up/verify-email-address` → `/sign-in/sso-callback` → `/sign-in/factor-one` (all 200) → `/sso-callback` **404** → `/__clerk/v1/environment` 404. Two `/sign-out` 404s at 22:30 UTC.
+- Likely cause, from code: no `signInUrl`/`signUpUrl` on `ClerkProvider`, no `NEXT_PUBLIC_CLERK_SIGN_IN_URL`/`NEXT_PUBLIC_CLERK_SIGN_UP_URL` in Vercel, and no `routing`/`path` on `<SignIn>`/`<SignUp>`. Clerk's UI code loads at runtime and wasn't inspected, so the exact line that drops `/sign-in` is unconfirmed. Turnstile blocks headless browsers, so the flow couldn't be replayed.
+- Fix: explicit URLs on the provider and both components, a root `/sso-callback` safety-net page, and a `/sign-out` page. 0.8.4.
+- Not addressed: the `/__clerk/v1/environment` 404 (no Clerk proxy is configured; it came right after the 404 page loaded). Vercel env vars unchanged.
+- Branch only. Not pushed or deployed. Facebook sign-up still needs checking on a deployed preview.
+
+## 2026-10-30 — iOS contribution form trust fixes (WRE-257)
+
+- Removed made-up fallback handles from `ContributionForm`, and replaced payment-processor wording with a saved shared record pending confirmation.
+- Kept the 4.5-second paced saving screen by owner decision (2026-10-30). It runs before the save and checks nothing. Its heads-up step was reworded.
+- `contributions:create` stores `status: "pending"`; `rewards:redeem` stores a confirmed credit. The saved screen follows that split.
+- Not changed: the web router `components/household/p2p-payment-router.tsx` and `lib/domain/p2pRouting.ts` have the same made-up handles and receipt wording.
+- Evidence: 39 KouchdTests passed on a dedicated iPhone 17 Pro simulator. The Debug test host with synthetic config and no real backend showed the blocked route, unlock after entering a handle, the handle clearing on app switch, cash without a handle, the send confirmation, the saved screen, and a failed save showing an error. Not checked: a successful save against a real backend, a fully coin-covered save, and the Apple Cash copy step on screen.
+- Branch only. Not pushed, released, or verified against real accounts.
+
+## 2026-10-31 — Meta advertising wording approved (WRE-252)
+
+- Decision (Lee, 2026-10-31): publish the Meta wording drafted in `docs/internal/META_ADS.md`, then set Pixel ID `1163132673323923` on both sites.
+- `lib/legal.ts` (and `src/lib/legal.ts` in `kouchd_marketing`): advertising-partner disclosure in section 5, sale/share statements in sections 5 and 10, Global Privacy Control as an opt-out in section 6, an "Advertising (only with your permission)" cookie category, and Meta named in the Cookie Policy's third-party section. Privacy and Cookie Policies dated October 31, 2026.
+- Marketing footers get a "Your Privacy Choices" link that opens Cookie settings.
+- Unchanged on purpose: the SMS line "We do not sell or share your SMS opt-in data or personal information with third parties for marketing purposes" (carrier-compliance wording, `AGENTS.md`). It sits next to the new Meta sharing; legal should confirm the two read consistently.
+- Pixel ID is set in Vercel only after both policy changes are merged and deployed.
+- Merged `main` at 0.8.0 into this branch, so this release is 0.8.1. `main` failed `tsc` after `6fcdae3` (web subscription management): two sibling elements under one `&&` in `workspace-panels.tsx`, and `info.managementURL` on a possibly-null `info` in `paywall-modal.tsx`. Both fixed here (fragment wrapper; `info?.managementURL`, which falls through to the existing "No web subscription" message).
+
+## 2026-10-31 — Production build fix for 0.7.25 (WRE-252)
+
+- The production deploy of #97 failed: two flag-override tests in `tests/feature-flags.test.ts` assumed overrides were allowed, but Vercel's production build runs tests with `NEXT_PUBLIC_VERCEL_ENV=production`, where overrides are off by design. app.kouchd.com stayed on the previous deploy.
+- Fix: the override tests pin `NEXT_PUBLIC_VERCEL_ENV=development` and `NODE_ENV=test`. Test-only, no version change; 0.7.25 ships with it.
+- Evidence: the full suite passes with `NEXT_PUBLIC_VERCEL_ENV` set to production, preview and unset; `npm run verify` passes with production set.
+- Found in the follow-up audit: Vercel builds run the suite with real provider keys, so Convex test fixtures sent server events to the live PostHog project (160 events in the 01:20 UTC build, all from test users such as `legacy-approval-guest`), and Knock could be reached the same way. `vitest.config.ts` now clears `NEXT_PUBLIC_POSTHOG_KEY`, `KNOCK_API_KEY` and `LOOPS_API_KEY` for every test. Proof: pointing the suite at a local fake PostHog host, it sent 147 requests without the change and 0 with it. Every `user_signed_up`, `stay_created`, `invite_*`, `stay_joined`, `terms_accepted` and `contribution_recorded` event in PostHog before this fix is test data; filter it out (or delete it) before building funnels.
+## 2026-10-30 — iPad layout (WRE-254)
+
+- Sidebar navigation, width-driven layouts, Ledger list and detail, keyboard shortcuts, and a DEBUG layout test host on `codex/WRE-254-ipad-redesign`. Version 0.8.0. Branch only.
+- Details, evidence, and open items: `docs/internal/WRE-254-ipad-handoff.md`.
+
+
+## 2026-10-31 — Google Tag Manager removed (WRE-252)
+
+- Decision (Lee): no Tag Manager on either site; PostHog covers it.
+- App: removed `components/google-tag-manager.tsx`, its mount in `app/layout.tsx`, the Google hosts in `lib/security/csp.ts`, and the Tag Manager wording in `lib/legal.ts` and `app/privacy/page.tsx`. The policies go back to the October 30 text, which was never published, so their dates stay October 30.
+- Marketing (`kouchd_marketing`): removed the Tag Manager loader from `Analytics.astro` and its policy wording. GA4 still loads directly after "Allow analytics".
+- `main` also merged into this branch, so it's now 0.7.25 (`main` used 0.7.22–0.7.24 for WRE-253 and WRE-256).
+
+## 2026-10-30 — Previews on production Clerk
+
+- Decision (Lee): Vercel previews keep the production Clerk instance. Its only domain is `kouchd.com` (Frontend API `clerk.kouchd.com`), so it refuses `*.vercel.app` origins; that was the blank `/sign-in` with a Clerk 400 on previews.
+- `proxy.ts` trusts `https://preview.kouchd.com` when `VERCEL_ENV` is `preview`.
+- **Still to do (needs approval, not done):**
+  1. Vercel app project → Domains → add `preview.kouchd.com`, assigned to a Git branch (currently `claude/inspiring-volta-fvyy1z`; change the branch as needed).
+  2. Cloudflare DNS (kouchd.com is on Cloudflare): CNAME `preview` → `cname.vercel-dns.com`, **DNS only** (grey cloud).
+  3. Open `https://preview.kouchd.com/sign-in`. Previews sign in with real production accounts; use a test account.
+- `*.vercel.app` preview URLs still won't sign in. Only the branch assigned to `preview.kouchd.com` can.
+
+## 2026-10-30 — Analytics phases 2–6 (WRE-252)
+
+- **Phase 2:** `trackServerEvent` (`convex/lib/posthog.ts`) is called from users, stays, invites, referral, terms, contributions, chores, rewards and subscriptions.
+  - `CONTRIBUTION_RECORDED` replaces `PAYMENT_RECORDED`, matching the "contribution" wording.
+  - New events: `USER_SIGNED_UP` and `PLAN_LIMIT_HIT`.
+  - Removed: `CHECKOUT_STARTED` and `SUBSCRIPTION_ACTIVATED`.
+  - Tests: `tests/server-analytics.test.ts`, and the coverage test in `tests/analytics.test.ts`.
+- **Phase 3:**
+  - `lib/flags/resolve.ts` and the rewritten `useFeatureFlag` (off while loading; 2.5-second PostHog fallback).
+  - `requireFeature` in every gated write.
+  - `setOverride` key validation. `tests/platform-admin.test.ts` used the misspelled key `enable_sms_reminders`; it now uses `feature_sms_reminders` and checks the refusal.
+  - Server-side bootstrapping was not added, because reading cookies in the root layout would make every page dynamic.
+- **Phase 4 (marketing):**
+  - PostHog loads after consent through the `vercel.json` `/ingest` rewrites.
+  - `cta_clicked` event; the last campaign touch is appended to sign-up links.
+  - "Cookie settings" link added to the legal footer.
+  - The marketing policies now describe PostHog and the shared cookies.
+  - Added the `/ingest/array` route to both proxies.
+- **Phase 5:**
+  - Meta Pixel on both sites behind the ads choice, Global Privacy Control and a Pixel ID that is unset.
+  - `meta_event_id` on `user_signed_up`; `ads_consent` person property.
+  - CSP allows the Meta hosts.
+  - Setup steps and draft policy text in `docs/internal/META_ADS.md`, not published.
+- **Phase 6:** PostHog `capture_exceptions` off; Sentry session replay 0 (errors only); `verify-env` warns on a missing `SENTRY_AUTH_TOKEN` in production. Convex→Sentry, iOS Sentry, uptime checks and alerts are listed in `docs/internal/ANALYTICS.md` as dashboard work.
+- **Phase 7 (dashboards):** deferred until the new events arrive in PostHog, so each insight can be checked against data.
+- **Evidence:**
+  - `vitest run`: 40 files, 231 tests.
+  - `tsc --noEmit`, `eslint` and `next build` pass.
+  - Marketing: `astro check`, `eslint`, `prettier` and `npm run build` pass.
+  - Chromium against `astro preview`:
+    - No PostHog traffic before consent; after consent it goes to `/ingest`.
+    - The sign-up link gained `utm_source` and `utm_campaign`.
+    - With a test Pixel ID, Meta loads only after "Allow analytics and ads" and never with GPC.
+  - Unverified: production delivery through `/ingest`, Convex server events reaching PostHog, and anything involving Meta.
+
+## 2026-10-30 — Analytics foundations, phase 1 (WRE-252)
+
+- `/ingest` proxy: rewrites in `next.config.ts` (`/ingest/static/*` to `us-assets.i.posthog.com`, `/ingest/*` to `us.i.posthog.com`), plus `skipTrailingSlashRedirect`. `proxy.ts` matcher skips `ingest`. `posthog.init` uses `api_host: "/ingest"`. `NEXT_PUBLIC_POSTHOG_HOST` is now read only by `convex/posthog.ts` (`.env.example` says so).
+- CSP: `lib/security/csp.ts` is the one source. It exports the directives (for Clerk), the header string, and the `<meta>` string without `frame-ancestors`. Directive content is unchanged.
+- `cross_subdomain_cookie: true` on PostHog.
+- `lib/analytics/attribution.ts`: shared `kouchd_attr` cookie on `.kouchd.com` (host-only on previews and localhost). `captureAttribution()` runs after `posthog.init`; `PostHogAuthSync` passes `initial_*` properties as `$set_once` on identify.
+- Marketing site (`kouchd_marketing`, same branch): `src/components/common/ConsentBridge.astro` mirrors the banner choice into a `kouchd_consent` cookie (`analytics`, `ads` always false for now, `gpc` from Global Privacy Control). With analytics consent it records `kouchd_attr`; choosing "Only necessary" clears it.
+- Evidence:
+  - `next build` passes. Built routes manifest shows both rewrites and a CSP header with `frame-ancestors`.
+  - Locally, `/ingest/*` reached the rewrite without Clerk. The upstream fetch failed only because this sandbox can't resolve PostHog's hosts.
+  - Marketing preview in Chromium: no cookies before a choice; consent and attribution cookies after "Allow analytics"; attribution cleared after "Only necessary".
+  - `vitest run` passes. Not yet checked: production delivery through `/ingest`.
+
+## 2026-10-30 — Analytics and flags review, phase 0 (WRE-252)
+
+- Full PostHog, flag, observability and conversion review; the phased plan is in WRE-252.
+- `app/privacy/page.tsx`: the hard-coded telemetry bullet matched neither `lib/legal.ts` nor the code. Rewritten to match `lib/legal.ts` section 6.
+- `lib/flags/client.ts`: new `localOverridesAllowed()`. It returns false when `NEXT_PUBLIC_VERCEL_ENV` is `production`, or when that variable is unset and `NODE_ENV` is `production`. `getLocalDevOverride` returns null then. Test added in `tests/feature-flags.test.ts`.
+- `components/posthog-provider.tsx`: `PostHogAuthSync` waits for Clerk `isLoaded`, and calls `reset()` only when PostHog's `$user_state` is `identified`. Before this, every signed-out page load reset the anonymous ID.
+- `ios/README.md`: the web-client analytics description and the tracked PostHog token note corrected.
+- Checks: `vitest run` (36 files, 215 tests), `tsc --noEmit`, `eslint` on the changed files (no errors), release gate passes.
+
+## 2026-10-29 — RevenueCat → PostHog preparation (WRE-251)
+
+- Context: RevenueCat's PostHog integration sends subscription lifecycle events to PostHog from RevenueCat's servers. It is not turned on; the `Kouchd` PostHog project (595950) had no RevenueCat, purchase, paywall or checkout events in the last 60 days.
+- First commit sent `paywall_viewed` and `customer_center_opened` from `components/billing/paywall-modal.tsx`. Removed after review (xhawk): the in-app Privacy Policy section 6 limits optional telemetry to page and screen categories, `paywall_viewed` fired before the paywall rendered, and `customer_center_opened` can't detect a blocked pop-up (`window.open` with `noopener` returns `null`). The doc records how to add them once the copy is approved.
+- `tests/revenuecat-posthog.test.ts`: source checks that web and iOS identify PostHog and RevenueCat with the same Clerk user ID (so no `$posthogUserId` attribute is needed), and that the paywall does not send `checkout_started` or `subscription_activated`. No product code changes.
+- Decision (Lee, 2026-10-30): keep web autocapture and session replay on; change the policy, not the config. `lib/legal.ts` Privacy Policy section 6 and Cookie Policy "Performance and diagnostics" rewritten to say what the web app records, including that replays hide typed input but can show names, household details and contribution amounts, and that signed-in web sessions are linked to account ID, name and email. Decisions (Lee, 2026-10-30): keep sending name and email with the web `identify`; add RevenueCat to the service-provider lists here and in `kouchd_marketing`; no separate user notice. Dates moved from shared `legalMeta` to each `LegalDocumentData` (review finding: a shared date re-dated unchanged documents). Privacy and Cookie Policies are dated October 30, 2026; Terms and Acceptable Use keep October 23, 2026. Same change in `kouchd_marketing`, where only the Privacy Policy moves. Version 0.7.25 (`main` used 0.7.22–0.7.24 for WRE-253 and WRE-256).
+- `docs/internal/REVENUECAT_POSTHOG.md`: identity table, event plan, dashboard checklist, verification query, privacy findings.
+- Privacy findings (open, need approval): neither privacy policy names RevenueCat; the in-app Cookie Policy's PostHog sentence would no longer be accurate once plan data arrives; and on web the policy already conflicts with `autocapture: true`, session replay, and `identify` sending email and name.
+- Checks: `vitest run` (36 files, 214 tests), `tsc --noEmit`, `eslint` on changed files. The RevenueCat docs page could not be fetched from this environment; the dashboard steps follow its PostHog integration and must be confirmed in the RevenueCat dashboard.
+## 2026-10-30 — iPhone Plus flow per flow plan section 6 (WRE-250 follow-up)
+
+- Built P1, P3, P4 and P5 and the host spots UI on the backend from #93. New file: `ios/Kouchd/PlusFlow.swift`.
+- RevenueCat 5.95.0 supports the signed offer: `PurchaseParams.Builder.with(introductoryOfferEligibilityJWS:)`, forwarded by `PurchasesOrchestrator` as a StoreKit 2 purchase option. Source inspection only; not exercised against the App Store sandbox.
+- Evidence: Vitest, `KouchdTests`, and simulator screenshots of synthetic scenarios (`--ui-test-plan=<scenario>`) with a fake store client. No real purchase, webhook, or Knock delivery was run.
+- Depends on open PR #101 for removing a guest. Until then "Manage guests" opens Host controls, which has no remove action.
+- Version 0.7.24. Not deployed.
+
+## 2026-10-30 — Web contribution router trust fixes (WRE-259)
+
+- Web counterpart of WRE-257, in `components/household/p2p-payment-router.tsx`, `lib/domain/p2pRouting.ts`, and the preview in `components/kouchd-workspace.tsx`.
+- `buildNetworkRouteUri` now returns `null` without a real handle, and `hasUsableRecipient` is the new gate. `DEFAULT_P2P_TRANSACTION`, `transactionId`, and `P2PConfirmationReceipt` are removed. `onLogContribution` is required.
+- Kept the 4.5-second paced saving screen by owner decision (2026-10-30), matching WRE-257. It runs before the save and checks nothing. Its heads-up step was reworded. Closing the dialog during the pause cancels the save.
+- The router is used only by the preview workspace, shown when Clerk or Convex isn't configured. Nothing in it writes to Convex.
+- Evidence: `tests/p2p-routing.test.ts` and a browser walkthrough of the preview at `localhost` with synthetic, non-working Clerk values and a synthetic local cookie. Checked on screen: blocked route, bare `@`, handle unlock, no amount, Zelle copy step, cash without a handle, phone link blocked then enabled, send confirmation, groceries, full and partial Coins, saved screens, and Ledger rows.
+- The paced screen was timed in the browser at about 4.5 seconds, with its three steps about 1.5 seconds apart. Closing the dialog during the pause added no Ledger row.
+- Not checked: a failed save, the Apple Cash copy step, tapping the phone link into a real payment app, scanning a QR code, or anything on real accounts.
+- Branch only. Not pushed, released, or deployed.
+
+## 2026-10-30 — Sign-in freeze from guard observer loop (WRE-253)
+
+- After 0.7.22 (`0436bcf`) removed the meta CSP, scripts ran on `/sign-in` but the tab stopped responding. `/terms` stayed responsive.
+- Cause: `SignInFormGuard` wrote `disabled` and `class` on every observer callback even when nothing changed, and each write queued another callback.
+- Evidence: in Chromium on the live site, a bounded copy of the old writes on a detached button looped until stopped at 500 callbacks on both branches; change-only writes settled after 1.
+- Change: `syncSubmitState` writes only on a real change. Version 0.7.23. Not yet verified in production.
+
+## 2026-10-30 — Blank web app from rewritten meta CSP (WRE-253)
+
+- Symptom: `app.kouchd.com` `/sign-in` and `/` stayed blank in a browser on `dpl_8jk3szKbMtjx8WSqhxoyTArH3z8S` (`26a3576`).
+- Evidence: a plain curl got the clean meta tag; a curl with browser navigation headers got `script-src &#x27 'nonce-…'`. The browser reported CSP blocks on Next.js chunks, inline scripts, and Clerk. The header CSP was valid.
+- Change: removed the meta tag from `app/layout.tsx`; the header CSP is unchanged. Added a regression test. Version 0.7.22.
+- Not established: which edge layer rewrites the tag (Cloudflare is suspected) or when that started. The fix has not been verified in production.
+
+## 2026-10-29 — Web body copy in Inter
+
+- Decision (Lee, 2026-10-29): body copy is Inter; titles and display text stay Manrope. `docs/internal/BRAND_DESIGN_SYSTEM.md` and `app/brand-system.css` already said so; the web app and `AGENTS.md` did not.
+- The base font moved from Manrope to Inter in four places: `:root` in `styles.css`, `.production-shell` in `app/production.css`, the dashboard root in `components/dashboard-v21.css`, and the marketing root in `components/landing-v21.css`.
+- `styles.css` now pins Manrope on `h1`–`h6`, `button`, `.button`, `.v21-button`, eyebrows and overlines (`[class*="eyebrow"]`), pills (`[class*="-pill"]`), `.metric`, `.badge`, the `.v21-brand` wordmark, and footer column titles.
+- Review feedback: dashboard and marketing controls that set `font-family: inherit` (sidebar nav items, summary tiles, pill and attention buttons, invite pill, sign-in, preview tabs) would have picked up Inter. They now set Manrope, and `components/dashboard-v21.css` pins Manrope on the dashboard's titles, tile labels, and tile metrics.
+- Controls that reset the font with the `font: inherit` shorthand also set Manrope after it: the host workspace text, icon, and secondary actions, check-in card buttons, the newsletter button, and mobile menu items. Activity rows and inputs keep inheriting Inter.
+- Swept `landing-v21.css`, `dashboard-v21.css`, and `about-kouchd-page.css` for heavy (750+) text with no font family and pinned Manrope on the display ones: proof-card and summary metrics, contribution amounts, kickers and overlines, avatars and initials, step and feature numbers, status labels, FAQ questions, and the sidebar wordmark. Bold inline phrases inside sentences stay Inter.
+- `AGENTS.md` "Brand and product design" now names Manrope for titles and display text and Inter for web body copy.
+- Checked computed fonts on `/about` in a local dev server. The signed-in dashboard was not checked. The old `.landing-*` rules in `styles.css` are not used by any page and were left as they were.
+- Version `0.7.21` (re-prepared after the zod patch and the iOS review fixes took `0.7.19` and `0.7.20` on `main`).
+- Review fix: `.v21-host-heading` dropped from the Manrope rule; it wraps the stay subhead, which now stays Inter. The title keeps Manrope through `.v21-stay-title`.
+- Review fix: the Ledger summary amounts and labels (`.summary-item strong`, `.summary-item span`) keep Manrope. A sweep of `styles.css` for heavy text with no font family also pinned `.brand`, `.avatar`, `.list-value`, `.details-card p:last-child`, and `.stay-hub-card > strong`.
+
+## 2026-10-29 — iOS review fixes: analytics privacy, paywall disclosures, introduction (WRE-249)
+
+- `ios/Kouchd/KouchdApp.swift`:
+  - PostHog is set up through the existing `KouchdAnalytics` helper (replay, screen, lifecycle and element capture all off), instead of a second setup that turned on session replay and automatic screen capture.
+  - `identify` sends only the Clerk user ID; email and full name are no longer sent.
+  - Removed the `stay` group call, which sent the stay name.
+  - The curated `screen_viewed` event, which was never called before, now fires on root phase changes.
+- `ios/Kouchd/Billing.swift`:
+  - `BillingPackage` gains `period` (from `SubscriptionPeriod`) and `priceWithPeriod`.
+  - The subscription screen adds an auto-renewal and cancellation note, plus Terms and Privacy links (App Store guideline 3.1.2).
+- `ios/Kouchd/Introduction.swift`:
+  - At accessibility text sizes the footer scrolls with the content instead of staying pinned.
+  - The couch mark is a template image tinted with `Palette.forest` on the intro and About.
+  - Intro text uses `Palette.ink`; only controls use forest/lime.
+  - Skip is hidden on the role step.
+  - Both role headings use `Palette.section`.
+  - The splash wordmark stays on one line at large text sizes.
+- Tests: new `testPriceIncludesRenewalPeriodWhenKnown`, and `testSkipShowsRoleSelection` now asserts that Skip is gone. Added two UI journeys at `.accessibility5` (launch flag `--ui-test-accessibility-text`) that check the footer isn't pinned and stays reachable. Local simulator run on iPhone 18 Pro Max: 22 unit and 9 UI tests passed.
+- Checked visually in the simulator: introduction light and dark, role step, and largest accessibility size. Not checked: the paywall on screen (needs a signed-in host with RevenueCat offerings), and a 375-point iPhone (no small simulator installed).
+- Open: there is no in-app account deletion. It exists only in Clerk's `UserProfileView`, if self-deletion is enabled in Clerk, which the Clerk config API doesn't expose. There is no Convex deletion path for stays and records. Apple requires in-app deletion; this needs a product decision on what happens to shared records.
+- Version `0.7.20` (renumbered from `0.7.19`, which PR #89 uses for the zod override).
+
+## 2026-10-29 — Patch zod for CVE-2023-54404
+
+- `package.json`: added `"overrides": { "zod": "^4.6.6" }`. `npm ls zod` showed `zod` only as a dev dependency of `eslint-plugin-react-hooks@7.1.1` (through `eslint-config-next@16.4.3`), whose range `^3.25.0 || ^4.0.0` had locked 4.5.4. `zod-validation-error@4.0.2` now dedupes to the same copy.
+- `package-lock.json`: `node_modules/zod` moves from 4.5.4 to 4.6.7; no other entries changed.
+- This is the only open Dependabot alert on `main` (#45, high, `zod < 4.6.6`, first patched 4.6.6). It should close once this merges to `main`; that is not yet observed.
+- Version `0.7.19`. Open PR #88 (web body font) also uses `0.7.19`; whichever merges second must re-prepare the next patch, because the release gate requires a patch to be exactly one above `main`.
+
+## 2026-10-29 — Readable text on lime in iOS dark mode
+
+- `ios/Kouchd/Design.swift`: added a fixed `Palette.onLime` (#16241E, the light-mode ink). `Pill` now uses it instead of the adaptive `Palette.ink`, which is #F1F5F0 in dark mode and sat on the fixed lime fill at 1.1:1. Now 13.0:1 in both appearances.
+- `ios/Kouchd/MainScreens.swift`: the account initials button in the toolbar uses `Palette.onLime` on its lime circle for the same reason.
+- Left unchanged: other lime fills already use `brandForest` text, and the payment channel row (ink on 35% lime over cream) measures 5.8:1 in dark and 13.8:1 in light.
+- Checked with a local `xcodebuild` simulator build; not yet viewed in dark mode on a simulator or device.
+- Version `0.7.18`.
+
+## 2026-10-29 — Harden web CI workflow, newsletter rate limiter, and error handling (WRE-241)
+
+- Added a `web` job on `ubuntu-latest` in `.github/workflows/release-integrity.yml` that gates pull requests with the environment check, `tsc --noEmit`, ESLint, Vitest, and the Next.js production build.
+- Kept the existing `verify` job on `macos-latest` for iOS release integrity, fastlane validation, and the simulator build.
+- Hardened the newsletter rate limiter in `app/api/newsletter/route.ts` and `lib/newsletter-limiter.ts`:
+  - A 5,000-entry cap and expired-entry pruning bound memory growth.
+  - Client IP comes from `x-real-ip`, then the first `x-forwarded-for` entry.
+  - Timeouts and provider outages return 502 and internal errors return 500, logged server-side without sending error objects or stack traces to clients.
+- `tests/newsletter.test.ts`: 12 tests covering rate limiting, IP extraction, Loops submission, the honeypot, timeouts, and internal errors.
+- Originally prepared against `1.0.0-rc.13` on 2026-10-26; renumbered to `0.7.17` on the 0.7.x prerelease line after merging `main`.
+
+## 2026-10-28 — Fix web sign-in button guard and native stay creation (WRE-242)
+
+- Fixed `SignInFormGuard` in `components/sign-in-form-guard.tsx` to prevent disabling the submit button on password, OTP, and MFA verification steps when the identifier input is no longer rendered.
+- No code change for stay creation: checked that all numeric terms (`rateCents`, `earlyDiscountPercentage`, `earlyDiscountDays`, `lateFeeCents`, `graceDays`, `paymentDayOfWeek`) are already sent as `Double`, which Convex's `v.number()` validator expects.
+- Version `0.7.16`. The earlier draft of this entry also listed `/sign-in` and `/sign-up` redirects; those are not part of this change.
+
+## 2026-10-28 — iOS settings and ledger summary parity (WRE-247)
+
+- `ios/Kouchd/MoreScreens.swift`: **Host controls** gets two new cards:
+  - **Automatic acceptance** calls `stays:updateAgreementAutoAccept` (1–720 hours, or off).
+  - **Guest display names** calls `stays:updateGuestPreferredName`.
+  - Both are hidden on ended stays.
+- `convex/obligations.ts`: new `ledgerWithTotals` query returns `{ rows, totals }` from a single `buildFinancialRecord` call. `summary` now shares the `summarize` helper, and `list` and `summary` are unchanged for web and older iOS builds. Covered in `tests/backend.test.ts` (matches `list` and `summary`; rejects outsiders).
+- `ios/Kouchd/Service.swift`: the store subscribes once to `obligations:ledgerWithTotals` instead of `obligations:list`, and fills `ledger`, `typedLedger`, and `ledgerSummary` from it. Review feedback: the earlier version subscribed to `list` and `summary` together, so the full ledger was computed twice on every update.
+- The display-name card lists only active guests, because `stays:updateGuestPreferredName` rejects inactive ones.
+- `ios/Kouchd/MainScreens.swift`: `LedgerSummaryCard` uses web's labels.
+- `ios/Kouchd/Models.swift`: the `HouseholdSettings` rules (default on, 24 hours, hour range, name length) mirror the server.
+- Numbers are sent as `Double`, matching the WRE-242 encoding fix.
+- Evidence: the simulator build succeeded, `KouchdTests` passed (15 tests, including 4 new `HouseholdSettingsTests`), and `npm run release:check` passed for `0.7.15` (earlier prepared as `1.0.0-rc.17`; stacked on WRE-246 at `0.7.14`), and Vitest passed (174 tests). Not exercised while signed in.
+- Not done: no in-app notification feed (needs the Knock iOS SDK) and no push notifications (post-1.0).
+
+## 2026-10-28 — Web host corrections parity (WRE-246)
+
+- Wired existing backend functions into the web workspace:
+  - `contributions:dispute` and `contributions:voidContribution` in the Ledger.
+  - `chores:voidChore` on the chore board.
+  - `rewards:voidClaim` in the rewards hub.
+  - `stays:updateName` behind **Rename stay**.
+  - `referral:regenerateCode` behind **New code** in the invite panel.
+  - `terms:updateCurrent` behind **Edit household defaults**, reusing `GuestAgreementForm` with a new `intro` prop.
+- Each button appears only where the server allows the action, matching iOS: the host or the record's creator (or claimant), and dispute only for pending entries someone else added. Hidden on ended stays.
+- `DestructiveAction` and `destructiveActionCopy` moved to `components/workspace/types.ts` so all confirmations share copy.
+- The invite panel closes before the new-code confirmation, because the confirmation isn't a top-layer dialog.
+- Review fixes:
+  - `contributions:voidContribution` rejects a credit that came from a reward redemption, and `rewards:voidClaim` rejects a confirmed claim whose points are already redeemed. Before this, either void could leave points spent with no credit, or credit with no points. This affected iOS too.
+  - The household-defaults text now says every active guest gets a new version to review and that per-guest settings carry forward, matching `terms:updateCurrent`.
+  - **New code** shows only for hosts.
+- Version `0.7.14`, stacked on WRE-244 (`0.7.13`); earlier prepared as `1.0.0-rc.16`.
+- Evidence: `tsc --noEmit` clean, ESLint has no new findings, Vitest passed (33 files, 177 tests, including new `tests/destructive-actions.test.ts` and redemption-void cases in `tests/rewards.test.ts`), and `npm run release:check` passed. Not exercised in a browser against a live Convex deployment.
+- Not done: no push notifications or overdue payment plan screens (post-1.0). Public help pages wait for release verification.
+
+## 2026-10-28 — iOS parity: edit shopping items and set chore repeats (WRE-244)
+
+- Privacy change (requested 2026-10-28): personal shopping items are visible only to their creator. Hosts lose the exception they had before.
+  - `convex/shopping.ts`: `list` returns shared items plus the viewer's own personal items. `requireItemEditor` throws "Shopping item not found" for anyone else's personal item. `update` lets only the creator set `personal`.
+  - `convex/activity.ts`: `canSee` hides shopping rows that carry `guestUserId` (the personal-item marker) from everyone except that user, hosts included, in both `list` and `page`. This also hides older rows.
+  - Web `components/household/shopping-list.tsx` drops the `isHost` prop and shows the List select only to the creator. iOS `HouseholdRules` drops `isHost`.
+  - `tests/shopping-privacy.test.ts` rewritten (5 tests): host and other guest can't list, toggle, remove, or update a personal item; only the creator can make an item personal; personal activity is hidden from host and guest; shared activity is still visible; host paging has no duplicate rows.
+- `ios/Kouchd/CoordinationScreens.swift`: added an **Edit item** sheet that calls `shopping:update`. Its permission check matches `requireItemEditor` (shared items can be edited by any member; personal items only by their creator). Only the creator sees the personal toggle.
+- `ios/Kouchd/MainScreens.swift`: added a **Repeat** picker to `ChoreForm` that sends `repeatCadence` when it is daily or weekly, and shows "Repeats <cadence>" on chore cards.
+- `ios/Kouchd/HouseholdRules.swift`: the client-side permission and cadence rules, kept in one place and covered by `ios/KouchdTests/HouseholdRulesTests.swift` (6 tests).
+- Version `0.7.13` (first prerelease after WRE-248; earlier prepared as `1.0.0-rc.15`).
+- Evidence: Debug simulator build succeeded (iPhone 18 Pro Max, iOS 27.0), `KouchdTests` passed (17 tests, 0 failures), and `npm run release:check` passed, and the full Vitest suite passed (178 tests). Not exercised against a signed-in account; no UI test covers the new sheet or picker.
+- Not done: public iOS help (`help/ios/chores-and-stay.mdx`) and the public changelog are waiting for release verification. Tracked in WRE-244.
+
+## 2026-10-28 — Resume prerelease numbering and pause the 1.0 feature lock (WRE-248)
+
+- Team decision: Kouchd stays in prerelease until the team approves the official App Store submission.
+- Renamed the 13 releases recorded as `1.0.0-rc.1`–`1.0.0-rc.13` to `0.7.0`–`0.7.12`. None were tagged or released, so only the records change. Earlier entries in this log now show the current number with the old one in parentheses.
+- `release/version-history.json` holds the mapping. `scripts/release-gate.mjs` compares the base version by its current number, allows the one-time rename (`none` from `1.0.0-rc.13` to `0.7.12`), and treats the next prerelease as `0.7.13`. Covered by three new cases in `tests/release-gate.test.ts`.
+- `release/feature-lock.json`: `enabled: false`, phase `prerelease`, with an `activation` block naming the trigger (App Store submission approved) and the next step (`1.0.0-rc.1`).
+- `scripts/release-version.mjs` and `scripts/feature-lock.mjs bump-rc` refuse `-rc.N` versions while the lock is off; `lock:status` reports the lock as open.
+- `VERSION`, `package.json`, the lockfile, and the iOS `MARKETING_VERSION` set to `0.7.12`. No 1.0.0 build was uploaded to App Store Connect, per the team.
+- Open PRs renumbered in merge order: #79 → `0.7.13`, #83 → `0.7.14`, #84 → `0.7.15`. Each is stacked on the PR before it. #74 (WRE-242) still needs a 0.7.x number when it merges.
+>>>>>>> origin/main
 
 ## 2026-10-26 — Polish landing and marketing pages, update Mintlify tokens and roadmap (WRE-240)
 
@@ -36,59 +324,59 @@ Internal engineering record. This file is excluded from Mintlify navigation and 
 ## 2026-10-26 — Repair iOS AppConfig declaration after launch merge (WRE-224)
 
 - Removed the extra closing brace that left `AppConfig.isConfigured` at file scope and caused the release simulator build to fail.
-- Synchronized release candidate metadata to `1.0.0-rc.12`.
+- Synchronized release candidate metadata to `0.7.11` (recorded as `1.0.0-rc.12`).
 ## 2026-10-26 — Update Help Center & tooltips for 1.0 RC status and app support boundaries (WRE-238)
 
 - Created dedicated app support guide `help/support/app-support.mdx` clarifying that `help@kouchd.com` provides technical app assistance (account access, bug reports, and reminder settings), while Kouchd explicitly does not mediate interpersonal roommate conflicts, stay disputes, house rule issues, or external payment problems.
 - Registered the new support guide in `docs.json` navigation under `"Support"` and added `"App support"` to footer navigation links.
-- Updated `help/product/roadmap.mdx` and `help/product/changelog.mdx` to reflect Version 1.0 Release Candidate (`1.0.0-rc.*`) stabilization under the feature lock:
+- Updated `help/product/roadmap.mdx` and `help/product/changelog.mdx` to reflect the then-current Version 1.0 Release Candidate labels (since renamed `0.7.x`) stabilization under the feature lock:
   - Documented merged capabilities: delayed guest agreement acceptance, synced profile names, Loops newsletter signup, Liquid Glass motion polish, and direct workspace routing.
   - Documented remaining pre-lock launch merges (dependency hardening, package maintenance, release readiness).
   - Outlined post-1.0 exploration (shared grocery receipt scanning, App Store distribution, recurring chore rotation) without promised ETAs.
 - Updated plain-language guidance across `help/index.mdx`, `index.mdx`, `help/legal-trust/stay-agreements.mdx`, `help/legal-trust/terms-of-service.mdx`, `help/hosts/getting-started.mdx`, `help/guests/joining-a-stay.mdx`, `help/hosts/ledger-management.mdx`, and `help/guests/logging-contributions.mdx`.
 - Refined all in-app tooltips and help tips across `components/authenticated-home.tsx`, `components/marketing/marketing-header.tsx`, and `components/household/payment-options.tsx` to use friendly, plainspoken, non-technical terminology.
 - Added `appSupport` URL to `lib/help-links.ts`.
-- Synchronized release candidate version to `1.0.0-rc.10` for runtime tooltip and helper updates under the 1.0 feature lock.
+- Synchronized release candidate version to `0.7.9` (recorded as `1.0.0-rc.10`) for runtime tooltip and helper updates under the 1.0 feature lock.
 
 ## 2026-10-26 — Fix iOS RootView compiler timeout (WRE-239)
 
 - Split the root screen branches and authenticated tab composition into focused view properties, and extracted lifecycle callbacks to reduce SwiftUI type-checking complexity.
 - Kept analytics identity updates separate from session connection updates and used public Clerk first/last-name fields.
 - Verified a generic iOS Simulator Debug build with Xcode.
-- Synchronized release candidate metadata to `1.0.0-rc.9`.
+- Synchronized release candidate metadata to `0.7.8` (recorded as `1.0.0-rc.9`).
 
 
 ## 2026-10-25 — Add Kouchd artwork to onboarding and empty stays (WRE-237)
 
 - Added decorative brand artwork to the host and guest welcome steps, host/join start screen, and no-active-stays state.
 - Added responsive image framing and documented the customer-visible polish in the root unreleased changelog.
-- Synchronized release candidate metadata to `1.0.0-rc.8` after the WRE-237 push check required a unique version.
+- Synchronized release candidate metadata to `0.7.7` (recorded as `1.0.0-rc.8`) after the WRE-237 push check required a unique version.
 
 
 ## 2026-10-25 — Patch vulnerable framework and sanitizer dependencies (WRE-224)
 
 - Patched DOMPurify to `3.4.17`, refreshed compatible lockfile dependencies, and bumped Vitest to `^5.0.5`.
 - Recorded security patch verification notes in `docs/internal/SECURITY_PATCH.md`.
-- Synchronized release candidate version to `1.0.0-rc.7`.
+- Synchronized release candidate version to `0.7.6` (recorded as `1.0.0-rc.7`).
 
 ## 2026-10-25 — Polish motion and adopt Liquid Glass surfaces (WRE-219)
 
 - Refined motion easing, spring transitions, and reduced-motion accessibility rules across `app/production.css` and `styles.css`.
 - Adopted translucent Liquid Glass surface modifiers and refined elevation in `ios/Kouchd/Design.swift`.
-- Synchronized release candidate version to `1.0.0-rc.6`.
+- Synchronized release candidate version to `0.7.5` (recorded as `1.0.0-rc.6`).
 
 ## 2026-10-25 — Delayed agreement acceptance and host guest profiles (WRE-216)
 
 - Added host-configurable agreement auto-acceptance after a 1–720 hour delay, defaulting to 24 hours; hosts can disable it, and guests can accept manually at any time.
 - Added auditable agreement offer state, manual/system acceptance methods, system approval timestamps, and activity events for offers, replacements, approvals, and setting changes.
 - Added host-only guest preferred-name editing and host-only guest contact details in the stay bundle.
-- Synchronized release candidate version to `1.0.0-rc.5`.
+- Synchronized release candidate version to `0.7.4` (recorded as `1.0.0-rc.5`).
 
 ## 2026-10-25 — Main website newsletter signup with Loops integration (WRE-213)
 
 - Added accessible newsletter signup to main landing page with explicit, unchecked consent.
 - Added server-side `/api/newsletter` route for Loops contact synchronization with input validation, honeypot field, and IP rate limiting.
-- Synchronized release candidate version to `1.0.0-rc.4`.
+- Synchronized release candidate version to `0.7.3` (recorded as `1.0.0-rc.4`).
 
 ## 2026-10-25 — Improve iOS navigation and dashboard activity (WRE-210, WRE-211, WRE-212)
 
@@ -96,17 +384,17 @@ Internal engineering record. This file is excluded from Mintlify navigation and 
 - Routed iOS contribution and account shortcuts through their owning tabs, made recent activity rows open their related section, and kept Home stay cards from reloading the active stay.
 - Reduced web dashboard agreement clutter by showing pending-review details only when needed; made activity rows navigate to the relevant area and identify actor host or guest role.
 - Added More tab for secondary stay, account, and help actions, moving extra links off primary screens.
-- Synchronized release candidate version to `1.0.0-rc.3`.
+- Synchronized release candidate version to `0.7.2` (recorded as `1.0.0-rc.3`).
 
 ## 2026-10-25 — Patch Next.js security advisory and establish Version 1.0 Release Candidate 2 (WRE-228)
 
 ## 2026-10-25 — Establish Version 1.0 Release Candidate feature lock and P2P Contribution Router (WRE-234, WRE-231)
 
-- Implemented the **Version 1.0 Release Candidate (`1.0.0-rc.1`) Feature Lock**:
+- Implemented the **Version 1.0 Release Candidate (`0.7.0` (recorded as `1.0.0-rc.1`)) Feature Lock**:
   - Added `release/feature-lock.json` codifying the `v1-rc` stabilization lock, enumerating the open pre-lock PRs (#55–#61, #66) and in-flight branches (`WRE-228`, `WRE-230`, `WRE-231`, `WRE-234`) allowed to complete merge before the unconditional lock takes effect.
   - Created the `v1-feature-lock` agent skill at `.agents/skills/v1-feature-lock/SKILL.md` and helper CLI at `scripts/feature-lock.mjs` (`npm run lock:status`, `npm run lock:defer-feature`, `npm run lock:bump-rc`).
   - Enforced the feature lock in `AGENTS.md` and `scripts/release-gate.mjs`: only bug fixes, security patches, stability fixes, and documentation updates (`patch`, `rc`, `none`) may land on the 1.0 launch line; net-new features must be added to `help/product/roadmap.mdx` and developed in separate git worktrees under `/Volumes/Projects/CodexWorktrees/`.
-  - Synchronized `VERSION`, `package.json`, `package-lock.json`, and `release/change.json` to `1.0.0-rc.1`, and iOS `MARKETING_VERSION` to `1.0.0`.
+  - Synchronized `VERSION`, `package.json`, `package-lock.json`, and `release/change.json` to `0.7.0` (recorded as `1.0.0-rc.1`), and iOS `MARKETING_VERSION` to `1.0.0`.
 - Implemented the **P2P Contribution Router & 4-Phase Confirmation Engine** (`WRE-231`) across Next.js (`lib/domain/p2pRouting.ts`, `lib/domain/qrCodeLevelH.ts`, `components/household/p2p-payment-router.tsx`) and native iOS SwiftUI (`ios/Kouchd/Models.swift`, `ios/Kouchd/MainScreens.swift`), including Venmo, Cash App, Chime, PayPal (`https://paypal.me/[username]/[amount]`), Zelle, Cash, and Reward Points offsets.
 
 ## 2026-10-24 — Remediate Replay QA web security, canonical link, and sign-in defects (WRE-228)

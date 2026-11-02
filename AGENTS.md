@@ -46,7 +46,7 @@ This file governs agent activity in the Kouchd repository. Read it before planni
 ## Brand and product design
 
 - Kouchd should feel warm, homey, calm, and capable: private shared living made easier to coordinate. Favor rounded organic shapes, soft curves, welcoming illustration, cream surfaces, forest-green anchors, and restrained lime accents. Keep product explanations as clear as the visual tone is inviting.
-- Use Manrope for Kouchd brand and web product typography. For future native concepts, Manrope may carry the brand while navigation, sheets, and controls follow the platform conventions.
+- Use Manrope for Kouchd titles and display text (headings, eyebrows, metrics, buttons, and pills) and Inter for web body copy. For future native concepts, Manrope may carry the brand while navigation, sheets, and controls follow the platform conventions.
 - Write in a plainspoken, respectful voice. Prefer everyday words, short active sentences, and practical reassurance. Avoid corporate jargon, hype, pressure, shame, or treating a guest like a debtor.
 - Use “host”, “guest”, “stay”, and “contribution” consistently. Explain that a contribution is a shared record; never imply the record itself moves money.
 - Keep visual examples inclusive, lived-in, and privacy-conscious. Use synthetic names and amounts. Avoid staged luxury imagery, public listing cues, fabricated social proof, or claims of guaranteed outcomes.
@@ -54,13 +54,10 @@ This file governs agent activity in the Kouchd repository. Read it before planni
 ## Versioning and release integrity
 
 - The root `VERSION` file is the canonical SemVer source for the Wrelik release workflow. Synchronize `package.json`, its lockfile, and every iOS marketing version with it. Keep the iOS build number independent and strictly increasing.
-- **Version 1.0 Launch Feature Lock (`release/feature-lock.json`)**:
-  - Kouchd is in the **Version 1.0 Release Candidate (`1.0.0-rc.*` / `1.0.x`)** phase. Once currently open pre-lock merges (listed in `release/feature-lock.json`) are completed, the Version 1.0 feature lock is strictly enforced on `main` and all launch branches.
-  - **Only bug fixes, security patches, regression fixes, accessibility/stability patches, and documentation/release polish (`patch`, `rc`, or `none`) are permitted for the 1.0 launch version.**
-  - **No new features may be added to the launch branch.** When a new feature is requested or proposed:
-    1. Invoke the `v1-feature-lock` skill (`.agents/skills/v1-feature-lock/SKILL.md`).
-    2. Record the capability on the public roadmap (`help/product/roadmap.mdx` under **In progress** or **Being explored**, without promised ETAs) and track it in Linear.
-    3. Create and develop the feature exclusively in a **separate isolated git worktree** under `/Volumes/Projects/CodexWorktrees/` on a `codex/post-v1-*` branch so the launch checkout remains restricted to 1.0 RC stabilization.
+- **Prerelease numbering and the Version 1.0 feature lock (`release/feature-lock.json`)**:
+  - Kouchd is in **prerelease** and uses `0.7.x` versions. The Version 1.0 feature lock is configured but **turned off** (`"enabled": false`) until the team approves the official Apple App Store submission. Until then, normal `patch`, `minor`, and `none` releases are allowed, and new features may land on `main` with the usual Linear issue, roadmap, and documentation steps.
+  - Releases recorded as `1.0.0-rc.1`–`1.0.0-rc.13` were renamed `0.7.0`–`0.7.12` on 2026-10-28 (WRE-248); `release/version-history.json` holds the mapping, and the release gate compares recorded versions by their current number. Do not prepare new `-rc.N` versions while the lock is off; `release-version.mjs` and `lock:bump-rc` refuse them.
+  - **When the App Store submission is approved:** set `enabled` to `true`, prepare `1.0.0-rc.1`, and from then on allow only bug fixes, security patches, regression fixes, accessibility/stability patches, and documentation/release polish (`patch`, `rc`, or `none`) on the launch line. New features then go on the public roadmap (`help/product/roadmap.mdx`, without promised ETAs), in Linear, and in a separate worktree under `/Volumes/Projects/CodexWorktrees/` on a `codex/post-v1-*` branch.
 - Every product-behavior release PR needs a unique version, a substantive `[Unreleased]` technical changelog entry, and affected documentation updates. Run `npm run release:check` before promotion; documentation-only changes do not need a version bump.
 - Do not copy DRX-specific automation claims into Kouchd. Kouchd's release-integrity workflow checks source and version consistency; it does not automatically bump, tag, deploy, or distribute a release.
 - Documentation-only changes do not bump the product version. Version changes, tags, release notes, deployment, and public availability are distinct steps and require evidence appropriate to each.

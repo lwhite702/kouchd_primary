@@ -12,7 +12,8 @@ Sentry.init({
   tracesSampleRate: process.env.NODE_ENV === "development" ? 1.0 : 0.1,
 
   // Replay configuration
-  replaysSessionSampleRate: 0.1,
+  // PostHog records everyday session replays; Sentry keeps only sessions with an error.
+  replaysSessionSampleRate: 0,
   replaysOnErrorSampleRate: 1.0,
 
   beforeSend: scrubErrorEvent,

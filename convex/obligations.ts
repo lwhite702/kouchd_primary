@@ -64,6 +64,58 @@ export const list = query({
   },
 });
 
+type FinancialRecord = Awaited<ReturnType<typeof buildFinancialRecord>>;
+
+const totals = v.object({
+  chargesCents: v.number(),
+  creditCents: v.number(),
+  balanceCents: v.number(),
+  pendingCount: v.number(),
+  dueCount: v.number(),
+});
+
+function summarize({ ledger, contributions }: FinancialRecord) {
+  const active = contributions.filter((entry) => entry.status !== "voided");
+  const creditCents = confirmedCreditCents(active);
+  // Full scheduled total, including upcoming periods; this is not the amount due today.
+  const chargesCents = ledger.reduce(
+    (sum, item) => sum + item.effectiveChargeCents,
+    0,
+  );
+  const pending = active.filter((entry) => entry.status === "pending");
+  const due = ledger.filter(
+    (item) =>
+      item.balanceCents > 0 &&
+      (item.status === "late" || item.status === "due"),
+  );
+  return {
+    active,
+    pending,
+    due,
+    totals: {
+      chargesCents,
+      creditCents,
+      balanceCents: chargesCents - creditCents,
+      pendingCount: pending.length,
+      dueCount: due.length,
+    },
+  };
+}
+
+/** Ledger rows and their totals from one financial computation, for screens that show both. */
+export const ledgerWithTotals = query({
+  args: {
+    stayId: v.id("stays"),
+    asOfDate: v.string(),
+    guestUserId: v.optional(v.id("users")),
+  },
+  returns: v.object({ rows: v.array(ledgerItem), totals }),
+  handler: async (ctx, args) => {
+    const record = await buildFinancialRecord(ctx, args);
+    return { rows: record.ledger, totals: summarize(record).totals };
+  },
+});
+
 /** Compact, guest-scoped totals; detailed ledger rows remain screen-owned. */
 export const summary = query({
   args: {
@@ -87,34 +139,19 @@ export const summary = query({
     ),
   }),
   handler: async (ctx, args) => {
-    const { ledger, contributions } = await buildFinancialRecord(ctx, args);
-    const active = contributions.filter((entry) => entry.status !== "voided");
-    const creditCents = confirmedCreditCents(active);
-    // Full scheduled total, including upcoming periods; this is not the amount due today.
-    const chargesCents = ledger.reduce(
-      (sum, item) => sum + item.effectiveChargeCents,
-      0,
+    const { active, pending, due, totals } = summarize(
+      await buildFinancialRecord(ctx, args),
     );
     const recent = [...active]
       .sort((a, b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt)
       .slice(0, 5);
-    const pending = active.filter((entry) => entry.status === "pending");
     const recentContributions = [
       ...new Map(
         [...recent, ...pending.slice(0, 3)].map((entry) => [entry._id, entry]),
       ).values(),
     ];
-    const due = ledger.filter(
-      (item) =>
-        item.balanceCents > 0 &&
-        (item.status === "late" || item.status === "due"),
-    );
     return {
-      chargesCents,
-      creditCents,
-      balanceCents: chargesCents - creditCents,
-      pendingCount: pending.length,
-      dueCount: due.length,
+      ...totals,
       highlights: due.slice(0, 3),
       recentContributions,
     };

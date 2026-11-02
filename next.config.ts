@@ -1,22 +1,7 @@
 import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs/config";
+import { contentSecurityPolicy } from "./lib/security/csp";
 
-const cspDirectives = [
-  "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://clerk.kouchd.com https://*.clerk.accounts.dev https://challenges.cloudflare.com https://va.vercel-scripts.com https://us.i.posthog.com https://us-assets.i.posthog.com",
-  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-  "font-src 'self' https://fonts.gstatic.com data:",
-  "img-src 'self' data: blob: https://img.clerk.com https://*.googleusercontent.com https://images.unsplash.com",
-  "connect-src 'self' https://clerk.kouchd.com https://*.clerk.accounts.dev https://*.convex.cloud wss://*.convex.cloud https://*.ingest.sentry.io https://*.ingest.us.sentry.io https://us.i.posthog.com https://vitals.vercel-insights.com https://api.knock.app wss://api.knock.app",
-  "frame-src 'self' https://challenges.cloudflare.com",
-  "frame-ancestors 'none'",
-  "object-src 'none'",
-  "base-uri 'self'",
-  "form-action 'self' https://clerk.kouchd.com https://*.clerk.accounts.dev",
-  "worker-src 'self' blob:",
-];
-
-const contentSecurityPolicy = cspDirectives.join("; ");
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
@@ -39,8 +24,22 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  // PostHog through the app's own origin, so ad blockers don't drop events.
+  skipTrailingSlashRedirect: true,
   async rewrites() {
     return [
+      {
+        source: "/ingest/static/:path*",
+        destination: "https://us-assets.i.posthog.com/static/:path*",
+      },
+      {
+        source: "/ingest/array/:path*",
+        destination: "https://us-assets.i.posthog.com/array/:path*",
+      },
+      {
+        source: "/ingest/:path*",
+        destination: "https://us.i.posthog.com/:path*",
+      },
       {
         source: "/dashboard",
         destination: "/",

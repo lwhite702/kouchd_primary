@@ -12,6 +12,7 @@ struct BrandSplash: View {
       Image("CouchMark").resizable().scaledToFit().frame(width: 96, height: 96)
         .accessibilityHidden(true)
       Text("kouchd").font(.custom("Manrope", size: 72, relativeTo: .largeTitle).bold())
+        .lineLimit(1).minimumScaleFactor(0.5)
       Text("A little room, well shared.").font(.body)
       Spacer()
       Text("SHARED STAYS. CLEAR EXPECTATIONS.").font(.caption)
@@ -26,7 +27,15 @@ struct IntroductionScreen: View {
   var replay = false
   let finish: (EntryRoute?) -> Void
   @Environment(\.accessibilityReduceMotion) private var reduceMotion
+  @Environment(\.dynamicTypeSize) private var typeSize
   @State private var step = 0
+  /// Set while a tapped button moves the pager. The pager reports the page it is
+  /// leaving during that slide, which must not pull `step` back.
+  @State private var pendingStep: Int?
+  /// Counts tapped moves, so only the latest move's timeout can clear `pendingStep`.
+  @State private var moveGeneration = 0
+  /// The replay ends on "Done", so it has only the four preview pages, no role choice.
+  private var pageCount: Int { replay ? 4 : 5 }
   private let titles = ["A shared stay.\nOn the same page.", "Good stays start\nwith clarity.",
                         "Clear records.\nFewer awkward asks.", "Make the everyday\nfeel more shared."]
   private let descriptions = [
@@ -35,55 +44,99 @@ struct IntroductionScreen: View {
     "Record contributions made outside Kouchd. The people involved confirm or dispute the shared record.",
     "Coordinate chores, check-ins and occupied nights. Keep the little things from becoming a guessing game."
   ]
+  @State private var windowWidth: CGFloat = 0
+  private var usesWideLayout: Bool { windowWidth >= 900 && !typeSize.isAccessibilitySize }
   var body: some View {
     VStack(spacing: 0) {
       HStack {
         if step > 0 { Button("Back") { move(to: step - 1) } }
         else { Text("kouchd").font(.custom("Manrope", size: 20, relativeTo: .title3).bold()) }
         Spacer()
-        Button(replay ? "Done" : "Skip") {
-          if replay { finish(nil) } else { move(to: 4) }
-        }
-      }.frame(minHeight: 44).padding(.horizontal, 24)
-      ScrollView {
-        VStack(alignment: .leading, spacing: 20) {
-          if step < 4 {
-            Image("CouchMark").resizable().scaledToFit().frame(width: 64, height: 64)
-              .accessibilityHidden(true)
-            if step > 0 { Pill(text: ["", "01 / Your stay", "02 / Contributions", "03 / Everyday living"][step]) }
-            Text(titles[step]).font(Palette.heading).accessibilityAddTraits(.isHeader)
-            Text(descriptions[step]).foregroundStyle(Palette.muted)
-            preview
-            if step == 2 {
-              Text("Kouchd records contributions. It does not move money.")
-                .font(.footnote).foregroundStyle(Palette.muted)
-            }
-          } else {
-            Text("How are you\nmaking room?").font(Palette.heading).accessibilityAddTraits(.isHeader)
-            Text("Start with your role in this stay. You can host and be a guest in different stays.")
-              .foregroundStyle(Palette.muted)
-            Card {
-              Text("I’m hosting").font(Palette.section)
-              Text("Create a stay, set expectations and invite your guests.")
-              PrimaryButton(title: "Create a stay") { finish(.host) }
-            }
-            Card {
-              Text("I’m staying with someone").font(.title3.bold())
-              Text("Join using the invitation your host shared.")
-              PrimaryButton(title: "Join a stay") { finish(.guest) }
-            }
+        // The role choice is the last step, so Skip has nowhere to go there.
+        if replay || step < 4 {
+          Button(replay ? "Done" : "Skip") {
+            if replay { finish(nil) } else { move(to: 4) }
           }
         }
-        .id(step)
-        .transition(reduceMotion ? .opacity : .opacity.combined(with: .offset(y: 12)))
-        .padding(24).frame(maxWidth: 600, alignment: .leading).frame(maxWidth: .infinity)
+      }.frame(minHeight: 44).padding(.horizontal, 24).foregroundStyle(Palette.forest)
+      // A paged TabView, so people can swipe between steps as well as tap Continue.
+      TabView(selection: Binding(get: { step }, set: { swiped(to: $0) })) {
+        ForEach(0..<pageCount, id: \.self) { page in
+          ScrollView {
+            VStack(alignment: .leading, spacing: 20) {
+              pageContent(page)
+              // At accessibility sizes a pinned footer would cover most of the screen.
+              // Only the visible page carries it, so its buttons appear once.
+              if typeSize.isAccessibilitySize && page == step { footer.frame(maxWidth: .infinity) }
+            }
+            .padding(24).frame(maxWidth: usesWideLayout ? 1040 : 600, alignment: .leading).frame(maxWidth: .infinity)
+          }
+          .tag(page)
+        }
       }
+      .tabViewStyle(.page(indexDisplayMode: .never))
     }
     .safeAreaInset(edge: .bottom, spacing: 0) {
-      footer
+      if !typeSize.isAccessibilitySize {
+        footer.frame(maxWidth: 600).frame(maxWidth: .infinity)
+          .padding(.horizontal, 24).padding(.bottom, 16).background(Palette.cream)
+      }
     }
-    .foregroundStyle(Palette.forest)
+    .foregroundStyle(Palette.ink)
+    .tint(Palette.forest)
     .background(Palette.cream.ignoresSafeArea())
+    .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { windowWidth = $0 }
+  }
+  @ViewBuilder private func pageContent(_ page: Int) -> some View {
+    if usesWideLayout {
+      if page < 4 {
+        HStack(alignment: .center, spacing: 48) {
+          VStack(alignment: .leading, spacing: 20) { pageText(page) }
+            .frame(maxWidth: .infinity, alignment: .leading)
+          VStack(alignment: .leading, spacing: 20) { pagePreview(page) }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+      } else {
+        pageText(page)
+        HStack(alignment: .top, spacing: 20) { roleCards }
+      }
+    } else {
+      pageText(page)
+      if page < 4 { pagePreview(page) } else { roleCards }
+    }
+  }
+  @ViewBuilder private func pageText(_ page: Int) -> some View {
+    if page < 4 {
+      Image("CouchMark").renderingMode(.template).resizable().scaledToFit().frame(width: 64, height: 64)
+        .foregroundStyle(Palette.forest)
+        .accessibilityHidden(true)
+      if page > 0 { Pill(text: ["", "01 / Your stay", "02 / Contributions", "03 / Everyday living"][page]) }
+      Text(titles[page]).font(Palette.heading).accessibilityAddTraits(.isHeader)
+      Text(descriptions[page]).foregroundStyle(Palette.muted)
+    } else {
+      Text("How are you\nmaking room?").font(Palette.heading).accessibilityAddTraits(.isHeader)
+      Text("Start with your role in this stay. You can host and be a guest in different stays.")
+        .foregroundStyle(Palette.muted)
+    }
+  }
+  @ViewBuilder private func pagePreview(_ page: Int) -> some View {
+    preview(page)
+    if page == 2 {
+      Text("Kouchd records contributions. It does not move money.")
+        .font(.footnote).foregroundStyle(Palette.muted)
+    }
+  }
+  @ViewBuilder private var roleCards: some View {
+      Card {
+        Text("I’m hosting").font(Palette.section)
+        Text("Create a stay, set expectations and invite your guests.")
+        PrimaryButton(title: "Create a stay") { finish(.host) }
+      }
+      Card {
+        Text("I’m staying with someone").font(Palette.section)
+        Text("Join using the invitation your host shared.")
+        PrimaryButton(title: "Join a stay") { finish(.guest) }
+      }
   }
   private var footer: some View {
     VStack(spacing: 12) {
@@ -97,13 +150,14 @@ struct IntroductionScreen: View {
             if replay && step == 3 { finish(nil) } else { move(to: step + 1) }
           }
         }
-        if !replay { Button("Already have an account? Sign in") { finish(nil) }.frame(minHeight: 44) }
+        if !replay {
+          Button("Already have an account? Sign in") { finish(nil) }
+            .frame(minHeight: 44).foregroundStyle(Palette.forest)
+        }
       }
-      .padding(.horizontal, 24).padding(.bottom, 16)
-      .background(Palette.cream)
   }
-  @ViewBuilder private var preview: some View {
-    switch step {
+  @ViewBuilder private func preview(_ page: Int) -> some View {
+    switch page {
     case 0:
       VStack(alignment: .leading, spacing: 12) {
         Text("A LITTLE LESS GUESSWORK").font(.caption.bold()).foregroundStyle(Palette.lime)
@@ -147,7 +201,24 @@ struct IntroductionScreen: View {
     }
   }
   private func move(to value: Int) {
+    guard value != step else { return }
+    pendingStep = value
+    moveGeneration += 1
+    let generation = moveGeneration
     withAnimation(KouchdMotion.animation(reduceMotion)) { step = value }
+    Task {
+      // Never leave swiping blocked if the pager does not report the target.
+      try? await Task.sleep(for: .milliseconds(700))
+      if moveGeneration == generation { pendingStep = nil }
+    }
+  }
+
+  private func swiped(to value: Int) {
+    if let pendingStep {
+      if value == pendingStep { self.pendingStep = nil }
+      return
+    }
+    step = value
   }
 }
 
@@ -155,7 +226,8 @@ struct AboutKouchdScreen: View {
   @State private var previewPresented = false
   var body: some View {
     Page(title: "Make room\nfor clarity.", navigationTitle: "About Kouchd") {
-      Image("CouchMark").resizable().scaledToFit().frame(width: 64, height: 64).accessibilityHidden(true)
+      Image("CouchMark").renderingMode(.template).resizable().scaledToFit().frame(width: 64, height: 64)
+        .foregroundStyle(Palette.forest).accessibilityHidden(true)
       Text("Kouchd helps hosts and guests manage a shared stay with clearer expectations and fewer scattered conversations.")
         .foregroundStyle(Palette.muted)
       Text("Built by Wrelik Brands, Kouchd brings stay details, house expectations, chores, and contribution records together so people can share a home with more clarity.")

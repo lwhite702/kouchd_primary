@@ -41,6 +41,8 @@ export default defineSchema({
 
   householdAccounts: defineTable({
     ownerUserId: v.id("users"),
+    /** Host turned off the "trial ends in 2 days" email. Absent means on. */
+    trialReminderOptOut: v.optional(v.boolean()),
     createdAt: v.number(),
     updatedAt: v.number(),
   })
@@ -65,6 +67,10 @@ export default defineSchema({
     startedAt: v.optional(v.number()),
     currentPeriodEndsAt: v.optional(v.number()),
     willRenew: v.optional(v.boolean()),
+    /** Provider period type: a free trial, a paid intro offer, or a normal period. */
+    periodType: v.optional(v.union(v.literal("trial"), v.literal("intro"), v.literal("normal"))),
+    /** Where the subscription was bought, so the app can send the host to the right place to manage it. */
+    store: v.optional(v.union(v.literal("app_store"), v.literal("web"), v.literal("other"))),
     latestProviderEventAt: v.optional(v.number()),
     updatedAt: v.number(),
   })
@@ -152,6 +158,20 @@ export default defineSchema({
     .index("by_user", ["userId"])
     .index("by_stay_user", ["stayId", "userId"])
     .index("by_stay_role_status", ["stayId", "role", "status"]),
+
+  /**
+   * A guest tried to join while the host's plan had no guest spot left. Shown
+   * only to the host (the iOS app has no notification feed yet). Rows are
+   * cleared when that guest later joins or the host dismisses them.
+   */
+  blockedJoins: defineTable({
+    stayId: v.id("stays"),
+    hostUserId: v.id("users"),
+    guestUserId: v.id("users"),
+    attemptedAt: v.number(),
+  })
+    .index("by_stay_guest", ["stayId", "guestUserId"])
+    .index("by_host_attempted", ["hostUserId", "attemptedAt"]),
 
   invites: defineTable({
     stayId: v.id("stays"),
@@ -501,6 +521,7 @@ export default defineSchema({
   })
     .index("by_occurred_at", ["occurredAt"])
     .index("by_status_occurred_at", ["status", "occurredAt"])
+    .index("by_user_occurred_at", ["userId", "occurredAt"])
     .index("by_user_workflow_entity", ["userId", "workflow", "entityId"])
     .index("by_workflow_occurred_at", ["workflow", "occurredAt"]),
 

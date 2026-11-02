@@ -6,7 +6,7 @@ import type { Id } from "./_generated/dataModel";
 import { mutation, query } from "./_generated/server";
 import { requireMembership } from "./lib/auth";
 import { recordActivity } from "./lib/activity";
-import { isFeatureEnabled } from "./flags";
+import { isFeatureEnabled, requireFeature } from "./flags";
 import { FEATURE_FLAGS } from "../lib/flags/config";
 
 function validateItem(title: string, quantity: string, note: string) {
@@ -19,9 +19,8 @@ async function requireItemEditor(ctx: MutationCtx, itemId: Id<"shoppingItems">) 
   const item = await ctx.db.get(itemId);
   if (!item || item.deletedAt) throw new Error("Shopping item not found");
   const { user, membership } = await requireMembership(ctx, item.stayId);
-  if (item.visibility === "personal" && membership.role !== "host" && item.createdBy !== user._id) {
-    throw new Error("You cannot edit another member's personal item");
-  }
+  // Personal items belong to their creator alone, hosts included; report them as missing to everyone else.
+  if (item.visibility === "personal" && item.createdBy !== user._id) throw new Error("Shopping item not found");
   const stay = await ctx.db.get(item.stayId);
   if (!stay || stay.status === "ended") throw new Error("Ended stays cannot change shopping items");
   return { item, user, membership };
@@ -31,12 +30,12 @@ export const list = query({
   args: { stayId: v.id("stays") },
   returns: v.array(v.object({ ...schema.tables.shoppingItems.validator.fields, _id: v.id("shoppingItems"), _creationTime: v.number() })),
   handler: async (ctx, { stayId }) => {
-    const { user, membership } = await requireMembership(ctx, stayId);
+    const { user } = await requireMembership(ctx, stayId);
     const items = await ctx.db.query("shoppingItems")
       .withIndex("by_stay_created_at", (q) => q.eq("stayId", stayId))
       .order("desc")
       .take(200);
-    return items.filter((item) => !item.deletedAt && (membership.role === "host" || item.visibility === "shared" || item.createdBy === user._id));
+    return items.filter((item) => !item.deletedAt && (item.visibility === "shared" || item.createdBy === user._id));
   },
 });
 
@@ -82,10 +81,11 @@ export const update = mutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const { item, user, membership } = await requireItemEditor(ctx, args.itemId);
+    await requireFeature(ctx, FEATURE_FLAGS.SHOPPING_LIST, "Household shopping list is currently disabled by platform policy.");
+    const { item, user } = await requireItemEditor(ctx, args.itemId);
     validateItem(args.title, args.quantity, args.note);
-    if (args.visibility === "personal" && membership.role !== "host" && item.createdBy !== user._id) {
-      throw new Error("Only the creator or host can make this item personal");
+    if (args.visibility === "personal" && item.createdBy !== user._id) {
+      throw new Error("Only the person who added this item can make it personal");
     }
     await ctx.db.patch(item._id, { title: args.title.trim(), quantity: args.quantity.trim(), note: args.note.trim(), visibility: args.visibility, updatedAt: Date.now() });
     await recordActivity(ctx, { stayId: item.stayId, actorUserId: user._id, guestUserId: args.visibility === "personal" ? item.createdBy : undefined, kind: "shopping", action: "item_updated", detail: `${args.title.trim()} updated`, entityId: item._id });
@@ -97,6 +97,7 @@ export const toggle = mutation({
   args: { itemId: v.id("shoppingItems") },
   returns: v.boolean(),
   handler: async (ctx, { itemId }) => {
+    await requireFeature(ctx, FEATURE_FLAGS.SHOPPING_LIST, "Household shopping list is currently disabled by platform policy.");
     const { item, user } = await requireItemEditor(ctx, itemId);
     const checked = !item.checkedAt;
     await ctx.db.patch(item._id, { checkedAt: checked ? Date.now() : undefined, checkedBy: checked ? user._id : undefined, updatedAt: Date.now() });
@@ -109,6 +110,7 @@ export const remove = mutation({
   args: { itemId: v.id("shoppingItems") },
   returns: v.null(),
   handler: async (ctx, { itemId }) => {
+    await requireFeature(ctx, FEATURE_FLAGS.SHOPPING_LIST, "Household shopping list is currently disabled by platform policy.");
     const { item, user } = await requireItemEditor(ctx, itemId);
     const now = Date.now();
     await ctx.db.patch(item._id, { deletedAt: now, updatedAt: now });

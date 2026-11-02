@@ -181,6 +181,36 @@ enum P2PRouting {
     }
   }
 
+  /// Every channel except cash routes to a person, so it needs a real handle.
+  static func requiresHandle(_ channel: P2PChannel) -> Bool {
+    channel != .cash
+  }
+
+  /// The handle to route to: the host's saved one, then one the person entered.
+  /// Returns nil when there is none, and the route stays blocked. Never substitute a placeholder here:
+  /// a made-up handle can belong to a real stranger.
+  static func resolvedHandle(channel: P2PChannel, configured: String, entered: String) -> String? {
+    let candidates = [configured, entered].map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+    if let handle = candidates.first(where: { isUsableHandle(channel: channel, handle: $0) }) {
+      return handle
+    }
+    return requiresHandle(channel) ? nil : "Hand directly to your host"
+  }
+
+  /// A bare prefix such as "@" or an empty paypal.me link names nobody.
+  private static func isUsableHandle(channel: P2PChannel, handle: String) -> Bool {
+    switch channel {
+    case .venmo:
+      return !handle.replacingOccurrences(of: "^@", with: "", options: .regularExpression).isEmpty
+    case .cashapp, .chime:
+      return !handle.replacingOccurrences(of: "^\\$", with: "", options: .regularExpression).isEmpty
+    case .paypal:
+      return !normalizePayPalHandle(handle).isEmpty
+    case .zelle, .cash, .applepay:
+      return !handle.isEmpty
+    }
+  }
+
   static func formattedHandle(channel: P2PChannel, rawHandle: String) -> String {
     let trimmed = rawHandle.trimmingCharacters(in: .whitespacesAndNewlines)
     if trimmed.isEmpty {
@@ -272,6 +302,82 @@ struct AccountSubscriptionSummary: Decodable {
   let plan: String
   let status: String
   let currentPeriodEndsAt: Double?
+  var willRenew: Bool?
+  /// Public plan name ("free", "plus", "pro"); the UI never shows internal plan names.
+  var planName: String?
+  var isTrial: Bool?
+  var productId: String?
+  /// "app_store", "web", or "other".
+  var store: String?
+  var trialReminderEnabled: Bool?
+  var introOfferEligible: Bool?
+
+  /// Plus (or legacy Pro) as verified by the backend, never by the store alone.
+  var hasPlus: Bool { plan != "starter" }
+  var periodEnd: Date? {
+    guard let currentPeriodEndsAt, currentPeriodEndsAt > 0 else { return nil }
+    return Date(timeIntervalSince1970: currentPeriodEndsAt / 1000)
+  }
+}
+
+/// Host-only guest spots across every active stay (`subscriptions:planUsage`).
+struct PlanUsage: Decodable, Equatable {
+  struct Count: Decodable, Equatable {
+    let used: Int
+    let limit: Int?
+    var left: Int? { limit.map { max(0, $0 - used) } }
+    var isFull: Bool { limit.map { used >= $0 } ?? false }
+  }
+  struct GuestSpot: Decodable, Equatable, Identifiable {
+    let stayId: String
+    let stayName: String
+    let guestUserId: String
+    let guestName: String
+    let pendingAgreement: Bool
+    var id: String { stayId + guestUserId }
+  }
+  struct BlockedJoin: Decodable, Equatable, Identifiable {
+    let id: String
+    let stayId: String
+    let stayName: String
+    let guestName: String
+    let attemptedAt: Double
+  }
+  let plan: String
+  let planConfigured: Bool
+  let stays: Count
+  let guests: Count
+  let guestSpots: [GuestSpot]
+  let blockedJoins: [BlockedJoin]
+
+  var isFree: Bool { plan == "free" }
+  var isPlus: Bool { plan == "plus" }
+  var planLabel: String { plan == "plus" ? "Plus" : plan == "pro" ? "Pro" : "Free" }
+  func blockedJoins(inStay stayID: String) -> [BlockedJoin] { blockedJoins.filter { $0.stayId == stayID } }
+  func guestSpots(inStay stayID: String) -> [GuestSpot] { guestSpots.filter { $0.stayId == stayID } }
+}
+
+/// `ConvexError` data for a refused stay or guest (convex/lib/planCapacity.ts).
+struct PlanLimitError: Decodable, Equatable {
+  let code: String
+  let dimension: String
+  let plan: String
+  let limit: Int
+  let atHighestPlan: Bool
+  let message: String
+
+  var isGuest: Bool { dimension == "guest" }
+
+  /// Answers "New stay" before the host types anything, using the same words as the
+  /// server's refusal. The server still decides; nil when there's room or no known limit.
+  static func stayLimit(_ usage: PlanUsage) -> PlanLimitError? {
+    guard usage.planConfigured, usage.stays.isFull, let limit = usage.stays.limit else { return nil }
+    let message = usage.isPlus
+      ? "Plus covers up to \(limit) active stays. End a stay to start a new one."
+      : "Free includes \(limit) active stay. End your current stay or move to Plus to host up to \(PlanCopy.plusStays) at once."
+    return PlanLimitError(code: "plan_limit", dimension: "stay", plan: usage.plan, limit: limit,
+                          atHighestPlan: usage.isPlus, message: message)
+  }
 }
 
 struct AgreementRecord: Decodable, Identifiable {
@@ -289,5 +395,28 @@ extension Value {
   func decoded<T: Decodable>(_ type: T.Type) -> T? {
     guard let data = try? JSONEncoder().encode(self) else { return nil }
     return try? JSONDecoder().decode(type, from: data)
+  }
+}
+
+/// Client-side mirrors of stay settings rules enforced by `convex/stays.ts`.
+enum HouseholdSettings {
+  /// `stays:updateAgreementAutoAccept` accepts whole hours from 1 to 720.
+  static let autoAcceptHourRange = 1...720
+  static let defaultAutoAcceptHours = 24
+
+  /// Stays created before the setting existed have no value and behave as enabled.
+  static func autoAcceptEnabled(_ value: Value) -> Bool {
+    if case .bool(let enabled) = value { return enabled }
+    return true
+  }
+
+  static func autoAcceptHours(_ stored: Int) -> Int {
+    autoAcceptHourRange.contains(stored) ? stored : defaultAutoAcceptHours
+  }
+
+  /// `stays:updateGuestPreferredName` requires 1 to 80 characters after trimming.
+  static func isValidPreferredName(_ name: String) -> Bool {
+    let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+    return !trimmed.isEmpty && trimmed.count <= 80
   }
 }

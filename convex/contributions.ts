@@ -4,6 +4,8 @@ import { mutation, query } from "./_generated/server";
 import { resolveFinancialGuest } from "./lib/auth";
 import { recordActivity } from "./lib/activity";
 import { assertContributionInput } from "./lib/validation";
+import { ANALYTICS_EVENTS } from "../lib/analytics/events";
+import { trackServerEvent } from "./lib/posthog";
 
 export const list = query({
   args: { stayId: v.id("stays"), guestUserId: v.optional(v.id("users")) },
@@ -44,6 +46,7 @@ export const create = mutation({
     assertContributionInput(args.amountCents, args.date, args.note);
     const contributionId = await ctx.db.insert("contributions", { ...args, guestUserId, createdBy: user._id, status: "pending", createdAt: Date.now() });
     await recordActivity(ctx, { stayId: args.stayId, actorUserId: user._id, guestUserId, kind: "contribution", action: "created", detail: `${args.type} added for confirmation`, entityId: contributionId });
+    trackServerEvent(ctx, user, ANALYTICS_EVENTS.CONTRIBUTION_RECORDED, { stayId: args.stayId, type: args.type, recordedBy: user._id === guestUserId ? "guest" : "host" }, args.stayId);
     return contributionId;
   },
 });
@@ -94,6 +97,16 @@ export const voidContribution = mutation({
     if (!contribution.guestUserId && !access.includeLegacyUnscoped && membership.role !== "host") throw new Error("Not authorized for this financial record");
     if (membership.role !== "host" && contribution.createdBy !== user._id) throw new Error("Only the creator or host can void this contribution");
     if (contribution.status === "voided") return null;
+    // Voiding a redemption credit alone would leave its points spent with no credit behind them.
+    if (contribution.guestUserId) {
+      const guestUserId = contribution.guestUserId;
+      const redemptions = await ctx.db.query("pointRedemptions")
+        .withIndex("by_stay_and_guest", (q) => q.eq("stayId", contribution.stayId).eq("guestUserId", guestUserId))
+        .collect();
+      if (redemptions.some((redemption) => redemption.contributionId === contributionId)) {
+        throw new Error("This credit came from redeemed reward points, so it can't be voided.");
+      }
+    }
     const now = Date.now();
     await ctx.db.patch(contributionId, { status: "voided", voidedBy: user._id, voidedAt: now });
     await recordActivity(ctx, { stayId: contribution.stayId, actorUserId: user._id, guestUserId: contribution.guestUserId, kind: "contribution", action: "voided", detail: "Contribution voided; history retained", entityId: contributionId });
