@@ -307,6 +307,46 @@ export function UsersExplorer() {
               )}
             </div>
 
+            <h4 style={{ margin: "0 0 0.5rem", fontSize: "0.95rem" }}>Connected Provider Context</h4>
+            <p style={{ margin: "0 0 0.75rem", color: "var(--kouchd-muted)", fontSize: "0.8rem" }}>
+              Latest Kouchd records from RevenueCat, Knock, and Loops. Marketing consent is separate from transactional notifications.
+            </p>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))", gap: "0.65rem", marginBottom: "1.5rem" }}>
+              <div style={{ background: "#faf8f5", padding: "0.8rem", borderRadius: 10, border: "1px solid var(--kouchd-line)" }}>
+                <strong style={{ fontSize: "0.82rem" }}>RevenueCat</strong>
+                {userDetail.providerContext.billing.length ? userDetail.providerContext.billing.map((billing, index) => (
+                  <div key={`${billing.updatedAt}-${index}`} style={{ marginTop: 6, fontSize: "0.8rem" }}>
+                    <span className={`console-status-pill ${billing.status}`}>{billing.status.replaceAll("_", " ")}</span>
+                    <div style={{ marginTop: 5, color: "var(--kouchd-muted)" }}>
+                      {billing.entitlement ?? billing.productId ?? "No product recorded"}
+                      {billing.environment ? ` · ${billing.environment}` : ""}
+                    </div>
+                    {billing.currentPeriodEndsAt && <div style={{ color: "var(--kouchd-muted)" }}>Period ends {new Date(billing.currentPeriodEndsAt).toLocaleDateString()}</div>}
+                    {billing.willRenew !== undefined && <div style={{ color: "var(--kouchd-muted)" }}>{billing.willRenew ? "Renews" : "Will not renew"}</div>}
+                  </div>
+                )) : <div style={{ marginTop: 6, color: "var(--kouchd-muted)", fontSize: "0.8rem" }}>No owned billing account.</div>}
+              </div>
+              <div style={{ background: "#faf8f5", padding: "0.8rem", borderRadius: 10, border: "1px solid var(--kouchd-line)" }}>
+                <strong style={{ fontSize: "0.82rem" }}>Knock notifications</strong>
+                {userDetail.providerContext.notifications.length ? userDetail.providerContext.notifications.map((event, index) => (
+                  <div key={`${event.workflow}-${event.occurredAt}-${index}`} style={{ marginTop: 6, fontSize: "0.8rem" }}>
+                    <span className={`console-status-pill ${event.status}`}>{event.status}</span>
+                    <div style={{ marginTop: 4 }}>{event.workflow}</div>
+                    <div style={{ color: "var(--kouchd-muted)" }}>{new Date(event.lastAttemptAt).toLocaleString()} · {event.attemptCount} attempt{event.attemptCount === 1 ? "" : "s"}</div>
+                  </div>
+                )) : <div style={{ marginTop: 6, color: "var(--kouchd-muted)", fontSize: "0.8rem" }}>No notification events recorded.</div>}
+              </div>
+              <div style={{ background: "#faf8f5", padding: "0.8rem", borderRadius: 10, border: "1px solid var(--kouchd-line)" }}>
+                <strong style={{ fontSize: "0.82rem" }}>Loops marketing consent</strong>
+                {userDetail.providerContext.marketing ? <div style={{ marginTop: 6, fontSize: "0.8rem" }}>
+                  <span className={`console-status-pill ${userDetail.providerContext.marketing.status}`}>{userDetail.providerContext.marketing.status.replaceAll("_", " ")}</span>
+                  <div style={{ marginTop: 5, color: "var(--kouchd-muted)" }}>Source: {userDetail.providerContext.marketing.source}</div>
+                  <div style={{ color: "var(--kouchd-muted)" }}>{userDetail.providerContext.marketing.consentConfirmed ? "Consent confirmed" : "Consent not confirmed"}</div>
+                  <div style={{ color: "var(--kouchd-muted)" }}>Updated {new Date(userDetail.providerContext.marketing.updatedAt).toLocaleString()}</div>
+                </div> : <div style={{ marginTop: 6, color: "var(--kouchd-muted)", fontSize: "0.8rem" }}>No marketing consent record.</div>}
+              </div>
+            </div>
+
             <h4 style={{ margin: "0 0 0.5rem", fontSize: "0.95rem" }}>10DLC SMS Consent Audit Trail</h4>
             <div>
               {userDetail.smsEvents.map((evt) => (

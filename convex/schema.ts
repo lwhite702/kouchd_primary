@@ -521,6 +521,7 @@ export default defineSchema({
   })
     .index("by_occurred_at", ["occurredAt"])
     .index("by_status_occurred_at", ["status", "occurredAt"])
+    .index("by_user_occurred_at", ["userId", "occurredAt"])
     .index("by_user_workflow_entity", ["userId", "workflow", "entityId"])
     .index("by_workflow_occurred_at", ["workflow", "occurredAt"]),
 
