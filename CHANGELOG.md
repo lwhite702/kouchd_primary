@@ -4,6 +4,10 @@
 
 ### Added
 
+- **Help center guide: How Kouchd compares to Splitwise & Flatastic (WRE-266, branch only, not released)**:
+  - Published `help/support/kouchd-vs-splitwise.mdx` explaining in plain, everyday language how Kouchd approaches private shared living, direct payments without holding funds, private guest records, unlimited free contributions, and unified household coordination.
+  - Registered the guide under Support in `docs.json` navigation.
+
 - **Web host plan capacity indicator and blocked join alerts (WRE-265, branch only, not released)**:
   - `HostBillingButton` dynamically reflects current host plan usage (`Host plan · Free (1/1 spots)` or `Plan · Plus (X/5 spots)`) and surfaces an attention badge when prospective guests are blocked due to full capacity.
   - Implemented `PlanLimitModal` on web to intercept stay creation attempts when plan limits are reached, showing a clear explanation and a 1-click path to upgrade to Kouchd Plus without submitting invalid data or encountering server rollbacks.
