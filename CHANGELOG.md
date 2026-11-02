@@ -56,6 +56,12 @@
 
 ### Fixed
 
+- **Replay QA review follow-ups (WRE-271, 0.8.9)**:
+  - **Legal pages and strict CSP:** `/privacy`, `/terms`, `/cookies`, and `/acceptable-use` no longer use `force-static`. Clerk's strict CSP sends a per-request nonce, and a statically rendered page has none, so its inline scripts could be blocked.
+  - **Sign-in and sign-up submit button:** `SignInFormGuard` now only re-enables a submit button it disabled itself, so it no longer clears the disabled state Clerk sets while a sign-up is in flight (which allowed a double submit).
+  - **Landing preview tabs:** the example stay preview supports Left/Right arrow, Home, and End keys, so keyboard users can reach every tab.
+  - **Tests and docs:** the `'unsafe-eval'` policy is tested under explicit production and development environments, and the Replay QA nonce rotation steps include the test fixture.
+
 - **Replay QA defect remediation and bot protection unblocking (WRE-271, 0.8.8)**:
   - **Cloudflare Turnstile & Clerk protect CSP allowances:** Added `https://challenges.cloudflare.com` and `https://*.protect.clerk.com:*` to `connect-src`, and `https://*.protect.clerk.com` to `script-src` and `frame-src` in `lib/security/csp.ts`. Previously, the absence of `challenges.cloudflare.com` in `connect-src` caused Cloudflare Turnstile token validation fetches to fail silently on `/sign-up`, locking Clerk's form in an inert state.
   - **CSP hardening in production:** Removed `'unsafe-eval'` from `script-src` in production builds (`lib/security/csp.ts`), keeping it restricted exclusively to local development (`NODE_ENV === "development"`) for Next.js Fast Refresh and tooling.

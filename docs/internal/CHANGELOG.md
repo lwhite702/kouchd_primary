@@ -2,6 +2,14 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-11-02 — Replay QA review follow-ups (WRE-271, 0.8.9)
+
+- PR #143 merged as 148ef4a before its last review round was pushed; these fixes land on `codex/WRE-271-review-followups`.
+- Removed `force-static` from the four legal pages so Clerk's strict-CSP nonce reaches their inline scripts. Not yet verified in a deployed preview: Vercel previews currently fail at `convex deploy` because the Convex preview deployment quota is full.
+- `SignInFormGuard` only clears a disabled state it applied (marker class `kouchd-submit-disabled`).
+- Landing preview tablist: roving tabindex with Arrow/Home/End keys.
+- Checks run locally: `tsc --noEmit`, `vitest run` (43 files, 265 tests), `npm run verify`, `npm run build`, `scripts/release-gate.mjs`.
+
 ## 2026-11-02 — Replay QA defect remediation and bot protection unblocking (WRE-271)
 
 - Remediated reported defects from Replay QA project `proj-app-kouchd-com-mvmq5ma0`:
