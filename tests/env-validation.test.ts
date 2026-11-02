@@ -13,11 +13,16 @@ describe("verify-env script", () => {
         stdio: ["pipe", "pipe", "pipe"],
       });
       return { status: 0, stdout, stderr: "" };
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const execError = err as {
+        status?: number;
+        stdout?: Buffer | string;
+        stderr?: Buffer | string;
+      };
       return {
-        status: err.status,
-        stdout: err.stdout?.toString() || "",
-        stderr: err.stderr?.toString() || "",
+        status: execError.status ?? 1,
+        stdout: execError.stdout?.toString() || "",
+        stderr: execError.stderr?.toString() || "",
       };
     }
   };

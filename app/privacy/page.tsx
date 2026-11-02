@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { LegalPageLayout } from "@/components/legal/legal-page-layout";
 import {
   LegalArticle,
@@ -8,7 +7,7 @@ import {
   LegalCrossLinks,
 } from "@/components/legal/legal-article";
 import { ShieldCheck, Lock } from "lucide-react";
-import { privacyPolicy, legalMeta } from "@/lib/legal";
+import { privacyPolicy } from "@/lib/legal";
 
 export const metadata: Metadata = {
   title: "Privacy Policy | Kouchd",

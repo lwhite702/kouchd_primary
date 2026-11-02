@@ -2,6 +2,7 @@
 
 import * as Sentry from "@sentry/nextjs";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 
 export default function GlobalError({
   error,
@@ -89,11 +90,8 @@ export default function GlobalError({
               </button>
             )}
             {attempts >= 2 && (
-              <button
-                type="button"
-                onClick={() => {
-                  window.location.href = "/";
-                }}
+              <Link
+                href="/"
                 style={{
                   background: "transparent",
                   color: "#1c3829",
@@ -104,10 +102,11 @@ export default function GlobalError({
                   cursor: "pointer",
                   display: "inline-flex",
                   alignItems: "center",
+                  textDecoration: "none",
                 }}
               >
                 Return to home
-              </button>
+              </Link>
             )}
           </div>
         </main>

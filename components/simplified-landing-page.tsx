@@ -10,7 +10,6 @@ import {
   MessageCircle,
   ReceiptText,
   Sparkles,
-  Users,
 } from "lucide-react";
 import { CouchSymbol, KouchdWordmark } from "@/components/brand/kouchd-logo";
 import {

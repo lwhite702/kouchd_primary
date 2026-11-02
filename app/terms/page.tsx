@@ -7,8 +7,8 @@ import {
   LegalSectionList,
   LegalCrossLinks,
 } from "@/components/legal/legal-article";
-import { MessageSquare, ShieldCheck, Scale } from "lucide-react";
-import { termsOfUse, legalMeta } from "@/lib/legal";
+import { MessageSquare, Scale } from "lucide-react";
+import { termsOfUse } from "@/lib/legal";
 
 export const metadata: Metadata = {
   title: "Terms & Conditions | Kouchd",
