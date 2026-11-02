@@ -2,6 +2,15 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-11-02 — Support desk transition to Freshdesk (WRE-265)
+
+- Transitioned the Platform Ops console customer support integration from Help Scout to Freshdesk (`lib/platform/providers.ts`, `components/platform/support-explorer.tsx`, `components/platform/overview-dashboard.tsx`).
+- Configured honest setup blocker detection based on server-side environment variables `FRESHDESK_DOMAIN` and `FRESHDESK_API_KEY`.
+- Maintained support privacy guardrails: read-only metadata lookups behind mandatory platform-admin authorization and audit reason, no message bodies or attachments copied into household records, and no ticket mutation from the console.
+- Preserved Mintlify as the canonical documentation system (`https://help.kouchd.com`, `docs.json`, `help/`).
+- Added tests in `tests/platform-admin.test.ts` verifying unconfigured setup blocker reporting, configured state detection, and audit requirement enforcement.
+- Branch only (`codex/WRE-265-freshdesk-support`).
+
 ## 2026-11-01 — Platform Console user provider context (WRE-263)
 
 - Added connected provider context (RevenueCat subscriptions, Knock notifications, and Loops marketing consent) to the Platform Console user detail view in `components/platform/users-explorer.tsx` and `convex/admin.ts`.

@@ -1,6 +1,6 @@
 import { SupportExplorer } from "@/components/platform/support-explorer";
 import { requirePlatformConsole } from "@/lib/platform/console";
-import { getHelpScoutOpsStatus } from "@/lib/platform/providers";
+import { getFreshdeskOpsStatus } from "@/lib/platform/providers";
 
 export default async function ConsoleSupportPage({
   params,
@@ -9,6 +9,6 @@ export default async function ConsoleSupportPage({
 }) {
   const { consoleKey } = await params;
   await requirePlatformConsole(consoleKey);
-  const status = getHelpScoutOpsStatus();
+  const status = getFreshdeskOpsStatus();
   return <SupportExplorer status={status} />;
 }

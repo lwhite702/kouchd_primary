@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { api } from "@/convex/_generated/api";
-import type { HelpScoutOpsStatus, MintlifyOpsStatus } from "@/lib/platform/providers";
+import type { FreshdeskOpsStatus, HelpScoutOpsStatus, MintlifyOpsStatus } from "@/lib/platform/providers";
 
 const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
 function formatMoney(cents: number) {
@@ -31,14 +31,17 @@ function formatTimestamp(ms: number | null | undefined) {
 export function OverviewDashboard({
   consoleKey,
   basePath: explicitBasePath,
+  freshdeskStatus,
   helpScoutStatus,
   mintlifyStatus,
 }: {
   consoleKey?: string;
   basePath?: string;
+  freshdeskStatus?: FreshdeskOpsStatus;
   helpScoutStatus?: HelpScoutOpsStatus;
   mintlifyStatus?: MintlifyOpsStatus;
 }) {
+  const supportStatus = freshdeskStatus ?? helpScoutStatus;
   const stats = useQuery(api.admin.getOverviewStats, {});
   const opsOverview = useQuery(api.admin.getPlatformOpsOverview, {});
 
@@ -198,42 +201,42 @@ export function OverviewDashboard({
             </div>
           </div>
 
-          {/* 4. Help Scout */}
+          {/* 4. Freshdesk */}
           <div className="console-provider-card">
             <div>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
                 <strong style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: "0.98rem" }}>
                   <LifeBuoy size={16} color="var(--kouchd-forest)" />
-                  Help Scout
+                  Freshdesk
                 </strong>
-                <span className={`console-env-badge ${helpScoutStatus?.status === "configured" ? "production" : "blocked"}`}>
-                  {helpScoutStatus?.status === "configured" ? "Configured" : "Setup Blocked"}
+                <span className={`console-env-badge ${supportStatus?.status === "configured" ? "production" : "blocked"}`}>
+                  {supportStatus?.status === "configured" ? "Configured" : "Setup Blocked"}
                 </span>
               </div>
               <p style={{ margin: "0 0 8px", fontSize: "0.8rem", color: "var(--kouchd-muted)" }}>
-                Customer support conversations (`help@kouchd.com`). Isolated from household members.
+                Customer support tickets (`{supportStatus?.supportEmail ?? "support@kouchd.com"}`). Isolated from household members.
               </p>
               <div style={{ fontSize: "0.8rem", display: "flex", flexDirection: "column", gap: 4 }}>
                 <div>
                   <strong>Missing Keys:</strong>{" "}
-                  {helpScoutStatus?.missingEnvKeys?.length
-                    ? helpScoutStatus.missingEnvKeys.join(", ")
+                  {supportStatus?.missingEnvKeys?.length
+                    ? supportStatus.missingEnvKeys.join(", ")
                     : "None"}
                 </div>
-                <div><strong>Support Address:</strong> {helpScoutStatus?.supportEmail ?? "help@kouchd.com"}</div>
+                <div><strong>Support Address:</strong> {supportStatus?.supportEmail ?? "support@kouchd.com"}</div>
               </div>
             </div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: 8, borderTop: "1px solid #f0ebe1" }}>
               <Link href={`${basePath}/support`} className="button soft compact" style={{ fontSize: "0.78rem", padding: "4px 10px" }}>
-                View Setup Blocker
+                {supportStatus?.status === "configured" ? "View Operations" : "View Setup Blocker"}
               </Link>
               <a
-                href={helpScoutStatus?.dashboardUrl ?? "https://secure.helpscout.net"}
+                href={supportStatus?.dashboardUrl ?? "https://kouchd.freshdesk.com"}
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{ fontSize: "0.78rem", color: "var(--kouchd-forest)", display: "inline-flex", alignItems: "center", gap: 4, fontWeight: 700 }}
               >
-                Help Scout <ExternalLink size={12} />
+                Freshdesk <ExternalLink size={12} />
               </a>
             </div>
           </div>

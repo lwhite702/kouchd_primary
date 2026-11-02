@@ -33,6 +33,12 @@
 
 ### Changed
 
+- **Support desk transition to Freshdesk (WRE-265, branch only, not released)**:
+  - Transitioned the Platform Ops console customer support integration from Help Scout to Freshdesk (`lib/platform/providers.ts`, `components/platform/support-explorer.tsx`, `components/platform/overview-dashboard.tsx`).
+  - Added honest `setup_blocked` / `configured` state detection against server-side environment variables `FRESHDESK_DOMAIN` and `FRESHDESK_API_KEY`.
+  - Maintained strict support guardrails: read-only metadata lookups, no message bodies or attachments copied into household records, no ticket mutation from the console, and mandatory platform-admin audit reasons.
+  - Public documentation remains on Mintlify (`https://help.kouchd.com`, `docs.json`, `help/`).
+
 - **Privacy and Cookie Policy wording for web analytics (WRE-251, branch only, not released)**: the in-app Privacy Policy (section 6) and Cookie Policy now match what the web app does. PostHog automatically records page views and interactions, makes session replays with typed form input hidden, and links signed-in web sessions to the account identifier, name and email. They used to say autocapture and replay were off and that names and emails were not sent. The iPhone wording is unchanged. The service-provider lists now name RevenueCat for Kouchd Plus subscriptions (the marketing site's Privacy Policy gets the same line). The Privacy and Cookie Policies are dated October 30, 2026; the Terms and Acceptable Use Policy keep October 23, 2026. Each legal document now has its own dates instead of sharing `legalMeta`. No separate user notice is planned (0.7.25). Version 0.8.1 adds Meta ad measurement to both policies (dated October 31, 2026): the Pixel and Conversions API run only after a visitor chooses “Allow analytics and ads” on kouchd.com, Global Privacy Control counts as an opt-out, SMS, household, agreement and contribution data are never shared with advertising partners, and the old promises of no advertising networks and no cross-context sharing are replaced.
 - **iOS introduction and sign-in look (branch only, not released)**:
   - The introduction steps can be swiped left and right as well as moved with Continue, Back, and Skip. A tapped move ignores the pager's in-between page reports, so the footer never jumps back to the previous step.
