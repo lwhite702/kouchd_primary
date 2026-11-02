@@ -90,7 +90,11 @@ export const joinWithCode = mutation({
       }
       await assertPlanCapacity(ctx, stay.hostUserId, "guest", stay.householdAccountId);
       // Re-activate if left
-      await ctx.db.patch(existingMembership._id, { status: "active", joinedAt: Date.now() });
+      await ctx.db.patch(existingMembership._id, {
+        status: "active",
+        joinedAt: Date.now(),
+        acceptedTermsId: undefined,
+      });
       await clearBlockedJoins(ctx, stay._id, user._id);
       const guestTerms = await ensureGuestTerms(ctx, stay._id, user._id, stay.hostUserId);
       await offerGuestAgreement(ctx, { stayId: stay._id, termsId: guestTerms._id, guestUserId: user._id, offeredBy: stay.hostUserId });

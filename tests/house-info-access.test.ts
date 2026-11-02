@@ -223,4 +223,43 @@ describe("houseInfo access code protection", () => {
       expect(stay.houseInfo).toBeUndefined();
     }
   });
+
+  it("hides codes from a former guest who rejoins until they accept again", async () => {
+    const t = convexTest(schema, modules);
+    const host = await createActor(t, "host");
+    const guest = await createActor(t, "guest");
+    const stayId = await host.mutation(api.stays.create, {
+      timezone: "UTC",
+      terms,
+    });
+    await host.mutation(api.stays.updateHouseInfo, { stayId, houseInfo });
+    const referralCode = (await host.query(api.stays.getBundle, { stayId }))
+      .stay.referralCode!;
+    await guest.mutation(api.referral.joinWithCode, { referralCode });
+    await guest.mutation(api.terms.acceptCurrent, { stayId });
+
+    const beforeLeave = await guest.query(api.stays.getBundle, { stayId });
+    expect(beforeLeave.stay.houseInfo?.doorCode).toBe("0000");
+
+    await t.run(async ({ db }) => {
+      await db.patch(beforeLeave.membership._id, { status: "left" });
+    });
+
+    await guest.mutation(api.referral.joinWithCode, { referralCode });
+
+    const afterRejoin = await queryStayFromBoth(guest, stayId);
+    for (const stay of [afterRejoin.bundleStay, afterRejoin.listedStay]) {
+      expect(stay.houseInfo?.doorCode).toBeUndefined();
+      expect(stay.houseInfo?.wifiPassword).toBeUndefined();
+      expect(stay.houseInfo?.wifiNetwork).toBe("TestNet");
+    }
+
+    await guest.mutation(api.terms.acceptCurrent, { stayId });
+
+    const afterReaccept = await queryStayFromBoth(guest, stayId);
+    for (const stay of [afterReaccept.bundleStay, afterReaccept.listedStay]) {
+      expect(stay.houseInfo?.doorCode).toBe("0000");
+      expect(stay.houseInfo?.wifiPassword).toBe("test-pass");
+    }
+  });
 });
