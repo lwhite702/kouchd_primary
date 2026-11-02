@@ -50,7 +50,7 @@ export default function GlobalError({
               Reference: {error.digest}
             </p>
           )}
-          <div style={{ display: "flex", gap: "0.75rem" }}>
+          <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", justifyContent: "center" }}>
             <button
               type="button"
               onClick={handleRetry}
@@ -86,6 +86,27 @@ export default function GlobalError({
                 }}
               >
                 Reload app
+              </button>
+            )}
+            {attempts >= 2 && (
+              <button
+                type="button"
+                onClick={() => {
+                  window.location.href = "/";
+                }}
+                style={{
+                  background: "transparent",
+                  color: "#1c3829",
+                  border: "1px solid #c9d1c7",
+                  borderRadius: "0.5rem",
+                  padding: "0.6rem 1.2rem",
+                  fontSize: "0.95rem",
+                  cursor: "pointer",
+                  display: "inline-flex",
+                  alignItems: "center",
+                }}
+              >
+                Return to home
               </button>
             )}
           </div>
