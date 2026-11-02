@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type KeyboardEvent } from "react";
 import {
   CalendarDays,
   Check,
@@ -15,8 +15,28 @@ import { KouchdWordmark } from "@/components/brand/kouchd-logo";
 
 type PreviewTab = "calendar" | "record" | "ledger" | "chores" | "updates";
 
+const PREVIEW_TABS: PreviewTab[] = ["calendar", "record", "ledger", "chores", "updates"];
+
 export function InteractiveStayPreview() {
   const [activeTab, setActiveTab] = useState<PreviewTab>("calendar");
+
+  // Roving tabindex: only the selected tab is in the Tab order, so arrow keys,
+  // Home, and End move between tabs (WAI-ARIA tabs pattern).
+  const handleTabKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    const index = PREVIEW_TABS.indexOf(activeTab);
+    const last = PREVIEW_TABS.length - 1;
+    const next =
+      event.key === "ArrowRight" ? (index === last ? 0 : index + 1)
+      : event.key === "ArrowLeft" ? (index === 0 ? last : index - 1)
+      : event.key === "Home" ? 0
+      : event.key === "End" ? last
+      : null;
+    if (next === null) return;
+    event.preventDefault();
+    const tab = PREVIEW_TABS[next];
+    setActiveTab(tab);
+    document.getElementById(`v21-tab-${tab}`)?.focus();
+  };
 
   return (
     <div
@@ -33,6 +53,7 @@ export function InteractiveStayPreview() {
             className="v21-preview-tab-controls"
             role="tablist"
             aria-label="Stay preview views"
+            onKeyDown={handleTabKeyDown}
           >
             <button
               type="button"

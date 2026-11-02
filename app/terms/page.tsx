@@ -16,8 +16,6 @@ export const metadata: Metadata = {
   alternates: { canonical: "/terms" },
 };
 
-export const dynamic = "force-static";
-
 export default function TermsAndConditionsPage() {
   return (
     <LegalPageLayout activeRoute="terms">

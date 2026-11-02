@@ -39,7 +39,13 @@ export function SignInFormGuard({ children }: { children: React.ReactNode }) {
 
       // Only guard the initial identifier step if an identifier input exists.
       // On password, OTP code, or MFA steps, do not interfere with Clerk's native button state.
-      syncSubmitState(submitBtn, Boolean(input) && !input?.value.trim());
+      if (input && !input.value.trim()) {
+        syncSubmitState(submitBtn, true);
+      } else if (submitBtn.classList.contains("kouchd-submit-disabled")) {
+        // Only undo a disable this guard applied; never clear one Clerk set
+        // while a submission is in flight.
+        syncSubmitState(submitBtn, false);
+      }
     };
 
     // Run immediately
