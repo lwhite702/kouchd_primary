@@ -2,6 +2,7 @@
 
 import * as Sentry from "@sentry/nextjs";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 
 export default function GlobalError({
   error,
@@ -50,7 +51,7 @@ export default function GlobalError({
               Reference: {error.digest}
             </p>
           )}
-          <div style={{ display: "flex", gap: "0.75rem" }}>
+          <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", justifyContent: "center" }}>
             <button
               type="button"
               onClick={handleRetry}
@@ -88,6 +89,23 @@ export default function GlobalError({
                 Reload app
               </button>
             )}
+            <Link
+              href="/"
+              style={{
+                background: "transparent",
+                color: "#1c3829",
+                border: "1px solid #c9d1c7",
+                borderRadius: "0.5rem",
+                padding: "0.6rem 1.2rem",
+                fontSize: "0.95rem",
+                cursor: "pointer",
+                display: "inline-flex",
+                alignItems: "center",
+                textDecoration: "none",
+              }}
+            >
+              Return to home
+            </Link>
           </div>
         </main>
       </body>

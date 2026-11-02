@@ -25,6 +25,7 @@ export function SignInFormGuard({ children }: { children: React.ReactNode }) {
       const input =
         container.querySelector<HTMLInputElement>("#identifier-field") ||
         container.querySelector<HTMLInputElement>("input[name='identifier']") ||
+        container.querySelector<HTMLInputElement>("input[name='emailAddress']") ||
         container.querySelector<HTMLInputElement>("input[type='email']");
       const submitBtn =
         container.querySelector<HTMLButtonElement>("button[type='submit']") ||
@@ -49,6 +50,7 @@ export function SignInFormGuard({ children }: { children: React.ReactNode }) {
       if (
         target?.id === "identifier-field" ||
         target?.getAttribute("name") === "identifier" ||
+        target?.getAttribute("name") === "emailAddress" ||
         target?.getAttribute("type") === "email"
       ) {
         updateSubmitState();

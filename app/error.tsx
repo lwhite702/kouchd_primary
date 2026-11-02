@@ -33,13 +33,18 @@ export default function ErrorPage({
           Reference: {error.digest}
         </p>
       )}
-      <div style={{ display: "flex", gap: "0.75rem", marginTop: "1rem" }}>
+      <div style={{ display: "flex", gap: "0.75rem", marginTop: "1rem", flexWrap: "wrap" }}>
         <button className="button primary" type="button" onClick={handleRetry}>
           Try again
         </button>
         {attempts >= 1 && (
           <Link className="button secondary" href="/">
             Back to Home
+          </Link>
+        )}
+        {attempts >= 2 && (
+          <Link className="button secondary" href="/sign-in">
+            Sign in again
           </Link>
         )}
       </div>
