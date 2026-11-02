@@ -1,15 +1,15 @@
 "use client";
 
 import { AlertTriangle, ExternalLink, LifeBuoy, Lock, Mail, ShieldAlert } from "lucide-react";
-import type { HelpScoutOpsStatus } from "@/lib/platform/providers";
+import type { FreshdeskOpsStatus } from "@/lib/platform/providers";
 
-export function SupportExplorer({ status }: { status: HelpScoutOpsStatus }) {
+export function SupportExplorer({ status }: { status: FreshdeskOpsStatus }) {
   const isBlocked = status.status === "setup_blocked";
 
   return (
     <div>
       <div className="console-guardrail-banner">
-        <strong>Customer Support Privacy &amp; Access Boundary:</strong> Help Scout is reserved for customer-support conversations (`{status.supportEmail}`). Support threads are strictly isolated from household members and unrelated staff. Kouchd never copies full support message bodies into household records, and this console does not permit replying, creating conversations, or mutating ticket status.
+        <strong>Customer Support Privacy &amp; Access Boundary:</strong> Freshdesk is reserved for customer-support conversations (`{status.supportEmail}`). Support threads are strictly isolated from household members and unrelated staff. Kouchd never copies full support message bodies into household records, and this console does not permit replying, creating tickets, or mutating ticket status.
       </div>
 
       {isBlocked && (
@@ -18,7 +18,7 @@ export function SupportExplorer({ status }: { status: HelpScoutOpsStatus }) {
             <AlertTriangle size={22} color="#8f6412" style={{ flexShrink: 0, marginTop: 2 }} />
             <div>
               <strong style={{ fontSize: "0.96rem", display: "block", marginBottom: 4 }}>
-                Help Scout Integration Setup Blocker (Unverified Inbox &amp; Credentials)
+                Freshdesk Integration Setup Blocker (Unverified Portal &amp; API Key)
               </strong>
               <div>{status.blockerSummary}</div>
               <div style={{ marginTop: 8, fontSize: "0.82rem" }}>
@@ -44,7 +44,7 @@ export function SupportExplorer({ status }: { status: HelpScoutOpsStatus }) {
             </span>
           </div>
           <span className="console-stat-subtext" style={{ marginTop: 4 }}>
-            No synthetic or fabricated inbox metrics shown
+            No synthetic or fabricated ticket metrics shown
           </span>
         </div>
 
@@ -59,24 +59,22 @@ export function SupportExplorer({ status }: { status: HelpScoutOpsStatus }) {
         </div>
 
         <div className="console-stat-card">
-          <span className="console-stat-label">OAuth2 App Credentials</span>
-          <span className="console-stat-value" style={{ fontSize: "1.1rem" }}>
-            {status.credentialsConfigured.hasAppId && status.credentialsConfigured.hasAppSecret
-              ? "Present"
-              : "Not Configured"}
+          <span className="console-stat-label">Freshdesk Portal Domain</span>
+          <span className="console-stat-value" style={{ fontSize: "1.05rem" }}>
+            {status.credentialsConfigured.hasDomain ? status.domain : "Not Configured"}
           </span>
           <span className="console-stat-subtext">
-            `HELPSCOUT_APP_ID` / `HELPSCOUT_APP_SECRET`
+            <code>FRESHDESK_DOMAIN</code>
           </span>
         </div>
 
         <div className="console-stat-card">
-          <span className="console-stat-label">Verified Mailbox / Inbox ID</span>
+          <span className="console-stat-label">API Key Configuration</span>
           <span className="console-stat-value" style={{ fontSize: "1.1rem" }}>
-            {status.credentialsConfigured.hasInboxId ? "Present" : "Unverified"}
+            {status.credentialsConfigured.hasApiKey ? "Configured" : "Not Configured"}
           </span>
           <span className="console-stat-subtext">
-            `HELPSCOUT_INBOX_ID`
+            <code>FRESHDESK_API_KEY</code>
           </span>
         </div>
       </div>
@@ -90,7 +88,7 @@ export function SupportExplorer({ status }: { status: HelpScoutOpsStatus }) {
               Support Operations &amp; Provider Access
             </h2>
             <p style={{ margin: "4px 0 0", color: "var(--kouchd-muted)", fontSize: "0.85rem" }}>
-              Use the official Help Scout web workspace for support triage and responses.
+              Use the official Freshdesk agent portal for ticket triage, customer communication, and support resolution.
             </p>
           </div>
 
@@ -102,7 +100,7 @@ export function SupportExplorer({ status }: { status: HelpScoutOpsStatus }) {
               className="button primary compact"
               style={{ fontSize: "0.82rem", display: "inline-flex", alignItems: "center", gap: 6 }}
             >
-              Open Help Scout Workspace <ExternalLink size={14} />
+              Open Freshdesk Portal <ExternalLink size={14} />
             </a>
             <a
               href={`mailto:${status.supportEmail}`}
@@ -121,10 +119,11 @@ export function SupportExplorer({ status }: { status: HelpScoutOpsStatus }) {
               Required Provider Setup Checklist
             </strong>
             <ol style={{ margin: 0, paddingLeft: "1.2rem", fontSize: "0.82rem", color: "var(--kouchd-ink)", lineHeight: 1.6 }}>
-              <li>Provision and verify the Kouchd mailbox in Help Scout for <code>help@kouchd.com</code>.</li>
-              <li>Create a least-privileged Help Scout OAuth2 application (read-only Mailbox/Conversations scope).</li>
-              <li>Configure server-only environment variables: <code>HELPSCOUT_APP_ID</code>, <code>HELPSCOUT_APP_SECRET</code>, and <code>HELPSCOUT_INBOX_ID</code>.</li>
-              <li>Never expose Help Scout credentials to browser bundles (`NEXT_PUBLIC_*` is prohibited).</li>
+              <li>Provision the Kouchd support portal in Freshdesk (e.g., <code>kouchd.freshdesk.com</code> or custom domain).</li>
+              <li>Configure incoming support email forwarding for <code>support@kouchd.com</code> and <code>help@kouchd.com</code>.</li>
+              <li>Generate a least-privileged Freshdesk API Key (read-only Tickets scope).</li>
+              <li>Configure server-only environment variables: <code>FRESHDESK_DOMAIN</code> and <code>FRESHDESK_API_KEY</code>.</li>
+              <li>Never expose Freshdesk credentials to browser bundles (<code>NEXT_PUBLIC_*</code> is prohibited).</li>
             </ol>
           </div>
 

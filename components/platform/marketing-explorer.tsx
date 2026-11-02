@@ -30,7 +30,7 @@ export function MarketingExplorer() {
   return (
     <div>
       <div className="console-guardrail-banner">
-        <strong>Marketing Email &amp; Consent Boundary:</strong> Loops is strictly isolated to optional marketing newsletter signups (`mail.kouchd.com`), separate from Knock transactional reminders and Help Scout customer support. Kouchd <strong>never</strong> adds hosts or guests to Loops automatically. Explicit opt-in and double opt-in confirmation are preserved, and this console does not provide campaign-sending or consent-override controls.
+        <strong>Marketing Email &amp; Consent Boundary:</strong> Loops is strictly isolated to optional marketing newsletter signups (`mail.kouchd.com`), separate from Knock transactional reminders and Freshdesk customer support. Kouchd <strong>never</strong> adds hosts or guests to Loops automatically. Explicit opt-in and double opt-in confirmation are preserved, and this console does not provide campaign-sending or consent-override controls.
       </div>
 
       {/* Loops Configuration & Audience Summary */}

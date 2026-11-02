@@ -1,5 +1,5 @@
 {
   "type": "patch",
-  "version": "0.8.6",
-  "reason": "Add simplified marketing landing page at /simple and password-protect brand kit at /brand and /brandkit (WRE-243)."
+  "version": "0.8.7",
+  "reason": "Transition Platform Ops support desk from Help Scout to Freshdesk while keeping documentation on Mintlify (WRE-265)."
 }

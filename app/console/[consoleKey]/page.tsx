@@ -1,6 +1,6 @@
 import { OverviewDashboard } from "@/components/platform/overview-dashboard";
 import { requirePlatformConsole } from "@/lib/platform/console";
-import { getHelpScoutOpsStatus, getMintlifyOpsStatus } from "@/lib/platform/providers";
+import { getFreshdeskOpsStatus, getMintlifyOpsStatus } from "@/lib/platform/providers";
 
 export default async function ConsoleOverviewPage({
   params,
@@ -9,13 +9,13 @@ export default async function ConsoleOverviewPage({
 }) {
   const { consoleKey } = await params;
   await requirePlatformConsole(consoleKey);
-  const helpScoutStatus = getHelpScoutOpsStatus();
+  const freshdeskStatus = getFreshdeskOpsStatus();
   const mintlifyStatus = getMintlifyOpsStatus();
 
   return (
     <OverviewDashboard
       consoleKey={consoleKey}
-      helpScoutStatus={helpScoutStatus}
+      freshdeskStatus={freshdeskStatus}
       mintlifyStatus={mintlifyStatus}
     />
   );

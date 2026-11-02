@@ -2,6 +2,15 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-11-02 — Support desk transition to Freshdesk (WRE-265)
+
+- Transitioned the Platform Ops console customer support integration from Help Scout to Freshdesk (`lib/platform/providers.ts`, `components/platform/support-explorer.tsx`, `components/platform/overview-dashboard.tsx`).
+- Configured honest setup blocker detection based on server-side environment variables `FRESHDESK_DOMAIN` and `FRESHDESK_API_KEY`.
+- Maintained support privacy guardrails: read-only metadata lookups behind mandatory platform-admin authorization and audit reason, no message bodies or attachments copied into household records, and no ticket mutation from the console.
+- Preserved Mintlify as the canonical documentation system (`https://help.kouchd.com`, `docs.json`, `help/`).
+- Added tests in `tests/platform-admin.test.ts` verifying unconfigured setup blocker reporting, configured state detection, and audit requirement enforcement.
+- Branch only (`codex/WRE-265-freshdesk-support`).
+
 ## 2026-11-02 — Simplified landing page & Brand Kit password protection (WRE-243)
 
 - Added `/simple` (`app/simple/page.tsx`, `components/simplified-landing-page.tsx` + `.css`): aligned with authentic Kouchd design system, using `MarketingHeader`, `MarketingFooter`, `v21-hero` with living room art and app icon badge, interactive preview window with tabs (`v21-product`), 6-card feature grid (`v21-how` / `.v21-steps`), and `v21-cta`.
