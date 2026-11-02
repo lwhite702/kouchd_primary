@@ -6,7 +6,7 @@ Internal engineering record. This file is excluded from Mintlify navigation and 
 
 - PR #143 merged as 148ef4a before its last review round was pushed; these fixes land on `codex/WRE-271-review-followups`.
 - Removed `force-static` from the four legal pages so Clerk's strict-CSP nonce reaches their inline scripts. The shipped 0.8.8 changelog bullets were restored to their released wording; this entry carries the change. Not yet verified in a deployed preview: Vercel previews currently fail at `convex deploy` because the Convex preview deployment quota is full.
-- `SignInFormGuard` only clears a disabled state it applied, tracked in a `WeakSet` by `applyIdentifierGuard`; a button Clerk already disabled is never claimed.
+- `SignInFormGuard` only clears a disabled state it applied, tracked by `applyIdentifierGuard`; a button Clerk already disabled is never claimed, and effect cleanup (`releaseIdentifierGuard`) undoes the guard's disables so a Strict Mode replay or remount starts from Clerk's state.
 - Landing preview tablist: roving tabindex with Arrow/Home/End keys.
 - Checks run locally: `npm run release:check` (version check, `npm run verify` with lint, `tsc --noEmit` and `vitest run`, `npm run build`, `scripts/release-gate.mjs`).
 

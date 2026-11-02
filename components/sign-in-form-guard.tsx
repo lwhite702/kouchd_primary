@@ -23,7 +23,7 @@ export function syncSubmitState(submitBtn: HTMLButtonElement, disabled: boolean)
 export function applyIdentifierGuard(
   submitBtn: HTMLButtonElement,
   identifierEmpty: boolean,
-  owned: WeakSet<HTMLButtonElement>,
+  owned: Set<HTMLButtonElement>,
 ) {
   if (identifierEmpty) {
     if (!submitBtn.disabled) {
@@ -36,13 +36,23 @@ export function applyIdentifierGuard(
   }
 }
 
+/**
+ * Undo every disable the guard applied. Runs on effect cleanup, so a remount or
+ * a Strict Mode effect replay starts from Clerk's own state and can claim the
+ * button again instead of mistaking the guard's disable for Clerk's.
+ */
+export function releaseIdentifierGuard(owned: Set<HTMLButtonElement>) {
+  for (const submitBtn of owned) syncSubmitState(submitBtn, false);
+  owned.clear();
+}
+
 export function SignInFormGuard({ children }: { children: React.ReactNode }) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
-    const owned = new WeakSet<HTMLButtonElement>();
+    const owned = new Set<HTMLButtonElement>();
 
     const findElements = () => {
       const input =
@@ -102,6 +112,7 @@ export function SignInFormGuard({ children }: { children: React.ReactNode }) {
       container.removeEventListener("keyup", handleInput, true);
       container.removeEventListener("paste", handleInput, true);
       observer.disconnect();
+      releaseIdentifierGuard(owned);
     };
   }, []);
 
