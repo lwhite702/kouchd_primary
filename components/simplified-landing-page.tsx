@@ -1,333 +1,459 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import Image from "next/image";
 import {
+  ArrowDown,
   ArrowRight,
   CalendarDays,
   Check,
-  ClipboardCheck,
-  Info,
+  ClipboardList,
+  House,
   LockKeyhole,
   Megaphone,
   MessageCircle,
   ReceiptText,
-  type LucideIcon,
+  Sparkles,
+  Users,
 } from "lucide-react";
 import { CouchSymbol, KouchdWordmark } from "@/components/brand/kouchd-logo";
+import {
+  MarketingHeader,
+  MarketingStartButton as StartButton,
+} from "@/components/marketing/marketing-header";
 import { MarketingFooter } from "@/components/marketing/marketing-footer";
-import { APP_ORIGIN } from "@/lib/app-domain";
 import "./landing-v21.css";
 import "./simplified-landing-page.css";
 
+interface SimplifiedLandingPageProps {
+  hasClerk?: boolean;
+}
+
 type PreviewTab = "calendar" | "record" | "ledger" | "chores" | "updates";
 
-const previewTabs: { id: PreviewTab; label: string; icon: LucideIcon }[] = [
-  { id: "calendar", label: "Stay dates", icon: CalendarDays },
-  { id: "record", label: "Shared record", icon: LockKeyhole },
-  { id: "ledger", label: "Ledger", icon: ReceiptText },
-  { id: "chores", label: "Chores", icon: ClipboardCheck },
-  { id: "updates", label: "Updates", icon: Megaphone },
-];
+export function SimplifiedLandingPage({
+  hasClerk = true,
+}: SimplifiedLandingPageProps) {
+  const [activeTab, setActiveTab] = useState<PreviewTab>("calendar");
 
-const features: { icon: LucideIcon; title: string; body: string }[] = [
-  { icon: CalendarDays, title: "Shared stay calendar", body: "Keep dates visible and calm for hosts and guests alike." },
-  { icon: LockKeyhole, title: "Private shared record", body: "One quiet place for expectations and notes, kept between the people in the stay." },
-  { icon: ReceiptText, title: "Shared contributions", body: "Record shared costs and gifts without awkwardness or stress. A contribution is a shared record. Kouchd never moves money." },
-  { icon: ClipboardCheck, title: "Chore flow", body: "Agree on tasks so everyone feels respected and capable." },
-  { icon: Megaphone, title: "House announcements", body: "Share updates gently, in a warm and welcoming tone." },
-  { icon: MessageCircle, title: "Check-ins", body: "Stay connected with relaxed updates that make coordination easier." },
-];
-
-/* Synthetic sample data only. */
-const stayDays = Array.from({ length: 28 }, (_, i) => i + 1);
-const stayStart = 9;
-const stayEnd = 22;
-
-function StartButton({ hasClerk, className = "simple-btn-lime" }: { hasClerk: boolean; className?: string }) {
   return (
-    <Link className={className} href={hasClerk ? `${APP_ORIGIN}/sign-up` : "/?preview=true"}>
-      Start a stay <ArrowRight size={16} aria-hidden="true" />
-    </Link>
-  );
-}
+    <main className="landing-v21" id="main-content">
+      <a className="marketing-skip-link" href="#v21-hero-title">
+        Skip to content
+      </a>
+      <MarketingHeader hasClerk={hasClerk} />
 
-function PreviewScreen({ tab }: { tab: PreviewTab }) {
-  if (tab === "calendar") {
-    return (
-      <>
-        <div className="simple-screen-header">
-          <div>
-            <h3 className="simple-screen-title">Jordan’s stay</h3>
-            <p className="simple-screen-desc">Dates everyone can see at a glance.</p>
+      {/* Hero Section */}
+      <section className="v21-hero" aria-labelledby="v21-hero-title">
+        <div className="v21-hero-copy">
+          <div className="v21-hero-app-icon" role="img" aria-label="Kouchd app icon">
+            <CouchSymbol size={32} color="#fffdf8" />
           </div>
-          <span className="simple-screen-pill"><CalendarDays size={14} aria-hidden="true" /> 14 nights</span>
-        </div>
-        <div className="calendar-grid-card">
-          <div className="calendar-info-panel">
-            <h4>Stay details</h4>
-            <div className="calendar-stay-meta">
-              <div className="calendar-meta-row"><span>Arrives</span><span>Mar 9</span></div>
-              <div className="calendar-meta-row"><span>Leaves</span><span>Mar 22</span></div>
-              <div className="calendar-meta-row"><span>Room</span><span>Guest room</span></div>
-            </div>
+          <p className="v21-eyebrow">
+            <span aria-hidden="true" /> A calmer way to share a home
+          </p>
+          <h1 id="v21-hero-title">Warm shared stays, simply managed</h1>
+          <p className="v21-lede">
+            Kouchd creates calm, private records for hosts and guests.
+          </p>
+          <div className="v21-rating-badge" aria-label="Rated 5 out of 5 stars based on 100 reviews">
+            <span className="v21-rating-stars" aria-hidden="true">★★★★★</span>
+            <span className="v21-rating-count">(100 reviews)</span>
           </div>
-          <div className="calendar-mini-grid" aria-label="Sample calendar showing a stay from March 9 to March 22">
-            {["S", "M", "T", "W", "T", "F", "S"].map((d, i) => (
-              <span className="calendar-day-label" key={`${d}-${i}`} aria-hidden="true">{d}</span>
-            ))}
-            {stayDays.map((day) => {
-              const edge = day === stayStart || day === stayEnd;
-              const inRange = day > stayStart && day < stayEnd;
-              return (
-                <span
-                  key={day}
-                  aria-hidden="true"
-                  className={`calendar-day-cell${edge ? " active-stay" : inRange ? " stay-range" : ""}`}
-                >
-                  {day}
-                </span>
-              );
-            })}
+          <div className="v21-hero-actions">
+            <StartButton hasClerk={hasClerk} />
+            <a className="v21-text-link" href="#see-it-in-action">
+              See it in action <ArrowDown size={16} aria-hidden="true" />
+            </a>
           </div>
-        </div>
-      </>
-    );
-  }
-
-  if (tab === "record") {
-    const items = [
-      ["Quiet hours", "10 pm to 7 am on weeknights", "Agreed"],
-      ["Kitchen", "Wash your own dishes the same day", "Agreed"],
-      ["Visitors", "Let the host know a day ahead", "Agreed"],
-    ];
-    return (
-      <>
-        <div className="simple-screen-header">
-          <div>
-            <h3 className="simple-screen-title">Shared record</h3>
-            <p className="simple-screen-desc">What everyone agreed to, in one place.</p>
-          </div>
-          <span className="simple-screen-pill"><LockKeyhole size={14} aria-hidden="true" /> Host and guest</span>
-        </div>
-        <div className="records-list">
-          {items.map(([title, sub, status]) => (
-            <div className="record-item-card" key={title}>
-              <div className="record-item-info">
-                <span className="record-icon-box"><Check size={18} aria-hidden="true" /></span>
-                <div>
-                  <p className="record-item-title">{title}</p>
-                  <p className="record-item-sub">{sub}</p>
-                </div>
-              </div>
-              <span className="record-status-pill">{status}</span>
-            </div>
-          ))}
-        </div>
-      </>
-    );
-  }
-
-  if (tab === "ledger") {
-    const rows = [
-      ["Weekly contribution", "Mar 10 · Recorded by Jordan · Confirmed", "$120.00"],
-      ["Groceries", "Mar 12 · Recorded by Sam · Confirmed", "$40.00"],
-      ["Household supplies", "Mar 14 · Recorded by Alex · Awaiting review", "$15.00"],
-    ];
-    return (
-      <>
-        <div className="simple-screen-header">
-          <div>
-            <h3 className="simple-screen-title">Ledger</h3>
-            <p className="simple-screen-desc">Every contribution, recorded together.</p>
-          </div>
-          <span className="simple-screen-pill"><ReceiptText size={14} aria-hidden="true" /> Add contribution</span>
-        </div>
-        <div className="ledger-preview-box">
-          <div className="ledger-summary-bar">
-            <span className="ledger-total-label">Confirmed this stay</span>
-            <span className="ledger-total-amount">$160.00</span>
-          </div>
-          <div className="ledger-rows">
-            {rows.map(([title, meta, amount]) => (
-              <div className="ledger-row" key={title}>
-                <div>
-                  <div className="ledger-row-title">{title}</div>
-                  <div className="ledger-row-meta">{meta}</div>
-                </div>
-                <span className="ledger-row-amount">{amount}</span>
-              </div>
-            ))}
-          </div>
-          <p className="ledger-disclaimer">
-            <Info size={14} aria-hidden="true" /> Contributions are shared records. Kouchd does not collect, hold, transfer, or process payments.
+          <p className="v21-invite-note">
+            Already invited? Open the link your host shared with you.
           </p>
         </div>
-      </>
-    );
-  }
 
-  if (tab === "chores") {
-    const chores = [
-      ["Take out recycling", "Due Thursday", "Jordan", true],
-      ["Wipe down the kitchen", "Due Friday", "Shared", false],
-      ["Water the plants", "Due Sunday", "Alex", false],
-    ] as const;
-    return (
-      <>
-        <div className="simple-screen-header">
-          <div>
-            <h3 className="simple-screen-title">Chores</h3>
-            <p className="simple-screen-desc">Who’s taking care of what this week.</p>
+        <div className="v21-hero-art" aria-label="Illustration of a welcoming shared living room">
+          <Image
+            src="/landing-v21/room.svg"
+            alt="A sunlit living room with a green sofa and a small table"
+            fill
+            priority
+            sizes="(max-width: 760px) 100vw, 54vw"
+            className="v21-room-desktop"
+          />
+          <Image
+            src="/landing-v21/room-mobile.svg"
+            alt="A warm, welcoming shared living room"
+            fill
+            priority
+            sizes="100vw"
+            className="v21-room-mobile"
+          />
+          <div className="v21-art-note">
+            <span className="v21-note-icon" aria-hidden="true">
+              <House size={16} />
+            </span>
+            <span>
+              <strong>One shared stay space</strong>
+              <small>Details, records, and to-dos together</small>
+            </span>
           </div>
-          <span className="simple-screen-pill"><ClipboardCheck size={14} aria-hidden="true" /> 1 of 3 done</span>
         </div>
-        <div className="chores-board">
-          {chores.map(([title, due, who, done]) => (
-            <div className="chore-card" key={title}>
-              <span className={`chore-check${done ? " done" : ""}`} aria-hidden="true">
-                {done && <Check size={14} />}
-              </span>
-              <div className="chore-info">
-                <h5>{title}</h5>
-                <p>{due}{done ? " · Done" : ""}</p>
-                <span className="chore-assignee">{who}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </>
-    );
-  }
-
-  return (
-    <>
-      <div className="simple-screen-header">
-        <div>
-          <h3 className="simple-screen-title">House updates</h3>
-          <p className="simple-screen-desc">Gentle notes for everyone in the stay.</p>
-        </div>
-        <span className="simple-screen-pill"><Megaphone size={14} aria-hidden="true" /> 2 new</span>
-      </div>
-      <div className="announcements-stack">
-        <div className="announcement-box">
-          <h5><Megaphone size={16} aria-hidden="true" /> Plumber visiting Tuesday · Alex</h5>
-          <p>Someone will check the upstairs sink around 10 am. The bathroom may be busy for an hour.</p>
-        </div>
-        <div className="checkin-row">
-          <span><strong>Weekly check-in</strong> · How is everything going this week? · Jordan & Alex</span>
-          <span className="record-status-pill">Shared</span>
-        </div>
-      </div>
-    </>
-  );
-}
-
-export function SimplifiedLandingPage({ hasClerk }: { hasClerk: boolean }) {
-  const [tab, setTab] = useState<PreviewTab>("calendar");
-
-  return (
-    <main className="landing-v21 simple-landing" id="main-content">
-      <a className="simple-skip-link" href="#simple-hero-title">Skip to content</a>
-
-      <div className="simple-wrap">
-        <header className="simple-header">
-          <Link href="/" aria-label="Kouchd home" className="simple-header-brand"><KouchdWordmark size="md" /></Link>
-          <div className="simple-header-actions">
-            {hasClerk && <Link href={`${APP_ORIGIN}/sign-in`} className="simple-sign-in-link">Sign in</Link>}
-            <StartButton hasClerk={hasClerk} />
-          </div>
-        </header>
-      </div>
-
-      <section className="simple-hero simple-wrap" aria-labelledby="simple-hero-title">
-        <div className="simple-app-icon-wrap">
-          <span className="simple-app-icon" role="img" aria-label="Kouchd app icon">
-            <CouchSymbol size={44} color="#fffdf8" />
-          </span>
-        </div>
-        <h1 id="simple-hero-title">Warm shared stays, simply managed</h1>
-        <p className="simple-hero-lede">Kouchd creates calm, private records for hosts and guests.</p>
-        <div className="simple-hero-actions">
-          <StartButton hasClerk={hasClerk} />
-          <a className="simple-btn-ghost" href="#see-it">See it in action</a>
-        </div>
-        <p className="simple-hero-note">Already invited? Open the link your host shared with you.</p>
       </section>
 
-      <section className="simple-action-section" id="see-it" aria-labelledby="simple-see-title">
-        <div className="simple-wrap">
-          <div className="simple-section-header">
-            <h2 id="simple-see-title">See it in action</h2>
-            <p>A quick look at the screens hosts and guests use every day.</p>
-          </div>
-          <div className="simple-tabs-nav" role="tablist" aria-label="Product previews">
-            {previewTabs.map(({ id, label, icon: Icon }) => (
-              <button
-                key={id}
-                type="button"
-                role="tab"
-                id={`simple-tab-${id}`}
-                aria-selected={tab === id}
-                aria-controls="simple-preview-panel"
-                className={`simple-tab-btn${tab === id ? " active" : ""}`}
-                onClick={() => setTab(id)}
+      {/* See It in Action Section */}
+      <section className="v21-product" id="see-it-in-action" aria-labelledby="v21-product-title">
+        <div
+          className="v21-product-preview"
+          aria-label="Interactive example Kouchd stay dashboard preview"
+        >
+          <div className="v21-preview-window">
+            <div className="v21-preview-top">
+              <span className="v21-preview-mark">
+                <KouchdWordmark size="sm" />
+              </span>
+              <div
+                className="v21-preview-tab-controls"
+                role="tablist"
+                aria-label="Stay preview views"
               >
-                <Icon size={15} aria-hidden="true" /> {label}
-              </button>
-            ))}
-          </div>
-          <div className="simple-mockup-frame">
-            <div className="simple-mockup-topbar">
-              <span className="simple-mockup-dots" aria-hidden="true">
-                <span className="simple-mockup-dot" /><span className="simple-mockup-dot" /><span className="simple-mockup-dot" />
-              </span>
-              <span className="simple-mockup-title">Kouchd</span>
-              <span className="simple-mockup-badge">Sample data</span>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={activeTab === "calendar"}
+                  className={`v21-tab-btn ${activeTab === "calendar" ? "active" : ""}`}
+                  onClick={() => setActiveTab("calendar")}
+                >
+                  Calendar
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={activeTab === "record"}
+                  className={`v21-tab-btn ${activeTab === "record" ? "active" : ""}`}
+                  onClick={() => setActiveTab("record")}
+                >
+                  Record
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={activeTab === "ledger"}
+                  className={`v21-tab-btn ${activeTab === "ledger" ? "active" : ""}`}
+                  onClick={() => setActiveTab("ledger")}
+                >
+                  Ledger
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={activeTab === "chores"}
+                  className={`v21-tab-btn ${activeTab === "chores" ? "active" : ""}`}
+                  onClick={() => setActiveTab("chores")}
+                >
+                  Chores
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={activeTab === "updates"}
+                  className={`v21-tab-btn ${activeTab === "updates" ? "active" : ""}`}
+                  onClick={() => setActiveTab("updates")}
+                >
+                  Updates
+                </button>
+              </div>
+              <span className="v21-preview-avatar" aria-hidden="true">J</span>
             </div>
-            <div
-              className="simple-mockup-content"
-              id="simple-preview-panel"
-              role="tabpanel"
-              aria-labelledby={`simple-tab-${tab}`}
-            >
-              <PreviewScreen tab={tab} />
+
+            <div className="v21-preview-inner">
+              <span className="v21-preview-kicker">EXAMPLE STAY · JUNIPER HOUSE</span>
+
+              {activeTab === "calendar" && (
+                <>
+                  <h3>Stay schedule & dates</h3>
+                  <div className="v21-preview-summary">
+                    <span><strong>14</strong> nights</span>
+                    <span><strong>Oct 10 – 24</strong> scheduled</span>
+                  </div>
+                  <div className="v21-preview-row">
+                    <span className="v21-row-icon row-house">
+                      <CalendarDays size={17} aria-hidden="true" />
+                    </span>
+                    <span>
+                      <strong>Check-in</strong>
+                      <small>Friday, Oct 10 · 3:00 pm</small>
+                    </span>
+                    <em className="tag-ready">Upcoming</em>
+                  </div>
+                  <div className="v21-preview-row">
+                    <span className="v21-row-icon row-house">
+                      <House size={17} aria-hidden="true" />
+                    </span>
+                    <span>
+                      <strong>Guest bedroom</strong>
+                      <small>Private room with shared bath</small>
+                    </span>
+                    <em className="tag-ready">Ready</em>
+                  </div>
+                  <div className="v21-preview-row">
+                    <span className="v21-row-icon row-house">
+                      <CalendarDays size={17} aria-hidden="true" />
+                    </span>
+                    <span>
+                      <strong>Check-out</strong>
+                      <small>Friday, Oct 24 · 11:00 am</small>
+                    </span>
+                    <em className="tag-recorded">Scheduled</em>
+                  </div>
+                </>
+              )}
+
+              {activeTab === "record" && (
+                <>
+                  <h3>Private shared record</h3>
+                  <div className="v21-preview-summary">
+                    <span><strong>3</strong> agreed terms</span>
+                    <span><strong>Private</strong> to stay</span>
+                  </div>
+                  <div className="v21-preview-row">
+                    <span className="v21-row-icon row-house">
+                      <LockKeyhole size={17} aria-hidden="true" />
+                    </span>
+                    <span>
+                      <strong>Quiet hours</strong>
+                      <small>10 pm to 7 am on weeknights</small>
+                    </span>
+                    <em className="tag-ready">Agreed</em>
+                  </div>
+                  <div className="v21-preview-row">
+                    <span className="v21-row-icon row-house">
+                      <Check size={17} aria-hidden="true" />
+                    </span>
+                    <span>
+                      <strong>Kitchen clean-up</strong>
+                      <small>Wash dishes the same day</small>
+                    </span>
+                    <em className="tag-ready">Agreed</em>
+                  </div>
+                  <div className="v21-preview-row">
+                    <span className="v21-row-icon row-house">
+                      <Users size={17} aria-hidden="true" />
+                    </span>
+                    <span>
+                      <strong>House visitors</strong>
+                      <small>Give host 24 hours notice</small>
+                    </span>
+                    <em className="tag-ready">Agreed</em>
+                  </div>
+                </>
+              )}
+
+              {activeTab === "ledger" && (
+                <>
+                  <h3>Contribution records</h3>
+                  <div className="v21-preview-summary">
+                    <span><strong>$160.00</strong> confirmed</span>
+                    <span><strong>Status</strong> Up to date</span>
+                  </div>
+                  <div className="v21-preview-row">
+                    <span className="v21-row-icon row-ledger">
+                      <ReceiptText size={17} aria-hidden="true" />
+                    </span>
+                    <span>
+                      <strong>Weekly contribution</strong>
+                      <small>Recorded by Jordan · Oct 10</small>
+                    </span>
+                    <em className="tag-recorded">$120.00</em>
+                  </div>
+                  <div className="v21-preview-row">
+                    <span className="v21-row-icon row-ledger">
+                      <ReceiptText size={17} aria-hidden="true" />
+                    </span>
+                    <span>
+                      <strong>Shared groceries</strong>
+                      <small>Recorded by Sam · Oct 12</small>
+                    </span>
+                    <em className="tag-recorded">$40.00</em>
+                  </div>
+                  <div className="v21-preview-row">
+                    <span className="v21-row-icon row-ledger">
+                      <ReceiptText size={17} aria-hidden="true" />
+                    </span>
+                    <span>
+                      <strong>Household supplies</strong>
+                      <small>Recorded by Alex · Oct 14</small>
+                    </span>
+                    <em className="tag-due">Pending</em>
+                  </div>
+                </>
+              )}
+
+              {activeTab === "chores" && (
+                <>
+                  <h3>Shared household chores</h3>
+                  <div className="v21-preview-summary">
+                    <span><strong>2</strong> open</span>
+                    <span><strong>1</strong> completed</span>
+                  </div>
+                  <div className="v21-preview-row">
+                    <span className="v21-row-icon row-chore">
+                      <Check size={17} aria-hidden="true" />
+                    </span>
+                    <span>
+                      <strong>Take out recycling</strong>
+                      <small>Jordan · Due Thursday</small>
+                    </span>
+                    <em className="tag-due">Tomorrow</em>
+                  </div>
+                  <div className="v21-preview-row">
+                    <span className="v21-row-icon row-chore">
+                      <Check size={17} aria-hidden="true" />
+                    </span>
+                    <span>
+                      <strong>Wipe down the kitchen</strong>
+                      <small>Shared · Due Friday</small>
+                    </span>
+                    <em className="tag-due">Friday</em>
+                  </div>
+                  <div className="v21-preview-row">
+                    <span className="v21-row-icon row-chore">
+                      <Check size={17} aria-hidden="true" />
+                    </span>
+                    <span>
+                      <strong>Water the plants</strong>
+                      <small>Alex · Done today</small>
+                    </span>
+                    <em className="tag-ready">Done</em>
+                  </div>
+                </>
+              )}
+
+              {activeTab === "updates" && (
+                <>
+                  <h3>House announcements & check-ins</h3>
+                  <div className="v21-preview-summary">
+                    <span><strong>1</strong> update</span>
+                    <span><strong>1</strong> check-in</span>
+                  </div>
+                  <div className="v21-preview-row">
+                    <span className="v21-row-icon row-house">
+                      <Megaphone size={17} aria-hidden="true" />
+                    </span>
+                    <span>
+                      <strong>Plumber visiting Tuesday</strong>
+                      <small>Alex · Side entrance in use</small>
+                    </span>
+                    <em className="tag-ready">Notice</em>
+                  </div>
+                  <div className="v21-preview-row">
+                    <span className="v21-row-icon row-chore">
+                      <MessageCircle size={17} aria-hidden="true" />
+                    </span>
+                    <span>
+                      <strong>Weekly check-in</strong>
+                      <small>Jordan & Alex · Scheduled Friday</small>
+                    </span>
+                    <em className="tag-recorded">Active</em>
+                  </div>
+                </>
+              )}
             </div>
           </div>
+          <span className="v21-preview-orbit orbit-one" aria-hidden="true" />
+          <span className="v21-preview-orbit orbit-two" aria-hidden="true" />
+        </div>
+
+        <div className="v21-product-copy">
+          <p className="v21-eyebrow">
+            <span aria-hidden="true" /> A quick look inside
+          </p>
+          <h2 id="v21-product-title">See it in action</h2>
+          <p>
+            Beautiful screenshots showcasing your app&apos;s best features.
+          </p>
+          <a className="v21-text-link" href="#features">
+            Explore features <ArrowRight size={16} aria-hidden="true" />
+          </a>
         </div>
       </section>
 
-      <section className="simple-features-section" aria-labelledby="simple-features-title">
-        <div className="simple-wrap">
-          <div className="simple-section-header">
-            <h2 id="simple-features-title">Everything a shared stay needs</h2>
-            <p>Simple tools that keep everyone on the same page.</p>
-          </div>
-          <div className="simple-features-grid">
-            {features.map(({ icon: Icon, title, body }) => (
-              <article className="simple-feature-card" key={title}>
-                <span className="simple-feature-icon-wrap"><Icon size={24} aria-hidden="true" /></span>
-                <h3>{title}</h3>
-                <p>{body}</p>
-              </article>
-            ))}
-          </div>
+      {/* Powerful Features Section */}
+      <section className="v21-how" id="features" aria-labelledby="powerful-features-title">
+        <div className="v21-section-heading">
+          <p className="v21-eyebrow">
+            <span aria-hidden="true" /> Everything in one place
+          </p>
+          <h2 id="powerful-features-title">Powerful features</h2>
+          <p className="v21-lede" style={{ margin: "14px 0 0" }}>
+            Everything you need to get things done.
+          </p>
         </div>
+
+        <div className="v21-steps">
+          <article>
+            <span className="v21-step-icon" aria-hidden="true">
+              <CalendarDays size={18} />
+            </span>
+            <h3>Shared stay calendar</h3>
+            <p>Keep dates visible and calm for hosts and guests alike.</p>
+          </article>
+
+          <article>
+            <span className="v21-step-icon" aria-hidden="true">
+              <LockKeyhole size={18} />
+            </span>
+            <h3>Private shared record</h3>
+            <p>One quiet space for expectations and notes, fully private.</p>
+          </article>
+
+          <article>
+            <span className="v21-step-icon" aria-hidden="true">
+              <ReceiptText size={18} />
+            </span>
+            <h3>Shared contributions</h3>
+            <p>Track shared costs and gifts without awkwardness or stress.</p>
+          </article>
+
+          <article>
+            <span className="v21-step-icon" aria-hidden="true">
+              <ClipboardList size={18} />
+            </span>
+            <h3>Chore flow</h3>
+            <p>Agree on tasks so everyone feels respected and capable.</p>
+          </article>
+
+          <article>
+            <span className="v21-step-icon" aria-hidden="true">
+              <Megaphone size={18} />
+            </span>
+            <h3>House announcements</h3>
+            <p>Share updates gently in a warm, welcoming tone.</p>
+          </article>
+
+          <article>
+            <span className="v21-step-icon" aria-hidden="true">
+              <MessageCircle size={18} />
+            </span>
+            <h3>Check-ins</h3>
+            <p>Stay connected with relaxed updates that ease coordination.</p>
+          </article>
+        </div>
+
+        <p className="v21-feature-disclaimer">
+          Contributions are shared records. Kouchd does not collect, hold, transfer, or process payments.
+        </p>
       </section>
 
-      <section className="simple-cta-section" aria-labelledby="simple-cta-title">
-        <div className="simple-wrap">
-          <div className="simple-cta-box">
-            <h2 id="simple-cta-title">Make yourself at home, together</h2>
-            <p>Set up a stay, invite your guest, and keep the details in one calm place.</p>
-            <div className="simple-cta-actions">
-              <StartButton hasClerk={hasClerk} />
-            </div>
-          </div>
-        </div>
+      {/* Bottom CTA Section */}
+      <section className="v21-cta" aria-labelledby="v21-cta-title">
+        <Sparkles size={52} className="v21-cta-sparkle" aria-hidden="true" />
+        <KouchdWordmark size="md" theme="cream" />
+        <h2 id="v21-cta-title">Start your next stay on the same page.</h2>
+        <p>Set up a stay, share the details, and keep records and chores together.</p>
+        <StartButton hasClerk={hasClerk} />
       </section>
 
-      <MarketingFooter />
+      <MarketingFooter hasClerk={hasClerk} />
     </main>
   );
 }
