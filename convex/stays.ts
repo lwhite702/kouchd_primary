@@ -12,6 +12,7 @@ import { SUGGESTED_CONTRIBUTION_TASKS } from "../lib/domain/rewards";
 import { getCurrentGuestTerms } from "./lib/stayTerms";
 import { internal } from "./_generated/api";
 import { resolveMemberName } from "./lib/names";
+import { redactStayForMember } from "./lib/houseInfoAccess";
 import { getOrCreateHouseholdAccount } from "./householdOwnership";
 import { ANALYTICS_EVENTS } from "../lib/analytics/events";
 import { trackServerEvent } from "./lib/posthog";
@@ -234,7 +235,7 @@ export const listMine = query({
     const memberships = await ctx.db.query("memberships").withIndex("by_user", (query) => query.eq("userId", user._id)).take(50);
     const results = await Promise.all(memberships.filter(m => m.status === "active").map(async membership => {
       const stay = await ctx.db.get(membership.stayId);
-      return stay ? { stay, membership } : null;
+      return stay ? { stay: redactStayForMember(stay, membership), membership } : null;
     }));
     return results.filter((result): result is NonNullable<typeof result> => result !== null);
   },
@@ -287,7 +288,7 @@ export const getBundle = query({
     }));
     const members = membersWithMissing.filter((member): member is NonNullable<typeof member> => member !== null);
 
-    return { stay, terms, membership, members };
+    return { stay: redactStayForMember(stay, membership), terms, membership, members };
   },
 });
 

@@ -583,6 +583,12 @@ describe("shared stay authorization and audit rules", () => {
     const hostBundle = await host.query(api.stays.getBundle, { stayId });
     expect(hostBundle.stay.houseInfo).toMatchObject(houseInfo);
 
+    const guestBundleBeforeAccept = await guest.query(api.stays.getBundle, { stayId });
+    expect(guestBundleBeforeAccept.stay.houseInfo?.doorCode).toBeUndefined();
+    expect(guestBundleBeforeAccept.stay.houseInfo?.wifiPassword).toBeUndefined();
+    expect(guestBundleBeforeAccept.stay.houseInfo?.wifiNetwork).toBe("Kouchd-5G");
+
+    await guest.mutation(api.terms.acceptCurrent, { stayId });
     const guestBundle = await guest.query(api.stays.getBundle, { stayId });
     expect(guestBundle.stay.houseInfo).toMatchObject(houseInfo);
   });
