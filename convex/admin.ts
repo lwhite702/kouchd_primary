@@ -192,24 +192,51 @@ export const getUserDetail = query({
         : Promise.resolve([]),
     ]);
 
-    const billing = await Promise.all(
-      householdAccounts.map(async (account) => {
-        const snapshots = await ctx.db
-          .query("subscriptionSnapshots")
-          .withIndex("by_household_account", (q) => q.eq("householdAccountId", account._id))
-          .collect();
-        const latest = snapshots.sort((a, b) => b.updatedAt - a.updatedAt)[0];
-        return {
-          status: latest?.status ?? "no_subscription",
-          productId: latest?.productId,
-          entitlement: latest?.entitlement,
-          environment: latest?.environment,
-          currentPeriodEndsAt: latest?.currentPeriodEndsAt,
-          willRenew: latest?.willRenew,
-          updatedAt: latest?.updatedAt ?? account.updatedAt,
-        };
-      })
-    );
+    const billing = (
+      await Promise.all(
+        householdAccounts.map(async (account) => {
+          const snapshots = await ctx.db
+            .query("subscriptionSnapshots")
+            .withIndex("by_household_account", (q) => q.eq("householdAccountId", account._id))
+            .collect();
+          if (!snapshots.length) {
+            return [
+              {
+                status: "no_subscription" as const,
+                productId: undefined,
+                entitlement: undefined,
+                environment: undefined,
+                currentPeriodEndsAt: undefined,
+                willRenew: undefined,
+                updatedAt: account.updatedAt,
+              },
+            ];
+          }
+          const byEnv = new Map<string, (typeof snapshots)[0]>();
+          for (const s of snapshots) {
+            const existing = byEnv.get(s.environment);
+            if (!existing || s.updatedAt > existing.updatedAt) {
+              byEnv.set(s.environment, s);
+            }
+          }
+          return Array.from(byEnv.values())
+            .sort((a, b) => {
+              if (a.environment === "production" && b.environment !== "production") return -1;
+              if (b.environment === "production" && a.environment !== "production") return 1;
+              return b.updatedAt - a.updatedAt;
+            })
+            .map((latest) => ({
+              status: latest.status,
+              productId: latest.productId,
+              entitlement: latest.entitlement,
+              environment: latest.environment,
+              currentPeriodEndsAt: latest.currentPeriodEndsAt,
+              willRenew: latest.willRenew,
+              updatedAt: latest.updatedAt,
+            }));
+        })
+      )
+    ).flat();
 
     const latestMarketingEvent = marketingEvents.sort((a, b) => b.updatedAt - a.updatedAt)[0];
 

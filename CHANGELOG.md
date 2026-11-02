@@ -4,6 +4,12 @@
 
 ### Added
 
+- **Platform Console user provider context (WRE-263)**:
+  - **Connected provider cards:** Added RevenueCat subscription snapshots, Knock notification event audit history, and Loops marketing consent status to the Platform Console user detail view in `components/platform/users-explorer.tsx` and `convex/admin.ts`.
+  - **Environment segregation:** RevenueCat billing records are displayed per environment (`production` and `sandbox`), prioritizing production so sandbox test events do not mask live subscription status.
+  - **Notification index:** Added a composite index `by_user_occurred_at` on `notificationEvents` in `convex/schema.ts` to paginate recent events efficiently without table scans.
+  - **Privacy boundaries:** Kept provider data minimal: notification payloads, template variables, and marketing contact emails are omitted from support payloads.
+
 - **iPad layout (WRE-254, branch only, not released)**:
   - **Navigation:** regular-width windows use a `NavigationSplitView` sidebar with a single stay switcher; compact widths keep the tabs. `ShellNavigator` holds one navigation state, so a resized window stays on the same screen. The sidebar pins at 1000pt and wider and slides over narrower windows. `StayTool` is the one definition of who sees which tool, read by both the sidebar and More.
   - **Layouts:** `KouchdLayout` picks 1, 2, or 3 columns from measured content width (700pt and 1000pt), and always 1 at accessibility text sizes. Home is a two-column dashboard, Ledger shows summary tiles with a row list beside the selected entry's details and actions (700pt and wider), Chores and Stay use grids and columns, and Shopping separates shared and personal items. Settings-style forms center at 640pt, and the introduction and first-stay setup use the wider space.

@@ -269,6 +269,15 @@ describe("Convex Platform Admin Backend Authorization & Privacy", () => {
     const rcOpsAfter = await admin.query(api.admin.getRevenueCatOps, {});
     expect(rcOpsAfter.reconciliation.missingAccountLinks).toBe(0);
 
+    // Verify getUserDetail returns environment-segregated providerContext.billing with production prioritized
+    const hostDetail = await admin.query(api.admin.getUserDetail, { userId: hostUserId });
+    expect(hostDetail).not.toBeNull();
+    expect(hostDetail?.providerContext.billing).toHaveLength(2);
+    expect(hostDetail?.providerContext.billing[0].environment).toBe("production");
+    expect(hostDetail?.providerContext.billing[0].entitlement).toBe("pro");
+    expect(hostDetail?.providerContext.billing[1].environment).toBe("sandbox");
+    expect(hostDetail?.providerContext.billing[1].entitlement).toBe("plus");
+
     const logs = await admin.query(api.admin.listPlatformAuditLogs, { provider: "revenuecat" });
     expect(logs).toHaveLength(1);
     expect(logs[0].action).toBe("revenuecat.reconcile_household_ownership");
