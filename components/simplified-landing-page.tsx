@@ -77,7 +77,6 @@ export function SimplifiedLandingPage({
             src="/landing-v21/room-mobile.svg"
             alt="A warm, welcoming shared living room"
             fill
-            priority
             sizes="100vw"
             className="v21-room-mobile"
           />
