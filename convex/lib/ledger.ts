@@ -5,6 +5,7 @@ import { resolveFinancialGuest } from "./auth";
 import { assertCalendarDate } from "./validation";
 import { getCurrentGuestTerms } from "./stayTerms";
 import { listActiveGuestObligations } from "./obligations";
+import { getSubleaseLockState } from "./subleaseLock";
 import { calculateObligationLedger } from "../../lib/domain/obligations";
 
 export async function buildFinancialRecord(
@@ -26,6 +27,8 @@ export async function buildFinancialRecord(
   if (!stay || !stay.currentTermsId) return { ledger: [], contributions: [] };
   const terms = await getCurrentGuestTerms(ctx, stayId, access.guestUserId);
   if (!terms) return { ledger: [], contributions: [] };
+
+  const subleaseLock = await getSubleaseLockState(ctx, stay);
 
   const [scopedObligations, scopedContributions] = await Promise.all([
     listActiveGuestObligations(ctx, stayId, access.guestUserId),
@@ -85,7 +88,7 @@ export async function buildFinancialRecord(
         baseAmountCents: item.baseAmountCents,
         type: item.type ?? "cadence",
         title: item.title,
-        lateFeeWaived: Boolean(item.lateFeeWaivedAt),
+        lateFeeWaived: Boolean(item.lateFeeWaivedAt) || subleaseLock.locked,
         voided: Boolean(item.voidedAt),
         terms: obligationTerms,
       };

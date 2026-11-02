@@ -1,11 +1,12 @@
 import { v } from "convex/values";
 import schema from "./schema";
-import { assertPlanCapacity } from "./lib/planCapacity";
+import { assertPlanCapability, assertPlanCapacity } from "./lib/planCapacity";
 
 import { mutation, query } from "./_generated/server";
+import { requireFeature } from "./flags";
 import { requireCurrentUser, requireHost, requireMembership } from "./lib/auth";
 import { recordActivity } from "./lib/activity";
-import { assertCalendarDate, assertHouseInfoInput, assertPaymentOptionsInput, assertStayTerms, assertTimezone } from "./lib/validation";
+import { assertCalendarDate, assertHouseInfoInput, assertPaymentOptionsInput, assertStayTerms, assertSubleaseInput, assertTimezone } from "./lib/validation";
 
 import { generateReferralCode } from "../lib/referral";
 import { SUGGESTED_CONTRIBUTION_TASKS } from "../lib/domain/rewards";
@@ -13,8 +14,10 @@ import { getCurrentGuestTerms } from "./lib/stayTerms";
 import { internal } from "./_generated/api";
 import { resolveMemberName } from "./lib/names";
 import { accessCodesHiddenReason, redactStayForMember } from "./lib/houseInfoAccess";
+import { assertSubleaseUnlocked, getSubleaseLockState } from "./lib/subleaseLock";
 import { getOrCreateHouseholdAccount } from "./householdOwnership";
 import { ANALYTICS_EVENTS } from "../lib/analytics/events";
+import { FEATURE_FLAGS } from "../lib/flags/config";
 import { trackServerEvent } from "./lib/posthog";
 
 const houseInfoInput = {
@@ -83,6 +86,18 @@ export const create = mutation({
   args: {
     name: v.optional(v.string()),
     creationRequestId: v.optional(v.string()),
+    arrangement: v.optional(v.union(v.literal("home_stay"), v.literal("sublease"))),
+    subleaseLayout: v.optional(v.union(v.literal("whole_place"), v.literal("private_room"))),
+    roommateCount: v.optional(v.number()),
+    roommateNames: v.optional(v.array(v.string())),
+    landlordConsentAnswer: v.optional(
+      v.union(
+        v.literal("written_permission"),
+        v.literal("not_required"),
+        v.literal("not_confirmed"),
+      ),
+    ),
+    subleaseBillPreset: v.optional(v.union(v.literal("whole_place"), v.literal("private_room"))),
     timezone: v.string(),
     nextCheckInDate: v.optional(v.string()),
     houseInfo: v.optional(v.object(houseInfoInput)),
@@ -107,20 +122,71 @@ export const create = mutation({
     const name = args.name?.trim();
     if (name !== undefined && (name.length < 2 || name.length > 80)) throw new Error("Stay name must be 2–80 characters");
     assertTimezone(args.timezone);
-    assertStayTerms(args.terms);
+    if (args.arrangement === "sublease") {
+      await requireFeature(
+        ctx,
+        FEATURE_FLAGS.SUBLEASES,
+        "Subleases are currently disabled by platform policy.",
+      );
+      assertSubleaseInput({
+        arrangement: args.arrangement,
+        subleaseLayout: args.subleaseLayout,
+        roommateCount: args.roommateCount,
+        roommateNames: args.roommateNames,
+      });
+      assertStayTerms(args.terms, { arrangement: "sublease" });
+    } else {
+      assertSubleaseInput({
+        arrangement: args.arrangement,
+        subleaseLayout: args.subleaseLayout,
+        roommateCount: args.roommateCount,
+        roommateNames: args.roommateNames,
+      });
+      assertStayTerms(args.terms, { arrangement: args.arrangement });
+    }
     if (args.nextCheckInDate) assertCalendarDate(args.nextCheckInDate, "Next check-in date");
     if (args.houseInfo) assertHouseInfoInput(args.houseInfo);
     const paymentOptions = args.paymentOptions ?? [];
     assertPaymentOptionsInput(paymentOptions);
     const now = Date.now();
     const referralCode = generateReferralCode();
-    await assertPlanCapacity(ctx, user._id, "stay");
-    const householdAccountId = await getOrCreateHouseholdAccount(ctx, user._id);
+    let householdAccountId;
+    if (args.arrangement === "sublease") {
+      householdAccountId = await getOrCreateHouseholdAccount(ctx, user._id);
+      await assertPlanCapability(ctx, user._id, "subleases", householdAccountId);
+      await assertPlanCapacity(ctx, user._id, "stay", householdAccountId);
+    } else {
+      await assertPlanCapacity(ctx, user._id, "stay");
+      householdAccountId = await getOrCreateHouseholdAccount(ctx, user._id);
+    }
     const stayId = await ctx.db.insert("stays", {
       hostUserId: user._id,
       name,
       householdAccountId,
       creationRequestId,
+      ...(args.arrangement ? { arrangement: args.arrangement } : {}),
+      ...(args.arrangement === "sublease"
+        ? {
+            subleaseLayout: args.subleaseLayout,
+            ...(args.subleaseLayout === "private_room"
+              ? {
+                  roommateCount: args.roommateCount,
+                  ...(args.roommateNames
+                    ? { roommateNames: args.roommateNames.map((n) => n.trim()) }
+                    : {}),
+                }
+              : {}),
+            ...(args.landlordConsentAnswer
+              ? {
+                  landlordConsent: {
+                    answer: args.landlordConsentAnswer,
+                    answeredAt: now,
+                  },
+                }
+              : {}),
+            subleaseBillPreset: args.subleaseBillPreset ?? args.subleaseLayout,
+          }
+        : {}),
       status: "pending",
       timezone: args.timezone,
       agreementAutoAcceptEnabled: true,
@@ -170,6 +236,66 @@ export const create = mutation({
   },
 });
 
+export const recordLandlordConsent = mutation({
+  args: {
+    stayId: v.id("stays"),
+    answer: v.union(
+      v.literal("written_permission"),
+      v.literal("not_required"),
+      v.literal("not_confirmed"),
+    ),
+  },
+  returns: v.null(),
+  handler: async (ctx, { stayId, answer }) => {
+    const { user } = await requireHost(ctx, stayId);
+    const stay = await ctx.db.get(stayId);
+    if (!stay || stay.status === "ended") throw new Error("Ended stays cannot be edited");
+    await assertSubleaseUnlocked(ctx, stay, { viewerRole: "host" });
+    if (stay.arrangement !== "sublease") {
+      throw new Error("Landlord consent only applies to sublease stays");
+    }
+    const now = Date.now();
+    await ctx.db.patch(stayId, {
+      landlordConsent: {
+        answer,
+        answeredAt: now,
+      },
+      updatedAt: now,
+    });
+    await recordActivity(ctx, {
+      stayId,
+      actorUserId: user._id,
+      kind: "stay",
+      action: "landlord_consent_recorded",
+      detail: `Landlord consent recorded: ${answer.replaceAll("_", " ")}`,
+      entityId: stayId,
+    });
+    return null;
+  },
+});
+
+export const dismissLandlordConsentWarning = mutation({
+  args: { stayId: v.id("stays") },
+  returns: v.null(),
+  handler: async (ctx, { stayId }) => {
+    await requireHost(ctx, stayId);
+    const stay = await ctx.db.get(stayId);
+    if (!stay || stay.status === "ended") throw new Error("Ended stays cannot be edited");
+    await assertSubleaseUnlocked(ctx, stay, { viewerRole: "host" });
+    if (stay.landlordConsent) {
+      const now = Date.now();
+      await ctx.db.patch(stayId, {
+        landlordConsent: {
+          ...stay.landlordConsent,
+          warningDismissedAt: now,
+        },
+        updatedAt: now,
+      });
+    }
+    return null;
+  },
+});
+
 export const updateAgreementAutoAccept = mutation({
   args: { stayId: v.id("stays"), enabled: v.boolean(), hours: v.number() },
   returns: v.null(),
@@ -177,6 +303,7 @@ export const updateAgreementAutoAccept = mutation({
     const { user } = await requireHost(ctx, stayId);
     const stay = await ctx.db.get(stayId);
     if (!stay || stay.status === "ended") throw new Error("Ended stays cannot be edited");
+    await assertSubleaseUnlocked(ctx, stay, { viewerRole: "host" });
     if (!Number.isInteger(hours) || hours < 1 || hours > 720) throw new Error("Choose between 1 and 720 hours");
     const now = Date.now();
     await ctx.db.patch(stayId, { agreementAutoAcceptEnabled: enabled, agreementAutoAcceptHours: hours, updatedAt: now });
@@ -202,6 +329,7 @@ export const updateName = mutation({
     const { user } = await requireHost(ctx, stayId);
     const stay = await ctx.db.get(stayId);
     if (!stay || stay.status === "ended") throw new Error("Ended stays cannot be edited");
+    await assertSubleaseUnlocked(ctx, stay, { viewerRole: "host" });
     const trimmed = name.trim();
     if (trimmed.length < 2 || trimmed.length > 80) throw new Error("Stay name must be 2–80 characters");
     await ctx.db.patch(stayId, { name: trimmed, updatedAt: Date.now() });
@@ -217,6 +345,7 @@ export const updatePaymentOptions = mutation({
     const { user } = await requireHost(ctx, stayId);
     const stay = await ctx.db.get(stayId);
     if (!stay || stay.status === "ended") throw new Error("Ended stays cannot be edited");
+    await assertSubleaseUnlocked(ctx, stay, { viewerRole: "host" });
     assertPaymentOptionsInput(paymentOptions);
     await ctx.db.patch(stayId, { paymentOptions, updatedAt: Date.now() });
     await recordActivity(ctx, {
@@ -235,6 +364,11 @@ const stayDocument = v.object({ ...schema.tables.stays.validator.fields, _id: v.
 const memberDocument = v.object({ ...schema.tables.memberships.validator.fields, _id: v.id("memberships"), _creationTime: v.number() });
 const termsDocument = v.object({ ...schema.tables.terms.validator.fields, _id: v.id("terms"), _creationTime: v.number() });
 const offerDocument = v.object({ ...schema.tables.agreementOffers.validator.fields, _id: v.id("agreementOffers"), _creationTime: v.number() });
+const subleaseLockValidator = v.object({
+  locked: v.boolean(),
+  billingRetryWarning: v.boolean(),
+  reason: v.union(v.string(), v.null()),
+});
 
 export const listMine = query({
   args: {},
@@ -244,7 +378,17 @@ export const listMine = query({
     const memberships = await ctx.db.query("memberships").withIndex("by_user", (query) => query.eq("userId", user._id)).take(50);
     const results = await Promise.all(memberships.filter(m => m.status === "active").map(async membership => {
       const stay = await ctx.db.get(membership.stayId);
-      return stay ? { stay: redactStayForMember(stay, membership), membership } : null;
+      if (!stay) return null;
+      const guestTerms =
+        stay.arrangement === "sublease" && membership.role === "guest"
+          ? await getCurrentGuestTerms(ctx, stay._id, membership.userId)
+          : null;
+      return {
+        stay: redactStayForMember(stay, membership, {
+          termsEndDate: guestTerms?.endDate,
+        }),
+        membership,
+      };
     }));
     return results.filter((result): result is NonNullable<typeof result> => result !== null);
   },
@@ -257,6 +401,7 @@ export const getBundle = query({
       id: v.id("users"), name: v.string(), imageUrl: v.optional(v.string()), email: v.optional(v.string()), phone: v.optional(v.string()),
     }), terms: v.optional(v.union(termsDocument, v.null())), agreementOffer: v.optional(v.union(offerDocument, v.null())) })),
     accessCodesHidden: v.union(v.literal("needs_acceptance"), v.literal("ended"), v.null()),
+    subleaseLock: v.optional(subleaseLockValidator),
   }),
   handler: async (ctx, { stayId }) => {
     const { membership } = await requireMembership(ctx, stayId);
@@ -265,6 +410,7 @@ export const getBundle = query({
     const terms = membership.role === "guest"
       ? await getCurrentGuestTerms(ctx, stayId, membership.userId)
       : stay.currentTermsId ? await ctx.db.get(stay.currentTermsId) : null;
+    const subleaseLock = await getSubleaseLockState(ctx, stay);
     const memberships = await ctx.db.query("memberships").withIndex("by_stay", (query) => query.eq("stayId", stayId)).take(50);
     const membersWithMissing = await Promise.all(memberships.map(async item => {
       const person = await ctx.db.get(item.userId);
@@ -299,11 +445,20 @@ export const getBundle = query({
     const members = membersWithMissing.filter((member): member is NonNullable<typeof member> => member !== null);
 
     return {
-      stay: redactStayForMember(stay, membership),
+      stay: redactStayForMember(stay, membership, {
+        termsEndDate: terms?.endDate,
+      }),
       terms,
       membership,
       members,
-      accessCodesHidden: accessCodesHiddenReason(stay, membership),
+      accessCodesHidden: accessCodesHiddenReason(stay, membership, {
+        termsEndDate: terms?.endDate,
+      }),
+      subleaseLock: {
+        locked: subleaseLock.locked,
+        billingRetryWarning: subleaseLock.billingRetryWarning,
+        reason: subleaseLock.reason,
+      },
     };
   },
 });
@@ -315,6 +470,7 @@ export const updateGuestPreferredName = mutation({
     const { user } = await requireHost(ctx, stayId);
     const stay = await ctx.db.get(stayId);
     if (!stay || stay.status === "ended") throw new Error("Ended stays cannot be edited");
+    await assertSubleaseUnlocked(ctx, stay, { viewerRole: "host" });
     const name = preferredName.trim();
     if (!name || name.length > 80) throw new Error("Preferred name must be between 1 and 80 characters");
     const membership = await ctx.db.query("memberships")
@@ -344,10 +500,18 @@ export const end = mutation({
     const { user } = await requireHost(ctx, stayId);
     const stay = await ctx.db.get(stayId);
     if (!stay) throw new Error("Stay not found");
+    await assertSubleaseUnlocked(ctx, stay, {
+      allowHostEnd: true,
+      viewerRole: "host",
+    });
     if (stay.status === "ended") return null;
     const now = Date.now();
     await ctx.db.patch(stayId, { status: "ended", endedAt: now, updatedAt: now });
-    await recordActivity(ctx, { stayId, actorUserId: user._id, kind: "stay", action: "ended", detail: "Stay ended and record retained", entityId: stayId });
+    const detail =
+      stay.arrangement === "sublease"
+        ? "Sublease ended and record retained. Remember to change physical door codes and Wi-Fi passwords."
+        : "Stay ended and record retained";
+    await recordActivity(ctx, { stayId, actorUserId: user._id, kind: "stay", action: "ended", detail, entityId: stayId });
     return null;
   },
 });
@@ -362,6 +526,7 @@ export const updateHouseInfo = mutation({
     const { user } = await requireHost(ctx, stayId);
     const stay = await ctx.db.get(stayId);
     if (!stay || stay.status === "ended") throw new Error("Ended stays cannot be edited");
+    await assertSubleaseUnlocked(ctx, stay, { viewerRole: "host" });
     assertHouseInfoInput(houseInfo);
     const now = Date.now();
     await ctx.db.patch(stayId, {

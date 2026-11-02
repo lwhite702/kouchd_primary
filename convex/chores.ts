@@ -4,6 +4,7 @@ import { internalMutation, mutation, query } from "./_generated/server";
 import { requireMembership } from "./lib/auth";
 import { recordActivity } from "./lib/activity";
 import { assertChoreInput } from "./lib/validation";
+import { assertSubleaseUnlocked, getSubleaseLockState } from "./lib/subleaseLock";
 import { addCalendarDays, calendarDateInTimezone } from "../lib/domain/dates";
 import { ANALYTICS_EVENTS } from "../lib/analytics/events";
 import { trackServerEvent } from "./lib/posthog";
@@ -30,9 +31,10 @@ export const create = mutation({
   },
   returns: v.id("chores"),
   handler: async (ctx, args) => {
-    const { user } = await requireMembership(ctx, args.stayId);
+    const { user, membership } = await requireMembership(ctx, args.stayId);
     const stay = await ctx.db.get(args.stayId);
     if (!stay || stay.status === "ended") throw new Error("Ended stays cannot add ordinary chores");
+    await assertSubleaseUnlocked(ctx, stay, membership.role);
     const assigneeUserId = args.assigneeUserId;
     if (assigneeUserId) {
       const assignee = await ctx.db.query("memberships").withIndex("by_stay_user", (query) => query.eq("stayId", args.stayId).eq("userId", assigneeUserId)).unique();
@@ -54,7 +56,9 @@ export const toggle = mutation({
   handler: async (ctx, { choreId }) => {
     const chore = await ctx.db.get(choreId);
     if (!chore) throw new Error("Chore not found");
-    const { user } = await requireMembership(ctx, chore.stayId);
+    const { user, membership } = await requireMembership(ctx, chore.stayId);
+    const stay = await ctx.db.get(chore.stayId);
+    await assertSubleaseUnlocked(ctx, stay, membership.role);
     if (chore.voidedAt) throw new Error("Voided chores cannot be changed");
     const isComplete = !chore.completedAt;
     const now = Date.now();
@@ -118,6 +122,8 @@ export const voidChore = mutation({
     const chore = await ctx.db.get(choreId);
     if (!chore) throw new Error("Chore not found");
     const { user, membership } = await requireMembership(ctx, chore.stayId);
+    const stay = await ctx.db.get(chore.stayId);
+    await assertSubleaseUnlocked(ctx, stay, membership.role);
     if (membership.role !== "host" && chore.createdBy !== user._id) throw new Error("Only the creator or host can void this chore");
     if (chore.voidedAt) return null;
     await ctx.db.patch(choreId, { voidedAt: Date.now(), updatedAt: Date.now() });
@@ -141,6 +147,8 @@ export const advanceOverdueRecurring = internalMutation({
       if (!chore.repeatCadence || chore.nextOccurrenceId || chore.completedAt || chore.voidedAt) continue;
       const stay = await ctx.db.get(chore.stayId);
       if (!stay || stay.status === "ended") continue;
+      const lockState = await getSubleaseLockState(ctx, stay, now);
+      if (lockState.locked) continue;
       const localToday = calendarDateInTimezone(new Date(now), stay.timezone);
       if (chore.dueDate >= localToday) continue;
       const intervalDays = chore.repeatCadence === "daily" ? 1 : 7;

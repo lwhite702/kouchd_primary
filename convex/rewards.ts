@@ -4,6 +4,7 @@ import { mutation, query } from "./_generated/server";
 import { requireCurrentUser, requireHost, requireMembership, resolveFinancialGuest } from "./lib/auth";
 import { recordActivity } from "./lib/activity";
 import { assertCalendarDate, assertContributionRuleInput, assertPointClaimInput } from "./lib/validation";
+import { assertSubleaseUnlocked } from "./lib/subleaseLock";
 import { pointsToCents } from "../lib/domain/rewards";
 import { getAcceptedGuestTerms } from "./lib/stayTerms";
 import { listActiveGuestObligations } from "./lib/obligations";
@@ -59,6 +60,9 @@ export const createRule = mutation({
     await requireFeature(ctx, FEATURE_FLAGS.REWARDS_SYSTEM, "Contribution rewards are currently disabled by platform policy.");
     const { user } = await requireHost(ctx, args.stayId);
     assertContributionRuleInput(args.title, args.pointsAwarded, args.description);
+    const stay = await ctx.db.get(args.stayId);
+    if (!stay || stay.status === "ended") throw new Error("Ended stays cannot add contribution rules");
+    await assertSubleaseUnlocked(ctx, stay, "host");
 
     const now = Date.now();
     const ruleId = await ctx.db.insert("contributionRules", {
@@ -93,6 +97,8 @@ export const toggleRule = mutation({
     const rule = await ctx.db.get(ruleId);
     if (!rule) throw new Error("Contribution rule not found");
     const { user } = await requireHost(ctx, rule.stayId);
+    const stay = await ctx.db.get(rule.stayId);
+    await assertSubleaseUnlocked(ctx, stay, "host");
 
     const updatedActive = !rule.isActive;
     await ctx.db.patch(ruleId, { isActive: updatedActive });
@@ -206,6 +212,7 @@ export const submitClaim = mutation({
     if (!stay || stay.status === "ended") {
       throw new Error("Ended stays cannot record contribution claims");
     }
+    await assertSubleaseUnlocked(ctx, stay, "guest");
 
     const claimId = await ctx.db.insert("pointClaims", {
       stayId: args.stayId,
@@ -243,6 +250,8 @@ export const confirmClaim = mutation({
     if (!claim) throw new Error("Contribution claim not found");
 
     const { user } = await requireHost(ctx, claim.stayId);
+    const stay = await ctx.db.get(claim.stayId);
+    await assertSubleaseUnlocked(ctx, stay, "host");
     if (claim.status === "confirmed") return null;
     if (claim.status !== "pending") {
       throw new Error("Only pending contribution claims can be confirmed");
@@ -278,6 +287,8 @@ export const disputeClaim = mutation({
     if (!claim) throw new Error("Contribution claim not found");
 
     const access = await resolveFinancialGuest(ctx, claim.stayId, claim.guestUserId);
+    const stay = await ctx.db.get(claim.stayId);
+    await assertSubleaseUnlocked(ctx, stay, access.membership.role);
     if (claim.status === "voided") throw new Error("Voided claims cannot be disputed");
 
     await ctx.db.patch(claimId, {
@@ -308,6 +319,8 @@ export const voidClaim = mutation({
     if (!claim) throw new Error("Contribution claim not found");
 
     const access = await resolveFinancialGuest(ctx, claim.stayId, claim.guestUserId);
+    const stay = await ctx.db.get(claim.stayId);
+    await assertSubleaseUnlocked(ctx, stay, access.membership.role);
     if (access.membership.role !== "host" && claim.guestUserId !== access.user._id) {
       throw new Error("Only the claimant or host can void this claim");
     }
@@ -382,6 +395,7 @@ export const redeem = mutation({
     if (!stay || stay.status === "ended") {
       throw new Error("Ended stays cannot redeem contribution points");
     }
+    await assertSubleaseUnlocked(ctx, stay, "guest");
     if (!stay.currentTermsId) throw new Error("Stay has no active terms");
 
     const terms = await getAcceptedGuestTerms(ctx, args.stayId, user._id);

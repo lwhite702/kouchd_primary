@@ -7,6 +7,7 @@ import { mutation, query } from "./_generated/server";
 import { requireMembership } from "./lib/auth";
 import { recordActivity } from "./lib/activity";
 import { isFeatureEnabled, requireFeature } from "./flags";
+import { assertSubleaseUnlocked } from "./lib/subleaseLock";
 import { FEATURE_FLAGS } from "../lib/flags/config";
 
 function validateItem(title: string, quantity: string, note: string) {
@@ -23,6 +24,7 @@ async function requireItemEditor(ctx: MutationCtx, itemId: Id<"shoppingItems">) 
   if (item.visibility === "personal" && item.createdBy !== user._id) throw new Error("Shopping item not found");
   const stay = await ctx.db.get(item.stayId);
   if (!stay || stay.status === "ended") throw new Error("Ended stays cannot change shopping items");
+  await assertSubleaseUnlocked(ctx, stay, membership.role);
   return { item, user, membership };
 }
 
@@ -52,9 +54,10 @@ export const create = mutation({
     if (!await isFeatureEnabled(ctx, FEATURE_FLAGS.SHOPPING_LIST)) {
       throw new Error("Household shopping list is currently disabled by platform policy.");
     }
-    const { user } = await requireMembership(ctx, args.stayId);
+    const { user, membership } = await requireMembership(ctx, args.stayId);
     const stay = await ctx.db.get(args.stayId);
     if (!stay || stay.status === "ended") throw new Error("Ended stays cannot add shopping items");
+    await assertSubleaseUnlocked(ctx, stay, membership.role);
     validateItem(args.title, args.quantity, args.note);
     const now = Date.now();
     const itemId = await ctx.db.insert("shoppingItems", {

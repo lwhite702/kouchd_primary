@@ -215,19 +215,20 @@ export async function getSubleaseLockState(
 
 export async function assertSubleaseUnlocked(
   ctx: QueryCtx | MutationCtx,
-  stayOrId: Doc<"stays"> | Id<"stays">,
-  options?: { allowHostEnd?: boolean; viewerRole?: "host" | "guest" },
+  stayOrId: Doc<"stays"> | Id<"stays"> | null | undefined,
+  options?: { allowHostEnd?: boolean; viewerRole?: "host" | "guest" } | "host" | "guest",
 ): Promise<void> {
+  const opts = typeof options === "string" ? { viewerRole: options } : options;
   const stay =
     typeof stayOrId === "string" ? await ctx.db.get(stayOrId) : stayOrId;
   if (!stay) return;
   if (stay.arrangement !== "sublease") return;
-  if (options?.allowHostEnd && options?.viewerRole === "host") return;
+  if (opts?.allowHostEnd && opts?.viewerRole === "host") return;
 
   const lock = await getSubleaseLockState(ctx, stay);
   if (lock.locked) {
     throw new Error(
-      options?.viewerRole === "guest"
+      opts?.viewerRole === "guest"
         ? GUEST_SUBLEASE_LOCK_MESSAGE
         : HOST_SUBLEASE_LOCK_MESSAGE,
     );

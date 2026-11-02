@@ -7,6 +7,7 @@ import { mutation, query } from "./_generated/server";
 import { requireMembership } from "./lib/auth";
 import { recordActivity } from "./lib/activity";
 import { assertCalendarDate } from "./lib/validation";
+import { assertSubleaseUnlocked } from "./lib/subleaseLock";
 import { isFeatureEnabled, requireFeature } from "./flags";
 import { FEATURE_FLAGS } from "../lib/flags/config";
 
@@ -19,6 +20,7 @@ async function requireCheckInAccess(ctx: MutationCtx, stayId: Id<"stays">, guest
   const { user, membership } = await requireMembership(ctx, stayId);
   const stay = await ctx.db.get(stayId);
   if (!stay || stay.status === "ended") throw new Error("Ended stays cannot change check-ins");
+  await assertSubleaseUnlocked(ctx, stay, membership.role);
   if (membership.role === "guest" && membership.userId !== guestUserId) throw new Error("Guests can only access their own check-ins");
   const guestMembership = await ctx.db.query("memberships")
     .withIndex("by_stay_user", (q) => q.eq("stayId", stayId).eq("userId", guestUserId))

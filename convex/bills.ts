@@ -10,6 +10,7 @@ import { resolveMemberName } from "./lib/names";
 import { assertPlanCapability } from "./lib/planCapacity";
 import { getAcceptedGuestTerms, getCurrentGuestTerms } from "./lib/stayTerms";
 import { assertCalendarDate } from "./lib/validation";
+import { assertSubleaseUnlocked } from "./lib/subleaseLock";
 import { calculateBillShares } from "../lib/domain/billSplitting";
 import { FEATURE_FLAGS } from "../lib/flags/config";
 
@@ -91,6 +92,7 @@ export const create = mutation({
     if (!stay || stay.status === "ended") {
       throw new Error("Ended stays cannot add bills");
     }
+    await assertSubleaseUnlocked(ctx, stay, "host");
 
     await assertPlanCapability(
       ctx,
@@ -251,6 +253,8 @@ export const voidBill = mutation({
     const bill = await ctx.db.get(billId);
     if (!bill) throw new Error("Bill not found");
     const { user } = await requireHost(ctx, bill.stayId);
+    const stay = await ctx.db.get(bill.stayId);
+    await assertSubleaseUnlocked(ctx, stay, "host");
     if (bill.voidedAt) return null;
 
     const now = Date.now();

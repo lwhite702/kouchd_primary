@@ -8,6 +8,7 @@ import { requireHost, requireMembership } from "./lib/auth";
 import { ensureObligationsForTerms, listActiveGuestObligations } from "./lib/obligations";
 import { recordActivity } from "./lib/activity";
 import { getAcceptedGuestTerms, getCurrentGuestTerms } from "./lib/stayTerms";
+import { assertSubleaseUnlocked } from "./lib/subleaseLock";
 
 const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"] as const;
 const COOLDOWN_MS = 14 * 24 * 60 * 60 * 1000;
@@ -120,6 +121,7 @@ export const requestChange = mutation({
     const now = Date.now();
     const stay = await ctx.db.get(stayId);
     if (!stay || stay.status === "ended") throw new Error("This stay has ended");
+    await assertSubleaseUnlocked(ctx, stay, "guest");
     const currentTerms = await getCurrentGuestTerms(ctx, stayId, user._id);
     if (!currentTerms || membership.acceptedTermsId !== currentTerms._id) throw new Error("Review and accept your current agreement before requesting a schedule change");
     if (currentTerms.cadence === "monthly") throw new Error("Monthly agreements do not support daily or weekly schedule changes");
@@ -158,6 +160,7 @@ export const reviewRequest = mutation({
     const now = Date.now();
     const stay = await ctx.db.get(request.stayId);
     if (!stay) throw new Error("This stay no longer exists");
+    await assertSubleaseUnlocked(ctx, stay, "host");
     if (decision === "reject") {
       await ctx.db.patch(requestId, { status: "rejected", reviewedAt: now, reviewedBy: user._id });
       await recordActivity(ctx, { stayId: request.stayId, actorUserId: user._id, guestUserId: request.guestUserId, kind: "terms", action: "payment_schedule_rejected", detail: "Payment schedule change request declined", entityId: requestId });

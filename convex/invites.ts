@@ -9,6 +9,7 @@ import { assertInvite, assertInviteHash } from "./lib/validation";
 import { ensureGuestTerms, offerGuestAgreement } from "./lib/stayTerms";
 import { scheduleSubscriptionLimitShadow } from "./subscriptionShadow";
 import { clearBlockedJoins } from "./subscriptions";
+import { assertSubleaseUnlocked } from "./lib/subleaseLock";
 import { ANALYTICS_EVENTS } from "../lib/analytics/events";
 import { trackServerEvent } from "./lib/posthog";
 
@@ -20,6 +21,10 @@ export const preview = query({
     hostName: v.optional(v.string()),
     referralCode: v.optional(v.string()),
     stayName: v.optional(v.string()),
+    arrangement: v.optional(v.union(v.literal("home_stay"), v.literal("sublease"))),
+    subleaseLayout: v.optional(v.union(v.literal("whole_place"), v.literal("private_room"))),
+    roommateCount: v.optional(v.number()),
+    roommateNames: v.optional(v.array(v.string())),
     expiresAt: v.optional(v.number()),
     terms: v.optional(v.object({
       version: v.number(),
@@ -49,6 +54,10 @@ export const preview = query({
       hostName: host?.name ?? "A Kouchd host",
       referralCode: stay.referralCode,
       stayName: stay.name ?? "Shared stay",
+      arrangement: stay.arrangement,
+      subleaseLayout: stay.subleaseLayout,
+      roommateCount: stay.roommateCount,
+      roommateNames: stay.roommateNames,
       expiresAt: invite.expiresAt,
       ...(terms ? { terms: {
         version: terms.version,
@@ -71,6 +80,12 @@ export const create = mutation({
     if (args.inviteUrl) {
       const inviteUrl = new URL(args.inviteUrl);
       if (!['http:', 'https:'].includes(inviteUrl.protocol) || args.inviteUrl.length > 2_000) throw new Error("Invite URL is invalid");
+    }
+    const stay = await ctx.db.get(args.stayId);
+    if (!stay || stay.status === "ended") throw new Error("Ended stays cannot create invites");
+    await assertSubleaseUnlocked(ctx, stay, { viewerRole: "host" });
+    if (stay.arrangement === "sublease" && !stay.landlordConsent) {
+      throw new Error("Answer the landlord consent question before sending a sublease invite");
     }
     const existing = await ctx.db.query("invites").withIndex("by_token_hash", (query) => query.eq("tokenHash", args.tokenHash)).unique();
     if (existing) throw new Error("Invite token already exists");
@@ -107,6 +122,7 @@ export const accept = mutation({
     if (memberCount.filter((member) => member.status === "active").length >= 20) throw new Error("This stay has reached its member limit");
     const joiningStay = await ctx.db.get(invite.stayId);
     if (!joiningStay || joiningStay.status === "ended") throw new Error("Invite is invalid or expired");
+    await assertSubleaseUnlocked(ctx, joiningStay, { viewerRole: "guest" });
     await assertPlanCapacity(ctx, joiningStay.hostUserId, "guest", joiningStay.householdAccountId);
     const now = Date.now();
     await ctx.db.insert("memberships", { stayId: invite.stayId, userId: user._id, role: "guest", status: "active", joinedAt: now });
