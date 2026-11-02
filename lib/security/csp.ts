@@ -7,15 +7,18 @@
  * it; the PostHog hosts stay listed for clients that load before the proxy is
  * deployed.
  */
+const isDevelopment = process.env.NODE_ENV === "development";
+
 export const cspDirectives: Record<string, string[]> = {
   "default-src": ["'self'"],
   "script-src": [
     "'self'",
     "'unsafe-inline'",
-    "'unsafe-eval'",
+    ...(isDevelopment ? ["'unsafe-eval'"] : []),
     "https://clerk.kouchd.com",
     "https://*.clerk.accounts.dev",
     "https://challenges.cloudflare.com",
+    "https://*.protect.clerk.com",
     "https://va.vercel-scripts.com",
     "https://us.i.posthog.com",
     "https://us-assets.i.posthog.com",
@@ -36,6 +39,8 @@ export const cspDirectives: Record<string, string[]> = {
     "'self'",
     "https://clerk.kouchd.com",
     "https://*.clerk.accounts.dev",
+    "https://challenges.cloudflare.com",
+    "https://*.protect.clerk.com:*",
     "https://*.convex.cloud",
     "wss://*.convex.cloud",
     "https://*.ingest.sentry.io",
@@ -47,7 +52,11 @@ export const cspDirectives: Record<string, string[]> = {
     "https://www.facebook.com",
     "https://connect.facebook.net",
   ],
-  "frame-src": ["'self'", "https://challenges.cloudflare.com"],
+  "frame-src": [
+    "'self'",
+    "https://challenges.cloudflare.com",
+    "https://*.protect.clerk.com",
+  ],
   "frame-ancestors": ["'none'"],
   "object-src": ["'none'"],
   "base-uri": ["'self'"],

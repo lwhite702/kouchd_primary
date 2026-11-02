@@ -1,4 +1,6 @@
 name: Release integrity
+# For post-deployment smoke tests and emergency rollback procedures,
+# refer to docs/internal/ROLLBACK_RUNBOOK.md
 on:
   pull_request:
     branches: [main]
@@ -14,6 +16,7 @@ jobs:
       NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_dummy
       CLERK_SECRET_KEY: sk_test_dummy
       CLERK_JWT_ISSUER_DOMAIN: https://dummy.clerk.accounts.dev
+      SUBSCRIPTION_EXPECTED_ENVIRONMENT: sandbox
     steps:
       - uses: actions/checkout@v4
         with:
@@ -23,6 +26,7 @@ jobs:
           node-version: '22'
           cache: npm
       - run: npm ci
+      - run: npm audit --audit-level=high
       - run: npm run verify:env
       - run: npm run typecheck
       - run: npm run lint
@@ -50,6 +54,7 @@ jobs:
           NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: pk_test_dummy
           CLERK_SECRET_KEY: sk_test_dummy
           CLERK_JWT_ISSUER_DOMAIN: https://dummy.clerk.accounts.dev
+          SUBSCRIPTION_EXPECTED_ENVIRONMENT: sandbox
       - run: ruby -c ios/fastlane/Fastfile
       - run: brew install xcodegen
       - run: xcodegen generate --spec ios/project.yml

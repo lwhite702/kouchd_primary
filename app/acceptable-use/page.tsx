@@ -11,6 +11,8 @@ export const metadata: Metadata = {
   alternates: { canonical: "/acceptable-use" },
 };
 
+export const dynamic = "force-static";
+
 export default function AcceptableUsePage() {
   return (
     <LegalPageLayout activeRoute="acceptable-use">

@@ -18,7 +18,10 @@ export default clerkMiddleware({
     // hosts, so the preview branch domain is attached in Vercel as preview.kouchd.com.
     ...(process.env.VERCEL_ENV === "preview" ? ["https://preview.kouchd.com"] : []),
   ],
-  contentSecurityPolicy: { directives: cspDirectives },
+  contentSecurityPolicy: {
+    strict: true,
+    directives: cspDirectives,
+  },
 });
 
 export const config = {

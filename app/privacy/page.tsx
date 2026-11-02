@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { LegalPageLayout } from "@/components/legal/legal-page-layout";
-import { ShieldCheck, Lock, Users, Smartphone, FileText } from "lucide-react";
+import {
+  LegalArticle,
+  LegalSectionList,
+  LegalCrossLinks,
+} from "@/components/legal/legal-article";
+import { ShieldCheck, Lock } from "lucide-react";
 import { privacyPolicy, legalMeta } from "@/lib/legal";
 
 export const metadata: Metadata = {
@@ -11,11 +15,12 @@ export const metadata: Metadata = {
   alternates: { canonical: "/privacy" },
 };
 
+export const dynamic = "force-static";
+
 export default function PrivacyPolicyPage() {
   return (
     <LegalPageLayout activeRoute="privacy">
-      <article className="legal-article" style={{ lineHeight: 1.75 }}>
-        {/* Header Block */}
+      <LegalArticle>
         <div style={{ borderBottom: "1px solid var(--kouchd-line, #ded8ce)", paddingBottom: "1.25rem", marginBottom: "1.75rem" }}>
           <p
             style={{
@@ -27,7 +32,7 @@ export default function PrivacyPolicyPage() {
               margin: "0 0 0.5rem",
             }}
           >
-            Wrelik Brands LLC &middot; Legal Documentation
+            {legalMeta.provider} &middot; Legal Documentation
           </p>
           <h1
             style={{
@@ -119,38 +124,7 @@ export default function PrivacyPolicyPage() {
         </section>
 
         {/* Master Policy Sections */}
-        {privacyPolicy.sections.map((section, idx) => (
-          <section key={idx} style={{ marginBottom: "2.25rem" }}>
-            <h2 style={{ fontSize: "1.35rem", fontWeight: 800, color: "var(--kouchd-ink, #17251f)", marginBottom: "0.75rem" }}>
-              {section.title}
-            </h2>
-            {section.paragraphs?.map((p, pIdx) => (
-              <p key={pIdx} style={{ marginBottom: "0.75rem", whiteSpace: "pre-line" }}>
-                {p}
-              </p>
-            ))}
-            {section.bullets && section.bullets.length > 0 && (
-              <ul style={{ paddingLeft: "1.25rem", margin: "0.75rem 0 1rem" }}>
-                {section.bullets.map((b, bIdx) => (
-                  <li key={bIdx} style={{ marginBottom: "0.5rem" }}>
-                    {b.label && <strong style={{ color: "var(--kouchd-ink, #17251f)" }}>{b.label}: </strong>}
-                    <span>{b.text}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-            {section.numbered && section.numbered.length > 0 && (
-              <div style={{ display: "grid", gap: "0.5rem", marginTop: "0.5rem" }}>
-                {section.numbered.map((n, nIdx) => (
-                  <p key={nIdx} style={{ fontSize: "0.92rem", color: "var(--kouchd-muted, #59675f)", margin: 0 }}>
-                    {n.label && <strong>{n.label}: </strong>}
-                    {n.text}
-                  </p>
-                ))}
-              </div>
-            )}
-          </section>
-        ))}
+        <LegalSectionList sections={privacyPolicy.sections} />
 
         {/* Kouchd Specific Addendum */}
         {privacyPolicy.addendum.length > 0 && (
@@ -204,32 +178,8 @@ export default function PrivacyPolicyPage() {
         )}
 
         {/* Cross-navigation Links */}
-        <div
-          style={{
-            borderTop: "1px solid var(--kouchd-line, #ded8ce)",
-            paddingTop: "1.5rem",
-            marginTop: "2rem",
-            display: "flex",
-            justifyContent: "space-between",
-            flexWrap: "wrap",
-            gap: "1rem",
-            fontSize: "0.9rem",
-          }}
-        >
-          <Link href="/terms" style={{ color: "var(--kouchd-forest, #184f3a)", fontWeight: 700, textDecoration: "none" }}>
-            &rarr; View Terms &amp; Conditions
-          </Link>
-          <Link href="/cookies" style={{ color: "var(--kouchd-forest, #184f3a)", fontWeight: 700, textDecoration: "none" }}>
-            &rarr; View Cookie Policy
-          </Link>
-          <Link href="/acceptable-use" style={{ color: "var(--kouchd-forest, #184f3a)", fontWeight: 700, textDecoration: "none" }}>
-            &rarr; View Acceptable Use Policy
-          </Link>
-          <Link href="/sms-opt-in" style={{ color: "var(--kouchd-forest, #184f3a)", fontWeight: 700, textDecoration: "none" }}>
-            &rarr; View SMS Opt-In Form
-          </Link>
-        </div>
-      </article>
+        <LegalCrossLinks currentRoute="privacy" />
+      </LegalArticle>
     </LegalPageLayout>
   );
 }

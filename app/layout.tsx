@@ -1,5 +1,6 @@
 import { ClerkProvider } from "@clerk/nextjs";
 import type { Metadata, Viewport } from "next";
+import { headers } from "next/headers";
 import { Inter, Manrope } from "next/font/google";
 import { VercelAnalytics } from "../components/vercel-analytics";
 import { SECURITY_RUNTIME_INLINE_SCRIPT } from "../lib/security-runtime";
@@ -58,25 +59,21 @@ export const viewport: Viewport = {
   themeColor: "#f5f0e8",
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
+
   return (
     <html lang="en" className={`${manrope.variable} ${inter.variable}`}>
       <head>
-        <link
-          rel="preload"
-          as="script"
-          href="https://clerk.kouchd.com/npm/@clerk/ui@1.41.2/dist/vendors_ui_e564da_1.41.2.js"
-          integrity="sha384-n1qf8LZfE2TLHN1Eh3B3t0LvQVqZYr/WKDzGzK1VwkhfLYrZRFinzvauGI4mHpFu"
-          crossOrigin="anonymous"
-        />
         <script
           id="kouchd-security-runtime"
+          nonce={nonce}
           dangerouslySetInnerHTML={{ __html: SECURITY_RUNTIME_INLINE_SCRIPT }}
         />
       </head>
       <body>
-        {/* Explicit auth URLs keep Clerk's sign-up → sign-in hand-off under /sign-in and /sign-up (WRE-261). */}
-        <ClerkProvider signInUrl="/sign-in" signUpUrl="/sign-up">
+        {/* Explicit auth URLs keep Clerk's sign-up → sign-in hand-off under /sign-in and /sign-up (WRE-261). Dynamic prop required for strict nonce-based CSP. */}
+        <ClerkProvider dynamic signInUrl="/sign-in" signUpUrl="/sign-up">
           <AppProviders>{children}</AppProviders>
         </ClerkProvider>
         <VercelAnalytics />

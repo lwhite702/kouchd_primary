@@ -1,4 +1,5 @@
 import { getClientIp, isRateLimited } from "@/lib/newsletter-limiter";
+import { classifyUpstreamError } from "@/lib/newsletter-error";
 
 function json(message: string, status: number) {
   return Response.json({ message }, { status, headers: { "Cache-Control": "no-store" } });
@@ -37,13 +38,21 @@ export async function POST(request: Request) {
   if (!isValidEmail(email)) return json("Enter a valid email address.", 400);
 
   const ip = getClientIp(request);
-  if (isRateLimited(ip)) return json("Please wait a minute before trying again.", 429);
+  try {
+    if (isRateLimited(ip)) return json("Please wait a minute before trying again.", 429);
+  } catch (limiterError) {
+    console.error("Newsletter rate limiter error; returning 503", {
+      ip,
+      error: limiterError instanceof Error ? limiterError.message : String(limiterError),
+    });
+    return json("Signup is temporarily unavailable. Please try again later.", 503);
+  }
 
   const apiKey = process.env.LOOPS_API_KEY;
   if (!apiKey) return json("Signup is temporarily unavailable. Please try again later.", 503);
 
-  try {
-    const response = await fetch("https://app.loops.so/api/v1/contacts/update", {
+  const sendToLoops = () =>
+    fetch("https://app.loops.so/api/v1/contacts/update", {
       method: "PUT",
       headers: {
         Authorization: `Bearer ${apiKey}`,
@@ -56,35 +65,55 @@ export async function POST(request: Request) {
         userGroup: "Kouchd Newsletter",
       }),
       cache: "no-store",
-      signal: AbortSignal.timeout(8_000),
+      signal: AbortSignal.timeout(6_000),
     });
 
-    if (!response.ok) {
-      console.error("Loops newsletter signup failed", { status: response.status });
-      return json("We couldn’t add you just now. Please try again.", 502);
+  let response: Response | undefined;
+  let lastError: unknown;
+
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      response = await sendToLoops();
+      lastError = undefined;
+      if (response.ok || response.status < 500) {
+        break;
+      }
+      if (attempt === 1) {
+        await new Promise((resolve) => setTimeout(resolve, 200));
+      }
+    } catch (err: unknown) {
+      lastError = err;
+      const classification = classifyUpstreamError(err);
+      if (attempt === 1 && classification === "network") {
+        await new Promise((resolve) => setTimeout(resolve, 200));
+        continue;
+      }
+      break;
     }
+  }
 
-    return json("Thanks for signing up.", 200);
-  } catch (error: unknown) {
-    const isTimeout =
-      error instanceof Error &&
-      (error.name === "TimeoutError" || error.name === "AbortError");
-    const isNetworkError =
-      error instanceof TypeError &&
-      (error.message.includes("fetch") || error.message.includes("network"));
-
-    if (isTimeout || isNetworkError) {
+  if (lastError && (!response || !response.ok)) {
+    const classification = classifyUpstreamError(lastError);
+    if (classification === "timeout" || classification === "network") {
       console.error("Loops newsletter upstream network/timeout failure", {
-        errorName: error instanceof Error ? error.name : "UnknownError",
-        message: error instanceof Error ? error.message : String(error),
+        classification,
+        errorName: lastError instanceof Error ? lastError.name : "UnknownError",
+        message: lastError instanceof Error ? lastError.message : String(lastError),
       });
       return json("We couldn’t reach the signup service. Please try again shortly.", 502);
     }
 
     console.error("Newsletter route internal unexpected error", {
-      errorName: error instanceof Error ? error.name : "UnknownError",
-      message: error instanceof Error ? error.message : String(error),
+      errorName: lastError instanceof Error ? lastError.name : "UnknownError",
+      message: lastError instanceof Error ? lastError.message : String(lastError),
     });
     return json("An unexpected error occurred. Please try again.", 500);
   }
+
+  if (!response || !response.ok) {
+    console.error("Loops newsletter signup failed", { status: response?.status });
+    return json("We couldn’t add you just now. Please try again.", 502);
+  }
+
+  return json("Thanks for signing up.", 200);
 }

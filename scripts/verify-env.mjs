@@ -29,6 +29,24 @@ if (isProduction) {
     );
     process.exit(1);
   }
+
+  const subEnv = process.env.SUBSCRIPTION_EXPECTED_ENVIRONMENT;
+  if (process.env.VERCEL_ENV === "production") {
+    if (subEnv !== "production") {
+      console.error(
+        'Configuration error: SUBSCRIPTION_EXPECTED_ENVIRONMENT must be set to "production" for Vercel production deployments.'
+      );
+      process.exit(1);
+    }
+  } else {
+    const allowedSubEnvs = ["production", "sandbox"];
+    if (!subEnv || !allowedSubEnvs.includes(subEnv)) {
+      console.error(
+        'Missing or invalid required environment variable: SUBSCRIPTION_EXPECTED_ENVIRONMENT must be set to "production" or "sandbox".'
+      );
+      process.exit(1);
+    }
+  }
 }
 
 const required = [
