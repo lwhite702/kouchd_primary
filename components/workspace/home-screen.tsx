@@ -132,7 +132,6 @@ export function HomeScreen({
           </button>
         </div>
       )}
-      )}
 
       {isHost ? (
         <div className="host-workspace-overview">

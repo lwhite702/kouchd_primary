@@ -695,15 +695,22 @@ struct HostControlsScreen: View {
         MoreActionRow(title: "Reward rules", detail: "Set the points available for shared contributions.", symbol: "sparkles", route: .rewardRules)
       }
       Card {
-        Text("End this stay").font(.headline)
-        Text("The record is retained, but new activity stops.")
+        let isSublease = store.bundle["stay"]["arrangement"].text == "sublease"
+        Text(isSublease ? "End this sublease" : "End this stay").font(.headline)
+        Text(isSublease
+             ? "The record is retained and access codes are hidden, but new activity stops. Be sure to change physical door codes and Wi-Fi passwords."
+             : "The record is retained, but new activity stops.")
           .font(.subheadline).foregroundStyle(Palette.muted)
-        Button("End stay", role: .destructive) { showEndConfirmation = true }
+        Button(isSublease ? "End sublease" : "End stay", role: .destructive) { showEndConfirmation = true }
       }
     }
-    .confirmationDialog("End this stay?", isPresented: $showEndConfirmation) {
-      Button("End stay", role: .destructive) {
+    .confirmationDialog(store.bundle["stay"]["arrangement"].text == "sublease" ? "End this sublease?" : "End this stay?", isPresented: $showEndConfirmation) {
+      Button(store.bundle["stay"]["arrangement"].text == "sublease" ? "End sublease" : "End stay", role: .destructive) {
         Task { _ = await store.mutate("stays:end", ["stayId": store.selectedStayID]) }
+      }
+    } message: {
+      if store.bundle["stay"]["arrangement"].text == "sublease" {
+        Text("Be sure to change physical door codes and Wi-Fi passwords, as Kouchd cannot revoke physical access.")
       }
     }
   }

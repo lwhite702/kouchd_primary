@@ -91,6 +91,8 @@ struct HomeScreen: View {
       if store.isHost && store.guests.count > 1 {
         GuestPicker(store: store)
       }
+      subleaseLockCard
+      landlordConsentCard
       agreementCard
       remainingCard
       statTiles
@@ -103,6 +105,8 @@ struct HomeScreen: View {
   private var wideDashboard: some View {
     VStack(alignment: .leading, spacing: 24) {
       header
+      subleaseLockCard
+      landlordConsentCard
       TwoColumnLayout(spacing: 24) {
         if store.isHost {
           hostHero
@@ -210,6 +214,59 @@ struct HomeScreen: View {
       Text("Your shared expectations").font(.headline)
       Text(store.bundle["terms"]["houseNotes"].text)
         .font(.subheadline).foregroundStyle(Palette.muted)
+    }
+  }
+
+  @ViewBuilder private var subleaseLockCard: some View {
+    if store.bundle["subleaseLock"]["locked"].flag {
+      Card {
+        HStack(spacing: 12) {
+          Image(systemName: "lock.fill").foregroundStyle(store.isHost ? .red : .orange)
+          VStack(alignment: .leading, spacing: 4) {
+            Text(store.isHost ? "Sublease locked" : "Sublease read-only").font(.headline)
+            Text(store.isHost
+                 ? "Your Plus subscription has ended. This sublease is locked and personal exports are blocked until you have an active subscription."
+                 : "This sublease is read-only and personal exports are blocked until the host renews. Your sublease agreement still applies, so keep paying rent as agreed. Kouchd's record being locked doesn't change it.")
+              .font(.subheadline).foregroundStyle(Palette.muted)
+          }
+        }
+      }
+    } else if store.isHost && store.bundle["subleaseLock"]["billingRetryWarning"].flag {
+      Card {
+        HStack(spacing: 12) {
+          Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange)
+          VStack(alignment: .leading, spacing: 4) {
+            Text("Subscription payment issue").font(.headline)
+            Text("Please update your Plus payment method within 7 days to keep this sublease unlocked.")
+              .font(.subheadline).foregroundStyle(Palette.muted)
+          }
+        }
+      }
+    }
+  }
+
+  @ViewBuilder private var landlordConsentCard: some View {
+    if store.isHost &&
+       store.bundle["stay"]["arrangement"].text == "sublease" &&
+       store.bundle["stay"]["landlordConsent"]["answer"].text == "not_confirmed" &&
+       store.bundle["stay"]["landlordConsent"]["warningDismissedAt"].double == 0 {
+      Card {
+        HStack(spacing: 12) {
+          Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange)
+          VStack(alignment: .leading, spacing: 6) {
+            Text("Landlord consent not confirmed").font(.headline)
+            Text("Subletting without landlord consent may violate your lease. You can proceed, but please verify permissions before inviting guests.")
+              .font(.subheadline).foregroundStyle(Palette.muted)
+            Button("Dismiss warning") {
+              Task {
+                _ = await store.mutate("stays:dismissLandlordConsentWarning", ["stayId": store.bundle["stay"]["_id"].text])
+              }
+            }
+            .font(.subheadline.bold())
+            .foregroundStyle(Palette.forest)
+          }
+        }
+      }
     }
   }
 

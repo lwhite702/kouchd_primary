@@ -1,6 +1,7 @@
 import { convexTest } from "convex-test";
 import { afterEach, describe, expect, it } from "vitest";
 import { api, internal } from "../convex/_generated/api";
+import { Id } from "../convex/_generated/dataModel";
 import schema from "../convex/schema";
 import {
   evaluateSubleaseLockFromSnapshot,
@@ -469,11 +470,11 @@ describe("Sublease creation, landlord consent, and lock enforcement", () => {
     expect(inviteId).toBeTruthy();
 
     // Invite preview includes sublease metadata
-    const preview = await host.query(api.invites.preview, {
+    const preview = (await host.query(api.invites.preview, {
       tokenHash: hashConsent,
-    });
-    expect((preview as any).arrangement).toBe("sublease");
-    expect((preview as any).subleaseLayout).toBe("whole_place");
+    })) as Record<string, unknown>;
+    expect(preview.arrangement).toBe("sublease");
+    expect(preview.subleaseLayout).toBe("whole_place");
   });
 
   it("locks sublease mutations when subscription expires and allows host stay ending", async () => {
@@ -492,7 +493,7 @@ describe("Sublease creation, landlord consent, and lock enforcement", () => {
       email: "taylor@example.com",
     });
 
-    const hostUserId = await host.mutation(api.users.syncCurrent, {});
+    await host.mutation(api.users.syncCurrent, {});
     const guestUserId = await guest.mutation(api.users.syncCurrent, {});
 
     const setupStayId = await host.mutation(api.stays.create, {
@@ -707,7 +708,7 @@ describe("Sublease creation, landlord consent, and lock enforcement", () => {
     expect(ledger[0].lateFeeWaived).toBe(false);
 
     // Lock the sublease as of Nov 1, 2026
-    let householdAccountId: any;
+    let householdAccountId: Id<"householdAccounts"> | undefined;
     const lockTime = Date.UTC(2026, 10, 1, 0, 0, 0);
     await t.run(async ({ db }) => {
       const stay = await db.get(subleaseId);
@@ -715,7 +716,7 @@ describe("Sublease creation, landlord consent, and lock enforcement", () => {
       const snapshot = await db
         .query("subscriptionSnapshots")
         .withIndex("by_household_account", (q) =>
-          q.eq("householdAccountId", householdAccountId),
+          q.eq("householdAccountId", householdAccountId!),
         )
         .first();
       await db.patch(snapshot!._id, {
@@ -735,17 +736,11 @@ describe("Sublease creation, landlord consent, and lock enforcement", () => {
 
     // Reminders skip locked stays
     const nowMs = Date.UTC(2026, 10, 15, 12, 0, 0);
-    const reminders = await t.run(async (ctx) => {
-      return await ctx.db
-        .query("stays")
-        .withIndex("by_status", (q) => q.eq("status", "active"))
-        .collect();
-    });
     const reminderResults = await t.query(internal.notifications.reminderCandidates, {
       now: nowMs,
     });
     expect(
-      reminderResults.filter((r: any) => r.stayId === subleaseId),
+      reminderResults.filter((r) => (r as { stayId: string }).stayId === subleaseId),
     ).toHaveLength(0);
 
     // Renew subscription
@@ -753,7 +748,7 @@ describe("Sublease creation, landlord consent, and lock enforcement", () => {
       const snapshot = await ctx.db
         .query("subscriptionSnapshots")
         .withIndex("by_household_account", (q) =>
-          q.eq("householdAccountId", householdAccountId),
+          q.eq("householdAccountId", householdAccountId!),
         )
         .first();
       await ctx.db.patch(snapshot!._id, {
@@ -765,7 +760,7 @@ describe("Sublease creation, landlord consent, and lock enforcement", () => {
       );
       await reconcileAccountSubleaseLocks(
         ctx,
-        householdAccountId,
+        householdAccountId!,
         "production",
         Date.UTC(2026, 10, 15, 12, 0, 0),
       );
