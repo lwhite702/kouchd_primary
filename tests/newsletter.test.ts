@@ -230,6 +230,26 @@ describe("Newsletter API Route & Rate Limiter", () => {
       );
     });
 
+    it("retries once on transient 5xx error and succeeds if second attempt returns 200", async () => {
+      const mockFetch = vi
+        .fn()
+        .mockResolvedValueOnce(new Response("Gateway timeout", { status: 504 }))
+        .mockResolvedValueOnce(
+          new Response(JSON.stringify({ success: true }), { status: 200 })
+        );
+      vi.stubGlobal("fetch", mockFetch);
+
+      const req = new Request("http://localhost/api/newsletter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: "user@example.com", consent: true }),
+      });
+
+      const res = await POST(req);
+      expect(res.status).toBe(200);
+      expect(mockFetch).toHaveBeenCalledTimes(2);
+    });
+
     it("classifies upstream errors correctly by code, name, and cause", () => {
       const timeoutErr = new Error("Request timed out");
       timeoutErr.name = "TimeoutError";

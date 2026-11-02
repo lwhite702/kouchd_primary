@@ -50,8 +50,8 @@ export async function POST(request: Request) {
   const apiKey = process.env.LOOPS_API_KEY;
   if (!apiKey) return json("Signup is temporarily unavailable. Please try again later.", 503);
 
-  try {
-    const response = await fetch("https://app.loops.so/api/v1/contacts/update", {
+  const sendToLoops = () =>
+    fetch("https://app.loops.so/api/v1/contacts/update", {
       method: "PUT",
       headers: {
         Authorization: `Bearer ${apiKey}`,
@@ -64,31 +64,54 @@ export async function POST(request: Request) {
         userGroup: "Kouchd Newsletter",
       }),
       cache: "no-store",
-      signal: AbortSignal.timeout(8_000),
+      signal: AbortSignal.timeout(6_000),
     });
 
-    if (!response.ok) {
-      console.error("Loops newsletter signup failed", { status: response.status });
-      return json("We couldn’t add you just now. Please try again.", 502);
+  let response: Response | undefined;
+  let lastError: unknown;
+
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      response = await sendToLoops();
+      if (response.ok || response.status < 500) {
+        break;
+      }
+      if (attempt === 1) {
+        await new Promise((resolve) => setTimeout(resolve, 200));
+      }
+    } catch (err: unknown) {
+      lastError = err;
+      const classification = classifyUpstreamError(err);
+      if (attempt === 1 && classification === "network") {
+        await new Promise((resolve) => setTimeout(resolve, 200));
+        continue;
+      }
+      break;
     }
+  }
 
-    return json("Thanks for signing up.", 200);
-  } catch (error: unknown) {
-    const classification = classifyUpstreamError(error);
-
+  if (lastError && (!response || !response.ok)) {
+    const classification = classifyUpstreamError(lastError);
     if (classification === "timeout" || classification === "network") {
       console.error("Loops newsletter upstream network/timeout failure", {
         classification,
-        errorName: error instanceof Error ? error.name : "UnknownError",
-        message: error instanceof Error ? error.message : String(error),
+        errorName: lastError instanceof Error ? lastError.name : "UnknownError",
+        message: lastError instanceof Error ? lastError.message : String(lastError),
       });
       return json("We couldn’t reach the signup service. Please try again shortly.", 502);
     }
 
     console.error("Newsletter route internal unexpected error", {
-      errorName: error instanceof Error ? error.name : "UnknownError",
-      message: error instanceof Error ? error.message : String(error),
+      errorName: lastError instanceof Error ? lastError.name : "UnknownError",
+      message: lastError instanceof Error ? lastError.message : String(lastError),
     });
     return json("An unexpected error occurred. Please try again.", 500);
   }
+
+  if (!response || !response.ok) {
+    console.error("Loops newsletter signup failed", { status: response?.status });
+    return json("We couldn’t add you just now. Please try again.", 502);
+  }
+
+  return json("Thanks for signing up.", 200);
 }
