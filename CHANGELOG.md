@@ -56,6 +56,12 @@
 
 ### Fixed
 
+- **Door and Wi-Fi access code protection (WRE-266, 0.8.8, branch only, not released)**:
+  - `stays.listMine` and `stays.getBundle` now pass returned stay documents through `redactStayForMember` (`convex/lib/houseInfoAccess.ts`), removing `houseInfo.doorCode` and `houseInfo.wifiPassword` for guests unless the stay has not ended and the guest has accepted an agreement version. Other `houseInfo` fields remain visible, and hosts always see their own stay's codes.
+  - Guests who have already accepted keep access to door and Wi-Fi codes while a revised agreement version awaits their review or while another guest in the household has not accepted yet.
+  - Former guests who rejoin a household by referral code (`convex/referral.ts`) have `acceptedTermsId` cleared so they must accept an agreement again before seeing access codes.
+  - Added clear explanations on web (`components/household/household-logistics.tsx`) and iOS (`ios/Kouchd/StayScreens.swift`) when door and Wi-Fi codes are hidden pending agreement acceptance or after a stay ends, plus a host form hint to keep codes in their dedicated fields rather than notes.
+
 - **Facebook sign-up no longer ends on a 404 (WRE-261, 0.8.4, branch only, not released)**:
   - A Facebook sign-up that Clerk moved over to sign-in (for example, when the Facebook email needs verifying or already belongs to an account) could return to `/sso-callback` at the site root, which had no page and showed the "Wrong couch" 404. Seen in Vercel's production request log on 2026-10-31.
   - `ClerkProvider` now sets `signInUrl="/sign-in"` and `signUpUrl="/sign-up"`, and `<SignIn>` and `<SignUp>` use `routing="path"` with their own `path` and the other page's URL, so Clerk no longer has to guess these paths.

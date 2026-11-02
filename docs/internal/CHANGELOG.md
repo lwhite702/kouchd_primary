@@ -2,6 +2,16 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-11-02 — Access code protection for door and Wi-Fi codes (WRE-266)
+
+- Added `canViewAccessCodes` and `redactStayForMember` in `convex/lib/houseInfoAccess.ts` and applied redaction to both public queries returning stay documents (`stays.listMine` and `stays.getBundle` in `convex/stays.ts`).
+- `houseInfo.doorCode` and `houseInfo.wifiPassword` are removed from guest responses unless `stay.status !== "ended"` and `Boolean(membership.acceptedTermsId)`. Hosts always receive full `houseInfo`.
+- Cleared `acceptedTermsId` when reactivating a former guest (`status === "left"`) in `convex/referral.ts` (`joinWithCode`) so rejoining guests must accept an agreement again before seeing access codes.
+- Updated web (`components/household/household-logistics.tsx`, `components/workspace/use-live-stay.ts`, `components/workspace/home-screen.tsx`, `components/workspace/stay-screen.tsx`) and iOS (`ios/Kouchd/StayScreens.swift`, `ios/Kouchd/HostExtras.swift`) to explain when door and Wi-Fi codes are hidden and to remind hosts to keep codes out of general notes.
+- Updated Help Center guides (`help/guests/joining-a-stay.mdx`, `help/hosts/getting-started.mdx`, `help/ios/chores-and-stay.mdx`).
+- Evidence: `tests/house-info-access.test.ts` (8/8 passed), `tests/backend.test.ts` (17/17 passed), full Vitest suite, `npm run verify`, `npm run build`, `npm run release:check`, and iOS Simulator build.
+- Version 0.8.8. Branch only (`codex/WRE-266-access-code-protection`).
+
 ## 2026-11-02 — Support desk transition to Freshdesk (WRE-265)
 
 - Transitioned the Platform Ops console customer support integration from Help Scout to Freshdesk (`lib/platform/providers.ts`, `components/platform/support-explorer.tsx`, `components/platform/overview-dashboard.tsx`).

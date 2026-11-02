@@ -1,5 +1,5 @@
 {
   "type": "patch",
-  "version": "0.8.7",
-  "reason": "Transition Platform Ops support desk from Help Scout to Freshdesk while keeping documentation on Mintlify (WRE-265)."
+  "version": "0.8.8",
+  "reason": "Protect door and Wi-Fi access codes until guest agreement acceptance and after stay end (WRE-266)."
 }
