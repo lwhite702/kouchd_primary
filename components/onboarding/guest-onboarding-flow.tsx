@@ -435,6 +435,24 @@ export function GuestOnboardingFlow({
             <p style={{ margin: 0, fontSize: "0.85rem", color: "var(--muted, #6f6b64)", lineHeight: 1.5 }}>
               Your financial balance, payments, and points redemptions are private between you and your host. Other guests cannot view your ledger.
             </p>
+            {stay.arrangement === "sublease" && (
+              <div
+                style={{
+                  marginTop: "1rem",
+                  padding: "0.85rem 1rem",
+                  borderRadius: "10px",
+                  background: "#f0f6f2",
+                  border: "1px solid #d0e4d7",
+                }}
+              >
+                <strong style={{ fontSize: "0.9rem", color: "var(--green, #184f3a)", display: "block", marginBottom: "0.25rem" }}>
+                  Sublease record notice
+                </strong>
+                <p style={{ margin: 0, fontSize: "0.82rem", color: "#243e30", lineHeight: 1.45 }}>
+                  This is a sublease record on Kouchd ({stay.subleaseLayout === "whole_place" ? "Whole place" : `Private room, ${stay.roommateCount ?? 1} roommate${(stay.roommateCount ?? 1) === 1 ? "" : "s"}`}). If the host&apos;s subscription lapses, the record becomes read-only, but your sublease agreement still applies, so keep paying rent as agreed. Kouchd&apos;s record being locked doesn&apos;t change it.
+                </p>
+              </div>
+            )}
           </div>
 
           {/* SMS Notification Acceptance */}

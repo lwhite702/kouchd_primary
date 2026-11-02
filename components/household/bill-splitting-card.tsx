@@ -266,6 +266,7 @@ export function BillSplittingSection({
 }
 
 export function SplitBillModalForm({
+  stay,
   guests,
   defaultTerms,
   asOfDate,
@@ -273,6 +274,7 @@ export function SplitBillModalForm({
   onSubmit,
   onCancel,
 }: {
+  stay?: Doc<"stays">;
   guests: Member[];
   defaultTerms?: Doc<"terms"> | null;
   asOfDate: string | null;
@@ -281,19 +283,38 @@ export function SplitBillModalForm({
   onCancel: () => void;
 }) {
   const defaultDate = asOfDate ?? defaultTerms?.startDate ?? "";
+  const isSublease = stay?.arrangement === "sublease";
+  const isPrivateRoomSublease = isSublease && stay?.subleaseLayout === "private_room";
+  const roommateCount = stay?.roommateCount ?? 1;
+  const totalShares = roommateCount + 1;
+  const defaultGuestPercentage = (100 / totalShares).toFixed(1);
+
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState<BillCategory>("electricity");
   const [serviceStart, setServiceStart] = useState(defaultDate);
   const [serviceEnd, setServiceEnd] = useState(defaultDate);
   const [totalDollars, setTotalDollars] = useState("");
   const [dueDate, setDueDate] = useState(defaultDate);
-  const [splitMethod, setSplitMethod] = useState<BillSplitMethod>("equal");
-  const [includeHost, setIncludeHost] = useState(true);
+  const [splitMethod, setSplitMethod] = useState<BillSplitMethod>(
+    isPrivateRoomSublease ? "percentage" : "equal",
+  );
+  const [includeHost, setIncludeHost] = useState(
+    isPrivateRoomSublease ? true : !isSublease,
+  );
   const [prorateByStayDates, setProrateByStayDates] = useState(false);
   const [selectedGuestIds, setSelectedGuestIds] = useState<Id<"users">[]>(() =>
     guests.map((guest) => guest.person.id),
   );
-  const [guestInputs, setGuestInputs] = useState<Record<string, string>>({});
+  const [guestInputs, setGuestInputs] = useState<Record<string, string>>(() => {
+    if (isPrivateRoomSublease) {
+      const inputs: Record<string, string> = {};
+      for (const guest of guests) {
+        inputs[guest.person.id] = defaultGuestPercentage;
+      }
+      return inputs;
+    }
+    return {};
+  });
   const [validationError, setValidationError] = useState("");
 
   function toggleGuest(guestId: Id<"users">) {
@@ -445,6 +466,25 @@ export function SplitBillModalForm({
 
   return (
     <form onSubmit={(event) => void handleSubmit(event)}>
+      {isSublease && (
+        <div
+          style={{
+            padding: "0.75rem 1rem",
+            background: "var(--paper, #f5f0e8)",
+            borderRadius: "10px",
+            fontSize: "0.85rem",
+            lineHeight: 1.45,
+            marginBottom: "1rem",
+          }}
+        >
+          <strong>
+            Sublease preset ({isPrivateRoomSublease ? "Private room" : "Whole place"}):
+          </strong>{" "}
+          {isPrivateRoomSublease
+            ? `Preset to 1/${totalShares} (${defaultGuestPercentage}%) per room. Host is included on the ledger to absorb the remaining ${(100 - Number(defaultGuestPercentage) * guests.length).toFixed(1)}% off-ledger.`
+            : "Host is excluded. Active guest(s) cover 100% of utilities."}
+        </div>
+      )}
       <div className="form-grid">
         <label className="full">
           <span>Bill title</span>
