@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef } from "react";
+import { Home, Users } from "lucide-react";
 
 export interface PlanLimitModalProps {
   isOpen: boolean;
@@ -63,7 +64,7 @@ export function PlanLimitModal({
       : "Every guest spot on Plus is in use"
     : limit.dimension === "stay"
       ? "Your Free plan is full"
-      : "Guest limit reached";
+      : "Guest spots are full";
 
   return (
     <div
@@ -92,15 +93,22 @@ export function PlanLimitModal({
         className="confirmation-dialog"
         style={{
           width: "min(480px, 100%)",
-          background: "var(--card, #fff)",
-          color: "var(--ink, #1f2e27)",
+          background: "var(--surface, #fffdf8)",
+          color: "var(--ink, #17251f)",
           borderRadius: "24px",
           padding: "1.75rem",
           boxShadow: "0 20px 50px rgba(0, 0, 0, 0.2)",
-          border: "1px solid var(--line, #e2ded7)",
+          border: "1px solid var(--line, #ded8ce)",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1rem" }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "0.75rem",
+            marginBottom: "1rem",
+          }}
+        >
           <div
             style={{
               width: "40px",
@@ -109,14 +117,26 @@ export function PlanLimitModal({
               background: "#dceade",
               display: "grid",
               placeItems: "center",
-              color: "var(--green, #184f3a)",
-              fontSize: "1.25rem",
+              color: "var(--forest, #184f3a)",
             }}
           >
-            🏠
+            {limit.dimension === "stay" ? (
+              <Home size={20} strokeWidth={2} />
+            ) : (
+              <Users size={20} strokeWidth={2} />
+            )}
           </div>
           <div>
-            <h2 id={titleId} style={{ fontSize: "1.35rem", margin: 0, fontWeight: 800 }}>
+            <h2
+              id={titleId}
+              style={{
+                fontSize: "1.35rem",
+                margin: 0,
+                fontWeight: 800,
+                fontFamily: 'var(--font-manrope), "Manrope", sans-serif',
+                letterSpacing: "-0.02em",
+              }}
+            >
               {title}
             </h2>
           </div>
@@ -127,14 +147,20 @@ export function PlanLimitModal({
           style={{
             margin: "0 0 1.5rem",
             lineHeight: 1.55,
-            color: "var(--ink, #1f2e27)",
+            color: "var(--ink, #17251f)",
             fontSize: "0.95rem",
           }}
         >
           {limit.message}
         </p>
 
-        <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.75rem" }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "flex-end",
+            gap: "0.75rem",
+          }}
+        >
           {!limit.atHighestPlan && onUpgrade ? (
             <>
               <button

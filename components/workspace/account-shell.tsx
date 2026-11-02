@@ -423,11 +423,11 @@ export function StayHub({
                             <span
                               className="status-pill alert"
                               style={{
-                                background: "#fef3c7",
-                                color: "#92400e",
-                                border: "1px solid #fde68a",
+                                background: "rgba(223, 242, 94, 0.45)",
+                                color: "var(--ink, #17251f)",
+                                border: "1px solid rgba(24, 79, 58, 0.2)",
                                 fontSize: "0.75rem",
-                                fontWeight: 700,
+                                fontWeight: 800,
                               }}
                             >
                               {blockedForStay} tried to join

@@ -62,31 +62,58 @@ export function BlockedJoinsBanner({
             style={{
               padding: "1rem 1.25rem",
               borderRadius: "18px",
-              background: "#fef9c3",
-              border: "1px solid #fef08a",
-              color: "#713f12",
+              background: "rgba(223, 242, 94, 0.22)",
+              border: "1px solid rgba(24, 79, 58, 0.16)",
+              color: "var(--ink, #17251f)",
               display: "flex",
               flexDirection: "column",
               gap: "0.5rem",
             }}
           >
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: "1rem" }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "flex-start",
+                gap: "1rem",
+              }}
+            >
               <div>
-                <strong style={{ display: "block", fontSize: "0.95rem", color: "#854d0e" }}>
+                <strong
+                  style={{
+                    display: "block",
+                    fontSize: "0.95rem",
+                    color: "var(--ink, #17251f)",
+                    fontFamily: 'var(--font-manrope), "Manrope", sans-serif',
+                  }}
+                >
                   {headline}
                 </strong>
-                <span style={{ fontSize: "0.82rem", color: "#a16207" }}>
+                <span
+                  style={{
+                    fontSize: "0.82rem",
+                    color: "var(--muted, #59675f)",
+                  }}
+                >
                   {blocked.stayName} &middot; {dateText}
                 </span>
               </div>
             </div>
 
-            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginTop: "0.25rem", flexWrap: "wrap" }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "0.75rem",
+                marginTop: "0.25rem",
+                flexWrap: "wrap",
+              }}
+            >
               {isFree && guestsFull && onUpgrade && (
                 <button
                   type="button"
                   className="button primary compact"
-                  style={{ fontSize: "0.82rem", padding: "6px 12px" }}
+                  style={{ fontSize: "0.82rem", padding: "6px 14px" }}
                   onClick={onUpgrade}
                 >
                   Make room with Plus
@@ -95,7 +122,12 @@ export function BlockedJoinsBanner({
               <button
                 type="button"
                 className="button ghost compact"
-                style={{ fontSize: "0.82rem", padding: "6px 12px", color: "#713f12" }}
+                style={{
+                  fontSize: "0.82rem",
+                  padding: "6px 14px",
+                  color: "var(--forest, #184f3a)",
+                  fontWeight: 700,
+                }}
                 disabled={isDismissing}
                 onClick={async () => {
                   setDismissingId(blocked.id);
