@@ -316,6 +316,7 @@ export function StayHub({
   };
 
   const handleHostNewStay = () => {
+    if (usage === undefined) return;
     if (stayLimit) {
       setLimitModalOpen(true);
       return;
@@ -348,6 +349,10 @@ export function StayHub({
             <HostOnboardingWizard
               onCancel={() => setCreating(false)}
               onComplete={goToCreatedStay}
+              onPlanLimit={() => {
+                setCreating(false);
+                setLimitModalOpen(true);
+              }}
             />
           </div>
         ) : (
@@ -364,6 +369,8 @@ export function StayHub({
               <button
                 className="button primary"
                 type="button"
+                disabled={usage === undefined}
+                aria-busy={usage === undefined}
                 onClick={handleHostNewStay}
               >
                 <Plus size={18} /> Host a new stay

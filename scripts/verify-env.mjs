@@ -37,6 +37,12 @@ if (isProduction) {
     );
     process.exit(1);
   }
+  if (process.env.VERCEL_ENV === "production" && subEnv !== "production") {
+    console.error(
+      `Invalid SUBSCRIPTION_EXPECTED_ENVIRONMENT for production deployment: "${subEnv}". Must be 'production'.`
+    );
+    process.exit(1);
+  }
   if (subEnv !== "production" && subEnv !== "sandbox") {
     console.error(
       `Invalid SUBSCRIPTION_EXPECTED_ENVIRONMENT: "${subEnv}". Must be 'production' or 'sandbox'.`

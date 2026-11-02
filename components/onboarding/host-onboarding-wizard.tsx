@@ -21,9 +21,11 @@ const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD
 export function HostOnboardingWizard({
   onCancel,
   onComplete,
+  onPlanLimit,
 }: {
   onCancel?: () => void;
   onComplete?: (stayId: Id<"stays">) => void;
+  onPlanLimit?: () => void;
 }) {
   const viewer = useQuery(api.users.viewer, {});
   const createStay = useMutation(api.stays.create);
@@ -186,7 +188,12 @@ export function HostOnboardingWizard({
       });
       onComplete?.(stayId);
     } catch (reason) {
-      setError(planLimitError(reason)?.message ?? (reason instanceof Error ? reason.message : "Could not create the stay"));
+      const planError = planLimitError(reason);
+      if (planError && onPlanLimit) {
+        onPlanLimit();
+        return;
+      }
+      setError(planError?.message ?? (reason instanceof Error ? reason.message : "Could not create the stay"));
       setSaving(false);
     }
   }
