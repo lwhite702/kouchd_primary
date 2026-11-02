@@ -5,9 +5,12 @@ import { FormEvent, useState } from "react";
 
 import type { Doc } from "@/convex/_generated/dataModel";
 
+export type AccessCodesHiddenReason = "needs_acceptance" | "ended" | null;
+
 interface HouseholdLogisticsCardProps {
   houseInfo?: Doc<"stays">["houseInfo"];
   isHost: boolean;
+  accessCodesHidden?: AccessCodesHiddenReason;
   onEdit: () => void;
   onNotify: (message: string) => void;
 }
@@ -15,22 +18,31 @@ interface HouseholdLogisticsCardProps {
 export function HouseholdLogisticsCard({
   houseInfo,
   isHost,
+  accessCodesHidden = null,
   onEdit,
   onNotify,
 }: HouseholdLogisticsCardProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
+  const accessCodesHiddenMessage =
+    accessCodesHidden === "needs_acceptance"
+      ? "Door and Wi-Fi codes appear after you accept your agreement."
+      : accessCodesHidden === "ended"
+        ? "This stay has ended, so door and Wi-Fi codes are no longer shown."
+        : null;
+
   const hasAnyInfo = Boolean(
-    houseInfo &&
-      (houseInfo.wifiNetwork ||
-        houseInfo.wifiPassword ||
-        houseInfo.streetAddress ||
-        houseInfo.doorCode ||
-        houseInfo.parkingNotes ||
-        houseInfo.trashDay ||
-        houseInfo.emergencyContact ||
-        houseInfo.otherNotes)
+    accessCodesHiddenMessage ||
+      (houseInfo &&
+        (houseInfo.wifiNetwork ||
+          houseInfo.wifiPassword ||
+          houseInfo.streetAddress ||
+          houseInfo.doorCode ||
+          houseInfo.parkingNotes ||
+          houseInfo.trashDay ||
+          houseInfo.emergencyContact ||
+          houseInfo.otherNotes))
   );
 
   function copyText(text: string, key: string, successMessage: string) {
@@ -193,7 +205,7 @@ export function HouseholdLogisticsCard({
           )}
 
           {/* Door Code & Access */}
-          {houseInfo?.doorCode && (
+          {houseInfo?.doorCode ? (
             <article className="house-card">
               <div className="house-card-header">
                 <span className="house-icon access">
@@ -225,7 +237,23 @@ export function HouseholdLogisticsCard({
                 </div>
               </div>
             </article>
-          )}
+          ) : accessCodesHiddenMessage ? (
+            <article className="house-card">
+              <div className="house-card-header">
+                <span className="house-icon access">
+                  <Key size={20} />
+                </span>
+                <div>
+                  <p className="overline" style={{ margin: 0 }}>Entry & Access</p>
+                  <strong>Door & Wi-Fi Codes</strong>
+                </div>
+              </div>
+
+              <div className="house-card-body">
+                <p className="house-note-text">{accessCodesHiddenMessage}</p>
+              </div>
+            </article>
+          ) : null}
 
           {/* Parking Notes */}
           {houseInfo?.parkingNotes && (
@@ -344,6 +372,9 @@ export function HouseInfoForm({ initialInfo, onSubmit, onCancel }: HouseInfoForm
 
   return (
     <form onSubmit={handleSubmit}>
+      <p className="muted" style={{ fontSize: "0.82rem", margin: "0 0 0.75rem" }}>
+        Guests see door and Wi-Fi codes after they accept their agreement. Keep codes in these fields, not in notes.
+      </p>
       <div className="form-grid">
         <div className="full" style={{ borderBottom: "1px solid var(--line)", paddingBottom: "0.5rem", marginBottom: "0.25rem" }}>
           <strong style={{ fontSize: "0.95rem", color: "var(--green)" }}>WiFi Connection</strong>

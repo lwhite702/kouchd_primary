@@ -271,6 +271,7 @@ export function StayScreen({ state }: { state: WorkspaceState }) {
       <HouseholdLogisticsCard
         houseInfo={bundle.stay.houseInfo}
         isHost={Boolean(isHost && !isEnded)}
+        accessCodesHidden={state.accessCodesHidden}
         onEdit={() => setPanel("houseInfo")}
         onNotify={notify}
       />
