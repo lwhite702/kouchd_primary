@@ -1,5 +1,5 @@
 {
   "type": "patch",
-  "version": "0.8.9",
-  "reason": "Follow up on WRE-271 review: render legal pages dynamically so strict CSP nonces apply, stop the sign-in/up guard from re-enabling Clerk's in-flight submit button, and add keyboard navigation to the landing preview tabs. Also accept sandbox store billing on Vercel production until the Version 1.0 feature lock is enabled, so production builds stop failing at verify-env."
+  "version": "0.8.10",
+  "reason": "Protect door and Wi-Fi access codes until guest agreement acceptance and after stay end (WRE-266)."
 }

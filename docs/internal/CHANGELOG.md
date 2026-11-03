@@ -2,6 +2,18 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-11-02 — Access code protection for door and Wi-Fi codes (WRE-266)
+
+- Added `canViewAccessCodes` and `redactStayForMember` in `convex/lib/houseInfoAccess.ts` and applied redaction to both public queries returning stay documents (`stays.listMine` and `stays.getBundle` in `convex/stays.ts`).
+- `houseInfo.doorCode` and `houseInfo.wifiPassword` are removed from guest responses unless `stay.status !== "ended"` and `Boolean(membership.acceptedTermsId)`. Hosts always receive full `houseInfo`.
+- Rejoining former guests (`convex/referral.ts`, `joinWithCode`) keep `acceptedTermsId` for reconciliation, get new terms from `stay.currentTermsId` via `createRejoinGuestTerms` (with `effectiveFrom` = rejoin date), and have `accessCodesNeedAcceptance` set until they accept. `acceptGuestAgreement` clears the flag. Review follow-up: the first version cleared `acceptedTermsId`, which bypassed old-schedule retirement and re-offered stale terms.
+- `getAcceptedGuestTermsForDate` requires an acceptance made after the latest `joinedAt` for dates on or after that join.
+- `stays.getBundle` returns `accessCodesHidden`, set only when a configured code was removed; web and iOS read it instead of inferring from membership state.
+- Updated web (`components/household/household-logistics.tsx`, `components/workspace/use-live-stay.ts`, `components/workspace/home-screen.tsx`, `components/workspace/stay-screen.tsx`) and iOS (`ios/Kouchd/StayScreens.swift`, `ios/Kouchd/HostExtras.swift`) to explain when door and Wi-Fi codes are hidden and to remind hosts to keep codes out of general notes.
+- Help Center guide edits were withdrawn until release verification; `help/product/roadmap.mdx` lists the behavior as in development. Sublease spec section 4/7 and bill-splitting invariants clarified in review.
+- Evidence: `tests/house-info-access.test.ts` (8/8 passed), `tests/backend.test.ts` (17/17 passed), full Vitest suite, `npm run verify`, `npm run build`, `npm run release:check`, and iOS Simulator build.
+- Version 0.8.10 (0.8.8 shipped with WRE-271; 0.8.9 is reserved by lwhite702/kouchd_primary#145). Branch only (`codex/WRE-266-access-code-protection`).
+
 ## 2026-11-02 — Replay QA review follow-ups (WRE-271, 0.8.9)
 
 - PR #143 merged as 148ef4a before its last review round was pushed; these fixes land on `codex/WRE-271-review-followups`.
@@ -327,7 +339,6 @@ Internal engineering record. This file is excluded from Mintlify navigation and 
 - `scripts/release-version.mjs` and `scripts/feature-lock.mjs bump-rc` refuse `-rc.N` versions while the lock is off; `lock:status` reports the lock as open.
 - `VERSION`, `package.json`, the lockfile, and the iOS `MARKETING_VERSION` set to `0.7.12`. No 1.0.0 build was uploaded to App Store Connect, per the team.
 - Open PRs renumbered in merge order: #79 → `0.7.13`, #83 → `0.7.14`, #84 → `0.7.15`. Each is stacked on the PR before it. #74 (WRE-242) still needs a 0.7.x number when it merges.
->>>>>>> origin/main
 
 ## 2026-10-26 — Polish landing and marketing pages, update Mintlify tokens and roadmap (WRE-240)
 

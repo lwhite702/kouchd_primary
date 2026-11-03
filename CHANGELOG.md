@@ -60,6 +60,14 @@
 
 ### Fixed
 
+- **Door and Wi-Fi access code protection (WRE-266, 0.8.10, branch only, not released)**:
+  - `stays.listMine` and `stays.getBundle` now pass returned stay documents through `redactStayForMember` (`convex/lib/houseInfoAccess.ts`), removing `houseInfo.doorCode` and `houseInfo.wifiPassword` for guests unless the stay has not ended and the guest has accepted an agreement version. Other `houseInfo` fields remain visible, and hosts always see their own stay's codes.
+  - Guests who have already accepted keep access to door and Wi-Fi codes while a revised agreement version awaits their review or while another guest in the household has not accepted yet.
+  - Former guests who rejoin a household by referral code (`convex/referral.ts`) get a new agreement built from the household's current terms, and a new `memberships.accessCodesNeedAcceptance` flag holds codes back until they accept it. Their earlier `acceptedTermsId` is kept, so accepting the new agreement retires the earlier schedule from the rejoin date instead of leaving both active.
+  - `getAcceptedGuestTermsForDate` ignores acceptances made before the latest join for dates on or after it, so an earlier residency's acceptance cannot authorize new occupancy charges.
+  - `stays.getBundle` returns `accessCodesHidden` (`"needs_acceptance"`, `"ended"`, or `null`), set only when a configured code was actually removed. Web and iOS use it, so a stay with no codes no longer claims codes are being withheld.
+  - Help Center guides are unchanged until release verification; the roadmap lists protected codes as in development.
+  - Added clear explanations on web (`components/household/household-logistics.tsx`) and iOS (`ios/Kouchd/StayScreens.swift`) when door and Wi-Fi codes are hidden pending agreement acceptance or after a stay ends, plus a host form hint to keep codes in their dedicated fields rather than notes.
 - **Replay QA review follow-ups (WRE-271, 0.8.9, branch only, not released)**:
   - **Legal pages and strict CSP:** `/privacy`, `/terms`, `/cookies`, and `/acceptable-use` no longer use `force-static`. Clerk's strict CSP sends a per-request nonce, and a statically rendered page has none, so its inline scripts could be blocked.
   - **Sign-in and sign-up submit button:** `SignInFormGuard` now only re-enables a submit button it disabled itself, and never claims one Clerk had already disabled, so it no longer clears the disabled state Clerk sets while a sign-up is in flight (which allowed a double submit).

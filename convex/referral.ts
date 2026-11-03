@@ -7,7 +7,7 @@ import { requireCurrentUser, requireHost } from "./lib/auth";
 import { recordActivity } from "./lib/activity";
 import { assertReferralCode } from "./lib/validation";
 import { generateReferralCode, normalizeReferralCode } from "../lib/referral";
-import { ensureGuestTerms, offerGuestAgreement } from "./lib/stayTerms";
+import { createRejoinGuestTerms, ensureGuestTerms, offerGuestAgreement } from "./lib/stayTerms";
 import { scheduleSubscriptionLimitShadow } from "./subscriptionShadow";
 import { clearBlockedJoins } from "./subscriptions";
 import { ANALYTICS_EVENTS } from "../lib/analytics/events";
@@ -90,9 +90,16 @@ export const joinWithCode = mutation({
       }
       await assertPlanCapacity(ctx, stay.hostUserId, "guest", stay.householdAccountId);
       // Re-activate if left
-      await ctx.db.patch(existingMembership._id, { status: "active", joinedAt: Date.now() });
+      // Keep acceptedTermsId: accepting the new agreement uses it to retire the
+      // earlier schedule. Codes stay hidden until that acceptance.
+      await ctx.db.patch(existingMembership._id, {
+        status: "active",
+        joinedAt: Date.now(),
+        ...(existingMembership.role === "guest" ? { accessCodesNeedAcceptance: true } : {}),
+      });
       await clearBlockedJoins(ctx, stay._id, user._id);
-      const guestTerms = await ensureGuestTerms(ctx, stay._id, user._id, stay.hostUserId);
+      const rejoined = await ctx.db.get(existingMembership._id);
+      const guestTerms = await createRejoinGuestTerms(ctx, stay, rejoined!);
       await offerGuestAgreement(ctx, { stayId: stay._id, termsId: guestTerms._id, guestUserId: user._id, offeredBy: stay.hostUserId });
       if (stay.status === "active") {
         await scheduleSubscriptionLimitShadow(ctx, stay._id, "guest_rejoined", "active_guest_memberships");

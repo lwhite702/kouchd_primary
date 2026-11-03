@@ -31,6 +31,8 @@ export type StayBundle = {
   terms: Doc<"terms"> | null;
   membership: Doc<"memberships">;
   members: Member[];
+  /** Set only when the server removed a configured door or Wi-Fi code. */
+  accessCodesHidden: "needs_acceptance" | "ended" | null;
 };
 
 export type LedgerItem = {
