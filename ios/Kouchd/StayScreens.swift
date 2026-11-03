@@ -128,6 +128,19 @@ struct StayScreen: View {
           }
         }
       }
+      if store.bundle["stay"]["arrangement"].text == "sublease" {
+        Card {
+          Text("Condition Checklists").font(.headline)
+          Text("Move-in and move-out condition checklists document private room and shared space conditions with timestamped confirmations.")
+            .font(.subheadline).foregroundStyle(Palette.muted)
+          DataRow(title: "Checklist type", detail: store.bundle["stay"]["subleaseLayout"].text == "private_room" ? "Private room + shared areas" : "Whole place")
+        }
+        Card {
+          Text("Security Deposit").font(.headline)
+          Text("Kouchd provides shared household records only and never holds, transfers, or decides deposit funds.")
+            .font(.footnote).foregroundStyle(Palette.muted)
+        }
+      }
       }
     }
     .toolbar {

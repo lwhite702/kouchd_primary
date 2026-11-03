@@ -28,6 +28,8 @@ import {
   SubleaseLockBanner,
 } from "./view-helpers";
 import { isUsableName } from "@/lib/names";
+import { ConditionChecklistCard } from "@/components/subleases/condition-checklist-card";
+import { DepositRecordCard } from "@/components/subleases/deposit-record-card";
 
 const PaywallModal = dynamic(() =>
   import("@/components/billing/paywall-modal").then((m) => m.PaywallModal),
@@ -328,6 +330,27 @@ export function StayScreen({ state }: { state: WorkspaceState }) {
         onEdit={() => setPanel("houseInfo")}
         onNotify={notify}
       />
+      {bundle?.stay.arrangement === "sublease" && (
+        <>
+          <ConditionChecklistCard
+            stayId={bundle.stay._id}
+            isHost={Boolean(isHost)}
+            isSublease={bundle.stay.arrangement === "sublease"}
+            subleaseLayout={bundle.stay.subleaseLayout}
+            isLocked={Boolean(bundle.subleaseLock?.locked)}
+            guestUserId={selectedGuestMember?.person.id}
+            onNotify={notify}
+          />
+          <DepositRecordCard
+            stayId={bundle.stay._id}
+            isHost={Boolean(isHost)}
+            isSublease={bundle.stay.arrangement === "sublease"}
+            isLocked={Boolean(bundle.subleaseLock?.locked)}
+            guestUserId={selectedGuestMember?.person.id}
+            onNotify={notify}
+          />
+        </>
+      )}
       {isHost && selectedGuestMember && (
         <section className="section-block">
           <div className="section-heading">
