@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { api } from "../convex/_generated/api";
 import { assertStayTerms } from "../convex/lib/validation";
 import schema from "../convex/schema";
+import { grantPlus } from "./helpers/plans";
 import {
   calendarMonthDueDate,
   calendarMonthEnd,
@@ -513,6 +514,7 @@ describe("monthly rent server validation & Convex safeguards", () => {
       timezone: "UTC",
       terms: baseWeeklyTerms,
     });
+    await grantPlus(t, stayId);
     await t.run(async (ctx) => {
       await ctx.db.patch(stayId, { arrangement: "sublease" });
     });
@@ -692,6 +694,7 @@ describe("monthly rent server validation & Convex safeguards", () => {
       timezone: "UTC",
       terms: baseWeeklyTerms,
     });
+    await grantPlus(t, stayId);
     await t.run(async (ctx) => {
       await ctx.db.patch(stayId, { arrangement: "sublease" });
     });
