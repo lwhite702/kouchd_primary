@@ -20,6 +20,7 @@ import { HELP_LINKS } from "@/lib/help-links";
 
 import type { WorkspaceState } from "./use-live-stay";
 import { ModalActions, panelTitle } from "./view-helpers";
+import { isUsableName } from "@/lib/names";
 export function WorkspacePanels({ state }: { state: WorkspaceState }) {
   const {
     actionError,
@@ -261,8 +262,7 @@ export function WorkspacePanels({ state }: { state: WorkspaceState }) {
                 <option value="">Everyone</option>
                 {members.map((member) => (
                   <option value={member.person.id} key={member.person.id}>
-                    {member.person.name &&
-                    member.person.name !== "Kouchd member"
+                    {isUsableName(member.person.name)
                       ? member.person.name
                       : member.membership.role === "host"
                         ? "Host"
@@ -341,7 +341,7 @@ export function WorkspacePanels({ state }: { state: WorkspaceState }) {
               <input
                 name="name"
                 type="text"
-                defaultValue={clerkUser?.fullName || ""}
+                defaultValue={clerkUser?.fullName || (isUsableName(viewer?.name) ? viewer.name : "")}
                 placeholder="e.g. Lee White"
                 maxLength={80}
               />
@@ -467,10 +467,9 @@ export function WorkspacePanels({ state }: { state: WorkspaceState }) {
             (item) => item.person.id === editingGuestId,
           );
           const guestTerms = guest?.terms ?? terms;
-          const currentGuestName =
-            guest?.person.name && guest.person.name !== "Kouchd member"
-              ? guest.person.name
-              : "Guest";
+          const currentGuestName = isUsableName(guest?.person.name)
+            ? guest.person.name
+            : "Guest";
           return guest && guestTerms ? (
             <GuestAgreementForm
               terms={guestTerms}

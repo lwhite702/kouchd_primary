@@ -3,7 +3,7 @@ import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import { mutation, query } from "./_generated/server";
 import { requireCurrentUser } from "./lib/auth";
-import { resolveMemberName } from "./lib/names";
+import { isUsableName, resolveMemberName } from "./lib/names";
 import { assertPhone } from "./lib/validation";
 import { ANALYTICS_EVENTS } from "../lib/analytics/events";
 import { trackServerEvent } from "./lib/posthog";
@@ -37,14 +37,30 @@ export const syncCurrent = mutation({
     if (args.clerkName !== undefined && (!clerkName || clerkName.length > 80)) {
       throw new Error("Name must be between 1 and 80 characters");
     }
+    const explicitName = isUsableName(clerkName) ? clerkName : undefined;
+
+    let role: "host" | "guest" | undefined;
+    if (existing) {
+      const activeMembership = await ctx.db
+        .query("memberships")
+        .withIndex("by_user", (q) => q.eq("userId", existing._id))
+        .filter((q) => q.eq(q.field("status"), "active"))
+        .first();
+      if (activeMembership) {
+        role = activeMembership.role;
+      }
+    }
+
     const name = resolveMemberName({
-      explicitName: clerkName,
+      explicitName,
       identityName: identity.name,
       givenName: identity.givenName,
       familyName: identity.familyName,
       nickname: identity.nickname,
       preferredUsername: identity.preferredUsername,
       email: args.email ?? identity.email,
+      existingName: existing?.name,
+      role,
     });
     const email = args.email?.trim() || identity.email || existing?.email;
     const imageUrl = args.imageUrl || identity.pictureUrl || existing?.imageUrl;
@@ -75,7 +91,10 @@ export const viewer = query({
     return {
       id: user._id,
       // syncCurrent mirrors the Clerk profile into Convex for household queries.
-      name: user.name,
+      name: resolveMemberName({
+        existingName: user.name,
+        email: user.email,
+      }),
       email: user.email,
       phone: user.phone,
       imageUrl: user.imageUrl,

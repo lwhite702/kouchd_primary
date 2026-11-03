@@ -3,6 +3,7 @@
 import type { Id } from "@/convex/_generated/dataModel";
 
 import { Member, Panel } from "@/components/workspace/types";
+import { isUsableName } from "@/lib/names";
 
 export function GuestTabs({
   guests,
@@ -22,7 +23,7 @@ export function GuestTabs({
           key={guest.person.id}
           onClick={() => onSelect(guest.person.id)}
         >
-          {guest.person.name && guest.person.name !== "Kouchd member"
+          {isUsableName(guest.person.name)
             ? guest.person.name
             : "Guest"}
         </button>

@@ -112,14 +112,29 @@ describe("Convex user sync and member name persistence", () => {
     expect(v?.name).toBe("Jordan Belfort");
   });
 
-  it("does not preserve a stale Convex-only name during a later sync", async () => {
+  it("preserves an established member name when a later sync omits name claims", async () => {
     const t = convexTest(schema, modules);
     const actor = t.withIdentity({ subject: "user-789", email: "casey.guest@example.com" });
-    await actor.mutation(api.users.syncCurrent, { clerkName: "Stale Convex Name" });
+    await actor.mutation(api.users.syncCurrent, { clerkName: "Established Member Name" });
 
+    // Subsequent sync without name arguments preserves the established name
+    await actor.mutation(api.users.syncCurrent, {});
+    let v = await actor.query(api.users.viewer, {});
+    expect(v?.name).toBe("Established Member Name");
+
+    // But an updated Clerk name takes precedence when provided
+    await actor.mutation(api.users.syncCurrent, { clerkName: "Casey Updated" });
+    v = await actor.query(api.users.viewer, {});
+    expect(v?.name).toBe("Casey Updated");
+  });
+
+  it("never returns 'Kouchd member' even with completely empty claims and no email", async () => {
+    const t = convexTest(schema, modules);
+    const actor = t.withIdentity({ subject: "empty-user" });
     await actor.mutation(api.users.syncCurrent, {});
     const v = await actor.query(api.users.viewer, {});
-    expect(v?.name).toBe("Casey Guest");
+    expect(v?.name).not.toBe("Kouchd member");
+    expect(v?.name).toBe("Guest");
   });
 
   it("keeps reminder preference updates separate from profile names", async () => {

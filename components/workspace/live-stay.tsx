@@ -38,6 +38,7 @@ import { NotificationBellMenu } from "@/components/notifications/dashboard-notif
 
 import { MobileHeaderMenu } from "@/components/navigation/header-menu";
 import { Tooltip } from "@/components/ui/tooltip";
+import { isUsableName } from "@/lib/names";
 import { HELP_LINKS } from "@/lib/help-links";
 import { FeatureGate } from "@/components/flags/feature-gate";
 import { FEATURE_FLAGS } from "@/lib/flags/config";
@@ -247,7 +248,7 @@ export function LiveStay({
         <div className="v21-sidebar-footer">
           <div className="v21-sidebar-account">
             <span className="v21-sidebar-user-name">
-              {viewer?.name && viewer.name !== "Kouchd member"
+              {isUsableName(viewer?.name)
                 ? viewer.name
                 : isHost
                   ? "Host"
@@ -496,10 +497,9 @@ export function LiveStay({
                 today={asOfDate ?? ""}
                 guests={guestMembers.map((guest) => ({
                   id: guest.person.id,
-                  name:
-                    guest.person.name && guest.person.name !== "Kouchd member"
-                      ? guest.person.name
-                      : "Guest",
+                  name: isUsableName(guest.person.name)
+                    ? guest.person.name
+                    : "Guest",
                 }))}
               />
             </FeatureGate>

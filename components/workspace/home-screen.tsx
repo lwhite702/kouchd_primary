@@ -20,6 +20,7 @@ import {
 
 import type { WorkspaceState } from "./use-live-stay";
 import { GuestTabs } from "./view-helpers";
+import { isUsableName } from "@/lib/names";
 export function HomeScreen({
   state,
   onBackToHub,
@@ -79,6 +80,43 @@ export function HomeScreen({
         onOpenSettings={() => setPanel("settings")}
       />
 
+      {!isEnded && !isUsableName(viewer?.name) && (
+        <div
+          className="agreement-callout"
+          style={{
+            marginBottom: "1.25rem",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "1rem",
+            background: "#f4f7f2",
+            border: "1px solid rgba(24, 79, 58, 0.15)",
+            borderRadius: "16px",
+            padding: "0.85rem 1.15rem",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+            <Users size={20} style={{ color: "var(--green, #184f3a)", flexShrink: 0 }} />
+            <div>
+              <strong style={{ display: "block", color: "var(--ink, #17251f)", fontSize: "0.92rem" }}>
+                What should your household call you?
+              </strong>
+              <span style={{ color: "var(--muted, #56635d)", fontSize: "0.82rem" }}>
+                Add your name so everyone in the house knows who you are.
+              </span>
+            </div>
+          </div>
+          <button
+            type="button"
+            className="button primary compact"
+            onClick={() => setPanel("settings")}
+            style={{ flexShrink: 0 }}
+          >
+            Add your name
+          </button>
+        </div>
+      )}
+
       {isHost ? (
         <div className="host-workspace-overview">
           <Image
@@ -120,7 +158,7 @@ export function HomeScreen({
               <h1>
                 {isEnded ? "Stay history for" : greeting}{" "}
                 {
-                  (viewer?.name && viewer.name !== "Kouchd member"
+                  (isUsableName(viewer?.name)
                     ? viewer.name
                     : "Host"
                   ).split(" ")[0]
@@ -180,12 +218,11 @@ export function HomeScreen({
             <div className="host-workspace-member-strip">
               <div className="host-workspace-avatar-list">
                 {members.slice(0, 5).map((member, index) => {
-                  const name =
-                    member.person.name && member.person.name !== "Kouchd member"
-                      ? member.person.name
-                      : member.membership.role === "host"
-                        ? "Host"
-                        : "Guest";
+                  const name = isUsableName(member.person.name)
+                    ? member.person.name
+                    : member.membership.role === "host"
+                      ? "Host"
+                      : "Guest";
                   const initials = name
                     .split(" ")
                     .map((part) => part[0])
@@ -318,12 +355,11 @@ export function HomeScreen({
                               member.person.id === item.assigneeUserId,
                           )?.person.name
                         : undefined;
-                      const assignee =
-                        assigned && assigned !== "Kouchd member"
-                          ? assigned
-                          : item.assigneeUserId
-                            ? "Guest"
-                            : item.assignee;
+                      const assignee = isUsableName(assigned)
+                        ? assigned
+                        : item.assigneeUserId
+                          ? "Guest"
+                          : item.assignee;
                       return (
                         <article
                           className="host-workspace-chore-row"
@@ -392,10 +428,9 @@ export function HomeScreen({
                       const contributor = members.find(
                         (member) => member.person.id === entry.createdBy,
                       )?.person.name;
-                      const contributorName =
-                        contributor && contributor !== "Kouchd member"
-                          ? contributor
-                          : "Household member";
+                      const contributorName = isUsableName(contributor)
+                        ? contributor
+                        : "Household member";
                       const contributionType =
                         entry.type === "payment"
                           ? "Contribution"
@@ -464,8 +499,7 @@ export function HomeScreen({
                       const actorName =
                         item.actorType === "system"
                           ? "System"
-                          : actor?.person.name &&
-                              actor.person.name !== "Kouchd member"
+                          : isUsableName(actor?.person.name)
                             ? actor.person.name
                             : item.actorUserId === bundle.membership.userId
                               ? "You"
@@ -554,13 +588,11 @@ export function HomeScreen({
                 </div>
                 <div className="host-workspace-household-avatars">
                   {members.map((member) => {
-                    const personName =
-                      member.person.name &&
-                      member.person.name !== "Kouchd member"
-                        ? member.person.name
-                        : member.membership.role === "host"
-                          ? "Host"
-                          : "Guest";
+                    const personName = isUsableName(member.person.name)
+                      ? member.person.name
+                      : member.membership.role === "host"
+                        ? "Host"
+                        : "Guest";
                     const initials = personName
                       .split(" ")
                       .map((part) => part[0])
@@ -942,8 +974,7 @@ export function HomeScreen({
                 const actorName =
                   item.actorType === "system"
                     ? "System"
-                    : actorMember?.person.name &&
-                        actorMember.person.name !== "Kouchd member"
+                    : isUsableName(actorMember?.person.name)
                       ? actorMember.person.name
                       : item.actorUserId === bundle.membership.userId
                         ? "You"

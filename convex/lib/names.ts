@@ -11,9 +11,12 @@ export function formatEmailAsName(email?: string): string | undefined {
   return localPart ? localPart.charAt(0).toUpperCase() + localPart.slice(1) : undefined;
 }
 
-function isUsableName(name?: string): name is string {
+export function isUsableName(name?: string): name is string {
   const normalized = name?.trim().replace(/\s+/g, " ").toLowerCase();
-  return Boolean(normalized && !["guest", "host", "kouchd member", "unknown guest", "unknown member"].includes(normalized));
+  return Boolean(
+    normalized &&
+      !["guest", "host", "kouchd member", "unknown guest", "unknown member", "member"].includes(normalized)
+  );
 }
 
 export function resolveMemberName(candidate: {
@@ -55,7 +58,7 @@ export function resolveMemberName(candidate: {
     return preferred;
   }
 
-  // 5. Keep a saved profile name only when it is not a generic role fallback.
+  // 5. Keep a saved profile name only when it is not a generic role fallback or placeholder.
   const existing = candidate.existingName?.trim();
   if (isUsableName(existing)) {
     return existing;
@@ -67,9 +70,9 @@ export function resolveMemberName(candidate: {
     return fromEmail;
   }
 
-  // 7. Role-based fallback or default
+  // 7. Role-based fallback or default (never return "Kouchd member")
   if (candidate.role === "host") return "Host";
   if (candidate.role === "guest") return "Guest";
 
-  return "Kouchd member";
+  return "Guest";
 }

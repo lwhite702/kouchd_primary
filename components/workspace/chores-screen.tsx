@@ -8,6 +8,7 @@ import { Tooltip } from "@/components/ui/tooltip";
 import { HELP_LINKS } from "@/lib/help-links";
 
 import { formatDate } from "@/components/workspace/types";
+import { isUsableName } from "@/lib/names";
 
 import type { WorkspaceState } from "./use-live-stay";
 
@@ -92,16 +93,10 @@ export function ChoresScreen({ state }: { state: WorkspaceState }) {
                     : "One time"}{" "}
                   ·{" "}
                   {item.assigneeUserId
-                    ? members.find(
-                        (member) => member.person.id === item.assigneeUserId,
-                      )?.person.name &&
-                      members.find(
-                        (member) => member.person.id === item.assigneeUserId,
-                      )!.person.name !== "Kouchd member"
-                      ? members.find(
-                          (member) => member.person.id === item.assigneeUserId,
-                        )!.person.name
-                      : "Guest"
+                    ? (() => {
+                        const m = members.find((member) => member.person.id === item.assigneeUserId);
+                        return isUsableName(m?.person.name) ? m.person.name : "Guest";
+                      })()
                     : item.assignee}
                 </span>
               </div>

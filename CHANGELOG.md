@@ -2,6 +2,17 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- **Eliminated "Kouchd member" placeholder across client and server (WRE-269, #136, branch only, not released)**:
+  - Removed `"Kouchd member"` fallback in `convex/lib/names.ts`, ensuring that name resolution never generates or returns `"Kouchd member"`. If all candidate names and email formatting are missing, fallbacks resolve to friendly, role-based labels (`"Host"` or `"Guest"`).
+  - Fixed `ios/Kouchd/Service.swift` `syncUser` to pass actual `clerkUser.firstName`, `clerkUser.lastName`, `primaryEmailAddress?.emailAddress`, and `imageUrl`, preventing iOS client sync from submitting empty arguments.
+  - Updated `convex/users.ts:syncCurrent` to pass `existingName: existing?.name` and resolve `role` from active stay memberships so valid, established profile names are never overwritten with placeholders during empty syncs.
+  - Sanitized `convex/users.ts:viewer` through `resolveMemberName` so legacy stored records do not leak `"Kouchd member"` into frontend views.
+  - Replaced ad-hoc defensive checks (`!== "Kouchd member"`) across web workspace components (`chores-screen.tsx`, `home-screen.tsx`, `live-stay.tsx`, `stay-screen.tsx`, `use-live-stay.ts`, `view-helpers.tsx`, `workspace-panels.tsx`, and `convex/notifications.ts`) with normalized `isUsableName(...)` guards.
+  - Added a gentle, welcoming display name prompt on Web (`HomeScreen`, `StayHub`, and `AccountSettingsDialog`) inviting users whose accounts lack a usable name to set what their household should call them.
+  - Updated unit and integration tests in `tests/users-names.test.ts` to assert that established names persist across syncs and that `"Kouchd member"` is never returned.
+
 ### Added
 
 - **Simplified introduction landing page & brand kit password protection (WRE-243)**:

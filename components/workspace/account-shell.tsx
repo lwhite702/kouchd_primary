@@ -34,6 +34,8 @@ import { HELP_LINKS } from "@/lib/help-links";
 import { FeatureGate } from "@/components/flags/feature-gate";
 import { FEATURE_FLAGS } from "@/lib/flags/config";
 import { StayMembershipSummary } from "@/components/workspace/types";
+import { isUsableName } from "@/lib/names";
+import { AccountSettingsDialog } from "./account-settings-dialog";
 
 const PaywallModal = dynamic(() =>
   import("@/components/billing/paywall-modal").then((m) => m.PaywallModal),
@@ -179,10 +181,11 @@ export function GetStartedHub({
   onHostStayCreated: (stayId: Id<"stays">) => void;
 }) {
   const [tab, setTab] = useState<"host" | "join">("host");
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   return (
     <div className="app-shell production-shell">
-      <AccountHeader />
+      <AccountHeader onSettings={() => setSettingsOpen(true)} />
       <main style={{ padding: "1.5rem 1rem 4rem" }}>
         <div className="get-started-artwork" aria-hidden="true">
           <Image
@@ -271,6 +274,10 @@ export function GetStartedHub({
           />
         )}
       </main>
+      <AccountSettingsDialog
+        isOpen={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+      />
     </div>
   );
 }
@@ -286,11 +293,13 @@ export function StayHub({
 }) {
   const { user } = useUser();
   const usage = useQuery(api.subscriptions.planUsage, user ? {} : "skip");
+  const viewer = useQuery(api.users.viewer, user ? {} : "skip");
   const dismissBlockedJoin = useMutation(api.subscriptions.dismissBlockedJoin);
 
   const [creating, setCreating] = useState(false);
   const [limitModalOpen, setLimitModalOpen] = useState(false);
   const [paywallOpen, setPaywallOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const stayLimit =
     usage?.planConfigured &&
@@ -326,7 +335,7 @@ export function StayHub({
 
   return (
     <div className="app-shell production-shell">
-      <AccountHeader />
+      <AccountHeader onSettings={() => setSettingsOpen(true)} />
       <main className="stay-hub">
         {creating ? (
           <div className="stay-hub-setup">
@@ -390,6 +399,43 @@ export function StayHub({
                   await dismissBlockedJoin({ blockedJoinId });
                 }}
               />
+            )}
+
+            {!isUsableName(viewer?.name) && (
+              <div
+                className="agreement-callout"
+                style={{
+                  marginBottom: "1.25rem",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: "1rem",
+                  background: "#f4f7f2",
+                  border: "1px solid rgba(24, 79, 58, 0.15)",
+                  borderRadius: "16px",
+                  padding: "0.85rem 1.15rem",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                  <Users size={20} style={{ color: "var(--green, #184f3a)", flexShrink: 0 }} />
+                  <div>
+                    <strong style={{ display: "block", color: "var(--ink, #17251f)", fontSize: "0.92rem" }}>
+                      What should your household call you?
+                    </strong>
+                    <span style={{ color: "var(--muted, #56635d)", fontSize: "0.82rem" }}>
+                      Add your name so everyone in the house knows who you are.
+                    </span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className="button primary compact"
+                  onClick={() => setSettingsOpen(true)}
+                  style={{ flexShrink: 0 }}
+                >
+                  Add your name
+                </button>
+              </div>
             )}
 
             <section className="stay-hub-section">
@@ -526,6 +572,10 @@ export function StayHub({
           userEmail={user?.primaryEmailAddress?.emailAddress}
         />
       )}
+      <AccountSettingsDialog
+        isOpen={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+      />
     </div>
   );
 }
