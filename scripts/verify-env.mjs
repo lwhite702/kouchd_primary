@@ -1,3 +1,18 @@
+import { readFileSync } from "node:fs";
+
+function launchLockEnabled() {
+  const lockPath = new URL("../release/feature-lock.json", import.meta.url);
+  try {
+    // Same truthiness rule as scripts/release-gate.mjs.
+    return Boolean(JSON.parse(readFileSync(lockPath, "utf8")).enabled);
+  } catch (error) {
+    console.error(
+      `Configuration error: could not read release/feature-lock.json (${error.message}).`
+    );
+    process.exit(1);
+  }
+}
+
 const isManagedBuild = Boolean(process.env.CI || process.env.VERCEL_ENV);
 
 if (!isManagedBuild) {
@@ -31,10 +46,12 @@ if (isProduction) {
   }
 
   const subEnv = process.env.SUBSCRIPTION_EXPECTED_ENVIRONMENT;
-  if (process.env.VERCEL_ENV === "production") {
+  // Store billing stays on sandbox during prerelease; live billing is required
+  // once the Version 1.0 feature lock turns on for the App Store submission.
+  if (process.env.VERCEL_ENV === "production" && launchLockEnabled()) {
     if (subEnv !== "production") {
       console.error(
-        'Configuration error: SUBSCRIPTION_EXPECTED_ENVIRONMENT must be set to "production" for Vercel production deployments.'
+        'Configuration error: SUBSCRIPTION_EXPECTED_ENVIRONMENT must be set to "production" for Vercel production deployments once the Version 1.0 feature lock is enabled.'
       );
       process.exit(1);
     }
