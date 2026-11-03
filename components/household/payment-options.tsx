@@ -5,6 +5,7 @@ import { FormEvent, useState } from "react";
 
 import type { Doc } from "@/convex/_generated/dataModel";
 import { Tooltip } from "@/components/ui/tooltip";
+import { PaymentOptionsIllustration } from "@/components/illustrations/empty-state-illustrations";
 
 type PaymentOption = NonNullable<Doc<"stays">["paymentOptions"]>[number];
 const providers = [
@@ -90,7 +91,13 @@ export function PaymentOptionsCard({
             );
           })}
         </div>
-      ) : <p className="muted">{isHost ? "Add a payment method for guests to use outside Kouchd." : "The host has not shared payment details yet."}</p>}
+      ) : (
+        <div className="empty-list line-art-empty-state payment-options-empty-state">
+          <PaymentOptionsIllustration />
+          <strong>{isHost ? "No payment options added yet" : "No payment details shared yet"}</strong>
+          <p>{isHost ? "Add a way for guests to pay you directly outside Kouchd." : "Your host has not shared a way to pay them outside Kouchd yet."}</p>
+        </div>
+      )}
     </section>
   );
 }

@@ -15,6 +15,7 @@ import { formatMoney, formatDate } from "@/components/workspace/types";
 
 import type { WorkspaceState } from "./use-live-stay";
 import { GuestTabs } from "./view-helpers";
+import { LedgerEntryIllustration } from "@/components/illustrations/empty-state-illustrations";
 export function ContributionsScreen({ state }: { state: WorkspaceState }) {
   const {
     setScreen,
@@ -271,7 +272,14 @@ export function ContributionsScreen({ state }: { state: WorkspaceState }) {
           </div>
         </div>
         <div className="ledger-list">
-          {activeContributions.map((item) => (
+          {activeContributions.length === 0 ? (
+            <div className="empty-list line-art-empty-state">
+              <LedgerEntryIllustration />
+              <strong>No contributions recorded yet</strong>
+              <p>Contributions you record for this guest will appear here.</p>
+            </div>
+          ) : (
+            activeContributions.map((item) => (
             <article className="list-row contribution-row" key={item._id}>
               <span className="list-icon payment">
                 <Landmark size={19} />
@@ -327,7 +335,8 @@ export function ContributionsScreen({ state }: { state: WorkspaceState }) {
                 </div>
               )}
             </article>
-          ))}
+          ))
+          )}
         </div>
       </section>
     </div>

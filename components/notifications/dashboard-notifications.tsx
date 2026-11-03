@@ -14,6 +14,7 @@ import {
   Users,
   X,
 } from "lucide-react";
+import { RemindersIllustration } from "@/components/illustrations/empty-state-illustrations";
 
 export type NotificationItem = {
   id: string;
@@ -277,7 +278,7 @@ export function NotificationBellMenu({
             <div className="notification-popover-feed">
               {activeItems.length === 0 ? (
                 <div className="notification-popover-empty">
-                  <CheckCircle2 size={24} color="var(--green, #184f3a)" />
+                  <RemindersIllustration className="line-art-illustration line-art-illustration--compact" />
                   <p><strong>You&apos;re all caught up!</strong></p>
                   <span>No unconfirmed contributions, overdue charges, or pending chores.</span>
                 </div>

@@ -4,6 +4,7 @@ import { Check, Copy, Edit3, Eye, EyeOff, FileText, Key, MapPin, Phone, Plus, Tr
 import { FormEvent, useState } from "react";
 
 import type { Doc } from "@/convex/_generated/dataModel";
+import { HouseGuideIllustration } from "@/components/illustrations/empty-state-illustrations";
 
 export type AccessCodesHiddenReason = "needs_acceptance" | "ended" | null;
 
@@ -77,11 +78,8 @@ export function HouseholdLogisticsCard({
       </div>
 
       {!hasAnyInfo ? (
-        <div className="empty-list" style={{ padding: "28px 20px", textAlign: "center" }}>
-          <Wifi
-            size={34}
-            style={{ margin: "0 auto 10px", color: "var(--green, #184f3a)", opacity: 0.75 }}
-          />
+        <div className="empty-list line-art-empty-state" style={{ padding: "28px 20px", textAlign: "center" }}>
+          <HouseGuideIllustration />
           <strong style={{ display: "block", fontSize: "1.05rem", marginBottom: 6 }}>
             {isHost ? "No household details added yet" : "No household details shared yet"}
           </strong>

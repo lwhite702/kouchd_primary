@@ -899,23 +899,23 @@
   flex-shrink: 0;
 }
 
-.v21-activity-status.status-confirmed,
-.v21-activity-status.status-sky {
-  background: var(--v21-sage);
+.v21-activity-status.status-confirmed {
+  background: var(--kouchd-sage);
   color: var(--kouchd-on-fill);
 }
 
-.v21-activity-status.status-recorded,
-.v21-activity-status.status-lime {
-  background: var(--v21-sky-soft);
-  border: 1px solid var(--v21-sky-border);
-  color: var(--kouchd-palette-1d5b6d);
+.v21-activity-status.status-recorded { background: var(--kouchd-palette-e8e5dd); color: var(--kouchd-muted); }
+
+.v21-activity-status.status-sky,
+.v21-activity-status.status-pending {
+  background: var(--kouchd-sky);
+  color: var(--kouchd-on-fill);
 }
 
-.v21-activity-status.status-pending {
-  background: var(--v21-amber-soft);
-  border: 1px solid var(--v21-amber-border);
-  color: var(--v21-amber);
+.v21-activity-status.status-attention,
+.v21-activity-status.status-disputed {
+  background: var(--kouchd-palette-f1cfc6);
+  color: var(--kouchd-on-fill);
 }
 
 /* Referral Code Highlight Card */
@@ -1447,9 +1447,10 @@
   white-space: normal;
 }
 
-.host-workspace-status.confirmed { background: var(--v21-sky); color: var(--kouchd-on-fill); }
-.host-workspace-status.recorded { background: var(--v21-lime); color: var(--kouchd-on-fill); }
-.host-workspace-status.logged { background: var(--kouchd-palette-f4e9ca); color: var(--kouchd-palette-674814); }
+.host-workspace-status.confirmed { background: var(--kouchd-sage); color: var(--kouchd-on-fill); }
+.host-workspace-status.recorded,
+.host-workspace-status.logged { background: var(--kouchd-palette-e8e5dd); color: var(--kouchd-muted); }
+.host-workspace-status.attention { background: var(--kouchd-palette-f1cfc6); color: var(--kouchd-on-fill); }
 
 .host-workspace-household-avatars { gap: 9px; margin: 4px 0 14px; }
 .host-workspace-household-copy { margin: 0 0 14px; }

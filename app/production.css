@@ -94,8 +94,8 @@
 .accepted-pill {
   flex: 0 0 auto;
   border-radius: 99px;
-  background: var(--kouchd-brand-forest);
-  color: var(--kouchd-on-brand) !important;
+  background: var(--kouchd-sage);
+  color: var(--kouchd-on-fill) !important;
   padding: 8px 12px;
   font-size: 0.74rem !important;
   font-weight: 800;
@@ -933,14 +933,13 @@ input[type="radio"] {
   -webkit-tap-highlight-color: transparent;
 }
 
-.button:active,
+.button:not(.primary):active,
 .mini-button:active,
 .icon-button:active,
 .stay-switcher-button:active {
   transform: translateY(1px) scale(0.98) !important;
 }
 
-.button.primary:active,
 .mini-button:active,
 .icon-button:active,
 .stay-switcher-button:active {
