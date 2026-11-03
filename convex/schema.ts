@@ -333,6 +333,49 @@ export default defineSchema({
     .index("by_stay_guest_and_voided", ["stayId", "guestUserId", "voidedAt"])
     .index("by_due_date", ["dueDate"]),
 
+  bills: defineTable({
+    stayId: v.id("stays"),
+    createdBy: v.id("users"),
+    title: v.string(),
+    category: v.union(
+      v.literal("electricity"),
+      v.literal("water"),
+      v.literal("gas"),
+      v.literal("internet"),
+      v.literal("trash"),
+      v.literal("other"),
+    ),
+    serviceStart: v.string(),
+    serviceEnd: v.string(),
+    totalCents: v.number(),
+    dueDate: v.string(),
+    splitMethod: v.union(
+      v.literal("equal"),
+      v.literal("percentage"),
+      v.literal("fixed"),
+    ),
+    includeHost: v.boolean(),
+    prorateByStayDates: v.boolean(),
+    createdAt: v.number(),
+    voidedAt: v.optional(v.number()),
+    voidedBy: v.optional(v.id("users")),
+  })
+    .index("by_stay", ["stayId"])
+    .index("by_stay_created_at", ["stayId", "createdAt"]),
+
+  billShares: defineTable({
+    billId: v.id("bills"),
+    stayId: v.id("stays"),
+    guestUserId: v.id("users"),
+    input: v.optional(v.number()),
+    prorationDays: v.optional(v.number()),
+    amountCents: v.number(),
+    obligationId: v.id("obligations"),
+  })
+    .index("by_bill", ["billId"])
+    .index("by_stay_guest", ["stayId", "guestUserId"])
+    .index("by_obligation", ["obligationId"]),
+
   contributions: defineTable({
     stayId: v.id("stays"),
     guestUserId: v.optional(v.id("users")),

@@ -37,6 +37,8 @@ const capabilitiesValidator = v.object({
   expandedKoins: v.boolean(),
   hostReporting: v.boolean(),
   welcomeKit: v.boolean(),
+  billSplits: v.boolean(),
+  subleases: v.boolean(),
   multiStayManagement: v.boolean(),
   cohostAdministration: v.boolean(),
   consolidatedReporting: v.boolean(),

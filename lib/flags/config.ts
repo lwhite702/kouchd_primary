@@ -4,6 +4,7 @@ export const FEATURE_FLAGS = {
   CHECK_IN_BOARD: "feature_check_in_board",
   REWARDS_SYSTEM: "feature_rewards_system",
   HOUSEHOLD_ANNOUNCEMENTS: "feature_household_announcements",
+  BILL_SPLITTING: "feature_bill_splitting",
 
   // Core & Launch Plans
   FLEXIBLE_PAYMENT_SCHEDULES: "feature_flexible_payment_schedules",
@@ -62,6 +63,13 @@ export const FEATURE_FLAGS_REGISTRY: Record<FeatureFlagKey, FeatureFlagMeta> = {
     description: "Enables host announcement broadcast banner and live stay activity streams.",
     category: "household",
     defaultValue: true,
+  },
+  [FEATURE_FLAGS.BILL_SPLITTING]: {
+    key: FEATURE_FLAGS.BILL_SPLITTING,
+    label: "Household Bill Splitting",
+    description: "Enables Plus hosts to split household bills across guests into ledger obligations.",
+    category: "household",
+    defaultValue: false,
   },
   [FEATURE_FLAGS.FLEXIBLE_PAYMENT_SCHEDULES]: {
     key: FEATURE_FLAGS.FLEXIBLE_PAYMENT_SCHEDULES,

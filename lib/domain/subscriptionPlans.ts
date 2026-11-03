@@ -75,6 +75,8 @@ export interface PlanCapabilities {
   expandedKoins: boolean;
   hostReporting: boolean;
   welcomeKit: boolean;
+  billSplits: boolean;
+  subleases: boolean;
   multiStayManagement: boolean;
   cohostAdministration: boolean;
   consolidatedReporting: boolean;
@@ -86,6 +88,8 @@ const CORE_CAPABILITIES: Omit<PlanCapabilities,
   | "expandedKoins"
   | "hostReporting"
   | "welcomeKit"
+  | "billSplits"
+  | "subleases"
   | "multiStayManagement"
   | "cohostAdministration"
   | "consolidatedReporting"
@@ -105,6 +109,8 @@ export const PLAN_CAPABILITIES: Readonly<Record<SubscriptionPlan, PlanCapabiliti
     expandedKoins: false,
     hostReporting: false,
     welcomeKit: false,
+    billSplits: false,
+    subleases: false,
     multiStayManagement: false,
     cohostAdministration: false,
     consolidatedReporting: false,
@@ -116,6 +122,8 @@ export const PLAN_CAPABILITIES: Readonly<Record<SubscriptionPlan, PlanCapabiliti
     expandedKoins: true,
     hostReporting: true,
     welcomeKit: true,
+    billSplits: true,
+    subleases: true,
     multiStayManagement: false,
     cohostAdministration: false,
     consolidatedReporting: false,
@@ -127,6 +135,8 @@ export const PLAN_CAPABILITIES: Readonly<Record<SubscriptionPlan, PlanCapabiliti
     expandedKoins: true,
     hostReporting: true,
     welcomeKit: true,
+    billSplits: true,
+    subleases: true,
     multiStayManagement: true,
     cohostAdministration: true,
     consolidatedReporting: true,

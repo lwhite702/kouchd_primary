@@ -15,6 +15,14 @@
 
 ### Added
 
+### Added
+
+- **Plus household bill splitting (WRE-268, branch only, not released)**:
+  - **Plan capabilities & feature flag:** Added `billSplits` and `subleases` boolean capabilities to `PlanCapabilities` (`false` on `starter`, `true` on `hostPlus` and `householdPro` in `lib/domain/subscriptionPlans.ts`), `assertPlanCapability` in `convex/lib/planCapacity.ts` (reusing the `plan_limit` error shape so Free hosts open the Plus upgrade flow in `lib/planLimitError.ts` and iOS), and `FEATURE_FLAGS.BILL_SPLITTING` (`feature_bill_splitting`, `defaultValue: false` in `lib/flags/config.ts`).
+  - **Deterministic whole-cent calculation:** Added `calculateBillShares` in `lib/domain/billSplitting.ts` supporting `equal`, `percentage`, and `fixed` splits, optional host inclusion (`includeHost`), and optional stay-date proration (`prorateByStayDates` scaling each guest's share by inclusive overlap days over service days), with largest-remainder cent allocation and ties broken by earliest membership `joinedAt`.
+  - **Schema, mutations, and privacy boundaries:** Added `bills` and `billShares` tables in `convex/schema.ts` and `convex/bills.ts` (`create`, `voidBill`, `list`). `bills.create` writes the bill, per-guest `adhoc` ledger obligations, and `billShares` atomically; `bills.list` returns full share breakdowns to the host and redacts guest responses to only that guest's own `billShare`; `obligations.voidAdhocCharge` (`convex/obligations.ts`) refuses direct voiding of bill-linked obligations so bills are voided atomically via `bills.voidBill`.
+  - **Web & iOS Ledger UI:** Added the gated **Shared bills** section and **Split a bill** modal/sheet on web (`components/household/bill-splitting-card.tsx`, `components/workspace/contributions-screen.tsx`, `components/workspace/workspace-panels.tsx`, `components/workspace/use-live-stay.ts`, `components/workspace/view-helpers.tsx`, `components/workspace/types.ts`) and iOS (`ios/Kouchd/MainScreens.swift`, `ios/Kouchd/HostExtras.swift`, `ios/Kouchd/Service.swift`), including live per-guest previews, equal-split privacy notice when more than one guest is selected, and Plus upgrade routing on `plan_limit`.
+
 - **Automated turn-taking chore rotation for household stays (WRE-267, branch only, not released)**:
   - Enabled automatic turn-taking chore rotation across active stay members (host and guests) on recurring chores.
   - Backend schema extended with `rotateAssignee: v.optional(v.boolean())` on `chores`.

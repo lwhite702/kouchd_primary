@@ -231,6 +231,15 @@ export const voidAdhocCharge = mutation({
     const { user } = await requireHost(ctx, obligation.stayId);
     if ((obligation.type ?? "cadence") !== "adhoc")
       throw new Error("Only ad-hoc charges can be voided");
+    const linkedBillShare = await ctx.db
+      .query("billShares")
+      .withIndex("by_obligation", (q) => q.eq("obligationId", obligationId))
+      .unique();
+    if (linkedBillShare) {
+      throw new Error(
+        "This charge comes from a split bill. Void the bill to void its charges.",
+      );
+    }
     if (obligation.voidedAt) return null;
     await ctx.db.patch(obligationId, {
       voidedAt: Date.now(),

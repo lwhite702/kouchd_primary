@@ -63,6 +63,7 @@ export function panelTitle(panel: Exclude<Panel, null>) {
     contribution: "New contribution",
     chore: "Add a chore",
     adhoc: "Add one-off charge",
+    splitBill: "Split a bill",
     announcement: "New announcement",
     settings: "Profile & reminder settings",
     invite: "Invite a guest",

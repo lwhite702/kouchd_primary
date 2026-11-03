@@ -14,7 +14,9 @@ import { api } from "@/convex/_generated/api";
 import type { Doc, Id } from "@/convex/_generated/dataModel";
 import { calendarDateInTimezone } from "@/lib/domain/dates";
 import { createInviteToken, hashInviteToken } from "@/lib/invite";
+import { planLimitError } from "@/lib/planLimitError";
 
+import type { SplitBillSubmission } from "@/components/household/bill-splitting-card";
 import { GuestTerms } from "@/components/household/guest-agreement-form";
 
 import { guideSteps } from "@/components/onboarding/guided-tour";
@@ -171,6 +173,8 @@ export function useLiveStay(stayId: Id<"stays">, onBackToHub: () => void) {
   const createAnnouncement = useMutation(api.announcements.create);
   const createAdhocCharge = useMutation(api.obligations.createAdhocCharge);
   const voidAdhocCharge = useMutation(api.obligations.voidAdhocCharge);
+  const createBill = useMutation(api.bills.create);
+  const voidBill = useMutation(api.bills.voidBill);
   const waiveLateFee = useMutation(api.obligations.waiveLateFee);
   const createInvite = useMutation(api.invites.create);
   const updatePreferences = useMutation(api.users.updatePreferences);
@@ -255,6 +259,10 @@ export function useLiveStay(stayId: Id<"stays">, onBackToHub: () => void) {
     visibleScreen === "contributions" && financialGuestId
       ? { stayId, guestUserId: financialGuestId }
       : "skip",
+  );
+  const bills = useQuery(
+    api.bills.list,
+    visibleScreen === "contributions" ? { stayId } : "skip",
   );
   const obligations = useMemo(
     () =>
@@ -613,6 +621,26 @@ export function useLiveStay(stayId: Id<"stays">, onBackToHub: () => void) {
       finishSubmit();
     }
   }
+  async function addBill(input: SplitBillSubmission) {
+    if (!beginSubmit()) return;
+    try {
+      await createBill({
+        stayId,
+        ...input,
+      });
+      setPanel(null);
+      notify("Bill split posted to guest ledgers.");
+    } catch (reason) {
+      setActionError(
+        planLimitError(reason)?.message ??
+          (reason instanceof Error
+            ? reason.message
+            : "We could not split this bill. Please try again."),
+      );
+    } finally {
+      finishSubmit();
+    }
+  }
   async function addChore(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
@@ -901,6 +929,9 @@ export function useLiveStay(stayId: Id<"stays">, onBackToHub: () => void) {
     } else if (destructiveAction?.type === "cancelCharge") {
       await voidAdhocCharge({ obligationId: destructiveAction.obligationId });
       notify("Charge cancelled. Its history is retained.");
+    } else if (destructiveAction?.type === "voidBill") {
+      await voidBill({ billId: destructiveAction.billId });
+      notify("Bill and its guest charges voided. History is retained.");
     } else if (destructiveAction?.type === "voidContribution") {
       await voidContribution({
         contributionId: destructiveAction.contributionId,
@@ -968,6 +999,7 @@ export function useLiveStay(stayId: Id<"stays">, onBackToHub: () => void) {
     recent,
     bundle,
     obligations,
+    bills: bills ?? [],
     pendingAgreementGuests,
     financialGuestId,
     setSelectedGuestId,
@@ -994,6 +1026,7 @@ export function useLiveStay(stayId: Id<"stays">, onBackToHub: () => void) {
     openContributionWithPrefill,
     addContribution,
     addCharge,
+    addBill,
     addChore,
     addAnnouncement,
     savePreferences,

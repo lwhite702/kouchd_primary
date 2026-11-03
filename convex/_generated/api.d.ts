@@ -11,6 +11,7 @@
 import type * as activity from "../activity.js";
 import type * as admin from "../admin.js";
 import type * as announcements from "../announcements.js";
+import type * as bills from "../bills.js";
 import type * as checkIns from "../checkIns.js";
 import type * as chores from "../chores.js";
 import type * as contributions from "../contributions.js";
@@ -56,6 +57,7 @@ declare const fullApi: ApiFromModules<{
   activity: typeof activity;
   admin: typeof admin;
   announcements: typeof announcements;
+  bills: typeof bills;
   checkIns: typeof checkIns;
   chores: typeof chores;
   contributions: typeof contributions;

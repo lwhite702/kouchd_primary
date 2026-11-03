@@ -16,8 +16,8 @@ The spec has six separately released steps. Each gets its own plan, written afte
 
 | Step | Plan | Status |
 | --- | --- | --- |
-| 1 | Access code protection | This document |
-| 2 | Bill splitting on Plus | Not written |
+| 1 | Access code protection | Shipped in PR #132 (0.8.8, WRE-266) |
+| 2 | Bill splitting on Plus | `docs/superpowers/plans/2026-11-02-sublease-step-2-bill-splitting.md` |
 | 3 | Monthly rent | Not written |
 | 4 | Sublease type, setup, consent, and lock | Not written |
 | 5 | Checklists and deposit record | Not written |
