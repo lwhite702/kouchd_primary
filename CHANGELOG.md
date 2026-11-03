@@ -216,10 +216,10 @@
 
 ## [0.8.11] - 2026-11-02
 
-Deployed to production on 2026-11-02 (Vercel build and Convex deploy logs, HTTP 200). Signed-in behavior on production has not been checked yet.
+App changes deployed to production on 2026-11-02 (Vercel build and Convex deploy logs, HTTP 200). Signed-in behavior on production has not been checked yet. Help Center changes are not published.
 
 - **Help center guide: How Kouchd compares to Splitwise & Flatastic (WRE-266; public once the Help Center is published)**:
-  - Published `help/support/kouchd-vs-splitwise.mdx` explaining in plain, everyday language how Kouchd approaches private shared living, direct payments without holding funds, private guest records, unlimited free contributions, and unified household coordination.
+  - Added `help/support/kouchd-vs-splitwise.mdx` to the repo (public only once the Help Center is published), explaining in plain, everyday language how Kouchd approaches private shared living, direct payments without holding funds, private guest records, unlimited free contributions, and unified household coordination.
   - Registered the guide under Support in `docs.json` navigation.
   - Review follow-up (0.8.11): the guide no longer promises "no marketing trackers" (it links to the privacy page instead), no longer describes the unreleased shopping-to-Ledger shortcut (now on the roadmap as in development), no longer mentions receipt storage, and drops unsourced claims about Splitwise and Flatastic plans and ads.
 
