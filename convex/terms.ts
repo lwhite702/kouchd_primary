@@ -5,6 +5,7 @@ import { internalMutation, mutation } from "./_generated/server";
 import { requireHost, requireMembership } from "./lib/auth";
 import { recordActivity } from "./lib/activity";
 import { assertStayTerms } from "./lib/validation";
+import { assertSubleaseUnlocked, getSubleaseLockState } from "./lib/subleaseLock";
 import {
   acceptGuestAgreement,
   activateAcceptedStay,
@@ -72,6 +73,7 @@ export const acceptCurrent = mutation({
     const stay = await ctx.db.get(stayId);
     if (!stay || !stay.currentTermsId || stay.status === "ended")
       throw new Error("No active terms to accept");
+    await assertSubleaseUnlocked(ctx, stay, { viewerRole: membership.role });
     let terms =
       membership.role === "guest"
         ? await ensureGuestTerms(ctx, stayId, user._id, stay.hostUserId)
@@ -181,6 +183,7 @@ export const updateCurrent = mutation({
     const stay = await ctx.db.get(stayId);
     if (!stay || stay.status === "ended")
       throw new Error("Ended stays cannot be edited");
+    await assertSubleaseUnlocked(ctx, stay, { viewerRole: "host" });
     assertStayTerms(terms, { arrangement: stay.arrangement });
     const previous = stay.currentTermsId
       ? await ctx.db.get(stay.currentTermsId)
@@ -327,6 +330,7 @@ export const updateGuest = mutation({
     const stay = await ctx.db.get(stayId);
     if (!stay || stay.status === "ended")
       throw new Error("Ended stays cannot be edited");
+    await assertSubleaseUnlocked(ctx, stay, { viewerRole: "host" });
     const guestMembership = await ctx.db
       .query("memberships")
       .withIndex("by_stay_user", (query) =>
@@ -408,6 +412,8 @@ export const autoAcceptOffer = internalMutation({
       !(stay.agreementAutoAcceptEnabled ?? true)
     )
       return null;
+    const lock = await getSubleaseLockState(ctx, stay);
+    if (lock.locked) return null;
     const now = Date.now();
     if (offer.autoAcceptAt > now) {
       await ctx.scheduler.runAfter(

@@ -64,7 +64,7 @@ export const PLAN_LIMITS: Readonly<Record<SubscriptionPlan, PlanLimits>> = {
 };
 
 export interface PlanCapabilities {
-  /** Agreements, history, individual records, and personal exports. */
+  /** Agreements, history, individual records, and personal exports (routine support exports pause when a sublease is locked). */
   agreementsAndHistory: boolean;
   individualRecords: boolean;
   coreLedger: boolean;

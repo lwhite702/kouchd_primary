@@ -2,6 +2,19 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-11-02 — Sublease type, setup, landlord consent, and lock (WRE-272)
+
+- Registered `FEATURE_FLAGS.SUBLEASES` (`feature_subleases`, `defaultValue: false`) in `lib/flags/config.ts`.
+- Extended `stays` schema with `subleaseLayout` (`whole_place | private_room`), `roommateCount`, `roommateNames`, `landlordConsent` (`{ answer: written_permission | not_required | not_confirmed, answeredAt, warningDismissedAt? }`), `subleaseBillPreset`, and `subleaseLockedAt`; added `billingRetryStartedAt` to `subscriptionSnapshots` (`convex/schema.ts`).
+- Created `convex/lib/subleaseLock.ts` implementing `getSubleaseLockState`, `assertSubleaseUnlocked`, and `reconcileAccountSubleaseLocks` (locks on expiration, refund, or billing retry exceeding 7 days; never locks on unreadable or unknown plans; pauses late fees and reminders).
+- Added `assertSubleaseUnlocked` guard to all 14 stay-scoped mutation modules (`stays`, `terms`, `invites`, `referral`, `contributions`, `obligations`, `bills`, `paymentSchedule`, `occupancy`, `chores`, `shopping`, `checkIns`, `announcements`, `rewards`).
+- Updated `convex/lib/houseInfoAccess.ts` to redact access codes for subleases past the agreement end date.
+- Added `stays.recordLandlordConsent` and `stays.dismissLandlordConsentWarning` in `convex/stays.ts`; enforced landlord consent before first invite on subleases.
+- Implemented Web UI (`components/onboarding/host-onboarding-wizard.tsx`, `components/onboarding/guest-onboarding-flow.tsx`, `components/household/bill-splitting-card.tsx`, `components/workspace/view-helpers.tsx`, `components/workspace/home-screen.tsx`, `components/workspace/stay-screen.tsx`) and iOS UI (`ios/Kouchd/StayScreens.swift`, `ios/Kouchd/MainScreens.swift`, `ios/Kouchd/MoreScreens.swift`).
+- Updated `lib/domain/subscriptionPlans.ts`, `help/support/app-support.mdx`, and `help/product/roadmap.mdx` reflecting export policies and sublease capabilities.
+- Evidence: `tests/sublease-lock.test.ts` (11/11 passed), `tests/house-info-access.test.ts` (9/9 passed), full Vitest suite (46 files, 310 tests passed), and iOS Simulator build.
+- Branch only (`codex/WRE-272-sublease-setup-and-lock`), stacked on `codex/WRE-270-monthly-rent`.
+
 ## 2026-11-02 — Monthly rent cadence, calendar-month proration, and schedule guards (WRE-270)
 
 - Added UTC calendar-month date helpers (`daysInCalendarMonth`, `calendarMonthEnd`, `calendarMonthDueDate`) in `lib/domain/dates.ts`, extended `Cadence` to `"daily" | "weekly" | "monthly"` and `calculateStayChargeCents` in `lib/domain/pricing.ts`, and updated `buildObligationPeriods` in `lib/domain/obligations.ts` to generate calendar-month obligation periods with `paymentDayOfMonth` (`1..28`) due-date clamping and partial first/last month proration across 28/29/30/31-day calendar months.

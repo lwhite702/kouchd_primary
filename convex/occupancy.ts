@@ -8,6 +8,7 @@ import { assertCalendarDate } from "./lib/validation";
 import { getAcceptedGuestTermsForDate } from "./lib/stayTerms";
 import { listActiveGuestObligations } from "./lib/obligations";
 import { recordActivity } from "./lib/activity";
+import { assertSubleaseUnlocked } from "./lib/subleaseLock";
 
 function paymentDateForNight(nightDate: string, cadence: "daily" | "weekly" | "monthly", paymentDayOfWeek?: number) {
   if (cadence !== "weekly") return nightDate;
@@ -56,6 +57,7 @@ export const recordOvernight = mutation({
     assertCalendarDate(nightDate, "Overnight date");
     const stay = await ctx.db.get(stayId);
     if (!stay || stay.status === "ended") throw new Error("This stay has ended");
+    await assertSubleaseUnlocked(ctx, stay, "host");
     if (nightDate > calendarDateInTimezone(new Date(), stay.timezone)) throw new Error("Record an overnight after it has happened");
     const membership = await ctx.db.query("memberships")
       .withIndex("by_stay_user", (q) => q.eq("stayId", stayId).eq("userId", guestUserId))
@@ -133,6 +135,7 @@ export const voidOvernight = mutation({
     const { user } = await requireHost(ctx, night.stayId);
     const stay = await ctx.db.get(night.stayId);
     if (!stay || stay.status === "ended") throw new Error("Ended stays are read-only");
+    await assertSubleaseUnlocked(ctx, stay, "host");
     if (night.voidedAt) return null;
     const obligation = await ctx.db.get(night.obligationId);
     if (!obligation || obligation.voidedAt) throw new Error("The linked overnight charge is no longer active");

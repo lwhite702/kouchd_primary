@@ -15,6 +15,7 @@ import { recordActivity } from "./lib/activity";
 
 import { assertAdhocChargeInput, assertCalendarDate } from "./lib/validation";
 import { getAcceptedGuestTerms } from "./lib/stayTerms";
+import { assertSubleaseUnlocked } from "./lib/subleaseLock";
 
 const ledgerItem = v.object({
   _id: v.id("obligations"),
@@ -180,6 +181,7 @@ export const createAdhocCharge = mutation({
     const stay = await ctx.db.get(args.stayId);
     if (!stay || stay.status === "ended")
       throw new Error("Ended stays cannot add charges");
+    await assertSubleaseUnlocked(ctx, stay, { viewerRole: "host" });
     const terms = await getAcceptedGuestTerms(
       ctx,
       args.stayId,
@@ -229,6 +231,7 @@ export const voidAdhocCharge = mutation({
     const obligation = await ctx.db.get(obligationId);
     if (!obligation) throw new Error("Obligation not found");
     const { user } = await requireHost(ctx, obligation.stayId);
+    await assertSubleaseUnlocked(ctx, obligation.stayId, { viewerRole: "host" });
     if ((obligation.type ?? "cadence") !== "adhoc")
       throw new Error("Only ad-hoc charges can be voided");
     const linkedBillShare = await ctx.db
@@ -267,6 +270,7 @@ export const waiveLateFee = mutation({
     if (obligation.voidedAt)
       throw new Error("Voided obligations cannot be changed");
     const { user } = await requireHost(ctx, obligation.stayId);
+    await assertSubleaseUnlocked(ctx, obligation.stayId, { viewerRole: "host" });
     if (obligation.lateFeeWaivedAt) return null;
 
     await ctx.db.patch(obligationId, {
@@ -319,6 +323,7 @@ export const requestOverduePlan = mutation({
     const stay = await ctx.db.get(args.stayId);
     if (!stay || stay.status === "ended")
       throw new Error("This stay has ended");
+    await assertSubleaseUnlocked(ctx, stay, { viewerRole: "guest" });
 
     if (args.obligationId) {
       const obligation = await ctx.db.get(args.obligationId);
@@ -365,6 +370,7 @@ export const reviewOverduePlan = mutation({
     if (!request || request.status !== "pending")
       throw new Error("This recovery plan request is no longer pending");
     const { user } = await requireHost(ctx, request.stayId);
+    await assertSubleaseUnlocked(ctx, request.stayId, { viewerRole: "host" });
     const now = Date.now();
 
     await ctx.db.patch(requestId, {

@@ -521,6 +521,10 @@ describe("monthly rent server validation & Convex safeguards", () => {
       stayId,
       terms: baseSubleaseMonthlyTerms,
     });
+    await host.mutation(api.stays.recordLandlordConsent, {
+      stayId,
+      answer: "written_permission",
+    });
 
     const tokenHash = "a".repeat(64);
     await host.mutation(api.invites.create, {
@@ -701,6 +705,10 @@ describe("monthly rent server validation & Convex safeguards", () => {
         rateCents: 150_000,
         paymentDayOfMonth: 1,
       },
+    });
+    await host.mutation(api.stays.recordLandlordConsent, {
+      stayId,
+      answer: "written_permission",
     });
 
     const tokenHash = "b".repeat(64);

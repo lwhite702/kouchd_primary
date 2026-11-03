@@ -12,17 +12,65 @@ struct StayScreen: View {
   private var accessCodesHiddenMessage: String? {
     // The server sets this only when it actually removed a configured code.
     switch store.bundle["accessCodesHidden"].text {
-    case "ended": return "This stay has ended, so door and Wi-Fi codes are no longer shown."
-    case "needs_acceptance": return "Door and Wi-Fi codes appear once your agreement is accepted."
-    default: return nil
+    case "ended":
+      if store.bundle["stay"]["arrangement"].text == "sublease" {
+        return "Your sublease agreement has ended, so door and Wi-Fi codes are no longer shown."
+      }
+      return "This stay has ended, so door and Wi-Fi codes are no longer shown."
+    case "needs_acceptance":
+      return "Door and Wi-Fi codes appear once your agreement is accepted."
+    default:
+      return nil
     }
   }
   var body: some View {
     Page(title: "Your stay", width: .wide) {
+      if store.bundle["subleaseLock"]["locked"].flag {
+        Card {
+          HStack(spacing: 12) {
+            Image(systemName: "lock.fill").foregroundStyle(store.isHost ? .red : .orange)
+            VStack(alignment: .leading, spacing: 4) {
+              Text(store.isHost ? "Sublease locked" : "Sublease read-only").font(.headline)
+              Text(store.isHost
+                   ? "Your Plus subscription has ended. This sublease is locked and personal exports are blocked until you have an active subscription."
+                   : "This sublease is read-only and personal exports are blocked until the host renews. Your sublease agreement still applies, so keep paying rent as agreed. Kouchd's record being locked doesn't change it.")
+                .font(.subheadline).foregroundStyle(Palette.muted)
+            }
+          }
+        }
+      }
+      if store.isHost &&
+         store.bundle["stay"]["arrangement"].text == "sublease" &&
+         store.bundle["stay"]["landlordConsent"]["answer"].text == "not_confirmed" &&
+         store.bundle["stay"]["landlordConsent"]["warningDismissedAt"].double == 0 {
+        Card {
+          HStack(spacing: 12) {
+            Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(.orange)
+            VStack(alignment: .leading, spacing: 6) {
+              Text("Landlord consent not confirmed").font(.headline)
+              Text("Subletting without landlord consent may violate your lease. You can proceed, but please verify permissions before inviting guests.")
+                .font(.subheadline).foregroundStyle(Palette.muted)
+              Button("Dismiss warning") {
+                Task {
+                  _ = await store.mutate("stays:dismissLandlordConsentWarning", ["stayId": store.bundle["stay"]["_id"].text])
+                }
+              }
+              .font(.subheadline.bold())
+              .foregroundStyle(Palette.forest)
+            }
+          }
+        }
+      }
       TwoColumnLayout {
       Card {
         HStack { Pill(text: store.isHost ? "Host" : "Guest"); Spacer(); Pill(text: store.bundle["stay"]["status"].text) }
         Text(store.stayName).font(.title2.bold())
+        if store.bundle["stay"]["arrangement"].text == "sublease" {
+          DataRow(title: "Type", detail: "Sublease (" + (store.bundle["stay"]["subleaseLayout"].text == "private_room" ? "Private room" : "Whole place") + ")")
+          if store.bundle["stay"]["subleaseLayout"].text == "private_room" {
+            DataRow(title: "Roommates", detail: "\(max(1, store.bundle["stay"]["roommateCount"].int))")
+          }
+        }
         DataRow(title: "From", detail: store.bundle["terms"]["startDate"].text)
         DataRow(title: "Until", detail: store.bundle["terms"]["endDate"].text)
         DataRow(title: "Rhythm", detail: store.bundle["terms"]["cadence"].text.capitalized)
@@ -306,6 +354,13 @@ struct CreateStayScreen: View {
   let store: KouchdStore
   @Environment(\.dismiss) private var dismiss
   @State private var name = ""
+  @State private var arrangement = "home_stay"
+  @State private var subleaseLayout = "whole_place"
+  @State private var roommateCount = 1
+  @State private var roommateNames = ""
+  @State private var landlordConsent = "written_permission"
+  @State private var landlordConsentWarningDismissed = false
+  @State private var paymentDayOfMonth = 1
   @State private var start = Date.now
   @State private var end = Date.now.addingTimeInterval(30 * 86_400)
   @State private var rate = ""
@@ -319,10 +374,58 @@ struct CreateStayScreen: View {
   var body: some View {
     Form {
       Section("Household") { TextField("Stay name", text: $name) }
+      Section("Arrangement") {
+        Picker("Arrangement", selection: $arrangement) {
+          Text("Someone staying with me").tag("home_stay")
+          Text("Subletting my place").tag("sublease")
+        }
+        .pickerStyle(.segmented)
+        .onChange(of: arrangement) { _, newArrangement in
+          if newArrangement == "sublease" && cadence != "monthly" {
+            cadence = "monthly"
+          } else if newArrangement == "home_stay" && cadence == "monthly" {
+            cadence = "weekly"
+          }
+        }
+      }
+      if arrangement == "sublease" {
+        Section("Sublease layout") {
+          Picker("Layout", selection: $subleaseLayout) {
+            Text("Whole place").tag("whole_place")
+            Text("Private room").tag("private_room")
+          }
+          .pickerStyle(.segmented)
+          if subleaseLayout == "private_room" {
+            Stepper("Roommates living there: \(roommateCount)", value: $roommateCount, in: 1...20)
+            TextField("Roommate names (optional, comma-separated)", text: $roommateNames)
+          }
+        }
+        Section("Landlord consent") {
+          Picker("Landlord consent", selection: $landlordConsent) {
+            Text("Written permission").tag("written_permission")
+            Text("Not required").tag("not_required")
+            Text("Not confirmed yet").tag("not_confirmed")
+          }
+          if landlordConsent == "not_confirmed" && !landlordConsentWarningDismissed {
+            VStack(alignment: .leading, spacing: 6) {
+              Text("Subletting without landlord consent may violate your lease. You can proceed, but please verify permissions before inviting guests.")
+                .font(.footnote)
+                .foregroundStyle(.orange)
+              Button("Acknowledge & dismiss warning") {
+                landlordConsentWarningDismissed = true
+              }
+              .font(.footnote.bold())
+            }
+          }
+        }
+      }
       Section("Agreement") {
         DatePicker("Starts", selection: $start, displayedComponents: .date)
         DatePicker("Ends", selection: $end, in: start..., displayedComponents: .date)
         Picker("Contribution rhythm", selection: $cadence) {
+          if arrangement == "sublease" {
+            Text("Monthly").tag("monthly")
+          }
           Text("Weekly").tag("weekly")
           Text("Daily").tag("daily")
         }
@@ -330,11 +433,20 @@ struct CreateStayScreen: View {
           Picker("Due weekday", selection: $weekday) {
             ForEach(0..<7) { Text(Calendar.current.weekdaySymbols[$0]).tag($0) }
           }
+        } else if cadence == "monthly" {
+          Stepper("Due on day \(paymentDayOfMonth) of the month", value: $paymentDayOfMonth, in: 1...28)
         }
         Toggle("Set a shared check-in", isOn: $checkInEnabled)
         if checkInEnabled { DatePicker("Check-in", selection: $checkIn, displayedComponents: .date) }
         TextField("Amount in dollars", text: $rate).keyboardType(.decimalPad)
         TextField("House notes", text: $notes, axis: .vertical).lineLimit(3...7)
+      }
+      if arrangement == "sublease" {
+        Section("Sublease record notice") {
+          Text("Subleases require an active Plus subscription. If Plus lapses, this sublease becomes read-only and personal exports are blocked until renewed. Kouchd is a private record-keeping tool and does not replace a written sublease agreement.")
+            .font(.footnote)
+            .foregroundStyle(Palette.muted)
+        }
       }
       Section {
         Button("Create stay") {
@@ -369,11 +481,35 @@ struct CreateStayScreen: View {
         "lateFeeCents": Double(0), "graceDays": Double(0), "houseNotes": notes
       ]
       if cadence == "weekly" { terms["paymentDayOfWeek"] = Double(weekday) }
+      if cadence == "monthly" {
+        terms["paymentDayOfMonth"] = Double(paymentDayOfMonth)
+        terms["billingBasis"] = "continuous"
+      }
       var args: [String: ConvexEncodable?] = [
         "name": name, "creationRequestId": creationRequestID,
-        "timezone": TimeZone.current.identifier, "terms": terms
+        "timezone": TimeZone.current.identifier, "terms": terms,
+        "arrangement": arrangement
       ]
       if checkInEnabled { args["nextCheckInDate"] = Display.date(checkIn) }
+      if arrangement == "sublease" {
+        args["subleaseLayout"] = subleaseLayout
+        if subleaseLayout == "private_room" {
+          args["roommateCount"] = Double(roommateCount)
+          let names = roommateNames.split(separator: ",").map { String($0).trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
+          if !names.isEmpty {
+            args["roommateNames"] = Value.array(names.map { Value.string($0) })
+          }
+        }
+        var consentObj: [String: Value] = [
+          "answer": .string(landlordConsent),
+          "answeredAt": .number(Double(Int(Date.now.timeIntervalSince1970 * 1000)))
+        ]
+        if landlordConsent == "not_confirmed" && landlordConsentWarningDismissed {
+          consentObj["warningDismissedAt"] = .number(Double(Int(Date.now.timeIntervalSince1970 * 1000)))
+        }
+        args["landlordConsent"] = Value.object(consentObj)
+        args["subleaseBillPreset"] = subleaseLayout
+      }
       if await store.joinOrCreateStay("stays:create", args) { dismiss() }
       busy = false
     }

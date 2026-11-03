@@ -2,6 +2,7 @@ import { convexTest } from "convex-test";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { api } from "../convex/_generated/api";
 import type { Id } from "../convex/_generated/dataModel";
+import { canViewAccessCodes, redactStayForMember } from "../convex/lib/houseInfoAccess";
 import schema from "../convex/schema";
 import { grantPlus } from "./helpers/plans";
 
@@ -310,5 +311,79 @@ describe("houseInfo access code protection", () => {
     const fromRejoin = active.filter((obligation) => obligation.periodStart >= "2026-10-15");
     expect(fromRejoin.every((obligation) => obligation.termsId === rejoined.terms?._id)).toBe(true);
     expect((await guest.query(api.stays.getBundle, { stayId })).accessCodesHidden).toBeNull();
+  });
+
+  it("redacts sublease doorCode and wifiPassword after the agreement endDate while leaving home_stay unaffected", () => {
+    const subleaseStay = {
+      status: "active" as const,
+      arrangement: "sublease" as const,
+      timezone: "UTC",
+      houseInfo,
+    };
+    const homeStay = {
+      status: "active" as const,
+      arrangement: "home_stay" as const,
+      timezone: "UTC",
+      houseInfo,
+    };
+    const acceptedGuestMembership = {
+      role: "guest" as const,
+      acceptedTermsId: "terms_1" as Id<"terms">,
+    };
+    const hostMembership = {
+      role: "host" as const,
+      acceptedTermsId: "terms_1" as Id<"terms">,
+    };
+
+    // On or before the sublease end date, accepted guest sees access codes
+    expect(
+      canViewAccessCodes(subleaseStay, acceptedGuestMembership, {
+        termsEndDate: "2026-11-30",
+        currentDate: "2026-11-30",
+      }),
+    ).toBe(true);
+    const activeRedacted = redactStayForMember(subleaseStay, acceptedGuestMembership, {
+      termsEndDate: "2026-11-30",
+      currentDate: "2026-11-30",
+    });
+    expect(activeRedacted.houseInfo?.doorCode).toBe("0000");
+    expect(activeRedacted.houseInfo?.wifiPassword).toBe("test-pass");
+
+    // After the sublease end date, accepted guest loses access codes
+    expect(
+      canViewAccessCodes(subleaseStay, acceptedGuestMembership, {
+        termsEndDate: "2026-11-30",
+        currentDate: "2026-12-01",
+      }),
+    ).toBe(false);
+    const expiredRedacted = redactStayForMember(subleaseStay, acceptedGuestMembership, {
+      termsEndDate: "2026-11-30",
+      currentDate: "2026-12-01",
+    });
+    expect(expiredRedacted.houseInfo?.doorCode).toBeUndefined();
+    expect(expiredRedacted.houseInfo?.wifiPassword).toBeUndefined();
+    expect(expiredRedacted.houseInfo?.wifiNetwork).toBe("TestNet");
+
+    // Host still sees codes after sublease end date
+    expect(
+      canViewAccessCodes(subleaseStay, hostMembership, {
+        termsEndDate: "2026-11-30",
+        currentDate: "2026-12-01",
+      }),
+    ).toBe(true);
+
+    // Home stay is unaffected by termsEndDate passing
+    expect(
+      canViewAccessCodes(homeStay, acceptedGuestMembership, {
+        termsEndDate: "2026-11-30",
+        currentDate: "2026-12-01",
+      }),
+    ).toBe(true);
+    const homeRedacted = redactStayForMember(homeStay, acceptedGuestMembership, {
+      termsEndDate: "2026-11-30",
+      currentDate: "2026-12-01",
+    });
+    expect(homeRedacted.houseInfo?.doorCode).toBe("0000");
+    expect(homeRedacted.houseInfo?.wifiPassword).toBe("test-pass");
   });
 });

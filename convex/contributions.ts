@@ -4,6 +4,7 @@ import { mutation, query } from "./_generated/server";
 import { resolveFinancialGuest } from "./lib/auth";
 import { recordActivity } from "./lib/activity";
 import { assertContributionInput } from "./lib/validation";
+import { assertSubleaseUnlocked } from "./lib/subleaseLock";
 import { ANALYTICS_EVENTS } from "../lib/analytics/events";
 import { trackServerEvent } from "./lib/posthog";
 
@@ -39,10 +40,11 @@ export const create = mutation({
   },
   returns: v.id("contributions"),
   handler: async (ctx, args) => {
-    const { user, guestUserId } = await resolveFinancialGuest(ctx, args.stayId, args.guestUserId);
+    const { user, guestUserId, membership } = await resolveFinancialGuest(ctx, args.stayId, args.guestUserId);
     if (!guestUserId) throw new Error("Add a guest before recording contributions");
     const stay = await ctx.db.get(args.stayId);
     if (!stay || stay.status === "ended") throw new Error("Ended stays cannot add contributions");
+    await assertSubleaseUnlocked(ctx, stay, { viewerRole: membership.role });
     assertContributionInput(args.amountCents, args.date, args.note);
     const contributionId = await ctx.db.insert("contributions", { ...args, guestUserId, createdBy: user._id, status: "pending", createdAt: Date.now() });
     await recordActivity(ctx, { stayId: args.stayId, actorUserId: user._id, guestUserId, kind: "contribution", action: "created", detail: `${args.type} added for confirmation`, entityId: contributionId });
@@ -58,7 +60,8 @@ export const confirm = mutation({
     const contribution = await ctx.db.get(contributionId);
     if (!contribution) throw new Error("Contribution not found");
     const access = await resolveFinancialGuest(ctx, contribution.stayId, contribution.guestUserId);
-    const { user } = access;
+    const { user, membership } = access;
+    await assertSubleaseUnlocked(ctx, contribution.stayId, { viewerRole: membership.role });
     if (!contribution.guestUserId && !access.includeLegacyUnscoped && access.membership.role !== "host") throw new Error("Not authorized for this financial record");
     if (contribution.createdBy === user._id) throw new Error("Creators cannot confirm their own contribution");
     if (contribution.status === "confirmed") return null;
@@ -77,7 +80,8 @@ export const dispute = mutation({
     const contribution = await ctx.db.get(contributionId);
     if (!contribution) throw new Error("Contribution not found");
     const access = await resolveFinancialGuest(ctx, contribution.stayId, contribution.guestUserId);
-    const { user } = access;
+    const { user, membership } = access;
+    await assertSubleaseUnlocked(ctx, contribution.stayId, { viewerRole: membership.role });
     if (!contribution.guestUserId && !access.includeLegacyUnscoped && access.membership.role !== "host") throw new Error("Not authorized for this financial record");
     if (contribution.status === "voided") throw new Error("Voided contributions cannot be disputed");
     await ctx.db.patch(contributionId, { status: "disputed", disputedBy: user._id });
@@ -94,6 +98,7 @@ export const voidContribution = mutation({
     if (!contribution) throw new Error("Contribution not found");
     const access = await resolveFinancialGuest(ctx, contribution.stayId, contribution.guestUserId);
     const { user, membership } = access;
+    await assertSubleaseUnlocked(ctx, contribution.stayId, { viewerRole: membership.role });
     if (!contribution.guestUserId && !access.includeLegacyUnscoped && membership.role !== "host") throw new Error("Not authorized for this financial record");
     if (membership.role !== "host" && contribution.createdBy !== user._id) throw new Error("Only the creator or host can void this contribution");
     if (contribution.status === "voided") return null;

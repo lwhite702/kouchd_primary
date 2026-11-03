@@ -7,6 +7,7 @@ import { internalMutation, internalQuery, type QueryCtx } from "./_generated/ser
 import { getCurrentGuestTerms } from "./lib/stayTerms";
 import { listActiveGuestObligations } from "./lib/obligations";
 import { isUsableName } from "./lib/names";
+import { getSubleaseLockState } from "./lib/subleaseLock";
 
 function formatCents(cents: number): string {
   const dollars = cents / 100;
@@ -489,6 +490,7 @@ export const reminderCandidates = internalQuery({
       if (!guestUserId || obligation.voidedAt) continue;
       const stay = await ctx.db.get(obligation.stayId);
       if (!stay || stay.status === "ended") continue;
+      if ((await getSubleaseLockState(ctx, stay, now)).locked) continue;
       const localToday = calendarDateInTimezone(new Date(now), stay.timezone);
       const localTomorrow = addCalendarDays(localToday, 1);
       if (obligation.dueDate > localTomorrow) continue;
@@ -675,6 +677,7 @@ export const reminderCandidates = internalQuery({
       if (chore.completedAt || chore.voidedAt) continue;
       const stay = await ctx.db.get(chore.stayId);
       if (!stay || stay.status === "ended") continue;
+      if ((await getSubleaseLockState(ctx, stay, now)).locked) continue;
       const localToday = calendarDateInTimezone(new Date(now), stay.timezone);
       if (chore.dueDate !== localToday) continue;
       const members = await ctx.db.query("memberships").withIndex("by_stay", (query) => query.eq("stayId", chore.stayId)).take(20);
@@ -738,6 +741,7 @@ export const reminderCandidates = internalQuery({
       const localToday = calendarDateInTimezone(new Date(now), stay.timezone);
       const localTomorrow = addCalendarDays(localToday, 1);
       if (stay.status === "ended" || stay.nextCheckInDate !== localTomorrow) continue;
+      if ((await getSubleaseLockState(ctx, stay, now)).locked) continue;
       const members = await ctx.db.query("memberships").withIndex("by_stay", (query) => query.eq("stayId", stay._id)).take(20);
       const host = members.find((member) => member.role === "host");
       const hostUser = host ? await ctx.db.get(host.userId) : null;
@@ -868,6 +872,7 @@ async function collectAgreementPendingCandidatesForStays(
 
   for (const stay of stays) {
     if (stay.status === "ended" || !stay.currentTermsId) continue;
+    if ((await getSubleaseLockState(ctx, stay, now)).locked) continue;
     const localDate = calendarDateInTimezone(new Date(now), stay.timezone);
     const members = await ctx.db
       .query("memberships")

@@ -22,7 +22,11 @@ import { HELP_LINKS } from "@/lib/help-links";
 import { formatMoney, formatDate } from "@/components/workspace/types";
 
 import type { WorkspaceState } from "./use-live-stay";
-import { GuestTabs } from "./view-helpers";
+import {
+  GuestTabs,
+  LandlordConsentWarningCard,
+  SubleaseLockBanner,
+} from "./view-helpers";
 import { isUsableName } from "@/lib/names";
 
 const PaywallModal = dynamic(() =>
@@ -66,6 +70,17 @@ export function StayScreen({ state }: { state: WorkspaceState }) {
 
   return (
     <div key="stay" className="screen-transition">
+      <SubleaseLockBanner
+        lock={bundle?.subleaseLock}
+        isHost={isHost}
+        onOpenSettings={() => setPanel("settings")}
+      />
+      {isHost && (
+        <LandlordConsentWarningCard
+          stay={bundle?.stay}
+          onDismiss={state.dismissLandlordConsentWarning}
+        />
+      )}
       <div className="page-heading">
         <div>
           <p className="eyebrow">The agreement</p>
@@ -550,9 +565,16 @@ export function StayScreen({ state }: { state: WorkspaceState }) {
         <button
           className="button danger-outline"
           type="button"
-          onClick={() => setDestructiveAction({ type: "end" })}
+          onClick={() =>
+            setDestructiveAction({
+              type: "end",
+              arrangement: bundle?.stay?.arrangement,
+            })
+          }
         >
-          End this stay
+          {bundle?.stay?.arrangement === "sublease"
+            ? "End this sublease"
+            : "End this stay"}
         </button>
       )}
       {paywallOpen && (

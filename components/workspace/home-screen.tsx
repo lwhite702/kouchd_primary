@@ -19,7 +19,11 @@ import {
 } from "@/components/workspace/types";
 
 import type { WorkspaceState } from "./use-live-stay";
-import { GuestTabs } from "./view-helpers";
+import {
+  GuestTabs,
+  LandlordConsentWarningCard,
+  SubleaseLockBanner,
+} from "./view-helpers";
 import { isUsableName } from "@/lib/names";
 export function HomeScreen({
   state,
@@ -79,6 +83,18 @@ export function HomeScreen({
         notifications={notifications}
         onOpenSettings={() => setPanel("settings")}
       />
+
+      <SubleaseLockBanner
+        lock={bundle?.subleaseLock}
+        isHost={isHost}
+        onOpenSettings={() => setPanel("settings")}
+      />
+      {isHost && (
+        <LandlordConsentWarningCard
+          stay={bundle?.stay}
+          onDismiss={state.dismissLandlordConsentWarning}
+        />
+      )}
 
       {!isEnded && !isUsableName(viewer?.name) && (
         <div

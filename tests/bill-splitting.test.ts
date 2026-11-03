@@ -333,6 +333,36 @@ describe("Task 2: Pure bill-splitting & proration calculation", () => {
     ).toThrow();
   });
 
+  it("calculates private room sublease preset share (1 / (roommateCount + 1)) with host absorbing remainder", () => {
+    // 2 roommates + 1 guest = 3 total shares. Guest preset = 33.3%
+    const roommateCount = 2;
+    const totalShares = roommateCount + 1;
+    const guestPercentage = Number((100 / totalShares).toFixed(1)); // 33.3
+    const totalCents = 30000; // $300.00 bill
+
+    const shares = calculateBillShares({
+      totalCents,
+      serviceStart: "2026-10-01",
+      serviceEnd: "2026-10-31",
+      splitMethod: "percentage",
+      includeHost: true,
+      prorateByStayDates: false,
+      guests: [
+        {
+          guestUserId: "guest-subletter",
+          joinedAt: 100,
+          stayStartDate: "2026-10-01",
+          stayEndDate: "2026-10-31",
+          input: guestPercentage,
+        },
+      ],
+    });
+
+    expect(shares).toHaveLength(1);
+    expect(shares[0].amountCents).toBe(9990); // 33.3% of 30000 = 9990 cents ($99.90)
+    expect(shares[0].input).toBe(33.3);
+  });
+
   it("handles fixed split and rejects invalid fixed inputs", () => {
     const shares = calculateBillShares({
       totalCents: 1000,

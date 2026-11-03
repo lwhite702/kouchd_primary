@@ -10,6 +10,7 @@ import { generateReferralCode, normalizeReferralCode } from "../lib/referral";
 import { createRejoinGuestTerms, ensureGuestTerms, offerGuestAgreement } from "./lib/stayTerms";
 import { scheduleSubscriptionLimitShadow } from "./subscriptionShadow";
 import { clearBlockedJoins } from "./subscriptions";
+import { assertSubleaseUnlocked } from "./lib/subleaseLock";
 import { ANALYTICS_EVENTS } from "../lib/analytics/events";
 import { trackServerEvent } from "./lib/posthog";
 
@@ -17,7 +18,12 @@ export const preview = query({
   args: { referralCode: v.string() },
   returns: v.union(v.object({ valid: v.literal(false), error: v.string() }), v.object({
     valid: v.literal(true), stayId: v.id("stays"), hostName: v.string(), hostImage: v.optional(v.string()),
-    status: schema.tables.stays.validator.fields.status, timezone: v.string(), startDate: v.optional(v.string()), endDate: v.optional(v.string()),
+    status: schema.tables.stays.validator.fields.status, timezone: v.string(),
+    arrangement: schema.tables.stays.validator.fields.arrangement,
+    subleaseLayout: schema.tables.stays.validator.fields.subleaseLayout,
+    roommateCount: schema.tables.stays.validator.fields.roommateCount,
+    roommateNames: schema.tables.stays.validator.fields.roommateNames,
+    startDate: v.optional(v.string()), endDate: v.optional(v.string()),
     cadence: v.optional(schema.tables.terms.validator.fields.cadence), rateCents: v.optional(v.number()), houseNotes: v.optional(v.string()),
     houseRules: schema.tables.terms.validator.fields.houseRules, rewards: schema.tables.terms.validator.fields.rewards,
   })),
@@ -48,6 +54,10 @@ export const preview = query({
       hostImage: host?.imageUrl,
       status: stay.status,
       timezone: stay.timezone,
+      arrangement: stay.arrangement,
+      subleaseLayout: stay.subleaseLayout,
+      roommateCount: stay.roommateCount,
+      roommateNames: stay.roommateNames,
       startDate: terms?.startDate,
       endDate: terms?.endDate,
       cadence: terms?.cadence,
@@ -77,6 +87,11 @@ export const joinWithCode = mutation({
 
     if (!stay || stay.status === "ended") {
       throw new Error("Invalid or expired household referral code");
+    }
+
+    await assertSubleaseUnlocked(ctx, stay, { viewerRole: "guest" });
+    if (stay.arrangement === "sublease" && !stay.landlordConsent) {
+      throw new Error("The host must complete sublease setup before guests can join");
     }
 
     const existingMembership = await ctx.db
@@ -160,6 +175,9 @@ export const regenerateCode = mutation({
   returns: v.string(),
   handler: async (ctx, { stayId }) => {
     const { user } = await requireHost(ctx, stayId);
+    const stay = await ctx.db.get(stayId);
+    if (!stay || stay.status === "ended") throw new Error("Ended stays cannot be edited");
+    await assertSubleaseUnlocked(ctx, stay, { viewerRole: "host" });
     const newCode = generateReferralCode();
     await ctx.db.patch(stayId, { referralCode: newCode, updatedAt: Date.now() });
 

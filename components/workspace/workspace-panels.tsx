@@ -253,6 +253,7 @@ export function WorkspacePanels({ state }: { state: WorkspaceState }) {
       )}
       {panel === "splitBill" && (
         <SplitBillModalForm
+          stay={bundle?.stay}
           guests={guestMembers}
           defaultTerms={terms}
           asOfDate={asOfDate}

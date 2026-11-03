@@ -4,6 +4,7 @@ import { mutation, query } from "./_generated/server";
 import { requireHost, requireMembership } from "./lib/auth";
 import { recordActivity } from "./lib/activity";
 import { assertAnnouncementInput } from "./lib/validation";
+import { assertSubleaseUnlocked } from "./lib/subleaseLock";
 
 export const list = query({
   args: { stayId: v.id("stays") },
@@ -26,6 +27,7 @@ export const create = mutation({
     assertAnnouncementInput(args.title, args.body, args.pinnedUntil);
     const stay = await ctx.db.get(args.stayId);
     if (!stay || stay.status === "ended") throw new Error("Ended stays cannot add announcements");
+    await assertSubleaseUnlocked(ctx, stay, "host");
     const now = Date.now();
     const announcementId = await ctx.db.insert("announcements", {
       stayId: args.stayId,

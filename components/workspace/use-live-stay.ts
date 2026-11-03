@@ -920,11 +920,26 @@ export function useLiveStay(stayId: Id<"stays">, onBackToHub: () => void) {
     }
   }
 
+  const dismissLandlordConsentWarningMutation = useMutation(
+    api.stays.dismissLandlordConsentWarning,
+  );
+  const dismissLandlordConsentWarning = useCallback(async () => {
+    try {
+      await dismissLandlordConsentWarningMutation({ stayId });
+    } catch (err) {
+      console.error("Failed to dismiss landlord consent warning", err);
+    }
+  }, [dismissLandlordConsentWarningMutation, stayId]);
+
   // The confirmation dialog owns busy state, failure feedback and success dismissal.
   async function confirmDestructiveAction() {
     if (destructiveAction?.type === "end") {
       await endStay({ stayId });
-      notify("Stay ended. The record is retained in Past stays.");
+      notify(
+        bundle?.stay?.arrangement === "sublease"
+          ? "Sublease ended. Remember to change door codes and Wi-Fi passwords."
+          : "Stay ended. The record is retained in Past stays.",
+      );
       onBackToHub();
     } else if (destructiveAction?.type === "cancelCharge") {
       await voidAdhocCharge({ obligationId: destructiveAction.obligationId });
@@ -998,6 +1013,8 @@ export function useLiveStay(stayId: Id<"stays">, onBackToHub: () => void) {
     asOfDate,
     recent,
     bundle,
+    subleaseLock: bundle?.subleaseLock,
+    dismissLandlordConsentWarning,
     obligations,
     bills: bills ?? [],
     pendingAgreementGuests,

@@ -26,6 +26,12 @@ export type Member = {
   agreementOffer?: Doc<"agreementOffers"> | null;
 };
 
+export type SubleaseLockState = {
+  locked: boolean;
+  billingRetryWarning: boolean;
+  reason: string | null;
+};
+
 export type StayBundle = {
   stay: Doc<"stays">;
   terms: Doc<"terms"> | null;
@@ -33,6 +39,7 @@ export type StayBundle = {
   members: Member[];
   /** Set only when the server removed a configured door or Wi-Fi code. */
   accessCodesHidden: "needs_acceptance" | "ended" | null;
+  subleaseLock?: SubleaseLockState;
 };
 
 export type LedgerItem = {
@@ -83,7 +90,7 @@ export type Panel =
 
 /** Actions that need an explicit confirmation; voided records keep their history. */
 export type DestructiveAction =
-  | { type: "end" }
+  | { type: "end"; arrangement?: "home_stay" | "sublease" }
   | { type: "cancelCharge"; obligationId: Id<"obligations">; title: string }
   | { type: "voidBill"; billId: Id<"bills">; title: string }
   | {
@@ -106,10 +113,16 @@ export function destructiveActionCopy(action: DestructiveAction): {
   switch (action.type) {
     case "end":
       return {
-        title: "End this stay?",
+        title:
+          action.arrangement === "sublease"
+            ? "End this sublease?"
+            : "End this stay?",
         description:
-          "Guests will no longer be able to add to this stay. Its agreements and history will remain available under Past stays, and you can start another stay.",
-        confirmLabel: "End stay",
+          action.arrangement === "sublease"
+            ? "Guests will no longer be able to add to this sublease. Its records and agreements will remain available under Past stays. Remember to change physical door codes and Wi-Fi passwords if your agreement has ended."
+            : "Guests will no longer be able to add to this stay. Its agreements and history will remain available under Past stays, and you can start another stay.",
+        confirmLabel:
+          action.arrangement === "sublease" ? "End sublease" : "End stay",
       };
     case "cancelCharge":
       return {

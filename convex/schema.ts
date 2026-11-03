@@ -71,6 +71,7 @@ export default defineSchema({
     periodType: v.optional(v.union(v.literal("trial"), v.literal("intro"), v.literal("normal"))),
     /** Where the subscription was bought, so the app can send the host to the right place to manage it. */
     store: v.optional(v.union(v.literal("app_store"), v.literal("web"), v.literal("other"))),
+    billingRetryStartedAt: v.optional(v.number()),
     latestProviderEventAt: v.optional(v.number()),
     updatedAt: v.number(),
   })
@@ -99,6 +100,22 @@ export default defineSchema({
     name: v.optional(v.string()),
     creationRequestId: v.optional(v.string()),
     arrangement: v.optional(v.union(v.literal("home_stay"), v.literal("sublease"))),
+    subleaseLayout: v.optional(v.union(v.literal("whole_place"), v.literal("private_room"))),
+    roommateCount: v.optional(v.number()),
+    roommateNames: v.optional(v.array(v.string())),
+    landlordConsent: v.optional(
+      v.object({
+        answer: v.union(
+          v.literal("written_permission"),
+          v.literal("not_required"),
+          v.literal("not_confirmed"),
+        ),
+        answeredAt: v.number(),
+        warningDismissedAt: v.optional(v.number()),
+      }),
+    ),
+    subleaseBillPreset: v.optional(v.union(v.literal("whole_place"), v.literal("private_room"))),
+    subleaseLockedAt: v.optional(v.number()),
     status: v.union(v.literal("pending"), v.literal("active"), v.literal("ended")),
     timezone: v.string(),
     referralCode: v.optional(v.string()),

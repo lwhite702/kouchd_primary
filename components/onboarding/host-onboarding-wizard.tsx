@@ -37,9 +37,18 @@ export function HostOnboardingWizard({
   const [stayName, setStayName] = useState("");
   const [phone, setPhone] = useState("");
   const [optInSms, setOptInSms] = useState(false);
+  const [arrangement, setArrangement] = useState<"home_stay" | "sublease">("home_stay");
+  const [subleaseLayout, setSubleaseLayout] = useState<"whole_place" | "private_room">("whole_place");
+  const [roommateCount, setRoommateCount] = useState<number>(1);
+  const [roommateNames, setRoommateNames] = useState<string>("");
+  const [landlordConsentAnswer, setLandlordConsentAnswer] = useState<
+    "written_permission" | "not_required" | "not_confirmed"
+  >("written_permission");
+  const [landlordConsentWarningDismissed, setLandlordConsentWarningDismissed] = useState(false);
+  const [paymentDayOfMonth, setPaymentDayOfMonth] = useState<number>(1);
   const [startDate, setStartDate] = useState(today);
   const [endDate, setEndDate] = useState(addCalendarDays(today, 14));
-  const [cadence, setCadence] = useState<"daily" | "weekly">("weekly");
+  const [cadence, setCadence] = useState<"daily" | "weekly" | "monthly">("weekly");
   const [rate, setRate] = useState("200");
   const [nextCheckInDate, setNextCheckInDate] = useState(addCalendarDays(today, 7));
 
@@ -155,6 +164,23 @@ export function HostOnboardingWizard({
         creationRequestId,
         name: stayName.trim() || undefined,
         timezone,
+        arrangement,
+        ...(arrangement === "sublease"
+          ? {
+              subleaseLayout,
+              ...(subleaseLayout === "private_room"
+                ? {
+                    roommateCount: Number(roommateCount) || 1,
+                    roommateNames: roommateNames
+                      .split(",")
+                      .map((s) => s.trim())
+                      .filter(Boolean),
+                  }
+                : {}),
+              landlordConsentAnswer,
+              subleaseBillPreset: subleaseLayout,
+            }
+          : {}),
         nextCheckInDate: nextCheckInDate || undefined,
         paymentOptions: (Object.entries(paymentDetails) as Array<[keyof typeof paymentDetails, string]>)
           .filter(([, detail]) => detail.trim())
@@ -163,6 +189,9 @@ export function HostOnboardingWizard({
           startDate,
           endDate,
           cadence,
+          ...(cadence === "monthly"
+            ? { paymentDayOfMonth: Number(paymentDayOfMonth) || 1 }
+            : {}),
           rateCents: Math.round(Number(rate) * 100),
           earlyDiscountEnabled: earlyEnabled,
           earlyDiscountPercentage: earlyEnabled ? Number(earlyDiscount) : 0,
@@ -231,6 +260,163 @@ export function HostOnboardingWizard({
           </p>
 
           <div className="form-grid" style={{ marginTop: "1.5rem" }}>
+            <div className="full" style={{ marginBottom: "0.5rem" }}>
+              <span style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, marginBottom: "0.5rem" }}>
+                Arrangement type
+              </span>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem" }}>
+                <button
+                  type="button"
+                  className={`button ${arrangement === "home_stay" ? "primary" : "ghost"}`}
+                  style={{ justifyContent: "center", padding: "0.75rem 1rem" }}
+                  onClick={() => {
+                    setArrangement("home_stay");
+                    if (cadence === "monthly") {
+                      setCadence("weekly");
+                      setRate("200");
+                    }
+                  }}
+                >
+                  Someone staying with me
+                </button>
+                <button
+                  type="button"
+                  className={`button ${arrangement === "sublease" ? "primary" : "ghost"}`}
+                  style={{ justifyContent: "center", padding: "0.75rem 1rem" }}
+                  onClick={() => {
+                    setArrangement("sublease");
+                    setCadence("monthly");
+                    setRate("1200");
+                  }}
+                >
+                  Subletting my place
+                </button>
+              </div>
+            </div>
+
+            {arrangement === "sublease" && (
+              <div
+                className="full"
+                style={{
+                  padding: "1rem",
+                  background: "var(--paper, #f5f0e8)",
+                  borderRadius: "12px",
+                  border: "1px solid var(--line, #e2ded7)",
+                  marginBottom: "0.5rem",
+                }}
+              >
+                <span style={{ display: "block", fontSize: "0.85rem", fontWeight: 700, marginBottom: "0.5rem" }}>
+                  Sublease layout
+                </span>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "0.75rem", marginBottom: "0.75rem" }}>
+                  <button
+                    type="button"
+                    className={`button ${subleaseLayout === "whole_place" ? "primary" : "ghost"}`}
+                    style={{ justifyContent: "center" }}
+                    onClick={() => setSubleaseLayout("whole_place")}
+                  >
+                    Whole place
+                  </button>
+                  <button
+                    type="button"
+                    className={`button ${subleaseLayout === "private_room" ? "primary" : "ghost"}`}
+                    style={{ justifyContent: "center" }}
+                    onClick={() => setSubleaseLayout("private_room")}
+                  >
+                    Private room
+                  </button>
+                </div>
+
+                {subleaseLayout === "private_room" && (
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 2fr", gap: "0.75rem", marginTop: "0.75rem" }}>
+                    <label>
+                      <span>Roommates</span>
+                      <input
+                        type="number"
+                        min="1"
+                        max="20"
+                        value={roommateCount}
+                        onChange={(e) => setRoommateCount(Math.max(1, parseInt(e.target.value) || 1))}
+                        required
+                      />
+                    </label>
+                    <label>
+                      <span>Roommate names (optional)</span>
+                      <input
+                        type="text"
+                        placeholder="Alex, Jordan"
+                        value={roommateNames}
+                        onChange={(e) => setRoommateNames(e.target.value)}
+                      />
+                    </label>
+                  </div>
+                )}
+
+                <div style={{ marginTop: "1rem", borderTop: "1px solid var(--line, #e2ded7)", paddingTop: "0.75rem" }}>
+                  <label style={{ display: "block", marginBottom: "0.5rem" }}>
+                    <span style={{ fontWeight: 600 }}>Does your landlord or lease permit subletting?</span>
+                    <select
+                      value={landlordConsentAnswer}
+                      onChange={(e) =>
+                        setLandlordConsentAnswer(
+                          e.target.value as "written_permission" | "not_required" | "not_confirmed",
+                        )
+                      }
+                      style={{ marginTop: "0.35rem", width: "100%" }}
+                    >
+                      <option value="written_permission">Yes, I have written permission</option>
+                      <option value="not_required">Not required by my lease</option>
+                      <option value="not_confirmed">I haven&apos;t confirmed yet</option>
+                    </select>
+                  </label>
+
+                  {landlordConsentAnswer === "not_confirmed" && !landlordConsentWarningDismissed && (
+                    <div
+                      style={{
+                        marginTop: "0.5rem",
+                        padding: "0.75rem 1rem",
+                        background: "#fffbeb",
+                        border: "1px solid #fde68a",
+                        borderRadius: "8px",
+                        color: "#92400e",
+                        fontSize: "0.82rem",
+                        lineHeight: 1.45,
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        gap: "0.75rem",
+                      }}
+                    >
+                      <span>
+                        Subletting without landlord permission can lead to lease violations or eviction. Check your lease before your guest moves in.
+                      </span>
+                      <button
+                        type="button"
+                        className="button ghost compact"
+                        style={{ flexShrink: 0, padding: "0.2rem 0.5rem", fontSize: "0.75rem" }}
+                        onClick={() => setLandlordConsentWarningDismissed(true)}
+                      >
+                        Dismiss
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                <div
+                  style={{
+                    marginTop: "1rem",
+                    padding: "0.6rem 0.85rem",
+                    background: "rgba(24, 79, 58, 0.06)",
+                    borderRadius: "8px",
+                    fontSize: "0.8rem",
+                    color: "var(--ink)",
+                  }}
+                >
+                  <strong>Kouchd Plus required:</strong> Subleases require an active Kouchd Plus subscription. If your subscription lapses, this sublease becomes read-only until you renew.
+                </div>
+              </div>
+            )}
+
             <label className="full">
               <span>Stay name</span>
               <input
@@ -266,14 +452,39 @@ export function HostOnboardingWizard({
               <select
                 name="cadence"
                 value={cadence}
-                onChange={(e) => setCadence(e.target.value as "daily" | "weekly")}
+                onChange={(e) => setCadence(e.target.value as "daily" | "weekly" | "monthly")}
               >
+                {arrangement === "sublease" && <option value="monthly">Monthly</option>}
                 <option value="weekly">Weekly</option>
                 <option value="daily">Daily</option>
               </select>
             </label>
+            {cadence === "monthly" && (
+              <label>
+                <span>Rent due on day of month</span>
+                <input
+                  type="number"
+                  min="1"
+                  max="28"
+                  value={paymentDayOfMonth}
+                  onChange={(e) =>
+                    setPaymentDayOfMonth(
+                      Math.min(28, Math.max(1, parseInt(e.target.value) || 1)),
+                    )
+                  }
+                  required
+                />
+              </label>
+            )}
             <label>
-              <span>Amount per {cadence === "weekly" ? "week" : "day"}</span>
+              <span>
+                Amount per{" "}
+                {cadence === "monthly"
+                  ? "month"
+                  : cadence === "weekly"
+                    ? "week"
+                    : "day"}
+              </span>
               <div className="money-input">
                 <span>$</span>
                 <input
@@ -736,6 +947,16 @@ export function HostOnboardingWizard({
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 170px), 1fr))", gap: "1.25rem", marginBottom: "1.5rem" }}>
               <div>
                 <span style={{ fontSize: "0.75rem", textTransform: "uppercase", color: "var(--muted, #6f6b64)", fontWeight: 700 }}>
+                  Arrangement
+                </span>
+                <p style={{ margin: "2px 0 0", fontWeight: 700, fontSize: "1rem" }}>
+                  {arrangement === "sublease"
+                    ? `Sublease (${subleaseLayout === "whole_place" ? "Whole place" : `Private room, ${roommateCount} roommate${roommateCount === 1 ? "" : "s"}`})`
+                    : "Standard stay"}
+                </p>
+              </div>
+              <div>
+                <span style={{ fontSize: "0.75rem", textTransform: "uppercase", color: "var(--muted, #6f6b64)", fontWeight: 700 }}>
                   Stay Dates
                 </span>
                 <p style={{ margin: "2px 0 0", fontWeight: 700, fontSize: "1rem" }}>{startDate} to {endDate}</p>
@@ -745,7 +966,7 @@ export function HostOnboardingWizard({
                   Contribution Plan
                 </span>
                 <p style={{ margin: "2px 0 0", fontWeight: 700, fontSize: "1rem" }}>
-                  ${rate} / {cadence === "weekly" ? "week" : "day"}
+                  ${rate} / {cadence === "monthly" ? "month" : cadence === "weekly" ? "week" : "day"}
                 </p>
               </div>
               <div>
