@@ -2,6 +2,14 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-11-03 — Signed-out Start page (WRE-276, 0.9.1)
+
+- Branch `codex/WRE-276-signed-out-start-page`, part of the Version 1.0 redesign (WRE-273). Design: Figma node 533:356, "04 Start".
+- `app/page.tsx` now returns `<StartPage />` for signed-out visitors instead of `redirect("/sign-in")`; this reverses the redirect contract from WRE-178. `components/authenticated-home.tsx` renders `StartPage` in its signed-out branch. `components/landing-page.tsx` deleted; `components/landing-v21.css` kept for `/about` and `/simple`.
+- Guest code hand-off: `lib/start/join-code.ts` builds `/sign-up?redirect_url=/?join=<code>` and reads `?join=` back. `GetStartedHub` opens its join tab with the code, and `JoinHouseholdCard` takes an `initialCode` prop; the join itself still calls `api.referral.joinWithCode`. Signed-in users who already have stays land on `StayHub`, which does not read `?join=`.
+- Styles live in `components/start/start-page.css` (all classes prefixed `kd-start`) to stay clear of the parallel token/dark-mode work in `app/production.css`, `components/dashboard-v21.css`, and `app/console.css`.
+- Version 0.9.1.
+
 ## 2026-11-03 — WRE-274 web color tokens and dark appearance (0.9.0, branch only)
 
 - Added system-driven dark appearance to the shared web color tokens. Exactly seven semantic values adapt: paper, surface, ink, muted, line, forest accent, and eyebrow. Brand forest remains fixed for filled controls and bands; pale lime, sage, sky, and coral fills use the fixed on-fill text color.

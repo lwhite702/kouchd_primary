@@ -1,5 +1,5 @@
 {
   "type": "minor",
-  "version": "0.9.0",
-  "reason": "Shared web color tokens and system dark appearance (WRE-274)."
+  "version": "0.9.1",
+  "reason": "Redesigned signed-out Start page and invite-code deep link (WRE-276)."
 }

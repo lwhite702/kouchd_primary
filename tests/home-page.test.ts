@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { KouchdWorkspace } from "@/components/kouchd-workspace";
 import { AuthenticatedHome } from "@/components/authenticated-home";
+import { StartPage } from "@/components/start/start-page";
 
 const mockRedirect = vi.fn((url: string) => {
   throw new Error(`REDIRECT:${url}`);
@@ -22,6 +23,10 @@ vi.mock("@/components/kouchd-workspace", () => ({
 
 vi.mock("@/components/authenticated-home", () => ({
   AuthenticatedHome: vi.fn(() => null),
+}));
+
+vi.mock("@/components/start/start-page", () => ({
+  StartPage: vi.fn(() => null),
 }));
 
 describe("HomePage root route contract", () => {
@@ -49,15 +54,16 @@ describe("HomePage root route contract", () => {
     expect(mockRedirect).not.toHaveBeenCalled();
   });
 
-  it("redirects signed-out visitors to /sign-in when services are configured", async () => {
+  it("renders the Start page for signed-out visitors when services are configured", async () => {
     process.env.NEXT_PUBLIC_CONVEX_URL = "https://example.convex.cloud";
     process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY = "pk_test_123";
     mockAuth.mockResolvedValue({ userId: null });
 
     const { default: HomePage } = await import("@/app/page");
+    const result = await HomePage();
 
-    await expect(HomePage()).rejects.toThrow("REDIRECT:/sign-in");
-    expect(mockRedirect).toHaveBeenCalledWith("/sign-in");
+    expect(result.type).toBe(StartPage);
+    expect(mockRedirect).not.toHaveBeenCalled();
   });
 
   it("renders AuthenticatedHome for signed-in users when services are configured", async () => {
