@@ -633,4 +633,72 @@ export default defineSchema({
     .index("by_created_at", ["createdAt"])
     .index("by_actor_created_at", ["actorUserId", "createdAt"])
     .index("by_provider_created_at", ["provider", "createdAt"]),
+
+  conditionChecklists: defineTable({
+    stayId: v.id("stays"),
+    guestUserId: v.id("users"),
+    type: v.union(v.literal("move_in"), v.literal("move_out")),
+    status: v.union(
+      v.literal("draft"),
+      v.literal("submitted"),
+      v.literal("confirmed"),
+      v.literal("disputed"),
+    ),
+    submittedBy: v.optional(v.id("users")),
+    submittedAt: v.optional(v.string()),
+    reviewedBy: v.optional(v.id("users")),
+    reviewedAt: v.optional(v.string()),
+    reviewNote: v.optional(v.string()),
+    items: v.array(
+      v.object({
+        id: v.string(),
+        area: v.string(),
+        category: v.union(v.literal("private"), v.literal("shared")),
+        item: v.string(),
+        condition: v.union(
+          v.literal("good"),
+          v.literal("fair"),
+          v.literal("damaged"),
+          v.literal("not_applicable"),
+        ),
+        notes: v.optional(v.string()),
+        disputeNote: v.optional(v.string()),
+      }),
+    ),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_stay_guest", ["stayId", "guestUserId"])
+    .index("by_stay_type", ["stayId", "type"]),
+
+  depositRecords: defineTable({
+    stayId: v.id("stays"),
+    guestUserId: v.id("users"),
+    amountCents: v.number(),
+    holder: v.union(v.literal("host"), v.literal("landlord"), v.literal("third_party")),
+    holderName: v.optional(v.string()),
+    agreedReturnDate: v.string(),
+    status: v.union(
+      v.literal("recorded"),
+      v.literal("refund_pending"),
+      v.literal("returned"),
+      v.literal("disputed"),
+    ),
+    deductions: v.optional(
+      v.array(
+        v.object({
+          id: v.string(),
+          description: v.string(),
+          amountCents: v.number(),
+          disputed: v.optional(v.boolean()),
+          disputeReason: v.optional(v.string()),
+        }),
+      ),
+    ),
+    guestConfirmedAt: v.optional(v.string()),
+    disputeNote: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_stay_guest", ["stayId", "guestUserId"]),
 });

@@ -17,6 +17,13 @@
 
 ### Added
 
+- **Sublease condition checklists and security deposit records (WRE-272, branch only, not released)**:
+  - **Condition checklists:** Added `conditionChecklists` table (`convex/schema.ts`) and `convex/checklists.ts` (`getByStay`, `submit`, `review`) supporting move-in and move-out inspections. In `private_room` subleases, private bedroom areas and shared household spaces are inspected separately. Submissions and counterpart reviews (confirmations or itemized dispute notes) are timestamped and immutable once confirmed.
+  - **Security deposit records:** Added `depositRecords` table (`convex/schema.ts`) and `convex/deposits.ts` (`getByStay`, `record`, `proposeDeductions`, `respond`) tracking amount, funds holder (host, landlord, or third party), agreed return date, and itemized deductions with dispute notes.
+  - **Financial separation & non-holding boundary:** In accordance with Kouchd operating policy and architecture, deposit records never alter obligations, rent ledger balances, or credits. Kouchd does not hold, transfer, or escrow funds, nor mediate condition disputes.
+  - **Sublease lock enforcement:** Blocked checklist submissions, reviews, and deposit record modifications on locked subleases.
+  - **Web & iOS UI:** Added `ConditionChecklistCard` and `DepositRecordCard` components on web (`components/subleases/`, integrated into `components/workspace/stay-screen.tsx`) and native iOS cards in `ios/Kouchd/StayScreens.swift`.
+
 - **Sublease stay type, landlord consent flow, sublease lock engine, bill presets, and access-code end-date redaction (WRE-272, branch only, not released)**:
   - **Schema & feature flag:** Registered `FEATURE_FLAGS.SUBLEASES` (`feature_subleases`, `defaultValue: false` in `lib/flags/config.ts`) and added sublease fields to `stays` (`subleaseLayout`, `roommateCount`, `roommateNames`, `landlordConsent`, `subleaseBillPreset`, `subleaseLockedAt`) and `billingRetryStartedAt` to `subscriptionSnapshots` in `convex/schema.ts`.
   - **Lock engine & mutation guards:** Implemented `getSubleaseLockState`, `assertSubleaseUnlocked`, and `reconcileAccountSubleaseLocks` in `convex/lib/subleaseLock.ts`. Subleases lock upon subscription expiration, refund, or when `billing_retry` exceeds 7 days. Sublease locks are enforced across all 14 stay-scoped mutation modules (`stays`, `terms`, `invites`, `referral`, `contributions`, `obligations`, `bills`, `paymentSchedule`, `occupancy`, `chores`, `shopping`, `checkIns`, `announcements`, `rewards`), pausing late fees and reminders while permitting host stay termination.

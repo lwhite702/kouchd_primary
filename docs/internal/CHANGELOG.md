@@ -2,6 +2,17 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-11-03 — Sublease condition checklists and security deposit records (WRE-272, Step 5)
+
+- Added `conditionChecklists` table in `convex/schema.ts` and `convex/checklists.ts` (`getByStay`, `submit`, `review`) supporting move-in and move-out inspections. In `private_room` subleases, private room spaces and shared common areas are categorized and inspected separately. Submissions and counterpart reviews (confirm or itemized dispute note) are timestamped; once confirmed, checklist items become immutable.
+- Added `depositRecords` table in `convex/schema.ts` and `convex/deposits.ts` (`getByStay`, `record`, `proposeDeductions`, `respond`) capturing deposit amount in cents, funds holder (`host | landlord | third_party`), holding institution/details, agreed return date, and itemized proposed deductions with optional dispute notes.
+- Enforced strict financial separation: deposit records and deductions are pure record-keeping artifacts and never create or alter ledger obligations, balances, or credits.
+- Enforced sublease lock guards (`assertSubleaseUnlocked`) rejecting new checklist submissions, reviews, deposit recordings, deduction proposals, and responses on locked subleases.
+- Implemented Web UI (`components/subleases/condition-checklist-card.tsx`, `components/subleases/deposit-record-card.tsx`, integrated into `components/workspace/stay-screen.tsx`) and iOS UI (`ios/Kouchd/StayScreens.swift`).
+- Added full integration test suite in `tests/sublease-checklists-deposits.test.ts` (3 tests covering complete checklist submission/confirmation/dispute workflow, deposit recording/deduction proposals/dispute response without impacting ledger totals, and sublease lock rejection).
+- Evidence: `tests/sublease-checklists-deposits.test.ts` (3/3 passed), full Vitest suite (51 files, 335 tests passed), `tsc --noEmit` (0 errors), `npm run lint` (0 errors in new files), `npm run release:check` passing.
+- Branch only (`codex/sublease-step-5-checklists-and-deposits`), stacked on `codex/WRE-272-sublease-setup-and-lock`.
+
 ## 2026-11-02 — Sublease type, setup, landlord consent, and lock (WRE-272)
 
 - Registered `FEATURE_FLAGS.SUBLEASES` (`feature_subleases`, `defaultValue: false`) in `lib/flags/config.ts`.
