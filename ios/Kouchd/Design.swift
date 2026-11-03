@@ -2,15 +2,22 @@ import ClerkKitUI
 import SwiftUI
 
 enum Palette {
-  static let cream = adaptive(light: 0xF6F2EA, dark: 0x101713)
-  static let surface = adaptive(light: 0xFFFFFF, dark: 0x1B2721)
-  static let forest = adaptive(light: 0x174E39, dark: 0xD5F59A)
+  static let cream = adaptive(light: 0xF5F0E8, dark: 0x101713)
+  static let surface = adaptive(light: 0xFFFDF8, dark: 0x1B2721)
+  static let forest = adaptive(light: 0x184F3A, dark: 0xD5F59A)
   static let brandForest = Color(red: 0.090, green: 0.306, blue: 0.224)
-  static let ink = adaptive(light: 0x16241E, dark: 0xF1F5F0)
-  static let muted = adaptive(light: 0x697169, dark: 0xAEB8B0)
-  static let lime = Color(red: 0.870, green: 0.950, blue: 0.370)
+  static let ink = adaptive(light: 0x17251F, dark: 0xF1F5F0)
+  static let muted = adaptive(light: 0x59675F, dark: 0xAEB8B0)
+  static let lime = adaptive(light: 0xDFF25E, dark: 0xDFF25E)
   static let onLime = Color(red: 0.086, green: 0.141, blue: 0.118)
-  static let line = adaptive(light: 0xDFDED3, dark: 0x34443B)
+  static let line = adaptive(light: 0xDED8CE, dark: 0x34443B)
+  static let sage = adaptive(light: 0xE5EDDE, dark: 0x22352B)
+  static let sky = adaptive(light: 0xC9E7F0, dark: 0x1D3A44)
+  static let blue = adaptive(light: 0x245868, dark: 0x8CC3D6)
+  static let amber = adaptive(light: 0x795019, dark: 0xE0B36A)
+  static let rose = adaptive(light: 0xFAE5DD, dark: 0x3A2621)
+  static let heroSurface = adaptive(light: 0x184F3A, dark: 0x1B2721)
+  static let heroForeground = adaptive(light: 0xFFFFFF, dark: 0xF1F5F0)
   static let heading = Font.custom("Manrope", size: 33, relativeTo: .largeTitle).weight(.bold)
   static let section = Font.custom("Manrope", size: 23, relativeTo: .title2).weight(.bold)
 
@@ -207,13 +214,29 @@ struct Card<Content: View>: View {
 
 struct Pill: View {
   let text: String
+  private var fill: Color {
+    switch text.lowercased() {
+    case "confirmed", "complete", "completed": Palette.sage
+    case "pending", "waiting", "scheduled": Palette.sky
+    case "needs your attention", "disputed", "overdue", "attention", "voided", "failed", "rejected": Palette.rose
+    default: Palette.lime
+    }
+  }
+  private var foreground: Color {
+    switch text.lowercased() {
+    case "confirmed", "complete", "completed": Palette.forest
+    case "pending", "waiting", "scheduled": Palette.blue
+    case "needs your attention", "disputed", "overdue", "attention", "voided", "failed", "rejected": Palette.amber
+    default: Palette.onLime
+    }
+  }
   var body: some View {
     Text(text.uppercased())
       .font(.caption2.weight(.bold))
       .tracking(1)
-      .foregroundStyle(Palette.onLime)
+      .foregroundStyle(foreground)
       .padding(.horizontal, 12).padding(.vertical, 7)
-      .background(Palette.lime, in: Capsule())
+      .background(fill, in: Capsule())
   }
 }
 
@@ -224,7 +247,7 @@ struct PrimaryButton: View {
   let action: () -> Void
   var body: some View {
     Button(action: action) {
-      Text(title).font(.headline).foregroundStyle(.white).frame(maxWidth: .infinity)
+      Text(title).font(.headline).foregroundStyle(Palette.onLime).frame(maxWidth: .infinity)
         .padding(.vertical, 15)
         .contentShape(Rectangle())
     }
@@ -232,6 +255,19 @@ struct PrimaryButton: View {
     .fixedSize(horizontal: false, vertical: true)
     .frame(maxWidth: contentWidth > 600 ? 420 : .infinity)
     .opacity(isEnabled ? 1 : 0.5)
+  }
+}
+
+struct ForestButton: View {
+  let title: String
+  let action: () -> Void
+  var body: some View {
+    Button(action: action) {
+      Text(title).font(.headline).foregroundStyle(Palette.adaptive(light: 0xFFFFFF, dark: 0x16241E))
+        .frame(maxWidth: .infinity).padding(.vertical, 15)
+    }
+    .buttonStyle(.plain)
+    .background(Palette.forest, in: RoundedRectangle(cornerRadius: 16))
   }
 }
 
@@ -342,12 +378,7 @@ private struct KouchdFormWidth: ViewModifier {
 extension View {
   @ViewBuilder
   func kouchdPrimaryButtonStyle() -> some View {
-    if #available(iOS 26.0, *) {
-      self.buttonStyle(.glassProminent)
-        .tint(Palette.brandForest)
-    } else {
-      self.buttonStyle(KouchdButtonStyle())
-    }
+    self.buttonStyle(KouchdButtonStyle())
   }
 
   func kouchdNavigationBar(title: String? = nil) -> some View {
@@ -436,14 +467,8 @@ private struct StayDetailsDestination: View {
 private struct KouchdButtonStyle: ButtonStyle {
   @Environment(\.accessibilityReduceMotion) private var reduceMotion
   func makeBody(configuration: Configuration) -> some View {
-    configuration.label.foregroundStyle(.white)
-      .background(Palette.brandForest, in: RoundedRectangle(cornerRadius: 16))
-      .shadow(
-        color: Palette.brandForest.opacity(configuration.isPressed ? 0.08 : 0.2),
-        radius: configuration.isPressed ? 3 : 10,
-        x: 0,
-        y: configuration.isPressed ? 1 : 5
-      )
+    configuration.label.foregroundStyle(Palette.onLime)
+      .background(Palette.lime, in: RoundedRectangle(cornerRadius: 16))
       .contentShape(RoundedRectangle(cornerRadius: 16))
       .scaleEffect(configuration.isPressed && !reduceMotion ? 0.985 : 1)
       .offset(y: configuration.isPressed && !reduceMotion ? 1 : 0)

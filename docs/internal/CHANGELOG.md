@@ -2,6 +2,17 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-11-03 — iPhone redesign alignment (WRE-275, #149, 0.9.4)
+
+- Branch `codex/WRE-275-ios-redesign-recent-features`, issue #149 (Linear WRE-275).
+- Palette and Typography: Updated `ios/Kouchd/Design.swift` with tokens aligned with the Version 1.0 redesign (`cream`, `surface`, `forest`, `ink`, `muted`, `line`, `sage`, `sky`, `blue`, `amber`, `rose`, `paperFill`, `onFill`, `brandForest`, `onBrand`).
+- Pill tones: Updated `Pill` to map record statuses to calm semantic tones (`confirmed`, `pending`, `upcoming`, `attention`, `neutral`, `plus`) with on-fill text.
+- LimeButton: Introduced `LimeButton` for the prominent primary action per screen.
+- Illustrations & Visuals: Integrated line-art empty states and introduction illustrations (`RoomIllustration`, `AgreementIllustration`, `LedgerIllustration`, `ChoreBoardIllustration`).
+- Introduction: Added ambient gradient lighting, refreshed introductory copy ("Shared stays, made clear."), and direct referral code entry routing to `JoinCodeScreen(initialCode:)`.
+- Features & Subleases: Preserved recent shared features including bills, sublease checklists and deposit disclosures, and chore rotation.
+- Bumps version to 0.9.4 and iOS build to 3.
+
 ## 2026-11-03 — Feature flag registry defaults (0.9.3)
 
 - Restored code defaults in `lib/flags/config.ts` (`BILL_SPLITTING: false`, `SUBLEASES: false`) so unit and integration test fixtures remain isolated and deterministic without live backend dependencies.

@@ -331,11 +331,27 @@ struct SettingsScreen: View {
   @State private var sms = false
   @State private var showAccount = false
   @State private var saving = false
+  private var needsFriendlyName: Bool {
+    ["", "host", "guest", "member", "kouchd member", "unknown guest", "unknown member"]
+      .contains(store.viewer["name"].text.trimmingCharacters(in: .whitespacesAndNewlines).lowercased())
+  }
   var body: some View {
     Page(title: "Settings") {
+      if needsFriendlyName {
+        Card {
+          Label("A name that feels like you", systemImage: "person.crop.circle.badge.questionmark")
+            .font(.headline).foregroundStyle(Palette.forest)
+          Text("What should your household call you?").font(Palette.section)
+          Text("Your name helps people recognize you in shared chores and contribution records.")
+            .font(.subheadline).foregroundStyle(Palette.muted)
+          TextField("Your name", text: $name).textContentType(.name)
+          ForestButton(title: "Save my name") { savePreferences() }.disabled(saving || name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+        }
+      }
       Card {
         Text("Your profile").font(.headline)
-        TextField("Name", text: $name).textContentType(.name)
+        Text(store.viewer["email"].text).font(.subheadline).foregroundStyle(Palette.muted)
+        if !needsFriendlyName { TextField("Name", text: $name).textContentType(.name) }
         TextField("Phone", text: $phone).keyboardType(.phonePad)
         Toggle("Email reminders", isOn: $email)
         Toggle("SMS reminders", isOn: $sms)
@@ -347,7 +363,7 @@ struct SettingsScreen: View {
           Text("Review how Kouchd handles account, stay, and reminder information.")
             .font(.footnote).foregroundStyle(Palette.muted)
           Link("Terms & Conditions", destination: URL(string: "https://kouchd.com/terms")!)
-          Link("Privacy Policy", destination: URL(string: "https://kouchd.com/privacy")!)
+          Link("Privacy and your data", destination: URL(string: "https://kouchd.com/privacy")!)
           Link("SMS Terms Details", destination: URL(string: "https://kouchd.com/sms-opt-in")!)
         }
         .font(.subheadline.weight(.semibold))
@@ -365,9 +381,8 @@ struct SettingsScreen: View {
             .foregroundStyle(Palette.muted)
           Button("Try again") { store.loadAccount() }
         } else if store.subscriptionSummary["canManageSubscription"].flag {
-          NavigationLink("Plan", value: KouchdRoute.subscription)
+          NavigationLink("Kouchd Plus", value: KouchdRoute.subscription)
         }
-        NavigationLink("About Kouchd", value: KouchdRoute.about)
         Button("Manage account & security") { showAccount = true }
         DataRow(title: "Kouchd version",
                 detail: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "—")
@@ -378,6 +393,7 @@ struct SettingsScreen: View {
       if !store.selectedStayID.isEmpty {
         NavigationLink("Household guide", value: KouchdRoute.householdGuide)
       }
+      NavigationLink("About Kouchd", value: KouchdRoute.about)
       if store.adminAccess.flag {
         NavigationLink("Platform administration", value: KouchdRoute.admin)
       }

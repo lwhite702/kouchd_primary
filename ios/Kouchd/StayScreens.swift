@@ -116,7 +116,7 @@ struct StayScreen: View {
       }
       Card {
         Text("Pay outside Kouchd").font(.headline)
-        Text("Choose an option with your host, then record the contribution in the ledger.")
+        Text("Choose an option with your host, then record the contribution on the Ledger.")
           .font(.subheadline).foregroundStyle(Palette.muted)
         ForEach(store.bundle["stay"]["paymentOptions"].items.indices, id: \.self) { index in
           let option = store.bundle["stay"]["paymentOptions"].items[index]
@@ -531,6 +531,7 @@ struct CreateStayScreen: View {
 
 struct JoinCodeScreen: View {
   let store: KouchdStore
+  var initialCode = ""
   @Environment(\.dismiss) private var dismiss
   @State private var code = ""
   @State private var busy = false
@@ -552,6 +553,9 @@ struct JoinCodeScreen: View {
           joinStay()
         }.disabled(busy || code.trimmingCharacters(in: .whitespaces).isEmpty)
       }
+    }
+    .onAppear {
+      if code.isEmpty { code = initialCode }
     }
   }
 

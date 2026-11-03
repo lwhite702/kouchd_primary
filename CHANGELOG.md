@@ -4,6 +4,16 @@
 
 ### Changed
 
+- **Kouchd iOS: align iPhone design with the Version 1.0 redesign (WRE-275, #149, branch only, not released, 0.9.4)**:
+  - Aligned native iOS tokens in `ios/Kouchd/Design.swift` with the Version 1.0 web brand: light colors match web values (`cream`, `surface`, `forest`, `ink`, `muted`, `line`), keeping dark values unchanged, and adds fixed `sage`, `sky`, `blue`, `amber`, `rose`, `paperFill`, `onFill`, `brandForest`, and `onBrand` tokens.
+  - Implemented the dynamic Manrope type scale (`display`, `page`, `section`, `cardTitle`).
+  - Updated `Pill` to support calmer status tones (`confirmed`, `pending`, `upcoming`, `attention`, `neutral`, `plus`) with on-fill text, reserving lime for Plus and primary actions.
+  - Added new `LimeButton` for the single prominent action per screen (introduction host choice, "Add contribution" on the Ledger, and Plus purchase).
+  - Introduction flow (`ios/Kouchd/Introduction.swift`) refreshed with warm ambient lighting, updated copy ("Shared stays, made clear."), and newly illustrated scenes for Agreements, Ledger, Chores, and Rooms. Direct referral code entry connects directly to `JoinCodeScreen(initialCode:)`.
+  - Empty chore board displays line-art illustration (`ChoreBoardIllustration` / `ChoreBoardIllustrationDark`).
+  - Added `needsFriendlyName` prompt in settings to guide members with placeholder names to set a clear household name (WRE-269 alignment).
+  - Version 0.9.4, iOS build 3.
+
 - **Invite and Plus screens follow the Version 1.0 redesign (WRE-277, branch only, not released, 0.9.2)**:
   - The guest invite screen (`components/invite-accept.tsx`, new `components/invite-guest-panels.tsx`) opens with a "For invited guests" card. The title uses the host and stay names only when the invite has real ones ("Lee made room for you at Maple Street."), and falls back to "Someone made room for you." It says joining is always free and that no payment details are needed. The join, registration, and "Open Kouchd" actions use the new lime main-action button; the idle join label is now "Join free". Loading, invalid, already-used, signed-out, already-a-member, and full-stay states and their logic are unchanged.
   - A privacy panel explains who sees what, matched to current Convex access rules: announcements, house info, and the chore board are shared with the stay; agreement terms and contribution records are visible only to the guest and host; money never moves through Kouchd. House rules are not listed as shared because each guest's terms carry their own copy.

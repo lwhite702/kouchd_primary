@@ -1,0 +1,13 @@
+<svg preserveAspectRatio="none" overflow="visible" style="display: block;" width="280" height="168" viewBox="0 0 280 168" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Frame">
+<path id="Vector" d="M220 22H72C63.1634 22 56 29.1634 56 38V62C56 70.8366 63.1634 78 72 78H220C228.837 78 236 70.8366 236 62V38C236 29.1634 228.837 22 220 22Z" fill="#F5F0E8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke="#184F3A"/>
+<path id="Vector_2" d="M220 62H56C47.1634 62 40 69.1634 40 78V110C40 118.837 47.1634 126 56 126H220C228.837 126 236 118.837 236 110V78C236 69.1634 228.837 62 220 62Z" fill="#FFFDF8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke="#184F3A"/>
+<path id="Vector_3" d="M68 108C75.732 108 82 101.732 82 94C82 86.268 75.732 80 68 80C60.268 80 54 86.268 54 94C54 101.732 60.268 108 68 108Z" fill="#E5EDDE" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke="#184F3A"/>
+<path id="Vector_4" d="M92 86H162M92 102H138" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke="#184F3A"/>
+<path id="Vector_5" d="M208 80H190C182.268 80 176 86.268 176 94C176 101.732 182.268 108 190 108H208C215.732 108 222 101.732 222 94C222 86.268 215.732 80 208 80Z" fill="#DFF25E" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke="#184F3A"/>
+<path id="Vector_6" d="M236 148C243.732 148 250 141.732 250 134C250 126.268 243.732 120 236 120C228.268 120 222 126.268 222 134C222 141.732 228.268 148 236 148Z" fill="#DFF25E" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke="#184F3A"/>
+<path id="Vector_7" d="M229 134L234 139L243 130" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke="#184F3A"/>
+<path id="Vector_8" d="M24 44C26.2091 44 28 42.2091 28 40C28 37.7909 26.2091 36 24 36C21.7909 36 20 37.7909 20 40C20 42.2091 21.7909 44 24 44Z" fill="#DFF25E" stroke="#184F3A"/>
+<path id="Vector_9" d="M264 49C266.761 49 269 46.7614 269 44C269 41.2386 266.761 39 264 39C261.239 39 259 41.2386 259 44C259 46.7614 261.239 49 264 49Z" fill="#DFF25E" stroke="#184F3A"/>
+</g>
+</svg>

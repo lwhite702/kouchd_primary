@@ -18,7 +18,7 @@ struct IntroductionTestHost: View {
         Text("Introduction completed: \(route?.rawValue ?? "none")")
           .accessibilityIdentifier("introduction.testResult")
       } else {
-        IntroductionScreen(replay: arguments.contains("--ui-test-replay")) { selection in
+        IntroductionScreen(replay: arguments.contains("--ui-test-replay")) { selection, _ in
           route = selection
           completed = true
         }

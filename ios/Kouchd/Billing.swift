@@ -731,7 +731,12 @@ struct PlanLimitPresentation: ViewModifier {
       .onChange(of: store.planLimit, initial: true) { _, limit in
         guard let limit, !limit.isGuest, !limit.atHighestPlan, purchasesEnabled else { return }
         store.planLimit = nil
-        store.plusEntry = .stayLimit
+        switch limit.dimension {
+        case "recurringChores": store.plusEntry = .choreRotation
+        case "billSplits": store.plusEntry = .billSplitting
+        case "subleases": store.plusEntry = .sublease
+        default: store.plusEntry = .stayLimit
+        }
       }
   }
 }

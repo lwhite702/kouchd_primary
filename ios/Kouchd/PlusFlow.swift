@@ -4,7 +4,7 @@ import SwiftUI
 
 /// Why the Plus sheet opened. The reason is its headline, so the host knows why they're here.
 enum PlusEntry: String, Identifiable {
-  case settings, stayLimit, guestLimit
+  case settings, stayLimit, guestLimit, choreRotation, billSplitting, sublease
   var id: String { rawValue }
 
   var headline: String {
@@ -12,6 +12,9 @@ enum PlusEntry: String, Identifiable {
     case .settings: "Room for more of the people you host"
     case .stayLimit: "Host up to \(PlanCopy.plusStays) stays at once with Plus"
     case .guestLimit: "Invite up to \(PlanCopy.plusGuests) guests with Plus"
+    case .choreRotation: "Share repeating chores fairly with Plus"
+    case .billSplitting: "Split shared household bills with Plus"
+    case .sublease: "Set up a sublease stay with Plus"
     }
   }
 
@@ -21,6 +24,9 @@ enum PlusEntry: String, Identifiable {
     case .settings: nil
     case .stayLimit: ("Start your second stay", .createStay)
     case .guestLimit: ("Invite your next guest", .stay)
+    case .choreRotation: ("Set up a rotating chore", .chores)
+    case .billSplitting: ("Open the Ledger", .ledger)
+    case .sublease: ("Set up a sublease", .createStay)
     }
   }
 }
@@ -169,6 +175,7 @@ struct PlusSheet: View {
       }
     }
     .tint(Palette.forest)
+    .presentationBackground(Palette.cream)
     .interactiveDismissDisabled(billing.isConfirming)
     .task { await billing.load(kouchdTrialEligible: summary?.introOfferEligible) }
     .onChange(of: billing.outcome) { _, outcome in
@@ -191,8 +198,12 @@ struct PlusSheet: View {
         VStack(alignment: .leading, spacing: 10) {
           benefit("house", "Up to \(PlanCopy.plusStays) active stays at once")
           benefit("person.2", "Up to \(PlanCopy.plusGuests) guests across your stays")
-          benefit("checkmark.seal", "Everything you use on Free stays the same")
-          benefit("iphone.and.arrow.forward", "One Plus on iPhone and the web. Guests always join free.")
+          benefit("doc.text", "Custom stay terms")
+          benefit("arrow.trianglehead.2.clockwise.rotate.90", "Repeating chores with turn rotation")
+          benefit("bolt.horizontal.circle", "Split shared household bills")
+          benefit("house.and.flag", "Set up sublease stays")
+          Text("Guests always join free. Kouchd records contributions; money stays outside the app.")
+            .font(.footnote).foregroundStyle(Palette.muted)
         }
       }
       plans
