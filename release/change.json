@@ -1,5 +1,5 @@
 {
-  "type": "patch",
-  "version": "0.8.12",
-  "reason": "Add Plus household utility and bill splitting behind feature_bill_splitting (WRE-268), add monthly rent cadence with calendar-month proration and schedule guards (WRE-270), and add sublease stay type, landlord consent flow, sublease lock engine, bill presets, and access-code end-date redaction (WRE-272)."
+  "type": "minor",
+  "version": "0.9.0",
+  "reason": "Shared web color tokens and system dark appearance (WRE-274)."
 }
