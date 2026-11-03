@@ -619,7 +619,6 @@ export function useLiveStay(stayId: Id<"stays">, onBackToHub: () => void) {
     const assigneeUserId = value(form, "assigneeUserId") as Id<"users"> | "";
     if (!beginSubmit()) return;
     try {
-      const repeatCadence = value(form, "repeatCadence");
       const selectedMember = members.find(
         (member) => member.person.id === assigneeUserId,
       );
@@ -629,6 +628,14 @@ export function useLiveStay(stayId: Id<"stays">, onBackToHub: () => void) {
           : selectedMember
             ? "guest"
             : "shared";
+      const repeatCadenceVal = value(form, "repeatCadence");
+      const repeatCadence =
+        repeatCadenceVal === "daily" || repeatCadenceVal === "weekly"
+          ? repeatCadenceVal
+          : undefined;
+      const rotateAssignee = Boolean(
+        repeatCadence && form.get("rotateAssignee") === "on",
+      );
       await createChore({
         stayId,
         title: value(form, "title"),
@@ -636,10 +643,8 @@ export function useLiveStay(stayId: Id<"stays">, onBackToHub: () => void) {
         assignee,
         assigneeUserId: assigneeUserId || undefined,
         dueDate: value(form, "dueDate"),
-        repeatCadence:
-          repeatCadence === "daily" || repeatCadence === "weekly"
-            ? repeatCadence
-            : undefined,
+        repeatCadence,
+        rotateAssignee: rotateAssignee || undefined,
       });
       setPanel(null);
       notify("Chore added.");

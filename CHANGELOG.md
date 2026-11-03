@@ -15,10 +15,15 @@
 
 ### Added
 
+- **Automated turn-taking chore rotation for household stays (WRE-267, branch only, not released)**:
+  - Enabled automatic turn-taking chore rotation across active stay members (host and guests) on recurring chores.
+  - Backend schema extended with `rotateAssignee: v.optional(v.boolean())` on `chores`.
+  - When a recurring chore with `rotateAssignee: true` is completed, `convex/chores.ts` automatically advances the assignee to the next active household member in sequence ordered by join date (`joinedAt`), cycling smoothly from host to guests and back to host.
+  - Added "Rotate turns automatically" option to chore creation panels and forms on both Web (`components/workspace/workspace-panels.tsx`, `use-live-stay.ts`) and native iOS SwiftUI (`ios/Kouchd/MainScreens.swift`).
+  - Added "Rotating turns" badge to chore lists and cards across Web (`components/workspace/chores-screen.tsx`) and iOS (`ios/Kouchd/HouseholdRules.swift`, `MainScreens.swift`).
+  - Covered by automated integration tests in `tests/chore-rotation.test.ts`.
+
 - **Simplified introduction landing page & brand kit password protection (WRE-243)**:
-  - **Simplified landing page:** Added a streamlined marketing landing page at `/simple` featuring the canonical Kouchd brand design system (`MarketingHeader`, warm `v21-hero` with living room artwork and app icon badge, rating pill, interactive tabbed preview window, 6-card feature grid matching `v21-steps`, `v21-cta`, and `MarketingFooter`).
-  - **Brand Kit access control:** Added client/SSR-safe gate `<BrandKitGate />` password-protecting `/brand` and `/brandkit` with credential gate and session persistence.
-  - **Route aliases and telemetry:** Created `/brandkit` redirecting to `/brand` and updated telemetry route allowlist in `lib/telemetry-privacy.ts`.
 
 - **Platform Console user provider context (WRE-263)**:
   - **Connected provider cards:** Added RevenueCat subscription snapshots, Knock notification event audit history, and Loops marketing consent status to the Platform Console user detail view in `components/platform/users-explorer.tsx` and `convex/admin.ts`.
