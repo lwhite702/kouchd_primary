@@ -15,19 +15,26 @@ final class IntroductionFlowTests: XCTestCase {
     if replay { app.launchArguments.append("--ui-test-replay") }
     if accessibilityText { app.launchArguments.append("--ui-test-accessibility-text") }
     app.launch()
-    XCTAssertTrue(app.buttons["See how Kouchd works"].waitForExistence(timeout: 10))
+    XCTAssertTrue(app.buttons["Get started"].waitForExistence(timeout: 10))
   }
 
   private func tap(_ label: String) {
     let button = app.buttons[label].firstMatch
     XCTAssertTrue(button.waitForExistence(timeout: 5), "Missing button: \(label)")
-    XCTAssertTrue(button.isHittable, "Unreachable button: \(label)")
+    XCTAssertTrue(waitUntilHittable(button), "Unreachable button: \(label)")
     button.tap()
   }
 
+  /// Introduction content fades in when a page appears, so give it a moment to settle before tapping.
+  private func waitUntilHittable(_ element: XCUIElement, timeout: TimeInterval = 2) -> Bool {
+    let deadline = Date().addingTimeInterval(timeout)
+    while !element.isHittable && Date() < deadline { Thread.sleep(forTimeInterval: 0.1) }
+    return element.isHittable
+  }
+
   private func snapshot(_ name: String) {
-    // Capture the settled layout after the introduction's short page transition.
-    Thread.sleep(forTimeInterval: 0.5)
+    // Capture the settled layout after the page transition and the staggered content reveal.
+    Thread.sleep(forTimeInterval: 1.2)
     let attachment = XCTAttachment(screenshot: app.screenshot())
     attachment.name = name
     attachment.lifetime = .keepAlways
@@ -41,29 +48,46 @@ final class IntroductionFlowTests: XCTestCase {
   private func journey(dark: Bool, role: String) {
     launch(dark: dark)
     let suffix = dark ? "-dark" : ""
-    assertTitle("A shared stay.\nOn the same page.")
+    assertTitle("Shared stays, made clear.")
     snapshot("01-welcome" + suffix)
-    tap("See how Kouchd works")
-    assertTitle("Good stays start\nwith clarity.")
+    tap("Get started")
+    assertTitle("Agree on the stay.")
     snapshot("02-stay" + suffix)
     tap("Continue")
-    assertTitle("Clear records.\nFewer awkward asks.")
-    XCTAssertTrue(app.staticTexts["Kouchd records contributions. It does not move money."].exists)
+    assertTitle("Keep a clear record.")
+    XCTAssertTrue(app.staticTexts["The other person confirms each record. Money is settled outside Kouchd."].exists)
     snapshot("03-contributions" + suffix)
     tap("Continue")
-    assertTitle("Make the everyday\nfeel more shared.")
+    assertTitle("Share the everyday.")
     snapshot("04-chores" + suffix)
-    tap("Let’s get started")
-    assertTitle("How are you\nmaking room?")
+    tap("Choose how you’re joining")
+    assertTitle("How are you making room?")
     snapshot("05-role" + suffix)
-    tap(role == "host" ? "Create a stay" : "Join a stay")
+    if role == "host" { tap("Start free as a host") } else { joinWithCode() }
     XCTAssertTrue(app.staticTexts["Introduction completed: " + role].waitForExistence(timeout: 5))
+  }
+
+  /// Guests join with the invite code their host shared; Join stays disabled until a code is entered.
+  private func joinWithCode() {
+    let field = app.textFields["Invite code"].firstMatch
+    XCTAssertTrue(field.waitForExistence(timeout: 5), "Missing invite code field")
+    _ = waitUntilHittable(field)
+    var swipes = 0
+    while !field.isHittable && swipes < 8 { app.swipeUp(); swipes += 1 }
+    field.tap()
+    field.typeText("KCH-TEST01")
+    let join = app.buttons["Join"].firstMatch
+    swipes = 0
+    while !join.isHittable && swipes < 8 { app.swipeUp(); swipes += 1 }
+    XCTAssertTrue(join.isEnabled, "Join should be enabled once a code is entered")
+    join.tap()
   }
 
   /// Scrolls until a control at the end of the page is on screen and tappable.
   private func scrollTo(_ label: String) {
     let button = app.buttons[label].firstMatch
     XCTAssertTrue(button.waitForExistence(timeout: 5), "Missing button: \(label)")
+    _ = waitUntilHittable(button, timeout: 1)
     var swipes = 0
     while !button.isHittable && swipes < 8 {
       app.swipeUp()
@@ -74,15 +98,15 @@ final class IntroductionFlowTests: XCTestCase {
 
   func testSwipingMovesBetweenStepsAndKeepsTheFooterInStep() {
     launch()
-    assertTitle("A shared stay.\nOn the same page.")
+    assertTitle("Shared stays, made clear.")
     app.swipeLeft()
-    assertTitle("Good stays start\nwith clarity.")
+    assertTitle("Agree on the stay.")
     XCTAssertTrue(app.buttons["Continue"].waitForExistence(timeout: 5))
     XCTAssertTrue(app.buttons["Back"].exists)
     app.swipeLeft()
-    assertTitle("Clear records.\nFewer awkward asks.")
+    assertTitle("Keep a clear record.")
     app.swipeRight()
-    assertTitle("Good stays start\nwith clarity.")
+    assertTitle("Agree on the stay.")
     snapshot("swipe-back")
   }
 
@@ -90,26 +114,27 @@ final class IntroductionFlowTests: XCTestCase {
   func testAccessibilityTextFooterScrollsIntoReachThroughRoleSelection() {
     launch(accessibilityText: true)
     // A pinned footer would be on screen at launch and cover the content.
-    XCTAssertFalse(app.buttons["See how Kouchd works"].isHittable)
-    scrollTo("See how Kouchd works")
-    assertTitle("Good stays start\nwith clarity.")
+    XCTAssertFalse(app.buttons["Get started"].isHittable)
+    scrollTo("Get started")
+    assertTitle("Agree on the stay.")
     scrollTo("Continue")
-    assertTitle("Clear records.\nFewer awkward asks.")
+    assertTitle("Keep a clear record.")
     scrollTo("Continue")
-    assertTitle("Make the everyday\nfeel more shared.")
+    assertTitle("Share the everyday.")
     snapshot("04-chores-accessibility")
-    scrollTo("Let’s get started")
-    assertTitle("How are you\nmaking room?")
+    scrollTo("Choose how you’re joining")
+    assertTitle("How are you making room?")
     XCTAssertFalse(app.buttons["Skip"].exists)
-    scrollTo("Already have an account? Sign in")
+    scrollTo("I already have an account")
     XCTAssertTrue(app.staticTexts["Introduction completed: none"].waitForExistence(timeout: 5))
   }
 
   func testAccessibilityTextRoleSelectionIsReachable() {
     launch(accessibilityText: true)
+    scrollTo("Get started")
     tap("Skip")
-    assertTitle("How are you\nmaking room?")
-    scrollTo("Join a stay")
+    assertTitle("How are you making room?")
+    joinWithCode()
     XCTAssertTrue(app.staticTexts["Introduction completed: guest"].waitForExistence(timeout: 5))
   }
 
@@ -118,22 +143,26 @@ final class IntroductionFlowTests: XCTestCase {
 
   func testBackReturnsToWelcome() {
     launch()
-    tap("See how Kouchd works")
+    tap("Get started")
     tap("Back")
-    assertTitle("A shared stay.\nOn the same page.")
+    assertTitle("Shared stays, made clear.")
   }
 
   func testSkipShowsRoleSelection() {
     launch()
+    // The welcome page has no Skip; it appears from the first preview on.
+    XCTAssertFalse(app.buttons["Skip"].exists)
+    tap("Get started")
     tap("Skip")
-    XCTAssertTrue(app.buttons["Create a stay"].waitForExistence(timeout: 5))
-    XCTAssertTrue(app.buttons["Join a stay"].exists)
+    XCTAssertTrue(app.buttons["Start free as a host"].waitForExistence(timeout: 5))
+    XCTAssertTrue(app.textFields["Invite code"].exists)
+    XCTAssertFalse(app.buttons["Join"].isEnabled)
     XCTAssertFalse(app.buttons["Skip"].exists)
   }
 
   func testSignInReturnsNoRole() {
     launch()
-    tap("Already have an account? Sign in")
+    tap("I already have an account")
     XCTAssertTrue(app.staticTexts["Introduction completed: none"].waitForExistence(timeout: 5))
   }
 
@@ -141,7 +170,7 @@ final class IntroductionFlowTests: XCTestCase {
     app.launchArguments = ["-kouchd.introductionRevision", "0"]
     app.launch()
 
-    let signIn = app.buttons["Already have an account? Sign in"].firstMatch
+    let signIn = app.buttons["I already have an account"].firstMatch
     guard signIn.waitForExistence(timeout: 10) else {
       throw XCTSkip("Requires local Clerk and Convex configuration")
     }
@@ -156,15 +185,15 @@ final class IntroductionFlowTests: XCTestCase {
   func testReplaySwipeStopsAtTheLastPreview() {
     launch(replay: true)
     for _ in 0..<4 { app.swipeLeft() }
-    assertTitle("Make the everyday\nfeel more shared.")
-    XCTAssertFalse(app.staticTexts["How are you\nmaking room?"].exists)
+    assertTitle("Share the everyday.")
+    XCTAssertFalse(app.staticTexts["How are you making room?"].exists)
     XCTAssertTrue(app.buttons["Done"].exists)
   }
 
   func testReplayCompletesWithoutRoleSelection() {
     launch(replay: true)
-    XCTAssertFalse(app.buttons["Already have an account? Sign in"].exists)
-    tap("See how Kouchd works")
+    XCTAssertFalse(app.buttons["I already have an account"].exists)
+    tap("Get started")
     tap("Continue")
     tap("Continue")
     tap("Done")
