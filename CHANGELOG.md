@@ -8,6 +8,25 @@
 
 ### Added
 
+- **Help center guide: How Kouchd compares to Splitwise & Flatastic (WRE-266, branch only, not released)**:
+  - Published `help/support/kouchd-vs-splitwise.mdx` explaining in plain, everyday language how Kouchd approaches private shared living, direct payments without holding funds, private guest records, unlimited free contributions, and unified household coordination.
+  - Registered the guide under Support in `docs.json` navigation.
+  - Review follow-up (0.8.11): the guide no longer promises "no marketing trackers" (it links to the privacy page instead), no longer describes the unreleased shopping-to-Ledger shortcut (now on the roadmap as in development), no longer mentions receipt storage, and drops unsourced claims about Splitwise and Flatastic plans and ads.
+
+- **Web host plan capacity indicator and blocked join alerts (WRE-265, branch only, not released)**:
+  - `HostBillingButton` dynamically reflects current host plan usage (`Host plan · Free (1/1 spots)` or `Plan · Plus (X/5 spots)`) and surfaces an attention badge when prospective guests are blocked due to full capacity.
+  - Implemented `PlanLimitModal` on web to intercept stay creation attempts when plan limits are reached, showing a clear explanation and a 1-click path to upgrade to Kouchd Plus without submitting invalid data or encountering server rollbacks.
+  - Added `BlockedJoinsBanner` to `StayHub` and `StayScreen`, notifying hosts when a guest attempted to join while capacity was full, with direct actions to upgrade ("Make room with Plus") or dismiss the alert.
+  - Stay cards in `StayHub` display a `[N tried to join]` pill badge corresponding to each stay's blocked join requests, matching native iOS behavior.
+  - The plan label falls back to "Host plan" when the subscription environment can't be read, instead of guessing a Free limit. Blocked-join alerts describe guest spots as shared across the host's stays, and a failed Dismiss shows an error. `PlanLimitModal` returns focus to the control that opened it.
+  - Covered by automated Vitest suite `tests/web-plan-capacity.test.ts`.
+
+- **Shopping list to contribution ledger bridge (WRE-264, branch only, not released)**:
+  - Checked-off shared shopping items show a "Log contribution" action on web and iOS. It opens **Add contribution** with the type set to `groceries` and the note filled from the item; the amount is always entered by hand.
+  - Personal items never offer the action, so their details are not copied into a shared Ledger record.
+  - On web, a host with more than one guest must choose whose Ledger the contribution goes on. On iOS the action is shown to guests and to hosts with exactly one guest. Hosts with no guests do not see it.
+  - Covered by `tests/shopping-contribution-bridge.test.ts`. The Swift sources were syntax-checked only; no simulator build was run for this revision.
+
 - **Simplified introduction landing page & brand kit password protection (WRE-243)**:
   - **Simplified landing page:** Added a streamlined marketing landing page at `/simple` featuring the canonical Kouchd brand design system (`MarketingHeader`, warm `v21-hero` with living room artwork and app icon badge, rating pill, interactive tabbed preview window, 6-card feature grid matching `v21-steps`, `v21-cta`, and `MarketingFooter`).
   - **Brand Kit access control:** Added client/SSR-safe gate `<BrandKitGate />` password-protecting `/brand` and `/brandkit` with credential gate and session persistence.

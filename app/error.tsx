@@ -7,11 +7,13 @@ import Link from "next/link";
 export default function ErrorPage({
   error,
   reset,
+  initialAttempts = 0,
 }: {
   error: Error & { digest?: string };
   reset: () => void;
+  initialAttempts?: number;
 }) {
-  const [attempts, setAttempts] = useState(0);
+  const [attempts, setAttempts] = useState(initialAttempts);
 
   useEffect(() => {
     Sentry.captureException(error);
@@ -37,6 +39,17 @@ export default function ErrorPage({
         <button className="button primary" type="button" onClick={handleRetry}>
           Try again
         </button>
+        {attempts >= 2 && (
+          <button
+            className="button secondary"
+            type="button"
+            onClick={() => {
+              window.location.reload();
+            }}
+          >
+            Reload app
+          </button>
+        )}
         {attempts >= 1 && (
           <Link className="button secondary" href="/">
             Back to Home

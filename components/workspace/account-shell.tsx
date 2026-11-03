@@ -1,8 +1,13 @@
 "use client";
 
 import { HostBillingButton } from "@/components/billing/host-billing-button";
+import { PlanLimitModal } from "@/components/billing/plan-limit-modal";
+import { BlockedJoinsBanner } from "@/components/billing/blocked-joins-banner";
 
-import { UserButton } from "@clerk/nextjs";
+import { UserButton, useUser } from "@clerk/nextjs";
+import { useQuery, useMutation } from "convex/react";
+import dynamic from "next/dynamic";
+import { api } from "@/convex/_generated/api";
 import {
   ArrowRight,
   BookOpen,
@@ -29,6 +34,10 @@ import { HELP_LINKS } from "@/lib/help-links";
 import { FeatureGate } from "@/components/flags/feature-gate";
 import { FEATURE_FLAGS } from "@/lib/flags/config";
 import { StayMembershipSummary } from "@/components/workspace/types";
+
+const PaywallModal = dynamic(() =>
+  import("@/components/billing/paywall-modal").then((m) => m.PaywallModal),
+);
 
 export function AccountHeader({
   notifications,
@@ -275,12 +284,44 @@ export function StayHub({
   onSelectStay: (stayId: Id<"stays">) => void;
   onHostStayCreated: (stayId: Id<"stays">) => void;
 }) {
+  const { user } = useUser();
+  const usage = useQuery(api.subscriptions.planUsage, user ? {} : "skip");
+  const dismissBlockedJoin = useMutation(api.subscriptions.dismissBlockedJoin);
+
   const [creating, setCreating] = useState(false);
+  const [limitModalOpen, setLimitModalOpen] = useState(false);
+  const [paywallOpen, setPaywallOpen] = useState(false);
+
+  const stayLimit =
+    usage?.planConfigured &&
+    usage.stays.limit !== null &&
+    usage.stays.used >= usage.stays.limit
+      ? {
+          dimension: "stay" as const,
+          plan: usage.plan,
+          limit: usage.stays.limit,
+          atHighestPlan: usage.plan === "plus" || usage.plan === "pro",
+          message:
+            usage.plan === "plus"
+              ? `Plus covers up to ${usage.stays.limit} active stays. End a stay to start a new one.`
+              : `Free includes ${usage.stays.limit} active stay. End your current stay or move to Plus to host up to 3 at once.`,
+        }
+      : null;
+
   const currentStays = stays.filter(({ stay }) => stay.status !== "ended");
   const pastStays = stays.filter(({ stay }) => stay.status === "ended");
   const goToCreatedStay = (stayId: Id<"stays">) => {
     setCreating(false);
     onHostStayCreated(stayId);
+  };
+
+  const handleHostNewStay = () => {
+    if (usage === undefined) return;
+    if (stayLimit) {
+      setLimitModalOpen(true);
+      return;
+    }
+    setCreating(true);
   };
 
   return (
@@ -308,6 +349,10 @@ export function StayHub({
             <HostOnboardingWizard
               onCancel={() => setCreating(false)}
               onComplete={goToCreatedStay}
+              onPlanLimit={() => {
+                setCreating(false);
+                setLimitModalOpen(true);
+              }}
             />
           </div>
         ) : (
@@ -324,11 +369,29 @@ export function StayHub({
               <button
                 className="button primary"
                 type="button"
-                onClick={() => setCreating(true)}
+                disabled={usage === undefined}
+                aria-busy={usage === undefined}
+                onClick={handleHostNewStay}
               >
                 <Plus size={18} /> Host a new stay
               </button>
             </div>
+
+            {usage?.blockedJoins && usage.blockedJoins.length > 0 && (
+              <BlockedJoinsBanner
+                blockedJoins={usage.blockedJoins}
+                isFree={usage.plan === "free"}
+                guestsFull={
+                  usage.guests.limit !== null &&
+                  usage.guests.used >= usage.guests.limit
+                }
+                onUpgrade={() => setPaywallOpen(true)}
+                onDismiss={async (blockedJoinId) => {
+                  await dismissBlockedJoin({ blockedJoinId });
+                }}
+              />
+            )}
+
             <section className="stay-hub-section">
               <div className="section-heading">
                 <div>
@@ -338,33 +401,62 @@ export function StayHub({
               </div>
               {currentStays.length ? (
                 <div className="stay-hub-grid">
-                  {currentStays.map(({ stay, membership }) => (
-                    <button
-                      className="stay-hub-card"
-                      type="button"
-                      key={stay._id}
-                      onClick={() => onSelectStay(stay._id)}
-                    >
-                      <span className={`status-pill ${stay.status}`}>
-                        {stay.status === "pending"
-                          ? "Setup in progress"
-                          : "Active"}
-                      </span>
-                      <strong>
-                        {stay.name ||
-                          stay.houseInfo?.cityStateZip ||
-                          `Household ${stay.referralCode ?? ""}`}
-                      </strong>
-                      <span>
-                        {membership.role === "host"
-                          ? "You’re the host"
-                          : "You’re a guest"}
-                      </span>
-                      <span className="stay-hub-open">
-                        Open stay <ArrowRight size={16} />
-                      </span>
-                    </button>
-                  ))}
+                  {currentStays.map(({ stay, membership }) => {
+                    const blockedForStay =
+                      usage?.blockedJoins?.filter(
+                        (b) => b.stayId === stay._id,
+                      ).length ?? 0;
+                    return (
+                      <button
+                        className="stay-hub-card"
+                        type="button"
+                        key={stay._id}
+                        onClick={() => onSelectStay(stay._id)}
+                      >
+                        <span
+                          style={{
+                            display: "flex",
+                            gap: "6px",
+                            alignItems: "center",
+                            flexWrap: "wrap",
+                          }}
+                        >
+                          <span className={`status-pill ${stay.status}`}>
+                            {stay.status === "pending"
+                              ? "Setup in progress"
+                              : "Active"}
+                          </span>
+                          {blockedForStay > 0 && (
+                            <span
+                              className="status-pill alert"
+                              style={{
+                                background: "rgba(223, 242, 94, 0.45)",
+                                color: "var(--ink, #17251f)",
+                                border: "1px solid rgba(24, 79, 58, 0.2)",
+                                fontSize: "0.75rem",
+                                fontWeight: 800,
+                              }}
+                            >
+                              {blockedForStay} tried to join
+                            </span>
+                          )}
+                        </span>
+                        <strong>
+                          {stay.name ||
+                            stay.houseInfo?.cityStateZip ||
+                            `Household ${stay.referralCode ?? ""}`}
+                        </strong>
+                        <span>
+                          {membership.role === "host"
+                            ? "You’re the host"
+                            : "You’re a guest"}
+                        </span>
+                        <span className="stay-hub-open">
+                          Open stay <ArrowRight size={16} />
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
               ) : (
                 <p className="muted">
@@ -417,6 +509,23 @@ export function StayHub({
           </>
         )}
       </main>
+      {stayLimit && limitModalOpen && (
+        <PlanLimitModal
+          isOpen={limitModalOpen}
+          onClose={() => setLimitModalOpen(false)}
+          limit={stayLimit}
+          onUpgrade={() => setPaywallOpen(true)}
+        />
+      )}
+      {paywallOpen && (
+        <PaywallModal
+          key={user?.id}
+          isOpen={paywallOpen}
+          onClose={() => setPaywallOpen(false)}
+          userId={user?.id}
+          userEmail={user?.primaryEmailAddress?.emailAddress}
+        />
+      )}
     </div>
   );
 }

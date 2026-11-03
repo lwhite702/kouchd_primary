@@ -6,10 +6,16 @@ on:
     branches: [main]
   push:
     branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   web:
     name: Web verification and build
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     # Placeholder values so the environment check and build run without real keys.
     env:
       NEXT_PUBLIC_CONVEX_URL: https://dummy-test.convex.cloud
@@ -36,6 +42,7 @@ jobs:
   verify:
     name: iOS release integrity and simulator build
     runs-on: macos-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
         with:
@@ -48,6 +55,7 @@ jobs:
         with:
           xcode-version: latest-stable
       - run: npm ci
+      - run: npm audit --audit-level=high
       - run: npm run release:check
         env:
           NEXT_PUBLIC_CONVEX_URL: https://dummy-test.convex.cloud

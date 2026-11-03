@@ -28,12 +28,14 @@ export function WorkspacePanels({ state }: { state: WorkspaceState }) {
     isHost,
     members,
     guestMembers,
+    financialGuestId,
     asOfDate,
     bundle,
     notify,
     isSubmittingModal,
     terms,
     panel,
+    contributionPrefill,
     addContribution,
     addCharge,
     addChore,
@@ -118,10 +120,35 @@ export function WorkspacePanels({ state }: { state: WorkspaceState }) {
       {panel === "contribution" && (
         <form onSubmit={addContribution}>
           <div className="form-grid">
+            {isHost && guestMembers.length > 1 && (
+              <label className="full">
+                <span>Guest&apos;s Ledger</span>
+                <select
+                  name="guestUserId"
+                  defaultValue={contributionPrefill ? "" : financialGuestId}
+                  required
+                >
+                  {contributionPrefill && (
+                    <option value="" disabled>
+                      Choose a guest
+                    </option>
+                  )}
+                  {guestMembers.map((member) => (
+                    <option key={member.person.id} value={member.person.id}>
+                      {member.person.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
             <label>
               <span>Type</span>
-              <select name="type">
-                <option value="payment">Payment</option>
+              <select
+                name="type"
+                key={`type-${contributionPrefill?.type ?? "default"}`}
+                defaultValue={contributionPrefill?.type ?? "payment"}
+              >
+                <option value="payment">Send money / Cash</option>
                 <option value="groceries">Groceries</option>
                 <option value="supplies">Supplies</option>
                 <option value="house_work">House work</option>
@@ -129,7 +156,7 @@ export function WorkspacePanels({ state }: { state: WorkspaceState }) {
               </select>
             </label>
             <label>
-              <span>Value</span>
+              <span>Amount</span>
               <div className="money-input">
                 <span>$</span>
                 <input
@@ -142,7 +169,7 @@ export function WorkspacePanels({ state }: { state: WorkspaceState }) {
               </div>
             </label>
             <label>
-              <span>Transaction date</span>
+              <span>Date</span>
               <input
                 name="date"
                 type="date"
@@ -151,15 +178,17 @@ export function WorkspacePanels({ state }: { state: WorkspaceState }) {
               />
             </label>
             <label className="full">
-              <span>Note</span>
+              <span>Household note (optional)</span>
               <input
                 name="note"
-                placeholder="Backdated payments are supported"
+                key={`note-${contributionPrefill?.note ?? "default"}`}
+                defaultValue={contributionPrefill?.note ?? ""}
+                placeholder="What was this contribution for?"
               />
             </label>
             <label className="check full">
               <input name="counts" type="checkbox" defaultChecked />
-              <span>Count toward this guest&apos;s balance</span>
+              <span>Count toward stay balance</span>
             </label>
           </div>
           <ModalActions

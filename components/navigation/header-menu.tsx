@@ -12,7 +12,6 @@ import {
   Users,
   X,
 } from "lucide-react";
-import { Tooltip } from "@/components/ui/tooltip";
 import { HELP_LINKS } from "@/lib/help-links";
 
 export interface MobileHeaderMenuProps {

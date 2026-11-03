@@ -1,5 +1,5 @@
 {
   "type": "patch",
-  "version": "0.8.10",
-  "reason": "Protect door and Wi-Fi access codes until guest agreement acceptance and after stay end (WRE-266)."
+  "version": "0.8.11",
+  "reason": "Shopping-to-contribution shortcut, web plan capacity and blocked-join alerts, and the Kouchd vs Splitwise guide (WRE-264/265/266), with review fixes."
 }

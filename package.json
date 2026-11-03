@@ -1,6 +1,6 @@
 {
   "name": "kouchd",
-  "version": "0.8.10",
+  "version": "0.8.11",
   "private": true,
   "type": "module",
   "scripts": {
@@ -12,6 +12,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "verify:env": "node scripts/verify-env.mjs",
+    "smoke": "bash scripts/smoke.sh",
     "verify": "npm run verify:env && npm run lint && npm run typecheck && npm run test",
     "version:check": "node scripts/release-version.mjs check",
     "version:prepare": "node scripts/release-version.mjs prepare",

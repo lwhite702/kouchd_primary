@@ -8,6 +8,7 @@ struct ShoppingScreen: View {
   @State private var personal = false
   @State private var submitting = false
   @State private var editing: EditingShoppingItem?
+  @State private var contributionPrefill: ShoppingContributionPrefill?
 
   var body: some View {
     Page(title: "Shopping list", width: .wide) {
@@ -54,6 +55,9 @@ struct ShoppingScreen: View {
     }
     .stayFeature(.shopping, store: store)
     .sheet(item: $editing) { editing in ShoppingItemForm(store: store, item: editing.item) }
+    .sheet(item: $contributionPrefill) { prefill in
+      ContributionForm(store: store, initialType: prefill.type, initialNote: prefill.note, suggestsAmount: false)
+    }
   }
 
   private func itemCards(_ items: [Value]) -> some View {
@@ -71,6 +75,27 @@ struct ShoppingScreen: View {
               Task { _ = await store.mutate("shopping:toggle", ["itemId": item.id]) }
             }.buttonStyle(.bordered)
           }
+        }
+        // Personal items stay private, so they are never copied into a shared Ledger record.
+        // A host with several guests has no way to pick a Ledger here, so the shortcut is hidden.
+        if !store.isEnded && !item["checkedAt"].text.isEmpty && item["visibility"].text != "personal"
+          && (!store.isHost || store.guests.count == 1) {
+          HStack {
+            Button {
+              let noteDetail = item["note"].text.isEmpty ? "" : " · \(item["note"].text)"
+              contributionPrefill = ShoppingContributionPrefill(
+                type: "groceries",
+                note: "\(item.title) (\(item["quantity"].text))\(noteDetail)"
+              )
+            } label: {
+              Label("Log contribution", systemImage: "plus.circle")
+                .font(.subheadline.bold())
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(Palette.brandForest)
+            Spacer()
+          }
+          .padding(.top, 4)
         }
         if !store.isEnded && canEdit(item) {
           HStack {
@@ -93,6 +118,12 @@ struct ShoppingScreen: View {
 private struct EditingShoppingItem: Identifiable {
   let item: Value
   var id: String { item.id }
+}
+
+private struct ShoppingContributionPrefill: Identifiable {
+  let id = UUID()
+  let type: String
+  let note: String
 }
 
 private struct ShoppingItemForm: View {

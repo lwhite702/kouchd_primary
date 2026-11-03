@@ -471,6 +471,11 @@ export function LiveStay({
                 stayId={stayId}
                 viewerId={bundle.membership.userId}
                 isEnded={isEnded}
+                onLogContribution={
+                  state.financialGuestId
+                    ? (prefill) => state.openContributionWithPrefill(prefill)
+                    : undefined
+                }
               />
             </FeatureGate>
           )}

@@ -47,6 +47,11 @@ export function useLiveStay(stayId: Id<"stays">, onBackToHub: () => void) {
   }) as Doc<"announcements">[];
   const [screen, setScreen] = useState<Screen>("home");
   const [panel, updatePanel] = useState<Panel>(null);
+  const [contributionPrefill, setContributionPrefill] = useState<{
+    type?: "payment" | "groceries" | "supplies" | "house_work" | "other";
+    title?: string;
+    note: string;
+  } | null>(null);
   const [selectedGuestId, setSelectedGuestId] = useState<
     Id<"users"> | undefined
   >();
@@ -70,8 +75,23 @@ export function useLiveStay(stayId: Id<"stays">, onBackToHub: () => void) {
     submitting.current = false;
     setIsSubmittingModal(false);
   }
+  const openContributionWithPrefill = useCallback(
+    (prefill: {
+      type?: "payment" | "groceries" | "supplies" | "house_work" | "other";
+      title?: string;
+      note: string;
+    }) => {
+      setActionError("");
+      setContributionPrefill(prefill);
+      updatePanel("contribution");
+    },
+    [],
+  );
   const setPanel = useCallback((next: Panel) => {
     setActionError("");
+    if (next !== "contribution") {
+      setContributionPrefill(null);
+    }
     updatePanel(next);
   }, []);
   const [guestOnboardingOpen, setGuestOnboardingOpen] = useState(false);
@@ -538,11 +558,16 @@ export function useLiveStay(stayId: Id<"stays">, onBackToHub: () => void) {
     event.preventDefault();
     if (!financialGuestId) return;
     const form = new FormData(event.currentTarget);
+    // Hosts with several guests pick the Ledger explicitly in the form.
+    const chosenGuest = guestMembers.find(
+      (member) => member.person.id === form.get("guestUserId"),
+    )?.person.id;
+    const guestUserId = chosenGuest ?? financialGuestId;
     if (!beginSubmit()) return;
     try {
       await createContribution({
         stayId,
-        guestUserId: financialGuestId,
+        guestUserId,
         type: value(form, "type") as
           "payment" | "groceries" | "supplies" | "house_work" | "other",
         amountCents: Math.round(Number(value(form, "amount")) * 100),
@@ -550,6 +575,7 @@ export function useLiveStay(stayId: Id<"stays">, onBackToHub: () => void) {
         note: value(form, "note"),
         countsTowardBalance: form.get("counts") === "on",
       });
+      setContributionPrefill(null);
       setPanel(null);
       notify("Contribution added for confirmation.");
     } catch (reason) {
@@ -961,6 +987,8 @@ export function useLiveStay(stayId: Id<"stays">, onBackToHub: () => void) {
     selectedGuestTerms,
     setEditingGuestId,
     panel,
+    contributionPrefill,
+    openContributionWithPrefill,
     addContribution,
     addCharge,
     addChore,
