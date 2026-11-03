@@ -2,30 +2,7 @@
 
 ## [Unreleased]
 
-### Fixed
-
-- **Production builds blocked by the subscription environment check (WRE-271 follow-up)**: `scripts/verify-env.mjs` now requires `SUBSCRIPTION_EXPECTED_ENVIRONMENT=production` on Vercel production only when `release/feature-lock.json` is enabled. During prerelease, `sandbox` is accepted, matching the Convex production deployment. Build configuration only; no app behavior changes.
-
 ### Added
-
-- **Help center guide: How Kouchd compares to Splitwise & Flatastic (WRE-266, branch only, not released)**:
-  - Published `help/support/kouchd-vs-splitwise.mdx` explaining in plain, everyday language how Kouchd approaches private shared living, direct payments without holding funds, private guest records, unlimited free contributions, and unified household coordination.
-  - Registered the guide under Support in `docs.json` navigation.
-  - Review follow-up (0.8.11): the guide no longer promises "no marketing trackers" (it links to the privacy page instead), no longer describes the unreleased shopping-to-Ledger shortcut (now on the roadmap as in development), no longer mentions receipt storage, and drops unsourced claims about Splitwise and Flatastic plans and ads.
-
-- **Web host plan capacity indicator and blocked join alerts (WRE-265, branch only, not released)**:
-  - `HostBillingButton` dynamically reflects current host plan usage (`Host plan · Free (1/1 spots)` or `Plan · Plus (X/5 spots)`) and surfaces an attention badge when prospective guests are blocked due to full capacity.
-  - Implemented `PlanLimitModal` on web to intercept stay creation attempts when plan limits are reached, showing a clear explanation and a 1-click path to upgrade to Kouchd Plus without submitting invalid data or encountering server rollbacks.
-  - Added `BlockedJoinsBanner` to `StayHub` and `StayScreen`, notifying hosts when a guest attempted to join while capacity was full, with direct actions to upgrade ("Make room with Plus") or dismiss the alert.
-  - Stay cards in `StayHub` display a `[N tried to join]` pill badge corresponding to each stay's blocked join requests, matching native iOS behavior.
-  - The plan label falls back to "Host plan" when the subscription environment can't be read, instead of guessing a Free limit. Blocked-join alerts describe guest spots as shared across the host's stays, and a failed Dismiss shows an error. `PlanLimitModal` returns focus to the control that opened it.
-  - Covered by automated Vitest suite `tests/web-plan-capacity.test.ts`.
-
-- **Shopping list to contribution ledger bridge (WRE-264, branch only, not released)**:
-  - Checked-off shared shopping items show a "Log contribution" action on web and iOS. It opens **Add contribution** with the type set to `groceries` and the note filled from the item; the amount is always entered by hand.
-  - Personal items never offer the action, so their details are not copied into a shared Ledger record.
-  - On web, a host with more than one guest must choose whose Ledger the contribution goes on. On iOS the action is shown to guests and to hosts with exactly one guest. Hosts with no guests do not see it.
-  - Covered by `tests/shopping-contribution-bridge.test.ts`. The Swift sources were syntax-checked only; no simulator build was run for this revision.
 
 - **Simplified introduction landing page & brand kit password protection (WRE-243)**:
   - **Simplified landing page:** Added a streamlined marketing landing page at `/simple` featuring the canonical Kouchd brand design system (`MarketingHeader`, warm `v21-hero` with living room artwork and app icon badge, rating pill, interactive tabbed preview window, 6-card feature grid matching `v21-steps`, `v21-cta`, and `MarketingFooter`).
@@ -78,27 +55,6 @@
 - Upgraded `zod` from 4.5.4 to 4.6.7 through an npm `overrides` entry (`"zod": "^4.6.6"`) to fix CVE-2023-54404 (high, Dependabot alert #45): Zod could exhaust memory while validating oversized constrained collections. `zod` is not a direct dependency; it comes in only as a dev dependency of `eslint-plugin-react-hooks` (via `eslint-config-next`), so the shipped web bundle and the iOS app do not include it (0.7.19).
 
 ### Fixed
-
-- **Door and Wi-Fi access code protection (WRE-266, 0.8.10, branch only, not released)**:
-  - `stays.listMine` and `stays.getBundle` now pass returned stay documents through `redactStayForMember` (`convex/lib/houseInfoAccess.ts`), removing `houseInfo.doorCode` and `houseInfo.wifiPassword` for guests unless the stay has not ended and the guest has accepted an agreement version. Other `houseInfo` fields remain visible, and hosts always see their own stay's codes.
-  - Guests who have already accepted keep access to door and Wi-Fi codes while a revised agreement version awaits their review or while another guest in the household has not accepted yet.
-  - Former guests who rejoin a household by referral code (`convex/referral.ts`) get a new agreement built from the household's current terms, and a new `memberships.accessCodesNeedAcceptance` flag holds codes back until they accept it. Their earlier `acceptedTermsId` is kept, so accepting the new agreement retires the earlier schedule from the rejoin date instead of leaving both active.
-  - `getAcceptedGuestTermsForDate` ignores acceptances made before the latest join for dates on or after it, so an earlier residency's acceptance cannot authorize new occupancy charges.
-  - `stays.getBundle` returns `accessCodesHidden` (`"needs_acceptance"`, `"ended"`, or `null`), set only when a configured code was actually removed. Web and iOS use it, so a stay with no codes no longer claims codes are being withheld.
-  - Help Center guides are unchanged until release verification; the roadmap lists protected codes as in development.
-  - Added clear explanations on web (`components/household/household-logistics.tsx`) and iOS (`ios/Kouchd/StayScreens.swift`) when door and Wi-Fi codes are hidden pending agreement acceptance or after a stay ends, plus a host form hint to keep codes in their dedicated fields rather than notes.
-- **Replay QA review follow-ups (WRE-271, 0.8.9, branch only, not released)**:
-  - **Legal pages and strict CSP:** `/privacy`, `/terms`, `/cookies`, and `/acceptable-use` no longer use `force-static`. Clerk's strict CSP sends a per-request nonce, and a statically rendered page has none, so its inline scripts could be blocked.
-  - **Sign-in and sign-up submit button:** `SignInFormGuard` now only re-enables a submit button it disabled itself, and never claims one Clerk had already disabled, so it no longer clears the disabled state Clerk sets while a sign-up is in flight (which allowed a double submit).
-  - **Landing preview tabs:** the example stay preview supports Left/Right arrow, Home, and End keys, so keyboard users can reach every tab. Modified keys (Alt, Ctrl, Cmd) pass through to the browser.
-  - **Tests and docs:** the `'unsafe-eval'` policy is tested under explicit production and development environments, and the Replay QA nonce rotation steps include the test fixture.
-
-- **Replay QA defect remediation and bot protection unblocking (WRE-271, 0.8.8)**:
-  - **Cloudflare Turnstile & Clerk protect CSP allowances:** Added `https://challenges.cloudflare.com` and `https://*.protect.clerk.com:*` to `connect-src`, and `https://*.protect.clerk.com` to `script-src` and `frame-src` in `lib/security/csp.ts`. Previously, the absence of `challenges.cloudflare.com` in `connect-src` caused Cloudflare Turnstile token validation fetches to fail silently on `/sign-up`, locking Clerk's form in an inert state.
-  - **CSP hardening in production:** Removed `'unsafe-eval'` from `script-src` in production builds (`lib/security/csp.ts`), keeping it restricted exclusively to local development (`NODE_ENV === "development"`) for Next.js Fast Refresh and tooling.
-  - **Dynamic layout rendering for strict nonce-based CSP:** Documented that calling `headers()` in the root layout (`app/layout.tsx`) and configuring `<ClerkProvider dynamic>` renders routes dynamically to supply a per-request `x-nonce`, ensuring strict CSP script verification across all pages.
-  - **Sign-up redirect fallbacks:** Added `fallbackRedirectUrl="/"` and `signInFallbackRedirectUrl="/"` on `<SignUp />` in `app/sign-up/[[...sign-up]]/page.tsx`.
-  - **Sign-in submit button CSS hardening:** Scoped `.kouchd-submit-disabled` live-value fallback in `app/production.css` to `.kouchd-sign-in-container` and removed static `[value=""]` attribute checks to avoid disabling buttons after user input.
 
 - **Facebook sign-up no longer ends on a 404 (WRE-261, 0.8.4, branch only, not released)**:
   - A Facebook sign-up that Clerk moved over to sign-in (for example, when the Facebook email needs verifying or already belongs to an account) could return to `/sso-callback` at the site root, which had no page and showed the "Wrong couch" 404. Seen in Vercel's production request log on 2026-10-31.
@@ -257,3 +213,56 @@
 - Native signing and invitation association use the verified existing Kouchd Apple team.
 - App Store icon export is opaque and square; native orientation declarations support iPad multitasking.
 - iOS payment concepts use outside contribution records; Kouchd does not process payments.
+
+## [0.8.11] - 2026-11-02
+
+App changes deployed to production on 2026-11-02 (Vercel build and Convex deploy logs, HTTP 200). Signed-in behavior on production has not been checked yet. Help Center changes are not published.
+
+- **Help center guide: How Kouchd compares to Splitwise & Flatastic (WRE-266; public once the Help Center is published)**:
+  - Added `help/support/kouchd-vs-splitwise.mdx` to the repo (public only once the Help Center is published), explaining in plain, everyday language how Kouchd approaches private shared living, direct payments without holding funds, private guest records, unlimited free contributions, and unified household coordination.
+  - Registered the guide under Support in `docs.json` navigation.
+  - Review follow-up (0.8.11): the guide no longer promises "no marketing trackers" (it links to the privacy page instead), no longer describes the unreleased shopping-to-Ledger shortcut (now on the roadmap as in development), no longer mentions receipt storage, and drops unsourced claims about Splitwise and Flatastic plans and ads.
+
+- **Web host plan capacity indicator and blocked join alerts (WRE-265, web)**:
+  - `HostBillingButton` dynamically reflects current host plan usage (`Host plan · Free (1/1 spots)` or `Plan · Plus (X/5 spots)`) and surfaces an attention badge when prospective guests are blocked due to full capacity.
+  - Implemented `PlanLimitModal` on web to intercept stay creation attempts when plan limits are reached, showing a clear explanation and a 1-click path to upgrade to Kouchd Plus without submitting invalid data or encountering server rollbacks.
+  - Added `BlockedJoinsBanner` to `StayHub` and `StayScreen`, notifying hosts when a guest attempted to join while capacity was full, with direct actions to upgrade ("Make room with Plus") or dismiss the alert.
+  - Stay cards in `StayHub` display a `[N tried to join]` pill badge corresponding to each stay's blocked join requests, matching native iOS behavior.
+  - The plan label falls back to "Host plan" when the subscription environment can't be read, instead of guessing a Free limit. Blocked-join alerts describe guest spots as shared across the host's stays, and a failed Dismiss shows an error. `PlanLimitModal` returns focus to the control that opened it.
+  - Covered by automated Vitest suite `tests/web-plan-capacity.test.ts`.
+
+- **Shopping list to contribution ledger bridge (WRE-264; web deployed, iOS in the undistributed development preview)**:
+  - Checked-off shared shopping items show a "Log contribution" action on web and iOS. It opens **Add contribution** with the type set to `groceries` and the note filled from the item; the amount is always entered by hand.
+  - Personal items never offer the action, so their details are not copied into a shared Ledger record.
+  - On web, a host with more than one guest must choose whose Ledger the contribution goes on. On iOS the action is shown to guests and to hosts with exactly one guest. Hosts with no guests do not see it.
+  - Covered by `tests/shopping-contribution-bridge.test.ts`. The Swift sources were syntax-checked only; no simulator build was run for this revision.
+
+## [0.8.10] - 2026-11-02
+
+- **Door and Wi-Fi access code protection (WRE-266)**:
+  - `stays.listMine` and `stays.getBundle` now pass returned stay documents through `redactStayForMember` (`convex/lib/houseInfoAccess.ts`), removing `houseInfo.doorCode` and `houseInfo.wifiPassword` for guests unless the stay has not ended and the guest has accepted an agreement version. Other `houseInfo` fields remain visible, and hosts always see their own stay's codes.
+  - Guests who have already accepted keep access to door and Wi-Fi codes while a revised agreement version awaits their review or while another guest in the household has not accepted yet.
+  - Former guests who rejoin a household by referral code (`convex/referral.ts`) get a new agreement built from the household's current terms, and a new `memberships.accessCodesNeedAcceptance` flag holds codes back until they accept it. Their earlier `acceptedTermsId` is kept, so accepting the new agreement retires the earlier schedule from the rejoin date instead of leaving both active.
+  - `getAcceptedGuestTermsForDate` ignores acceptances made before the latest join for dates on or after it, so an earlier residency's acceptance cannot authorize new occupancy charges.
+  - `stays.getBundle` returns `accessCodesHidden` (`"needs_acceptance"`, `"ended"`, or `null`), set only when a configured code was actually removed. Web and iOS use it, so a stay with no codes no longer claims codes are being withheld.
+  - Help Center guides for guests and hosts now describe when codes are shown; the roadmap item moved to the public changelog.
+  - Added clear explanations on web (`components/household/household-logistics.tsx`) and iOS (`ios/Kouchd/StayScreens.swift`) when door and Wi-Fi codes are hidden pending agreement acceptance or after a stay ends, plus a host form hint to keep codes in their dedicated fields rather than notes.
+
+## [0.8.9] - 2026-11-02
+
+- **Production builds blocked by the subscription environment check (WRE-271 follow-up)**: `scripts/verify-env.mjs` now requires `SUBSCRIPTION_EXPECTED_ENVIRONMENT=production` on Vercel production only when `release/feature-lock.json` is enabled. During prerelease, `sandbox` is accepted, matching the Convex production deployment. Build configuration only; no app behavior changes.
+
+- **Replay QA review follow-ups (WRE-271, web)**:
+  - **Legal pages and strict CSP:** `/privacy`, `/terms`, `/cookies`, and `/acceptable-use` no longer use `force-static`. Clerk's strict CSP sends a per-request nonce, and a statically rendered page has none, so its inline scripts could be blocked.
+  - **Sign-in and sign-up submit button:** `SignInFormGuard` now only re-enables a submit button it disabled itself, and never claims one Clerk had already disabled, so it no longer clears the disabled state Clerk sets while a sign-up is in flight (which allowed a double submit).
+  - **Landing preview tabs:** the example stay preview supports Left/Right arrow, Home, and End keys, so keyboard users can reach every tab. Modified keys (Alt, Ctrl, Cmd) pass through to the browser.
+  - **Tests and docs:** the `'unsafe-eval'` policy is tested under explicit production and development environments, and the Replay QA nonce rotation steps include the test fixture.
+
+## [0.8.8] - 2026-11-02
+
+- **Replay QA defect remediation and bot protection unblocking (WRE-271, web)**:
+  - **Cloudflare Turnstile & Clerk protect CSP allowances:** Added `https://challenges.cloudflare.com` and `https://*.protect.clerk.com:*` to `connect-src`, and `https://*.protect.clerk.com` to `script-src` and `frame-src` in `lib/security/csp.ts`. Previously, the absence of `challenges.cloudflare.com` in `connect-src` caused Cloudflare Turnstile token validation fetches to fail silently on `/sign-up`, locking Clerk's form in an inert state.
+  - **CSP hardening in production:** Removed `'unsafe-eval'` from `script-src` in production builds (`lib/security/csp.ts`), keeping it restricted exclusively to local development (`NODE_ENV === "development"`) for Next.js Fast Refresh and tooling.
+  - **Dynamic layout rendering for strict nonce-based CSP:** Documented that calling `headers()` in the root layout (`app/layout.tsx`) and configuring `<ClerkProvider dynamic>` renders routes dynamically to supply a per-request `x-nonce`, ensuring strict CSP script verification across all pages.
+  - **Sign-up redirect fallbacks:** Added `fallbackRedirectUrl="/"` and `signInFallbackRedirectUrl="/"` on `<SignUp />` in `app/sign-up/[[...sign-up]]/page.tsx`.
+  - **Sign-in submit button CSS hardening:** Scoped `.kouchd-submit-disabled` live-value fallback in `app/production.css` to `.kouchd-sign-in-container` and removed static `[value=""]` attribute checks to avoid disabling buttons after user input.
