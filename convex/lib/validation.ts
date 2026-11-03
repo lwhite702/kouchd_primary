@@ -15,7 +15,10 @@ const PAYMENT_PROVIDERS = new Set(["venmo", "cashapp", "chime", "zelle", "cash",
 export type StayTermsInput = {
   startDate: string;
   endDate: string;
-  cadence: "daily" | "weekly";
+  cadence: "daily" | "weekly" | "monthly";
+  paymentDayOfWeek?: number;
+  paymentDayOfMonth?: number;
+  billingBasis?: "continuous" | "occupied_nights";
   rateCents: number;
   earlyDiscountEnabled: boolean;
   earlyDiscountPercentage: number;
@@ -38,6 +41,8 @@ export type StayTermsInput = {
     maxCreditPerPeriodCents: number;
   };
 };
+
+export type TermsValidationInput = StayTermsInput;
 
 export function assertCalendarDate(value: string, label = "Date") {
   if (!CALENDAR_DATE.test(value)) {
@@ -66,7 +71,10 @@ export function assertTimezone(timezone: string) {
   }
 }
 
-export function assertStayTerms(terms: StayTermsInput) {
+export function assertStayTerms(
+  terms: TermsValidationInput,
+  options?: { arrangement?: "home_stay" | "sublease" },
+) {
   assertCalendarDate(terms.startDate, "Start date");
   assertCalendarDate(terms.endDate, "End date");
   if (terms.endDate < terms.startDate) throw new Error("End date must be on or after start date");
@@ -78,6 +86,38 @@ export function assertStayTerms(terms: StayTermsInput) {
   assertIntegerInRange(terms.earlyDiscountDays, 0, MAX_RULE_DAYS, "Early discount days");
   assertIntegerInRange(terms.lateFeeCents, 0, MAX_MONEY_CENTS, "Late fee");
   assertIntegerInRange(terms.graceDays, 0, MAX_RULE_DAYS, "Grace days");
+
+  if (terms.cadence === "monthly") {
+    if (options?.arrangement !== "sublease") {
+      throw new Error("Monthly rent is only available on sublease stays");
+    }
+    if (
+      terms.paymentDayOfMonth === undefined ||
+      !Number.isInteger(terms.paymentDayOfMonth) ||
+      terms.paymentDayOfMonth < 1 ||
+      terms.paymentDayOfMonth > 28
+    ) {
+      throw new Error("Monthly payment day must be a whole number from 1 to 28");
+    }
+    if (terms.paymentDayOfWeek !== undefined) {
+      throw new Error("Monthly contributions do not use a weekly payment day");
+    }
+    if ((terms.billingBasis ?? "continuous") !== "continuous") {
+      throw new Error("Monthly subleases must bill every day in the stay");
+    }
+    if (
+      terms.earlyDiscountEnabled ||
+      terms.earlyDiscountPercentage > 0 ||
+      terms.earlyDiscountDays > 0
+    ) {
+      throw new Error("Early contribution discounts are not available on monthly subleases");
+    }
+    if (terms.rewards?.enabled) {
+      throw new Error("Contribution rewards are not available on monthly subleases");
+    }
+  } else if (terms.paymentDayOfMonth !== undefined) {
+    throw new Error("Only monthly contributions use a monthly payment day");
+  }
 
   if (!terms.earlyDiscountEnabled && (terms.earlyDiscountPercentage !== 0 || terms.earlyDiscountDays !== 0)) {
     throw new Error("Disabled early discounts must use zero values");

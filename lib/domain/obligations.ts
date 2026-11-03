@@ -1,4 +1,10 @@
-import { addCalendarDays, stayDays } from "./dates";
+import {
+  addCalendarDays,
+  calendarMonthDueDate,
+  calendarMonthEnd,
+  daysInCalendarMonth,
+  stayDays,
+} from "./dates";
 import type { Cadence } from "./pricing";
 
 export interface ObligationTerms {
@@ -7,6 +13,8 @@ export interface ObligationTerms {
   cadence: Cadence;
   /** Weekday used for weekly payment due dates (0 = Sunday ... 6 = Saturday). */
   paymentDayOfWeek?: number;
+  /** Day of month used for monthly payment due dates (1 ... 28). */
+  paymentDayOfMonth?: number;
   rateCents: number;
   earlyDiscountEnabled?: boolean;
   earlyDiscountPercentage: number;
@@ -51,6 +59,34 @@ export interface ObligationLedgerItem extends ObligationRecord {
 
 export function buildObligationPeriods(terms: ObligationTerms): ObligationPeriod[] {
   const periods: ObligationPeriod[] = [];
+
+  if (terms.cadence === "monthly") {
+    let cursor = terms.startDate;
+    while (cursor <= terms.endDate) {
+      const monthEnd = calendarMonthEnd(cursor);
+      const periodEnd = monthEnd < terms.endDate ? monthEnd : terms.endDate;
+      const year = Number(cursor.slice(0, 4));
+      const month = Number(cursor.slice(5, 7));
+      const daysInMonth = daysInCalendarMonth(year, month);
+      const daysCovered = stayDays(cursor, periodEnd);
+      const isFullMonth = daysCovered === daysInMonth;
+      const baseAmountCents = isFullMonth
+        ? terms.rateCents
+        : Math.round((terms.rateCents * daysCovered) / daysInMonth);
+      const dueCandidate = calendarMonthDueDate(cursor, terms.paymentDayOfMonth ?? 1);
+      const dueDate = dueCandidate > periodEnd ? periodEnd : dueCandidate;
+
+      periods.push({
+        periodStart: cursor,
+        periodEnd,
+        dueDate,
+        baseAmountCents,
+      });
+      cursor = addCalendarDays(periodEnd, 1);
+    }
+    return periods;
+  }
+
   let periodStart = terms.startDate;
   const totalDays = stayDays(terms.startDate, terms.endDate);
   const totalExpectedCents = terms.cadence === "weekly"

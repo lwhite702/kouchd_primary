@@ -9,8 +9,8 @@ import { getAcceptedGuestTermsForDate } from "./lib/stayTerms";
 import { listActiveGuestObligations } from "./lib/obligations";
 import { recordActivity } from "./lib/activity";
 
-function paymentDateForNight(nightDate: string, cadence: "daily" | "weekly", paymentDayOfWeek?: number) {
-  if (cadence === "daily") return nightDate;
+function paymentDateForNight(nightDate: string, cadence: "daily" | "weekly" | "monthly", paymentDayOfWeek?: number) {
+  if (cadence !== "weekly") return nightDate;
   const weekday = paymentDayOfWeek ?? new Date(`${nightDate}T00:00:00.000Z`).getUTCDay();
   const currentDay = new Date(`${nightDate}T00:00:00.000Z`).getUTCDay();
   return addCalendarDays(nightDate, (weekday - currentDay + 7) % 7);
@@ -22,7 +22,7 @@ export const list = query({
     _id: v.id("occupiedNights"),
     nightDate: v.string(),
     amountCents: v.number(),
-    cadence: v.union(v.literal("daily"), v.literal("weekly")),
+    cadence: v.union(v.literal("daily"), v.literal("weekly"), v.literal("monthly")),
     recordedAt: v.number(),
     voidedAt: v.optional(v.number()),
   })),
@@ -63,6 +63,7 @@ export const recordOvernight = mutation({
     if (!membership || membership.status !== "active" || membership.role !== "guest") throw new Error("Choose an active guest in this household");
     const terms = await getAcceptedGuestTermsForDate(ctx, stayId, guestUserId, nightDate);
     if (!terms) throw new Error("No accepted guest agreement covers this overnight date");
+    if (terms.cadence === "monthly") throw new Error("Monthly agreements use continuous billing and do not record individual nights");
     if (terms.billingBasis !== "occupied_nights") throw new Error("This guest agreement bills every day in the stay, not only recorded nights");
     const effectiveStart = terms.effectiveFrom && terms.effectiveFrom > terms.startDate ? terms.effectiveFrom : terms.startDate;
     if (nightDate < effectiveStart || nightDate > terms.endDate) throw new Error("The overnight date must fall within this guest's accepted agreement");

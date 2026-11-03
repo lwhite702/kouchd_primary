@@ -32,3 +32,25 @@ export function calendarDateInTimezone(date: Date, timezone: string): string {
   const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
   return `${values.year}-${values.month}-${values.day}`;
 }
+
+export function daysInCalendarMonth(year: number, monthOneBased: number): number {
+  return new Date(Date.UTC(year, monthOneBased, 0)).getUTCDate();
+}
+
+export function calendarMonthEnd(dateStr: string): string {
+  parseCalendarDate(dateStr);
+  const year = Number(dateStr.slice(0, 4));
+  const month = Number(dateStr.slice(5, 7));
+  const days = daysInCalendarMonth(year, month);
+  return `${dateStr.slice(0, 7)}-${String(days).padStart(2, "0")}`;
+}
+
+export function calendarMonthDueDate(periodStart: string, paymentDayOfMonth = 1): string {
+  parseCalendarDate(periodStart);
+  const year = Number(periodStart.slice(0, 4));
+  const month = Number(periodStart.slice(5, 7));
+  const daysInMonth = daysInCalendarMonth(year, month);
+  const clampedDay = Math.min(Math.max(1, Math.trunc(paymentDayOfMonth)), daysInMonth);
+  const dueCandidate = `${periodStart.slice(0, 7)}-${String(clampedDay).padStart(2, "0")}`;
+  return dueCandidate < periodStart ? periodStart : dueCandidate;
+}
