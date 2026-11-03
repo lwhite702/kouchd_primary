@@ -1,17 +1,25 @@
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, writeFileSync } from "node:fs";
+import { copyFileSync, mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 describe("verify-env script", () => {
-  const writeLock = (enabled: boolean) => {
-    const file = join(mkdtempSync(join(tmpdir(), "kouchd-lock-")), "feature-lock.json");
-    writeFileSync(file, JSON.stringify({ enabled }));
-    return file;
+  // The script always reads ../release/feature-lock.json beside itself, so lock
+  // scenarios run a copy of the script next to a fixture lock file.
+  const scriptWithLock = (enabled: boolean) => {
+    const root = mkdtempSync(join(tmpdir(), "kouchd-lock-"));
+    mkdirSync(join(root, "scripts"));
+    mkdirSync(join(root, "release"));
+    copyFileSync("scripts/verify-env.mjs", join(root, "scripts", "verify-env.mjs"));
+    writeFileSync(join(root, "release", "feature-lock.json"), JSON.stringify({ enabled }));
+    return join(root, "scripts", "verify-env.mjs");
   };
 
-  const runVerifyEnv = (env: Record<string, string | undefined>) => {
+  const runVerifyEnv = (
+    env: Record<string, string | undefined>,
+    script = "scripts/verify-env.mjs",
+  ) => {
     // Only pass minimal safe system variables (PATH, SYSTEMROOT, etc.) so host environment variables do not pollute test
     const cleanEnv: Record<string, string> = {
       PATH: process.env.PATH || "",
@@ -24,7 +32,7 @@ describe("verify-env script", () => {
     }
 
     try {
-      const stdout = execFileSync("node", ["scripts/verify-env.mjs"], {
+      const stdout = execFileSync("node", [script], {
         env: cleanEnv as NodeJS.ProcessEnv,
         encoding: "utf8",
         stdio: ["pipe", "pipe", "pipe"],
@@ -83,8 +91,7 @@ describe("verify-env script", () => {
       ...validBaseEnv,
       VERCEL_ENV: "production",
       SENTRY_AUTH_TOKEN: "sentry_dummy",
-      KOUCHD_FEATURE_LOCK_PATH: writeLock(false),
-    });
+    }, scriptWithLock(false));
     expect(res.status).toBe(0);
   });
 
@@ -94,15 +101,15 @@ describe("verify-env script", () => {
       VERCEL_ENV: "production",
       SUBSCRIPTION_EXPECTED_ENVIRONMENT: "production",
       SENTRY_AUTH_TOKEN: "sentry_dummy",
-      KOUCHD_FEATURE_LOCK_PATH: writeLock(true),
     };
-    const validRes = runVerifyEnv(vercelProdEnv);
+    const script = scriptWithLock(true);
+    const validRes = runVerifyEnv(vercelProdEnv, script);
     expect(validRes.status).toBe(0);
 
     const sandboxRes = runVerifyEnv({
       ...vercelProdEnv,
       SUBSCRIPTION_EXPECTED_ENVIRONMENT: "sandbox",
-    });
+    }, script);
     expect(sandboxRes.status).toBe(1);
     expect(sandboxRes.stderr).toContain("SUBSCRIPTION_EXPECTED_ENVIRONMENT must be set to \"production\" for Vercel production deployments");
   });

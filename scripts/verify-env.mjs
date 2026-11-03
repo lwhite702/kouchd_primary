@@ -1,9 +1,7 @@
 import { readFileSync } from "node:fs";
 
 function launchLockEnabled() {
-  const lockPath =
-    process.env.KOUCHD_FEATURE_LOCK_PATH ||
-    new URL("../release/feature-lock.json", import.meta.url);
+  const lockPath = new URL("../release/feature-lock.json", import.meta.url);
   return JSON.parse(readFileSync(lockPath, "utf8")).enabled === true;
 }
 
