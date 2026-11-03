@@ -2,7 +2,15 @@ import { readFileSync } from "node:fs";
 
 function launchLockEnabled() {
   const lockPath = new URL("../release/feature-lock.json", import.meta.url);
-  return JSON.parse(readFileSync(lockPath, "utf8")).enabled === true;
+  try {
+    // Same truthiness rule as scripts/release-gate.mjs.
+    return Boolean(JSON.parse(readFileSync(lockPath, "utf8")).enabled);
+  } catch (error) {
+    console.error(
+      `Configuration error: could not read release/feature-lock.json (${error.message}).`
+    );
+    process.exit(1);
+  }
 }
 
 const isManagedBuild = Boolean(process.env.CI || process.env.VERCEL_ENV);
