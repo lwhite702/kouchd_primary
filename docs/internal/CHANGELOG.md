@@ -2,6 +2,16 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-11-03 — Primary button, status tag tones, and adaptive line-art empty states (WRE-278, #152, 0.9.5)
+
+- Branch `codex/WRE-278-button-status-illustrations`, issue #152 (Linear WRE-278).
+- Primary button: Created `BrandButton` (`components/ui/brand-button.tsx`) with 1.5px forest outline, tactile offset shadow (`2px 2px 0 var(--color-ink)`), 12px corner radius, and keyboard/reduced-motion support.
+- Status tag tones: Updated `BrandTag` (`components/ui/brand-tag.tsx`) to map statuses to calm semantic tones (`sage` for confirmed, `sky` for pending/upcoming, `light coral` for attention, and warm gray for neutral) with on-fill text, reserving lime for Plus badges and primary actions.
+- Empty-state line-art illustrations: Created 6 adaptive SVG line-art illustrations in `components/illustrations/empty-state-illustrations.tsx` (`HouseGuideIllustration`, `LedgerEntryIllustration`, `ChoreBoardIllustration`, `AgreementIllustration`, `PaymentOptionsIllustration`, `RemindersIllustration`) responding to CSS theme tokens.
+- Integration: Wired illustrations into `household-logistics.tsx`, `contributions-screen.tsx`, `chores-screen.tsx`, `stay-screen.tsx`, `payment-options.tsx`, and `dashboard-notifications.tsx`.
+- Tests: Added `tests/wre-278-illustrations.test.ts` (7 unit tests).
+- Bumps version to 0.9.5.
+
 ## 2026-11-03 — iPhone redesign alignment (WRE-275, #149, 0.9.4)
 
 - Branch `codex/WRE-275-ios-redesign-recent-features`, issue #149 (Linear WRE-275).

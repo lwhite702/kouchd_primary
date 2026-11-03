@@ -11,6 +11,7 @@ import { formatDate } from "@/components/workspace/types";
 import { isUsableName } from "@/lib/names";
 
 import type { WorkspaceState } from "./use-live-stay";
+import { ChoreBoardIllustration } from "@/components/illustrations/empty-state-illustrations";
 
 export function ChoresScreen({ state }: { state: WorkspaceState }) {
   const {
@@ -23,6 +24,7 @@ export function ChoresScreen({ state }: { state: WorkspaceState }) {
     chores,
     setDestructiveAction,
   } = state;
+  const visibleChores = chores.filter((item) => !item.voidedAt);
   return (
     <div key="chores" className="screen-transition">
       <div className="page-heading">
@@ -49,9 +51,13 @@ export function ChoresScreen({ state }: { state: WorkspaceState }) {
         )}
       </div>
       <div className="chore-list">
-        {chores
-          .filter((item) => !item.voidedAt)
-          .map((item) => (
+        {visibleChores.length === 0 ? (
+          <div className="empty-list line-art-empty-state">
+            <ChoreBoardIllustration />
+            <strong>No chores on the board yet</strong>
+            <p>Add a task so everyone knows what needs doing.</p>
+          </div>
+        ) : visibleChores.map((item) => (
             <article
               className={`list-row chore-row ${item.completedAt ? "done" : ""}`}
               key={item._id}

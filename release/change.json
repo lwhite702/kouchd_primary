@@ -1,5 +1,5 @@
 {
   "type": "patch",
-  "version": "0.9.4",
-  "reason": "Align feature flag registry defaults with unit test invariants and platform overrides (0.9.3)."
+  "version": "0.9.5",
+  "reason": "New primary button, status colors, and adaptive line-art empty states (WRE-278)."
 }

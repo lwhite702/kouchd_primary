@@ -4,6 +4,14 @@
 
 ### Changed
 
+- **Primary button, status tag tones, and adaptive line-art empty states (WRE-278, #152, branch only, not released, 0.9.5)**:
+  - Added new `BrandButton` component (`components/ui/brand-button.tsx`) rendering the primary lime pressable action with 1.5px forest outline, 12px rounded radius, and tactile offset box-shadow, with reduced motion support.
+  - Refactored `BrandTag` (`components/ui/brand-tag.tsx`) to use calm semantic status tones: sage for confirmed, sky for pending/upcoming, light coral for attention, and warm gray for neutral, reserving lime exclusively for primary actions and Plus badges.
+  - Added six adaptive SVG line-art empty state illustrations (`components/illustrations/empty-state-illustrations.tsx`): HouseGuide, LedgerEntry, ChoreBoard, Agreement, PaymentOptions, and Reminders, responding smoothly to light and dark theme tokens.
+  - Integrated illustrations across web empty states in Household Logistics, Ledger Contributions, Chores Screen, Agreement & Stay Screen, Payment Options, and Dashboard Reminders.
+  - Added unit test suite `tests/wre-278-illustrations.test.ts`.
+  - Version 0.9.5.
+
 - **Kouchd iOS: align iPhone design with the Version 1.0 redesign (WRE-275, #149, branch only, not released, 0.9.4)**:
   - Aligned native iOS tokens in `ios/Kouchd/Design.swift` with the Version 1.0 web brand: light colors match web values (`cream`, `surface`, `forest`, `ink`, `muted`, `line`), keeping dark values unchanged, and adds fixed `sage`, `sky`, `blue`, `amber`, `rose`, `paperFill`, `onFill`, `brandForest`, and `onBrand` tokens.
   - Implemented the dynamic Manrope type scale (`display`, `page`, `section`, `cardTitle`).

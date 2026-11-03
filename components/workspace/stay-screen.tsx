@@ -22,6 +22,7 @@ import { HELP_LINKS } from "@/lib/help-links";
 import { formatMoney, formatDate } from "@/components/workspace/types";
 
 import type { WorkspaceState } from "./use-live-stay";
+import { AgreementIllustration } from "@/components/illustrations/empty-state-illustrations";
 import {
   GuestTabs,
   LandlordConsentWarningCard,
@@ -498,9 +499,11 @@ export function StayScreen({ state }: { state: WorkspaceState }) {
               })}
             </div>
           ) : (
-            <p className="muted">
-              Guest agreements appear here when someone joins.
-            </p>
+            <div className="empty-list line-art-empty-state">
+              <AgreementIllustration />
+              <strong>Guest agreements appear here when someone joins</strong>
+              <p>Your household defaults are ready to use for the next guest.</p>
+            </div>
           )}
         </section>
       )}
