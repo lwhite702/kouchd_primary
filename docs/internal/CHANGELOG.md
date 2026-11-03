@@ -2,6 +2,16 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-11-03 — Invite and Plus screens redesign (WRE-277, 0.9.2)
+
+- Branch `codex/WRE-277-invite-plus-redesign` (part of the Version 1.0 redesign, WRE-273).
+- Invite screen: `components/invite-accept.tsx` now renders `InviteHero` and `InvitePrivacyPanel` from the new `components/invite-guest-panels.tsx`, styled by `components/invite-accept.css`. `inviteTitle()` ignores the `convex/invites.ts` fallbacks ("A Kouchd host", "Shared stay") so the title never shows placeholder names. Accept and registration logic is unchanged; the idle join label changed from "Join household" to "Join free".
+- Privacy panel claims, checked against source: announcements (`convex/announcements.ts` `list`), house info (`convex/stays.ts` `getBundle` via `redactStayForMember`, door and Wi-Fi codes still gated), and chores (`convex/chores.ts` `list`) are returned to any stay member. Terms are scoped per guest in `getBundle` (guests get `getCurrentGuestTerms` for themselves; other members' terms only go to the host) and contributions go through `resolveFinancialGuest` (`convex/lib/auth.ts`).
+- Plus paywall: `PaywallModal` has a `plans` step showing `PlusPlanCards` (`components/billing/plus-plans.tsx`, `plus-plans.css`) before the RevenueCat checkout; the RevenueCat effect now waits for the `checkout` step. Purchase callbacks, flags, and the hosted Customer Center are unchanged. `PLUS_DISPLAY_PRICES` was added to `lib/domain/subscriptionPlans.ts` because no web price constant existed; values mirror the RevenueCat catalog noted in `docs/internal/LAUNCH_READINESS.md` and `ios/Kouchd/Billing.swift`.
+- Plus card features list only the enforced stay and guest limits plus "Everything in Free". Cards make no "unlimited" claims and add a guest note and a fine-print line that Kouchd never collects, holds, or transfers money.
+- Roadmap: "Refreshed invite and Plus screens" added as in development.
+- Version 0.9.2.
+
 ## 2026-11-03 — Signed-out Start page (WRE-276, 0.9.1)
 
 - Branch `codex/WRE-276-signed-out-start-page`, part of the Version 1.0 redesign (WRE-273). Design: Figma node 533:356, "04 Start".

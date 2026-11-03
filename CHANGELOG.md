@@ -4,6 +4,13 @@
 
 ### Changed
 
+- **Invite and Plus screens follow the Version 1.0 redesign (WRE-277, branch only, not released, 0.9.2)**:
+  - The guest invite screen (`components/invite-accept.tsx`, new `components/invite-guest-panels.tsx`) opens with a "For invited guests" card. The title uses the host and stay names only when the invite has real ones ("Lee made room for you at Maple Street."), and falls back to "Someone made room for you." It says joining is always free and that no payment details are needed. The join, registration, and "Open Kouchd" actions use the new lime main-action button; the idle join label is now "Join free". Loading, invalid, already-used, signed-out, already-a-member, and full-stay states and their logic are unchanged.
+  - A privacy panel explains who sees what, matched to current Convex access rules: announcements, house info, and the chore board are shared with the stay; agreement terms and contribution records are visible only to the guest and host; money never moves through Kouchd. House rules are not listed as shared because each guest's terms carry their own copy.
+  - The Plus paywall (`components/billing/paywall-modal.tsx`) first shows Free and Plus plan cards (new `components/billing/plus-plans.tsx`), then loads the existing RevenueCat checkout after "Start with Plus". Card limits come from `PLAN_LIMITS` (Free: 1 active stay and 1 guest; Plus: up to 3 active stays and up to 5 guests across stays). Prices come from a new `PLUS_DISPLAY_PRICES` constant ($6.99/month or $69.99/year) in `lib/domain/subscriptionPlans.ts`; checkout still shows the live store price. Cards make no "unlimited" claims and add a guest note and a fine-print line that Kouchd never collects, holds, or transfers money.
+  - `PlanLimitModal` uses the main-action button for its primary action. The shared button lives in `components/ui/main-action.css` (offset shadow, focus ring, reduced-motion support).
+  - Covered by `tests/invite-plus-redesign.test.ts`.
+
 - **Signed-out Start page (WRE-276, branch only, not released)**:
   - Signed-out visitors to `/` now see a short Start page (`components/start/start-page.tsx`, styles in `components/start/start-page.css`) instead of being redirected to `/sign-in`. The client home shell's signed-out branch renders the same page, replacing the older long-form `LandingPage`.
   - The page offers two choices: hosts go to `/sign-up`, and guests enter an invite code. Joining needs an account, so a valid code is sent through `/sign-up?redirect_url=/?join=KCH-...`; after sign-up, `GetStartedHub` opens the existing "Join with Code" card pre-filled with that code, which still joins through `api.referral.joinWithCode`. No new backend path.

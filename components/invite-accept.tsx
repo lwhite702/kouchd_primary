@@ -2,12 +2,13 @@
 
 import { Show, SignUp, useUser } from "@clerk/nextjs";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
-import { ArrowRight, CheckCircle2, Clock3, Users } from "lucide-react";
+import { ArrowRight, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 
 import { api } from "@/convex/_generated/api";
 import { InviteSkeleton } from "@/components/skeleton-loader";
+import { InviteHero, InvitePrivacyPanel } from "@/components/invite-guest-panels";
 import { planLimitError, STAY_FULL_MESSAGE } from "@/lib/planLimitError";
 
 const nameKey = (tokenHash: string) => `kouchd:invite-display-name:${tokenHash}`;
@@ -22,52 +23,33 @@ export function InviteAccept({ token, tokenHash }: { token: string; tokenHash: s
   if (!preview.valid) {
     const wasUsed = preview.status === "used";
     return (
-      <main className="auth-landing screen-transition">
-        <p className="eyebrow">Guest invitation</p>
-        <h1>{wasUsed ? "This invite was already accepted." : "This invite is unavailable."}</h1>
-        <p style={{ maxWidth: 540, lineHeight: 1.6 }}>
-          {wasUsed
-            ? "If you joined with this link, open Kouchd to continue. Otherwise, ask your host for a fresh invitation."
-            : "Ask your host for a new invitation link."}
-        </p>
-        {wasUsed && <Link className="button primary button-link" href="/" style={{ marginTop: "1rem" }}>Open Kouchd</Link>}
+      <main className="auth-landing invite-landing screen-transition">
+        <section className="invite-hero-card">
+          <p className="invite-eyebrow">For invited guests</p>
+          <h1>{wasUsed ? "This invite was already accepted." : "This invite is unavailable."}</h1>
+          <p className="invite-hero-body">
+            {wasUsed
+              ? "If you joined with this link, open Kouchd to continue. Otherwise, ask your host for a fresh invitation."
+              : "Ask your host for a new invitation link."}
+          </p>
+          {wasUsed && <Link className="kouchd-main-action invite-action" href="/">Open Kouchd</Link>}
+        </section>
       </main>
     );
   }
 
   const details = "hostName" in preview ? preview : null;
   return (
-    <main className="auth-landing screen-transition">
-      <InviteDetails hostName={details?.hostName ?? "A Kouchd host"} referralCode={details?.referralCode} expiresAt={details?.expiresAt} />
+    <main className="auth-landing invite-landing screen-transition">
+      <InviteHero hostName={details?.hostName} stayName={details?.stayName} referralCode={details?.referralCode} expiresAt={details?.expiresAt} />
       <Show when="signed-out">
         <Registration token={token} tokenHash={tokenHash} />
       </Show>
       <Show when="signed-in">
         <Accept tokenHash={tokenHash} />
       </Show>
+      <InvitePrivacyPanel />
     </main>
-  );
-}
-
-function InviteDetails({ hostName, referralCode, expiresAt }: { hostName: string; referralCode?: string; expiresAt?: number }) {
-  return (
-    <section className="invite-registration-card" aria-label="Household invitation details">
-      <p className="eyebrow">You&apos;ve been invited</p>
-      <h1>{hostName} invited you to Kouchd.</h1>
-      <p className="subhead">Create your account, review the household code, then choose whether to join.</p>
-      <div className="invite-registration-details">
-        <div className="invite-registration-detail">
-          <Users size={18} aria-hidden="true" />
-          <div>
-            <span className="overline">Household join code</span>
-            <input aria-label="Household join code" readOnly value={referralCode ?? "Unavailable for this invite"} />
-          </div>
-        </div>
-        {expiresAt !== undefined && (
-          <p className="invite-expiry"><Clock3 size={15} aria-hidden="true" /> Invite expires {new Date(expiresAt).toUTCString()}</p>
-        )}
-      </div>
-    </section>
   );
 }
 
@@ -118,7 +100,7 @@ function Registration({ token, tokenHash }: { token: string; tokenHash: string }
             />
           </label>
           {nameError && <p className="form-error" role="alert">{nameError}</p>}
-          <button className="button primary" type="submit">Continue to registration <ArrowRight size={18} /></button>
+          <button className="kouchd-main-action invite-action" type="submit">Continue to registration <ArrowRight size={18} aria-hidden="true" /></button>
         </form>
       ) : (
         <>
@@ -212,13 +194,13 @@ function Accept({ tokenHash }: { tokenHash: string }) {
               value={displayName}
             />
           </label>
-          <button className="button primary" type="submit" disabled={joining}>
-            {joining ? "Joining household..." : "Join household"} <ArrowRight size={18} />
+          <button className="kouchd-main-action invite-action" type="submit" disabled={joining}>
+            {joining ? "Joining..." : "Join free"} <ArrowRight size={18} aria-hidden="true" />
           </button>
         </form>
       )}
       {status && <p className={done ? "invite-success" : "form-error"} role={done ? "status" : "alert"}>{status}</p>}
-      {(done || status.includes("already part")) && <Link className="button primary button-link" href="/" style={{ marginTop: "1rem" }}>Open Kouchd</Link>}
+      {(done || status.includes("already part")) && <Link className="kouchd-main-action invite-action" href="/">Open Kouchd</Link>}
     </section>
   );
 }

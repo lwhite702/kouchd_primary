@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useRef, useState, useTransition } from "react";
+import React, { useCallback, useEffect, useId, useRef, useState, useTransition } from "react";
 import {
   presentRevenueCatPaywall,
   checkKouchdPlusAccess,
@@ -10,6 +10,7 @@ import {
 import { useFeatureFlag } from "@/components/flags/feature-gate";
 import { FEATURE_FLAGS } from "@/lib/flags/config";
 import type { CustomerInfo } from "@revenuecat/purchases-js";
+import { PlusPlanCards } from "./plus-plans";
 
 interface PaywallModalProps {
   userId?: string;
@@ -29,6 +30,10 @@ export function PaywallModal({
   const containerRef = useRef<HTMLDivElement>(null);
   const [error, setError] = useState<string | null>(null);
   const [, startTransition] = useTransition();
+  // Hosts compare Free and Plus first; the RevenueCat checkout loads only
+  // after they choose Plus, so the purchase flow itself is unchanged.
+  const [step, setStep] = useState<"plans" | "checkout">("plans");
+  const titleId = useId();
 
   const isBillingEnabled = useFeatureFlag(FEATURE_FLAGS.BILLING_PORTAL);
   const isPaywallFlagEnabled = useFeatureFlag(FEATURE_FLAGS.REVENUECAT_PAYWALL);
@@ -36,7 +41,7 @@ export function PaywallModal({
   const activeError = !userId ? "Please sign in to view subscription options." : error;
 
   useEffect(() => {
-    if (!isOpen || !isPaywallAvailable || !containerRef.current || !userId) return;
+    if (!isOpen || step !== "checkout" || !isPaywallAvailable || !containerRef.current || !userId) return;
 
     let isMounted = true;
     startTransition(async () => {
@@ -71,62 +76,50 @@ export function PaywallModal({
     return () => {
       isMounted = false;
     };
-  }, [isOpen, isPaywallAvailable, userId, userEmail, onClose, onPurchaseSuccess]);
+  }, [isOpen, step, isPaywallAvailable, userId, userEmail, onClose, onPurchaseSuccess]);
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="relative w-full max-w-2xl bg-white dark:bg-stone-900 rounded-2xl shadow-2xl overflow-hidden border border-stone-200 dark:border-stone-800">
-        <div className="flex justify-between items-center p-4 border-b border-stone-100 dark:border-stone-800">
-          <h2 className="text-lg font-semibold text-stone-900 dark:text-stone-100">
-            Kouchd Plus
-          </h2>
+    <div className="plus-paywall-backdrop">
+      <div className="plus-paywall-dialog" role="dialog" aria-modal="true" aria-labelledby={titleId}>
+        <div className="plus-paywall-header">
+          <div>
+            <h2 id={titleId}>Kouchd Plus</h2>
+            <p>More room for hosts. Guests always join free.</p>
+          </div>
           <button
             type="button"
             onClick={onClose}
-            className="p-1 rounded-full text-stone-500 hover:text-stone-900 dark:hover:text-stone-100 transition-colors"
+            className="plus-paywall-close"
             aria-label="Close"
           >
             ✕
           </button>
         </div>
 
-        <div className="p-4 min-h-[400px] flex flex-col justify-center">
-          {!isPaywallAvailable ? (
-            <div className="text-center p-6 space-y-4">
-              <div className="w-12 h-12 mx-auto rounded-full bg-stone-100 dark:bg-stone-800 flex items-center justify-center text-stone-500 text-xl font-bold">
-                ✨
-              </div>
-              <div className="space-y-1">
-                <h3 className="text-base font-medium text-stone-900 dark:text-stone-100">
-                  Early Access Preview
-                </h3>
-                <p className="text-sm text-stone-600 dark:text-stone-400 max-w-md mx-auto">
-                  Kouchd Plus subscription billing is currently in rollout and invite-only. Stay tuned for wider availability!
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-4 py-2 bg-stone-900 text-white dark:bg-stone-100 dark:text-stone-900 rounded-lg text-sm font-medium hover:opacity-90 transition-opacity"
-              >
+        <div className="plus-paywall-body">
+          {step === "plans" ? (
+            <PlusPlanCards onStartPlus={() => setStep("checkout")} />
+          ) : !isPaywallAvailable ? (
+            <div className="plus-paywall-state">
+              <h3>Early Access Preview</h3>
+              <p>
+                Kouchd Plus subscription billing is currently in rollout and invite-only. Stay tuned for wider availability!
+              </p>
+              <button type="button" onClick={onClose} className="kouchd-main-action">
                 Got it
               </button>
             </div>
           ) : activeError ? (
-            <div className="text-center p-6 space-y-3">
-              <p className="text-sm text-red-600 dark:text-red-400">{activeError}</p>
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-4 py-2 bg-stone-100 dark:bg-stone-800 rounded-lg text-sm font-medium"
-              >
+            <div className="plus-paywall-state">
+              <p className="plus-paywall-error" role="alert">{activeError}</p>
+              <button type="button" onClick={onClose} className="plus-paywall-secondary">
                 Dismiss
               </button>
             </div>
           ) : (
-            <div ref={containerRef} className="w-full h-full min-h-[380px]" />
+            <div ref={containerRef} className="plus-paywall-checkout" />
           )}
         </div>
       </div>

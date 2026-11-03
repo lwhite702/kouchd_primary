@@ -1,5 +1,5 @@
 {
   "type": "minor",
-  "version": "0.9.1",
-  "reason": "Redesigned signed-out Start page and invite-code deep link (WRE-276)."
+  "version": "0.9.2",
+  "reason": "Align guest invite screen and host Plus plan paywall with redesign (WRE-277)."
 }
