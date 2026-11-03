@@ -31,6 +31,7 @@ import type { NotificationItem } from "@/components/notifications/dashboard-noti
 import { MobileHeaderMenu } from "@/components/navigation/header-menu";
 import { Tooltip } from "@/components/ui/tooltip";
 import { HELP_LINKS } from "@/lib/help-links";
+import { readJoinCodeParam } from "@/lib/start/join-code";
 import { FeatureGate } from "@/components/flags/feature-gate";
 import { FEATURE_FLAGS } from "@/lib/flags/config";
 import { StayMembershipSummary } from "@/components/workspace/types";
@@ -180,7 +181,12 @@ export function GetStartedHub({
 }: {
   onHostStayCreated: (stayId: Id<"stays">) => void;
 }) {
-  const [tab, setTab] = useState<"host" | "join">("host");
+  // A guest who entered an invite code on the Start page lands here after
+  // sign-up with ?join=KCH-...; open the join card with that code filled in.
+  const [startJoinCode] = useState(() =>
+    typeof window === "undefined" ? null : readJoinCodeParam(window.location.search),
+  );
+  const [tab, setTab] = useState<"host" | "join">(startJoinCode ? "join" : "host");
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   return (
@@ -268,6 +274,7 @@ export function GetStartedHub({
           <HostOnboardingWizard onComplete={onHostStayCreated} />
         ) : (
           <JoinHouseholdCard
+            initialCode={startJoinCode ?? undefined}
             onJoined={() => {
               /* stay query updates automatically */
             }}

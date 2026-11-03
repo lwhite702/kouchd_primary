@@ -16,13 +16,16 @@ const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD
 export function JoinHouseholdCard({
   onJoined,
   onCancel,
+  initialCode,
 }: {
   onJoined: (stayId: Id<"stays">) => void;
   onCancel?: () => void;
+  /** Pre-fills the code, e.g. one a guest entered on the signed-out Start page. */
+  initialCode?: string;
 }) {
   const joinWithCode = useMutation(api.referral.joinWithCode);
   const recordBlockedJoin = useMutation(api.subscriptions.recordBlockedJoin);
-  const [code, setCode] = useState("");
+  const [code, setCode] = useState(initialCode ?? "");
   const [joining, setJoining] = useState(false);
   const [joinError, setJoinError] = useState("");
 

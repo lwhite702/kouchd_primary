@@ -5,7 +5,7 @@ import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { useEffect, useRef, useState } from "react";
 import { api } from "@/convex/_generated/api";
 import type { Doc, Id } from "@/convex/_generated/dataModel";
-import { LandingPage } from "@/components/landing-page";
+import { StartPage } from "@/components/start/start-page";
 import { KnockGuidesProvider } from "@/components/knock/knock-guides-provider";
 import { DashboardSkeleton } from "@/components/skeleton-loader";
 import "@/components/dashboard-v21.css";
@@ -22,7 +22,7 @@ export function AuthenticatedHome() {
   return (
     <>
       <Show when="signed-out">
-        <LandingPage hasClerk={true} />
+        <StartPage />
       </Show>
       <Show when="signed-in">
         <SyncedWorkspace />

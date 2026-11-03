@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 
+### Changed
+
+- **Signed-out Start page (WRE-276, branch only, not released)**:
+  - Signed-out visitors to `/` now see a short Start page (`components/start/start-page.tsx`, styles in `components/start/start-page.css`) instead of being redirected to `/sign-in`. The client home shell's signed-out branch renders the same page, replacing the older long-form `LandingPage`.
+  - The page offers two choices: hosts go to `/sign-up`, and guests enter an invite code. Joining needs an account, so a valid code is sent through `/sign-up?redirect_url=/?join=KCH-...`; after sign-up, `GetStartedHub` opens the existing "Join with Code" card pre-filled with that code, which still joins through `api.referral.joinWithCode`. No new backend path.
+  - Top bar links to `/sign-in`; the footer links to Privacy, Terms, Cookies, SMS preferences (`/sms-opt-in`), and the help center. Includes a `prefers-color-scheme: dark` variant and reduced-motion handling.
+  - Removed `components/landing-page.tsx`, which nothing else imported. `components/landing-v21.css` stays because `/about` and `/simple` still use it.
+  - Tests: `tests/start-page.test.ts` (new), `tests/home-page.test.ts` and `tests/carrier-compliance.test.ts` updated.
+
 ### Fixed
 
 - **Eliminated "Kouchd member" placeholder across client and server (WRE-269, #136, branch only, not released)**:
