@@ -83,7 +83,12 @@ struct IntroductionScreen: View {
     .safeAreaInset(edge: .bottom, spacing: 0) {
       if !typeSize.isAccessibilitySize {
         footer.frame(maxWidth: 600).frame(maxWidth: .infinity)
-          .padding(.horizontal, 24).padding(.bottom, 16).background(Palette.cream)
+          .padding(.horizontal, 24).padding(.top, 16).padding(.bottom, 16).background(Palette.cream)
+          // Fade the page content into the footer so preview cards never end in a hard cut under the dots.
+          .overlay(alignment: .top) {
+            LinearGradient(colors: [Palette.cream.opacity(0), Palette.cream], startPoint: .top, endPoint: .bottom)
+              .frame(height: 28).offset(y: -28).allowsHitTesting(false).accessibilityHidden(true)
+          }
       }
     }
     .foregroundStyle(Palette.ink)

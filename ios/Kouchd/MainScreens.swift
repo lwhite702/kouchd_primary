@@ -153,7 +153,9 @@ struct HomeScreen: View {
     VStack(alignment: .leading, spacing: 14) {
       Text(store.stayName.uppercased()).font(.caption.bold())
         .foregroundStyle(Palette.lime)
-      Text("\(store.stays.count) stays. One welcoming home.")
+      Text(store.stays.count == 1
+           ? "1 stay. One welcoming home."
+           : "\(store.stays.count) stays. One welcoming home.")
         .font(Palette.section).foregroundStyle(Palette.heroForeground)
       Text("Next shared check-in · \(store.bundle["stay"]["nextCheckInDate"].text.isEmpty ? "Set a date" : store.bundle["stay"]["nextCheckInDate"].text)")
         .font(.subheadline).foregroundStyle(Palette.heroForeground.opacity(0.8))
@@ -593,7 +595,10 @@ private struct SharedBillsCard: View {
         Text("Shared bills").font(.headline)
         Spacer()
         if store.isHost && !store.isEnded {
-          Button("Split a bill") { showingBillSplit = true }
+          Button { showingBillSplit = true } label: {
+            // Forest turns lime in dark mode, so the label needs the matching dark ink to stay readable.
+            Text("Split a bill").foregroundStyle(Palette.adaptive(light: 0xFFFFFF, dark: 0x16241E))
+          }
             .buttonStyle(.borderedProminent)
             .tint(Palette.forest)
         }

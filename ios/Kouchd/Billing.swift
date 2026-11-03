@@ -480,6 +480,9 @@ enum PlanCopy {
     guard let limit = guests.limit else {
       return "\(guests.used) \(guests.used == 1 ? "guest" : "guests") across your stays"
     }
+    if guests.used > limit {
+      return "\(guests.used) guests across your stays · your plan includes \(limit)"
+    }
     return "\(guests.used) of \(limit) guest spots used across your stays"
   }
 
