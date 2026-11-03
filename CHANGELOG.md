@@ -8,12 +8,12 @@
 
 ### Added
 
-- **Help center guide: How Kouchd compares to Splitwise & Flatastic (WRE-266, branch only, not released)**:
+- **Help center guide: How Kouchd compares to Splitwise & Flatastic (WRE-266, 0.8.11, merged 2026-11-02; public once the Help Center is published)**:
   - Published `help/support/kouchd-vs-splitwise.mdx` explaining in plain, everyday language how Kouchd approaches private shared living, direct payments without holding funds, private guest records, unlimited free contributions, and unified household coordination.
   - Registered the guide under Support in `docs.json` navigation.
   - Review follow-up (0.8.11): the guide no longer promises "no marketing trackers" (it links to the privacy page instead), no longer describes the unreleased shopping-to-Ledger shortcut (now on the roadmap as in development), no longer mentions receipt storage, and drops unsourced claims about Splitwise and Flatastic plans and ads.
 
-- **Web host plan capacity indicator and blocked join alerts (WRE-265, branch only, not released)**:
+- **Web host plan capacity indicator and blocked join alerts (WRE-265, 0.8.11, released to the web app 2026-11-02)**:
   - `HostBillingButton` dynamically reflects current host plan usage (`Host plan · Free (1/1 spots)` or `Plan · Plus (X/5 spots)`) and surfaces an attention badge when prospective guests are blocked due to full capacity.
   - Implemented `PlanLimitModal` on web to intercept stay creation attempts when plan limits are reached, showing a clear explanation and a 1-click path to upgrade to Kouchd Plus without submitting invalid data or encountering server rollbacks.
   - Added `BlockedJoinsBanner` to `StayHub` and `StayScreen`, notifying hosts when a guest attempted to join while capacity was full, with direct actions to upgrade ("Make room with Plus") or dismiss the alert.
@@ -21,7 +21,7 @@
   - The plan label falls back to "Host plan" when the subscription environment can't be read, instead of guessing a Free limit. Blocked-join alerts describe guest spots as shared across the host's stays, and a failed Dismiss shows an error. `PlanLimitModal` returns focus to the control that opened it.
   - Covered by automated Vitest suite `tests/web-plan-capacity.test.ts`.
 
-- **Shopping list to contribution ledger bridge (WRE-264, branch only, not released)**:
+- **Shopping list to contribution ledger bridge (WRE-264, 0.8.11, released to the web app 2026-11-02; iOS changes are in the development preview only)**:
   - Checked-off shared shopping items show a "Log contribution" action on web and iOS. It opens **Add contribution** with the type set to `groceries` and the note filled from the item; the amount is always entered by hand.
   - Personal items never offer the action, so their details are not copied into a shared Ledger record.
   - On web, a host with more than one guest must choose whose Ledger the contribution goes on. On iOS the action is shown to guests and to hosts with exactly one guest. Hosts with no guests do not see it.
@@ -79,15 +79,15 @@
 
 ### Fixed
 
-- **Door and Wi-Fi access code protection (WRE-266, 0.8.10, branch only, not released)**:
+- **Door and Wi-Fi access code protection (WRE-266, 0.8.10, released 2026-11-02)**:
   - `stays.listMine` and `stays.getBundle` now pass returned stay documents through `redactStayForMember` (`convex/lib/houseInfoAccess.ts`), removing `houseInfo.doorCode` and `houseInfo.wifiPassword` for guests unless the stay has not ended and the guest has accepted an agreement version. Other `houseInfo` fields remain visible, and hosts always see their own stay's codes.
   - Guests who have already accepted keep access to door and Wi-Fi codes while a revised agreement version awaits their review or while another guest in the household has not accepted yet.
   - Former guests who rejoin a household by referral code (`convex/referral.ts`) get a new agreement built from the household's current terms, and a new `memberships.accessCodesNeedAcceptance` flag holds codes back until they accept it. Their earlier `acceptedTermsId` is kept, so accepting the new agreement retires the earlier schedule from the rejoin date instead of leaving both active.
   - `getAcceptedGuestTermsForDate` ignores acceptances made before the latest join for dates on or after it, so an earlier residency's acceptance cannot authorize new occupancy charges.
   - `stays.getBundle` returns `accessCodesHidden` (`"needs_acceptance"`, `"ended"`, or `null`), set only when a configured code was actually removed. Web and iOS use it, so a stay with no codes no longer claims codes are being withheld.
-  - Help Center guides are unchanged until release verification; the roadmap lists protected codes as in development.
+  - Help Center guides for guests and hosts now describe when codes are shown; the roadmap item moved to the public changelog.
   - Added clear explanations on web (`components/household/household-logistics.tsx`) and iOS (`ios/Kouchd/StayScreens.swift`) when door and Wi-Fi codes are hidden pending agreement acceptance or after a stay ends, plus a host form hint to keep codes in their dedicated fields rather than notes.
-- **Replay QA review follow-ups (WRE-271, 0.8.9, branch only, not released)**:
+- **Replay QA review follow-ups (WRE-271, 0.8.9, released to the web app 2026-11-02)**:
   - **Legal pages and strict CSP:** `/privacy`, `/terms`, `/cookies`, and `/acceptable-use` no longer use `force-static`. Clerk's strict CSP sends a per-request nonce, and a statically rendered page has none, so its inline scripts could be blocked.
   - **Sign-in and sign-up submit button:** `SignInFormGuard` now only re-enables a submit button it disabled itself, and never claims one Clerk had already disabled, so it no longer clears the disabled state Clerk sets while a sign-up is in flight (which allowed a double submit).
   - **Landing preview tabs:** the example stay preview supports Left/Right arrow, Home, and End keys, so keyboard users can reach every tab. Modified keys (Alt, Ctrl, Cmd) pass through to the browser.

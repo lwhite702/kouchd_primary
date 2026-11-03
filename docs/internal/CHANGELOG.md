@@ -2,6 +2,13 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-11-02 — Release docs for 0.8.9–0.8.11 (WRE-266, WRE-271)
+
+- Production deploys: #146 (901e332) fixed `verify-env` so Vercel production accepts `SUBSCRIPTION_EXPECTED_ENVIRONMENT=sandbox` until the 1.0 feature lock (Vercel Production and Preview now set to `sandbox`, matching Convex prod). Then #132 (f69ebfb, 0.8.10) and #129 (29b02e1, 0.8.11) were merged. Each Vercel production build passed `verify-env`, `npm run verify` and the build, and logged "Deployed Convex functions" to hardy-pony-520. app.kouchd.com and `/api/health` returned 200.
+- Evidence is build logs and HTTP status only. No signed-in check of access-code hiding, the shopping shortcut, or the plan indicator on production. iOS changes are not distributed.
+- Docs: `CHANGELOG.md` markers updated, public changelog November 2026 section added, roadmap moved protected codes and the web shopping shortcut to available (iPhone shortcut stays in development), guest/host/iOS guides describe when codes are shown. Help Center not published; publishing needs separate approval.
+- Open: `help/support/plans-and-subscription.mdx` says Plus is unlimited while the code caps Plus at 3 stays and 5 guests. GitHub Actions is billing-locked, so no CI ran on these merges.
+
 ## 2026-11-02 — WRE-264/265/266 branch review follow-up (0.8.11)
 
 - Merged `main` into `codex/WRE-266-competitive-guide-kouchd-vs-splitwise`. This branch carried an earlier copy of the FinishKit audit fixes that reached `main` through #143, so conflicting CSP, `verify-env`, newsletter, legal-page, landing-page, and `/platform` files take `main`'s version. That restores `requirePlatformOpsAccess()` on every `/platform` page, which this branch had removed. The unused `ProductPreviewTabs` and `GuideSceneTabs` components were deleted.
