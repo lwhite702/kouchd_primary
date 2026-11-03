@@ -3,6 +3,8 @@
 import { useEffect, useId, useRef } from "react";
 import { Home, Users } from "lucide-react";
 
+import "@/components/ui/main-action.css";
+
 export interface PlanLimitModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -125,7 +127,7 @@ export function PlanLimitModal({
               width: "40px",
               height: "40px",
               borderRadius: "12px",
-              background: "#dceade",
+              background: "var(--kouchd-sage-10, #e5edde)",
               display: "grid",
               placeItems: "center",
               color: "var(--forest, #184f3a)",
@@ -184,7 +186,7 @@ export function PlanLimitModal({
               <button
                 ref={primaryButtonRef}
                 type="button"
-                className="button primary"
+                className="kouchd-main-action"
                 onClick={() => {
                   onClose();
                   onUpgrade();
@@ -197,7 +199,7 @@ export function PlanLimitModal({
             <button
               ref={primaryButtonRef}
               type="button"
-              className="button primary"
+              className="kouchd-main-action"
               onClick={onClose}
             >
               Understood
