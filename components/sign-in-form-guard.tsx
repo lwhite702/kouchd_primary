@@ -14,12 +14,45 @@ export function syncSubmitState(submitBtn: HTMLButtonElement, disabled: boolean)
   }
 }
 
+/**
+ * Disable the submit button while the identifier is empty, and re-enable only
+ * a button this guard disabled. `owned` records those buttons: a button Clerk
+ * had already disabled (an invalid form or an in-flight request) is never
+ * claimed, so the guard can't clear Clerk's own state.
+ */
+export function applyIdentifierGuard(
+  submitBtn: HTMLButtonElement,
+  identifierEmpty: boolean,
+  owned: Set<HTMLButtonElement>,
+) {
+  if (identifierEmpty) {
+    if (!submitBtn.disabled) {
+      owned.add(submitBtn);
+      syncSubmitState(submitBtn, true);
+    }
+  } else if (owned.has(submitBtn)) {
+    owned.delete(submitBtn);
+    syncSubmitState(submitBtn, false);
+  }
+}
+
+/**
+ * Undo every disable the guard applied. Runs on effect cleanup, so a remount or
+ * a Strict Mode effect replay starts from Clerk's own state and can claim the
+ * button again instead of mistaking the guard's disable for Clerk's.
+ */
+export function releaseIdentifierGuard(owned: Set<HTMLButtonElement>) {
+  for (const submitBtn of owned) syncSubmitState(submitBtn, false);
+  owned.clear();
+}
+
 export function SignInFormGuard({ children }: { children: React.ReactNode }) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
+    const owned = new Set<HTMLButtonElement>();
 
     const findElements = () => {
       const input =
@@ -39,7 +72,7 @@ export function SignInFormGuard({ children }: { children: React.ReactNode }) {
 
       // Only guard the initial identifier step if an identifier input exists.
       // On password, OTP code, or MFA steps, do not interfere with Clerk's native button state.
-      syncSubmitState(submitBtn, Boolean(input) && !input?.value.trim());
+      applyIdentifierGuard(submitBtn, Boolean(input) && !input?.value.trim(), owned);
     };
 
     // Run immediately
@@ -79,6 +112,7 @@ export function SignInFormGuard({ children }: { children: React.ReactNode }) {
       container.removeEventListener("keyup", handleInput, true);
       container.removeEventListener("paste", handleInput, true);
       observer.disconnect();
+      releaseIdentifierGuard(owned);
     };
   }, []);
 

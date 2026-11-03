@@ -14,6 +14,14 @@ Internal engineering record. This file is excluded from Mintlify navigation and 
 - Evidence: `tests/house-info-access.test.ts` (8/8 passed), `tests/backend.test.ts` (17/17 passed), full Vitest suite, `npm run verify`, `npm run build`, `npm run release:check`, and iOS Simulator build.
 - Version 0.8.10 (0.8.8 shipped with WRE-271; 0.8.9 is reserved by lwhite702/kouchd_primary#145). Branch only (`codex/WRE-266-access-code-protection`).
 
+## 2026-11-02 — Replay QA review follow-ups (WRE-271, 0.8.9)
+
+- PR #143 merged as 148ef4a before its last review round was pushed; these fixes land on `codex/WRE-271-review-followups`.
+- Removed `force-static` from the four legal pages so Clerk's strict-CSP nonce reaches their inline scripts. The shipped 0.8.8 changelog bullets were restored to their released wording; this entry carries the change. Not yet verified in a deployed preview: Vercel previews currently fail at `convex deploy` because the Convex preview deployment quota is full.
+- `SignInFormGuard` only clears a disabled state it applied, tracked by `applyIdentifierGuard`; a button Clerk already disabled is never claimed, and effect cleanup (`releaseIdentifierGuard`) undoes the guard's disables so a Strict Mode replay or remount starts from Clerk's state.
+- Landing preview tablist: roving tabindex with Arrow/Home/End keys.
+- Checks run locally: `npm run release:check` (version check, `npm run verify` with lint, `tsc --noEmit` and `vitest run`, `npm run build`, `scripts/release-gate.mjs`).
+
 ## 2026-11-02 — Replay QA defect remediation and bot protection unblocking (WRE-271)
 
 - Remediated reported defects from Replay QA project `proj-app-kouchd-com-mvmq5ma0`:

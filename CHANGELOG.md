@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- **Production builds blocked by the subscription environment check (WRE-271 follow-up)**: `scripts/verify-env.mjs` now requires `SUBSCRIPTION_EXPECTED_ENVIRONMENT=production` on Vercel production only when `release/feature-lock.json` is enabled. During prerelease, `sandbox` is accepted, matching the Convex production deployment. Build configuration only; no app behavior changes.
+
 ### Added
 
 - **Simplified introduction landing page & brand kit password protection (WRE-243)**:
@@ -64,6 +68,11 @@
   - `stays.getBundle` returns `accessCodesHidden` (`"needs_acceptance"`, `"ended"`, or `null`), set only when a configured code was actually removed. Web and iOS use it, so a stay with no codes no longer claims codes are being withheld.
   - Help Center guides are unchanged until release verification; the roadmap lists protected codes as in development.
   - Added clear explanations on web (`components/household/household-logistics.tsx`) and iOS (`ios/Kouchd/StayScreens.swift`) when door and Wi-Fi codes are hidden pending agreement acceptance or after a stay ends, plus a host form hint to keep codes in their dedicated fields rather than notes.
+- **Replay QA review follow-ups (WRE-271, 0.8.9, branch only, not released)**:
+  - **Legal pages and strict CSP:** `/privacy`, `/terms`, `/cookies`, and `/acceptable-use` no longer use `force-static`. Clerk's strict CSP sends a per-request nonce, and a statically rendered page has none, so its inline scripts could be blocked.
+  - **Sign-in and sign-up submit button:** `SignInFormGuard` now only re-enables a submit button it disabled itself, and never claims one Clerk had already disabled, so it no longer clears the disabled state Clerk sets while a sign-up is in flight (which allowed a double submit).
+  - **Landing preview tabs:** the example stay preview supports Left/Right arrow, Home, and End keys, so keyboard users can reach every tab. Modified keys (Alt, Ctrl, Cmd) pass through to the browser.
+  - **Tests and docs:** the `'unsafe-eval'` policy is tested under explicit production and development environments, and the Replay QA nonce rotation steps include the test fixture.
 
 - **Replay QA defect remediation and bot protection unblocking (WRE-271, 0.8.8)**:
   - **Cloudflare Turnstile & Clerk protect CSP allowances:** Added `https://challenges.cloudflare.com` and `https://*.protect.clerk.com:*` to `connect-src`, and `https://*.protect.clerk.com` to `script-src` and `frame-src` in `lib/security/csp.ts`. Previously, the absence of `challenges.cloudflare.com` in `connect-src` caused Cloudflare Turnstile token validation fetches to fail silently on `/sign-up`, locking Clerk's form in an inert state.
