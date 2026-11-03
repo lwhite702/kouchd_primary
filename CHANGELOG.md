@@ -20,6 +20,8 @@
 
 ### Fixed
 
+- **Feature flag registry defaults (0.9.3)**: Aligned code default values in `lib/flags/config.ts` with unit test invariants while runtime feature enablement is driven via Convex platform overrides.
+
 - **Eliminated "Kouchd member" placeholder across client and server (WRE-269, #136, branch only, not released)**:
   - Removed `"Kouchd member"` fallback in `convex/lib/names.ts`, ensuring that name resolution never generates or returns `"Kouchd member"`. If all candidate names and email formatting are missing, fallbacks resolve to friendly, role-based labels (`"Host"` or `"Guest"`).
   - Fixed `ios/Kouchd/Service.swift` `syncUser` to pass actual `clerkUser.firstName`, `clerkUser.lastName`, `primaryEmailAddress?.emailAddress`, and `imageUrl`, preventing iOS client sync from submitting empty arguments.

@@ -2,6 +2,12 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-11-03 — Feature flag registry defaults (0.9.3)
+
+- Restored code defaults in `lib/flags/config.ts` (`BILL_SPLITTING: false`, `SUBLEASES: false`) so unit and integration test fixtures remain isolated and deterministic without live backend dependencies.
+- Runtime feature flags are enabled in production via Convex platform overrides (`featureFlags` table).
+- Release gate and version bumped to 0.9.3.
+
 ## 2026-11-03 — Invite and Plus screens redesign (WRE-277, 0.9.2)
 
 - Branch `codex/WRE-277-invite-plus-redesign` (part of the Version 1.0 redesign, WRE-273).
