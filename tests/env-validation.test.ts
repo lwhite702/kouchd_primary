@@ -1,7 +1,16 @@
 import { execFileSync } from "node:child_process";
+import { mkdtempSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 describe("verify-env script", () => {
+  const writeLock = (enabled: boolean) => {
+    const file = join(mkdtempSync(join(tmpdir(), "kouchd-lock-")), "feature-lock.json");
+    writeFileSync(file, JSON.stringify({ enabled }));
+    return file;
+  };
+
   const runVerifyEnv = (env: Record<string, string | undefined>) => {
     // Only pass minimal safe system variables (PATH, SYSTEMROOT, etc.) so host environment variables do not pollute test
     const cleanEnv: Record<string, string> = {
@@ -69,12 +78,23 @@ describe("verify-env script", () => {
     expect(res.stderr).toContain("SUBSCRIPTION_EXPECTED_ENVIRONMENT must be set to \"production\" or \"sandbox\"");
   });
 
-  it("strictly requires SUBSCRIPTION_EXPECTED_ENVIRONMENT=production when VERCEL_ENV=production", () => {
+  it("allows sandbox on Vercel production while the feature lock is off", () => {
+    const res = runVerifyEnv({
+      ...validBaseEnv,
+      VERCEL_ENV: "production",
+      SENTRY_AUTH_TOKEN: "sentry_dummy",
+      KOUCHD_FEATURE_LOCK_PATH: writeLock(false),
+    });
+    expect(res.status).toBe(0);
+  });
+
+  it("requires SUBSCRIPTION_EXPECTED_ENVIRONMENT=production on Vercel production once the feature lock is on", () => {
     const vercelProdEnv = {
       ...validBaseEnv,
       VERCEL_ENV: "production",
       SUBSCRIPTION_EXPECTED_ENVIRONMENT: "production",
       SENTRY_AUTH_TOKEN: "sentry_dummy",
+      KOUCHD_FEATURE_LOCK_PATH: writeLock(true),
     };
     const validRes = runVerifyEnv(vercelProdEnv);
     expect(validRes.status).toBe(0);

@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- **Production builds blocked by the subscription environment check (WRE-271 follow-up)**: `scripts/verify-env.mjs` now requires `SUBSCRIPTION_EXPECTED_ENVIRONMENT=production` on Vercel production only when `release/feature-lock.json` is enabled. During prerelease, `sandbox` is accepted, matching the Convex production deployment. Build configuration only; no app behavior changes.
+
 ### Added
 
 - **Simplified introduction landing page & brand kit password protection (WRE-243)**:
