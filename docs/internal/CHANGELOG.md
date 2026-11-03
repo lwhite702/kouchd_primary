@@ -2,6 +2,14 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-11-03 — WRE-274 web color tokens and dark appearance (0.9.0, branch only)
+
+- Added system-driven dark appearance to the shared web color tokens. Exactly seven semantic values adapt: paper, surface, ink, muted, line, forest accent, and eyebrow. Brand forest remains fixed for filled controls and bands; pale lime, sage, sky, and coral fills use the fixed on-fill text color.
+- Migrated literal colors in `app/production.css`, `components/dashboard-v21.css`, and `app/console.css` to shared CSS variables while preserving their existing light-mode values.
+- Roadmap marks the work in development. No public release note or user guide was changed because this branch is unreleased and does not add a manual setting.
+- Checks: `npm run version:check`; `npm run verify:env` (skipped for local visual/demo mode); ESLint (0 errors, 5 existing `<img>` warnings in untouched workspace screens); `tsc --noEmit`; Vitest (47 files, 286 tests); `npm run build --webpack`; release gate and `git diff --check` all passed. No color literals remain in the three migrated CSS files.
+- Not verified: visual review across light/dark appearance and signed-in browser flows. No production deployment or availability claim.
+
 ## 2026-11-03 — Sublease condition checklists and security deposit records (WRE-272, Step 5)
 
 - Added `conditionChecklists` table in `convex/schema.ts` and `convex/checklists.ts` (`getByStay`, `submit`, `review`) supporting move-in and move-out inspections. In `private_room` subleases, private room spaces and shared common areas are categorized and inspected separately. Submissions and counterpart reviews (confirm or itemized dispute note) are timestamped; once confirmed, checklist items become immutable.

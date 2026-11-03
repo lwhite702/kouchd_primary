@@ -15,35 +15,9 @@
 
 ### Added
 
-### Added
+- **Web color tokens and dark appearance (WRE-274, in development):** Migrated color literals in `app/production.css`, `components/dashboard-v21.css`, and `app/console.css` to shared CSS color variables. Added system dark appearance for the seven adaptive colors (paper, surface, ink, muted, line, forest accent, and eyebrow); brand forest and on-fill text stay fixed for contrast.
 
 - **Sublease condition checklists and security deposit records (WRE-272, branch only, not released)**:
-  - **Condition checklists:** Added `conditionChecklists` table (`convex/schema.ts`) and `convex/checklists.ts` (`getByStay`, `submit`, `review`) supporting move-in and move-out inspections. In `private_room` subleases, private bedroom areas and shared household spaces are inspected separately. Submissions and counterpart reviews (confirmations or itemized dispute notes) are timestamped and immutable once confirmed.
-  - **Security deposit records:** Added `depositRecords` table (`convex/schema.ts`) and `convex/deposits.ts` (`getByStay`, `record`, `proposeDeductions`, `respond`) tracking amount, funds holder (host, landlord, or third party), agreed return date, and itemized deductions with dispute notes.
-  - **Financial separation & non-holding boundary:** In accordance with Kouchd operating policy and architecture, deposit records never alter obligations, rent ledger balances, or credits. Kouchd does not hold, transfer, or escrow funds, nor mediate condition disputes.
-  - **Sublease lock enforcement:** Blocked checklist submissions, reviews, and deposit record modifications on locked subleases.
-  - **Web & iOS UI:** Added `ConditionChecklistCard` and `DepositRecordCard` components on web (`components/subleases/`, integrated into `components/workspace/stay-screen.tsx`) and native iOS cards in `ios/Kouchd/StayScreens.swift`.
-
-- **Sublease stay type, landlord consent flow, sublease lock engine, bill presets, and access-code end-date redaction (WRE-272, branch only, not released)**:
-  - **Schema & feature flag:** Registered `FEATURE_FLAGS.SUBLEASES` (`feature_subleases`, `defaultValue: false` in `lib/flags/config.ts`) and added sublease fields to `stays` (`subleaseLayout`, `roommateCount`, `roommateNames`, `landlordConsent`, `subleaseBillPreset`, `subleaseLockedAt`) and `billingRetryStartedAt` to `subscriptionSnapshots` in `convex/schema.ts`.
-  - **Lock engine & mutation guards:** Implemented `getSubleaseLockState`, `assertSubleaseUnlocked`, and `reconcileAccountSubleaseLocks` in `convex/lib/subleaseLock.ts`. Subleases lock upon subscription expiration, refund, or when `billing_retry` exceeds 7 days. Sublease locks are enforced across all 14 stay-scoped mutation modules (`stays`, `terms`, `invites`, `referral`, `contributions`, `obligations`, `bills`, `paymentSchedule`, `occupancy`, `chores`, `shopping`, `checkIns`, `announcements`, `rewards`), pausing late fees and reminders while permitting host stay termination.
-  - **Access code protection & landlord consent:** Redacted door codes and Wi-Fi passwords from guest queries past the sublease agreement end date (`convex/lib/houseInfoAccess.ts`). Enforced landlord consent recording (`stays.recordLandlordConsent`) prior to issuing the first invite on a sublease.
-  - **Web & iOS UI:** Added sublease arrangement selection, whole place vs private room layouts with roommate configuration, monthly cadence default, landlord consent picker with dismissible guidance warning, lock disclosures, and live sublease lock banners across web (`components/onboarding/`, `components/workspace/`, `components/household/`) and iOS (`ios/Kouchd/StayScreens.swift`, `ios/Kouchd/MainScreens.swift`, `ios/Kouchd/MoreScreens.swift`).
-  - **Policy & export updates:** Updated `lib/domain/subscriptionPlans.ts` and `help/support/app-support.mdx` reflecting that routine support exports pause during sublease locks while formal legal data requests are handled separately.
-
-- **Plus household bill splitting (WRE-268, branch only, not released)**:
-  - **Plan capabilities & feature flag:** Added `billSplits` and `subleases` boolean capabilities to `PlanCapabilities` (`false` on `starter`, `true` on `hostPlus` and `householdPro` in `lib/domain/subscriptionPlans.ts`), `assertPlanCapability` in `convex/lib/planCapacity.ts` (reusing the `plan_limit` error shape so Free hosts open the Plus upgrade flow in `lib/planLimitError.ts` and iOS), and `FEATURE_FLAGS.BILL_SPLITTING` (`feature_bill_splitting`, `defaultValue: false` in `lib/flags/config.ts`).
-  - **Deterministic whole-cent calculation:** Added `calculateBillShares` in `lib/domain/billSplitting.ts` supporting `equal`, `percentage`, and `fixed` splits, optional host inclusion (`includeHost`), and optional stay-date proration (`prorateByStayDates` scaling each guest's share by inclusive overlap days over service days), with largest-remainder cent allocation and ties broken by earliest membership `joinedAt`.
-  - **Schema, mutations, and privacy boundaries:** Added `bills` and `billShares` tables in `convex/schema.ts` and `convex/bills.ts` (`create`, `voidBill`, `list`). `bills.create` writes the bill, per-guest `adhoc` ledger obligations, and `billShares` atomically; `bills.list` returns full share breakdowns to the host and redacts guest responses to only that guest's own `billShare`; `obligations.voidAdhocCharge` (`convex/obligations.ts`) refuses direct voiding of bill-linked obligations so bills are voided atomically via `bills.voidBill`.
-  - **Web & iOS Ledger UI:** Added the gated **Shared bills** section and **Split a bill** modal/sheet on web (`components/household/bill-splitting-card.tsx`, `components/workspace/contributions-screen.tsx`, `components/workspace/workspace-panels.tsx`, `components/workspace/use-live-stay.ts`, `components/workspace/view-helpers.tsx`, `components/workspace/types.ts`) and iOS (`ios/Kouchd/MainScreens.swift`, `ios/Kouchd/HostExtras.swift`, `ios/Kouchd/Service.swift`), including live per-guest previews, equal-split privacy notice when more than one guest is selected, and Plus upgrade routing on `plan_limit`.
-
-- **Automated turn-taking chore rotation for household stays (WRE-267, branch only, not released)**:
-  - Enabled automatic turn-taking chore rotation across active stay members (host and guests) on recurring chores.
-  - Backend schema extended with `rotateAssignee: v.optional(v.boolean())` on `chores`.
-  - When a recurring chore with `rotateAssignee: true` is completed, `convex/chores.ts` automatically advances the assignee to the next active household member in sequence ordered by join date (`joinedAt`), cycling smoothly from host to guests and back to host.
-  - Added "Rotate turns automatically" option to chore creation panels and forms on both Web (`components/workspace/workspace-panels.tsx`, `use-live-stay.ts`) and native iOS SwiftUI (`ios/Kouchd/MainScreens.swift`).
-  - Added "Rotating turns" badge to chore lists and cards across Web (`components/workspace/chores-screen.tsx`) and iOS (`ios/Kouchd/HouseholdRules.swift`, `MainScreens.swift`).
-  - Covered by automated integration tests in `tests/chore-rotation.test.ts`.
 
 - **Simplified introduction landing page & brand kit password protection (WRE-243)**:
 
