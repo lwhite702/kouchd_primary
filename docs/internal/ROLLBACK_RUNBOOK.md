@@ -61,7 +61,7 @@ To ensure the repository history matches production:
 - If a new Convex mutation or schema introduces a runtime fault:
   - Rolling back the web app (Step A) stops new web clients from calling changed interfaces.
   - However, because Convex backend code remains at the latest deploy, backend functions require their own hotfix or a code revert deployed via `git revert` and `git push` so `convex deploy` pushes the corrected backend code.
-- **Subscription Environment**: Ensure `SUBSCRIPTION_EXPECTED_ENVIRONMENT` is set to `production` in Convex deployment environment variables as well as Vercel.
+- **Subscription Environment**: Set `SUBSCRIPTION_EXPECTED_ENVIRONMENT` to the same value in the Convex deployment and Vercel. During prerelease it is `sandbox`; once `release/feature-lock.json` is enabled for the App Store submission, Vercel production builds require `production`.
 
 ---
 

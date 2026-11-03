@@ -11,8 +11,6 @@ export const metadata: Metadata = {
   alternates: { canonical: "/cookies" },
 };
 
-export const dynamic = "force-static";
-
 export default function CookiePolicyPage() {
   return (
     <LegalPageLayout activeRoute="cookies">

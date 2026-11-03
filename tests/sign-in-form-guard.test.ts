@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { syncSubmitState } from "../components/sign-in-form-guard";
+import { applyIdentifierGuard, releaseIdentifierGuard, syncSubmitState } from "../components/sign-in-form-guard";
 
 function fakeSubmitButton() {
   const attributes = new Map<string, string>();
@@ -54,6 +54,46 @@ describe("SignInFormGuard submit state", () => {
     syncSubmitState(button, false);
     expect(button.disabled).toBe(false);
     expect(button.getAttribute("aria-disabled")).toBe("false");
+    expect(button.classList.contains("kouchd-submit-disabled")).toBe(false);
+  });
+
+  it("re-enables only a button the guard disabled", () => {
+    const { button } = fakeSubmitButton();
+    const owned = new Set<HTMLButtonElement>();
+
+    applyIdentifierGuard(button, true, owned);
+    expect(button.disabled).toBe(true);
+
+    applyIdentifierGuard(button, false, owned);
+    expect(button.disabled).toBe(false);
+  });
+
+  it("never clears a disabled state Clerk applied", () => {
+    const { button } = fakeSubmitButton();
+    const owned = new Set<HTMLButtonElement>();
+    button.disabled = true; // Clerk: invalid form or request in flight
+
+    applyIdentifierGuard(button, true, owned);
+    applyIdentifierGuard(button, false, owned);
+
+    expect(button.disabled).toBe(true);
+  });
+
+  it("keeps the button usable across a setup, cleanup, setup replay", () => {
+    const { button } = fakeSubmitButton();
+
+    // First effect setup with an empty identifier, then Strict Mode cleanup.
+    const first = new Set<HTMLButtonElement>();
+    applyIdentifierGuard(button, true, first);
+    releaseIdentifierGuard(first);
+    expect(button.disabled).toBe(false);
+
+    // Second setup claims the button again, so typing re-enables it.
+    const second = new Set<HTMLButtonElement>();
+    applyIdentifierGuard(button, true, second);
+    expect(button.disabled).toBe(true);
+    applyIdentifierGuard(button, false, second);
+    expect(button.disabled).toBe(false);
     expect(button.classList.contains("kouchd-submit-disabled")).toBe(false);
   });
 });

@@ -48,17 +48,82 @@ export async function getAcceptedGuestTermsForDate(
     const effectiveFrom = terms.effectiveFrom ?? terms.startDate;
     return effectiveFrom <= date && terms.startDate <= date && terms.endDate >= date;
   });
+  // After a rejoin, an acceptance from the earlier residency must not authorize
+  // charges for dates in the new one.
+  const membership = await ctx.db
+    .query("memberships")
+    .withIndex("by_stay_user", (query) => query.eq("stayId", stayId).eq("userId", guestUserId))
+    .unique();
+  const stay = membership ? await ctx.db.get(stayId) : null;
+  const joinedOn = membership && stay ? calendarDateInTimezone(new Date(membership.joinedAt), stay.timezone) : null;
+  const requiredAcceptedAfter = joinedOn && date >= joinedOn ? membership!.joinedAt : 0;
   const accepted = await Promise.all(possible.map(async (terms) => {
     const acceptance = await ctx.db.query("termsAcceptances")
       .withIndex("by_terms_user", (query) => query.eq("termsId", terms._id).eq("userId", guestUserId))
       .unique();
-    return acceptance ? { terms, acceptedAt: acceptance.acceptedAt } : null;
+    return acceptance && acceptance.acceptedAt >= requiredAcceptedAfter ? { terms, acceptedAt: acceptance.acceptedAt } : null;
   }));
   return accepted
     .filter((item): item is NonNullable<typeof item> => item !== null)
     .sort((left, right) => (right.terms.effectiveFrom ?? right.terms.startDate).localeCompare(left.terms.effectiveFrom ?? left.terms.startDate)
       || right.terms.version - left.terms.version
       || right.acceptedAt - left.acceptedAt)[0]?.terms ?? null;
+}
+
+/** The household agreement fields a guest-specific agreement inherits. */
+function householdTermsFields(defaults: Doc<"terms">) {
+  return {
+    stayId: defaults.stayId,
+    startDate: defaults.startDate,
+    endDate: defaults.endDate,
+    cadence: defaults.cadence,
+    ...(defaults.paymentDayOfWeek !== undefined ? { paymentDayOfWeek: defaults.paymentDayOfWeek } : {}),
+    billingBasis: defaults.billingBasis ?? "continuous",
+    rateCents: defaults.rateCents,
+    earlyDiscountPercentage: defaults.earlyDiscountPercentage,
+    earlyDiscountDays: defaults.earlyDiscountDays,
+    lateFeeCents: defaults.lateFeeCents,
+    graceDays: defaults.graceDays,
+    houseNotes: defaults.houseNotes,
+    ...(defaults.earlyDiscountEnabled !== undefined ? { earlyDiscountEnabled: defaults.earlyDiscountEnabled } : {}),
+    ...(defaults.lateFeeEnabled !== undefined ? { lateFeeEnabled: defaults.lateFeeEnabled } : {}),
+    ...(defaults.houseRules !== undefined ? { houseRules: defaults.houseRules } : {}),
+    ...(defaults.rewards !== undefined ? { rewards: defaults.rewards } : {}),
+  };
+}
+
+/**
+ * A former guest rejoining gets a new agreement built from the household's
+ * current terms. Their earlier acceptance stays on the membership so accepting
+ * the new version retires the old schedule from today forward, and access codes
+ * stay hidden until that acceptance happens.
+ */
+export async function createRejoinGuestTerms(
+  ctx: MutationCtx,
+  stay: Doc<"stays">,
+  membership: Doc<"memberships">,
+) {
+  const defaults = stay.currentTermsId ? await ctx.db.get(stay.currentTermsId) : null;
+  if (!defaults) throw new Error("Household terms are not available");
+  const previous = await ctx.db
+    .query("terms")
+    .withIndex("by_stay_and_guest", (query) => query.eq("stayId", stay._id).eq("guestUserId", membership.userId))
+    .order("desc")
+    .first();
+  const now = Date.now();
+  const termsId = await ctx.db.insert("terms", {
+    ...householdTermsFields(defaults),
+    guestUserId: membership.userId,
+    version: Math.max(previous?.version ?? 0, defaults.version) + 1,
+    ...(membership.acceptedTermsId
+      ? { effectiveFrom: calendarDateInTimezone(new Date(now), stay.timezone) }
+      : {}),
+    createdBy: stay.hostUserId,
+    createdAt: now,
+  });
+  const terms = await ctx.db.get(termsId);
+  if (!terms) throw new Error("Could not create guest agreement");
+  return terms;
 }
 
 export async function ensureGuestTerms(
@@ -78,24 +143,7 @@ export async function ensureGuestTerms(
   const defaults = stay?.currentTermsId ? await ctx.db.get(stay.currentTermsId) : null;
   if (!stay || !defaults) throw new Error("Household terms are not available");
 
-  const defaultsFields = {
-    stayId: defaults.stayId,
-    startDate: defaults.startDate,
-    endDate: defaults.endDate,
-    cadence: defaults.cadence,
-    ...(defaults.paymentDayOfWeek !== undefined ? { paymentDayOfWeek: defaults.paymentDayOfWeek } : {}),
-    billingBasis: defaults.billingBasis ?? "continuous",
-    rateCents: defaults.rateCents,
-    earlyDiscountPercentage: defaults.earlyDiscountPercentage,
-    earlyDiscountDays: defaults.earlyDiscountDays,
-    lateFeeCents: defaults.lateFeeCents,
-    graceDays: defaults.graceDays,
-    houseNotes: defaults.houseNotes,
-    ...(defaults.earlyDiscountEnabled !== undefined ? { earlyDiscountEnabled: defaults.earlyDiscountEnabled } : {}),
-    ...(defaults.lateFeeEnabled !== undefined ? { lateFeeEnabled: defaults.lateFeeEnabled } : {}),
-    ...(defaults.houseRules !== undefined ? { houseRules: defaults.houseRules } : {}),
-    ...(defaults.rewards !== undefined ? { rewards: defaults.rewards } : {}),
-  };
+  const defaultsFields = householdTermsFields(defaults);
   const termsId = await ctx.db.insert("terms", {
     ...defaultsFields,
     guestUserId,
@@ -210,7 +258,7 @@ export async function acceptGuestAgreement(
         await ctx.db.patch(obligation._id, { voidedAt: now, voidedBy: actorUserId, voidedSource: actorType });
       }
     }
-    await ctx.db.patch(membership._id, { acceptedTermsId: terms._id });
+    await ctx.db.patch(membership._id, { acceptedTermsId: terms._id, accessCodesNeedAcceptance: undefined });
     await ensureObligationsForTerms(ctx, stayId, terms._id, guestUserId, actorUserId);
     await recordActivity(ctx, { stayId, actorUserId, actorType, guestUserId, kind: "terms",
       action: method === "system_auto" ? "auto_accepted" : "accepted",

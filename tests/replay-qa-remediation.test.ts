@@ -124,13 +124,29 @@ describe("Replay QA: Content-Security-Policy & Canonical Metadata", () => {
     );
 
     expect(directives["default-src"]).toContain("'self'");
-    expect(directives["script-src"]).not.toContain("'unsafe-eval'");
     expect(directives["script-src"]).toContain("https://challenges.cloudflare.com");
     expect(directives["script-src"]).toContain("https://*.protect.clerk.com");
     expect(directives["connect-src"]).toContain("https://challenges.cloudflare.com");
     expect(directives["connect-src"]).toContain("https://*.protect.clerk.com:*");
     expect(directives["frame-src"]).toContain("https://challenges.cloudflare.com");
     expect(directives["frame-ancestors"]).toContain("'none'");
+  });
+
+  it("allows 'unsafe-eval' only in development builds", async () => {
+    try {
+      vi.stubEnv("NODE_ENV", "production");
+      vi.resetModules();
+      const production = await import("../lib/security/csp");
+      expect(production.cspDirectives["script-src"]).not.toContain("'unsafe-eval'");
+
+      vi.stubEnv("NODE_ENV", "development");
+      vi.resetModules();
+      const development = await import("../lib/security/csp");
+      expect(development.cspDirectives["script-src"]).toContain("'unsafe-eval'");
+    } finally {
+      vi.unstubAllEnvs();
+      vi.resetModules();
+    }
   });
 
   it("keeps Content-Security-Policy out of root layout markup", () => {
