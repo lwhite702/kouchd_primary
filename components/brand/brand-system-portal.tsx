@@ -205,7 +205,7 @@ export function BrandSystemPortal() {
       </header>
 
       {/* Main Tab Panels */}
-      <main className="py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+      <div className="py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         {activeTab === "guidelines" && (
           <BrandGuidelinesTab
             copiedKey={copiedKey}
@@ -223,7 +223,7 @@ export function BrandSystemPortal() {
         {activeTab === "social" && <SocialMediaTab />}
         {activeTab === "carousel" && <MarketingCarouselTab />}
         {activeTab === "elements" && <WebElementsTab />}
-      </main>
+      </div>
 
       {/* Brand Portal Footer */}
       <footer className="brand-portal-footer mt-20 border-t border-[var(--kouchd-neutral-20)] py-8 px-4 text-center text-xs text-[var(--kouchd-neutral-60)]">

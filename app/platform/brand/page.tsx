@@ -3,7 +3,7 @@ import { BrandSystemPortal } from "@/components/brand/brand-system-portal";
 import { requirePlatformOpsAccess } from "@/lib/platform/console";
 
 export const metadata: Metadata = {
-  title: "Brand & Design System | Platform Ops | Kouchd",
+  title: "Brand & Design System | Platform Ops",
   robots: {
     index: false,
     follow: false,
