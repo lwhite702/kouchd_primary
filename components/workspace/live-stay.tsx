@@ -423,8 +423,8 @@ export function LiveStay({
             <div
               className="agreement-callout"
               style={{
-                background: "#eef6f0",
-                borderColor: "#b8d2c1",
+                background: "var(--kouchd-surface, #eef6f0)",
+                borderColor: "var(--kouchd-line, #b8d2c1)",
                 marginBottom: "1.25rem",
               }}
             >

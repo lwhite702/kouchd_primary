@@ -197,8 +197,12 @@ struct IntroductionScreen: View {
           .textInputAutocapitalization(.characters).autocorrectionDisabled()
           .padding(14).background(Palette.surface, in: RoundedRectangle(cornerRadius: 14))
           .overlay(RoundedRectangle(cornerRadius: 14).stroke(Palette.line))
-        Button("Join") { finish(.guest, inviteCode.trimmingCharacters(in: .whitespacesAndNewlines)) }
-          .buttonStyle(.borderedProminent).tint(Palette.forest)
+        Button {
+          finish(.guest, inviteCode.trimmingCharacters(in: .whitespacesAndNewlines))
+        } label: {
+          Text("Join").foregroundStyle(Palette.onPrimary)
+        }
+        .buttonStyle(.borderedProminent).tint(Palette.forest)
           .disabled(inviteCode.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
       }
       .background(Palette.sage, in: RoundedRectangle(cornerRadius: 24))

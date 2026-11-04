@@ -97,17 +97,17 @@ export function JoinHouseholdCard({
             {preview.valid ? (
               <div
                 style={{
-                  border: "1px solid #b8d2c1",
+                  border: "1px solid var(--kouchd-line, #b8d2c1)",
                   borderRadius: "14px",
                   padding: "1.25rem",
-                  background: "#eef6f0",
+                  background: "var(--kouchd-surface, #eef6f0)",
                 }}
               >
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.75rem" }}>
                   <span style={{ fontSize: "0.75rem", textTransform: "uppercase", color: "var(--green, #184f3a)", fontWeight: 800 }}>
                     Household Match Found
                   </span>
-                  <span className="status-pill" style={{ background: "var(--green, #184f3a)", color: "#fff", fontSize: "0.7rem" }}>
+                  <span className="status-pill" style={{ background: "var(--green, #184f3a)", color: "var(--kouchd-on-primary, #fff)", fontSize: "0.7rem" }}>
                     {preview.status}
                   </span>
                 </div>
@@ -116,7 +116,7 @@ export function JoinHouseholdCard({
                   Hosted by {preview.hostName}
                 </strong>
 
-                <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", marginTop: "0.6rem", fontSize: "0.85rem", color: "#324e3e" }}>
+                <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", marginTop: "0.6rem", fontSize: "0.85rem", color: "var(--kouchd-muted, #324e3e)" }}>
                   {preview.startDate && preview.endDate && (
                     <span>• Dates: {preview.startDate} to {preview.endDate}</span>
                   )}

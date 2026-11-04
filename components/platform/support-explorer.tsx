@@ -113,7 +113,7 @@ export function SupportExplorer({ status }: { status: FreshdeskOpsStatus }) {
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "1rem" }}>
-          <div style={{ background: "#faf8f5", padding: "1rem", borderRadius: 12, border: "1px solid var(--kouchd-line)" }}>
+          <div style={{ background: "var(--kouchd-surface, #faf8f5)", padding: "1rem", borderRadius: 12, border: "1px solid var(--kouchd-line)" }}>
             <strong style={{ display: "flex", alignItems: "center", gap: 6, fontSize: "0.9rem", marginBottom: 8 }}>
               <Lock size={15} color="var(--kouchd-forest)" />
               Required Provider Setup Checklist
@@ -127,7 +127,7 @@ export function SupportExplorer({ status }: { status: FreshdeskOpsStatus }) {
             </ol>
           </div>
 
-          <div style={{ background: "#faf8f5", padding: "1rem", borderRadius: 12, border: "1px solid var(--kouchd-line)" }}>
+          <div style={{ background: "var(--kouchd-surface, #faf8f5)", padding: "1rem", borderRadius: 12, border: "1px solid var(--kouchd-line)" }}>
             <strong style={{ display: "flex", alignItems: "center", gap: 6, fontSize: "0.9rem", marginBottom: 8 }}>
               <ShieldAlert size={15} color="var(--kouchd-forest)" />
               Enforced Security &amp; Privacy Guardrails

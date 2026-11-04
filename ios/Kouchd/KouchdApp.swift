@@ -270,8 +270,10 @@ struct RootView: View {
           Text("Start a shared stay").font(.title3.bold())
           Text("Set the dates, contribution rhythm, and house notes for your guests.")
             .foregroundStyle(Palette.muted)
-          NavigationLink("Create a stay", value: KouchdRoute.createStay)
-            .buttonStyle(.borderedProminent).tint(Palette.forest)
+          NavigationLink(value: KouchdRoute.createStay) {
+            Text("Create a stay").foregroundStyle(Palette.onPrimary)
+          }
+          .buttonStyle(.borderedProminent).tint(Palette.forest)
         }
         } trailing: {
         Card {
