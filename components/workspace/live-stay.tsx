@@ -170,7 +170,7 @@ export function LiveStay({
                 aria-hidden="true"
               />
             </span>
-            <span>Guests</span>
+            <span>Stay details</span>
           </button>
 
           <button

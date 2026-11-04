@@ -25,7 +25,6 @@ import type { Id } from "@/convex/_generated/dataModel";
 import { KouchdWordmark } from "@/components/brand/kouchd-logo";
 import { HostOnboardingWizard } from "@/components/onboarding/host-onboarding-wizard";
 import { JoinHouseholdCard } from "@/components/referral/join-household";
-import { HelpTip } from "@/components/onboarding/help-tip";
 import { NotificationBellMenu } from "@/components/notifications/dashboard-notifications";
 import type { NotificationItem } from "@/components/notifications/dashboard-notifications";
 import { MobileHeaderMenu } from "@/components/navigation/header-menu";
@@ -193,15 +192,18 @@ export function GetStartedHub({
     <div className="app-shell production-shell">
       <AccountHeader onSettings={() => setSettingsOpen(true)} />
       <main style={{ padding: "1.5rem 1rem 4rem" }}>
-        <div className="get-started-artwork" aria-hidden="true">
-          <Image
-            src={tab === "host" ? "/artwork/host-welcome.png" : "/artwork/invitation.png"}
-            alt=""
-            width={640}
-            height={480}
-            sizes="(max-width: 480px) 58vw, 220px"
-          />
-        </div>
+        {/* The host wizard shows its own artwork, so only the join view needs one here. */}
+        {tab === "join" && (
+          <div className="get-started-artwork" aria-hidden="true">
+            <Image
+              src="/artwork/invitation.png"
+              alt=""
+              width={640}
+              height={480}
+              sizes="(max-width: 480px) 58vw, 220px"
+            />
+          </div>
+        )}
         <div
           style={{
             maxWidth: 440,
@@ -229,20 +231,6 @@ export function GetStartedHub({
           </button>
         </div>
 
-        <div style={{ maxWidth: 440, margin: "0 auto 1rem" }}>
-          <HelpTip
-            title={tab === "host" ? "Starting a stay" : "Joining a household"}
-            href={
-              tab === "host"
-                ? HELP_LINKS.hostsGettingStarted
-                : HELP_LINKS.joiningAStay
-            }
-          >
-            {tab === "host"
-              ? "Set the dates, contribution plan, house rules, and any optional rewards before you invite guests."
-              : "Enter the referral code shared by your host. After joining, review and accept the household agreement to finish setup."}
-          </HelpTip>
-        </div>
 
         <a
           className="onboarding-help-card"

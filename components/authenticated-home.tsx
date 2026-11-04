@@ -36,6 +36,7 @@ function SyncedWorkspace() {
   const { isLoaded: clerkLoaded, user: clerkUser } = useUser();
   const syncCurrent = useMutation(api.users.syncCurrent);
   const syncedProfileRef = useRef<string | null>(null);
+  const autoOpenedRef = useRef(false);
   const [synced, setSynced] = useState(false);
   const [syncError, setSyncError] = useState("");
   const [selectedStayId, setSelectedStayId] = useState<Id<"stays"> | null>(
@@ -79,17 +80,28 @@ function SyncedWorkspace() {
     Array<{ stay: Doc<"stays">; membership: Doc<"memberships"> }> | undefined;
 
   useEffect(() => {
-    if (!stays || stays.length === 0 || selectedStayId) return;
+    if (selectedStayId) {
+      autoOpenedRef.current = true;
+      return;
+    }
+    if (!stays || stays.length === 0) return;
     if (typeof window === "undefined") return;
+    if (autoOpenedRef.current) return;
+    autoOpenedRef.current = true;
     const params = new URLSearchParams(window.location.search);
     const stayIdParam = params.get("stayId");
-    if (stayIdParam) {
-      const matchingStay = stays.find((item) => item.stay._id === stayIdParam);
-      if (matchingStay) {
-        queueMicrotask(() => {
-          setSelectedStayId(matchingStay.stay._id);
-        });
-      }
+    const matchingStay = stayIdParam
+      ? stays.find((item) => item.stay._id === stayIdParam)
+      : undefined;
+    // Someone with exactly one stay goes straight into it; "All stays" still
+    // returns to the hub because this only runs on the first load.
+    const onlyStay =
+      stays.length === 1 && stays[0].stay.status !== "ended" ? stays[0] : undefined;
+    const target = matchingStay ?? onlyStay;
+    if (target) {
+      queueMicrotask(() => {
+        setSelectedStayId(target.stay._id);
+      });
     }
   }, [stays, selectedStayId]);
 

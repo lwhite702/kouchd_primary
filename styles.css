@@ -1,19 +1,19 @@
 :root {
   color-scheme: light;
   --kouchd-forest: #184f3a;
-  --kouchd-forest-rgb: 24, 79, 58;
+  --kouchd-forest-rgb: 24 79 58;
   --kouchd-lime: #dff25e;
   --kouchd-paper: #f5f0e8;
-  --kouchd-paper-rgb: 245, 240, 232;
+  --kouchd-paper-rgb: 245 240 232;
   --kouchd-surface: #fffdf8;
-  --kouchd-surface-rgb: 255, 253, 248;
+  --kouchd-surface-rgb: 255 253 248;
   --kouchd-ink: #17251f;
-  --kouchd-ink-rgb: 23, 37, 31;
+  --kouchd-ink-rgb: 23 37 31;
   --kouchd-muted: #59675f;
   --kouchd-sage: #e5edde;
   --kouchd-sky: #c9e7f0;
   --kouchd-line: #ded8ce;
-  --kouchd-line-rgb: 222, 216, 206;
+  --kouchd-line-rgb: 222 216 206;
 
   /* Stable palette tokens shared by legacy product screens. Core semantic tokens above adapt in dark mode. */
   --kouchd-palette-123d2e: #123d2e;
@@ -95,22 +95,22 @@
   --kouchd-palette-fcf6ec: #fcf6ec;
   --kouchd-palette-fdf6e9: #fdf6e9;
   --kouchd-palette-fdf6f4: #fdf6f4;
-  --kouchd-rgb-17-32-25: 17,32,25;
-  --kouchd-rgb-18-61-46: 18,61,46;
-  --kouchd-rgb-201-231-240: 201,231,240;
-  --kouchd-rgb-223-242-107: 223,242,107;
-  --kouchd-rgb-223-242-94: 223,242,94;
-  --kouchd-rgb-229-237-222: 229,237,222;
-  --kouchd-rgb-233-216-173: 233,216,173;
-  --kouchd-rgb-247-235-204: 247,235,204;
-  --kouchd-rgb-81-66-28: 81,66,28;
+  --kouchd-rgb-17-32-25: 17 32 25;
+  --kouchd-rgb-18-61-46: 18 61 46;
+  --kouchd-rgb-201-231-240: 201 231 240;
+  --kouchd-rgb-223-242-107: 223 242 107;
+  --kouchd-rgb-223-242-94: 223 242 94;
+  --kouchd-rgb-229-237-222: 229 237 222;
+  --kouchd-rgb-233-216-173: 233 216 173;
+  --kouchd-rgb-247-235-204: 247 235 204;
+  --kouchd-rgb-81-66-28: 81 66 28;
   --kouchd-brand-forest: #184f3a;
-  --kouchd-brand-forest-rgb: 24, 79, 58;
-  --kouchd-shadow-rgb: 23, 37, 31;
+  --kouchd-brand-forest-rgb: 24 79 58;
+  --kouchd-shadow-rgb: 23 37 31;
   --kouchd-black: #000;
-  --kouchd-black-rgb: 0, 0, 0;
+  --kouchd-black-rgb: 0 0 0;
   --kouchd-white: #fff;
-  --kouchd-white-rgb: 255, 255, 255;
+  --kouchd-white-rgb: 255 255 255;
   --kouchd-on-fill: #17251f;
   --kouchd-on-brand: #fff;
   --kouchd-eyebrow: #92582b;
@@ -134,6 +134,10 @@
   --card: var(--kouchd-surface);
   --line: var(--kouchd-line);
   --green: var(--kouchd-forest);
+  --forest: var(--kouchd-forest);
+  --surface: var(--kouchd-surface);
+  --red: #9f351f;
+  --danger: #9f351f;
   --green-2: #2b6b50;
   --lime: var(--kouchd-lime);
   --coral: #ed755c;
@@ -1328,16 +1332,16 @@ textarea { resize: vertical; }
   :root {
     color-scheme: dark;
     --kouchd-paper: #101713;
-    --kouchd-paper-rgb: 16, 23, 19;
+    --kouchd-paper-rgb: 16 23 19;
     --kouchd-surface: #1b2721;
-    --kouchd-surface-rgb: 27, 39, 33;
+    --kouchd-surface-rgb: 27 39 33;
     --kouchd-ink: #f1f5f0;
-    --kouchd-ink-rgb: 241, 245, 240;
+    --kouchd-ink-rgb: 241 245 240;
     --kouchd-muted: #aeb8b0;
     --kouchd-line: #34443b;
-    --kouchd-line-rgb: 52, 68, 59;
+    --kouchd-line-rgb: 52 68 59;
     --kouchd-forest: #d5f59a;
-    --kouchd-forest-rgb: 213, 245, 154;
+    --kouchd-forest-rgb: 213 245 154;
     --kouchd-eyebrow: #dff25e;
   }
 }

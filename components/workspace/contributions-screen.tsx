@@ -44,14 +44,7 @@ export function ContributionsScreen({ state }: { state: WorkspaceState }) {
     <div key="contributions" className="screen-transition">
       <div className="page-heading">
         <div>
-          <p className="eyebrow">Private by guest</p>
-          <h1>{ledgerLabel}</h1>
-          <p className="subhead">
-            {isHost
-              ? "Each guest's ledger is shared only with that guest and the host."
-              : "Your ledger is private between you and your host."}
-          </p>
-          <HelpTip
+          <p className="eyebrow">Private by guest <HelpTip
             title="Contribution ledger"
             href={
               isHost
@@ -61,7 +54,13 @@ export function ContributionsScreen({ state }: { state: WorkspaceState }) {
           >
             Review charges and contributions here. Hosts can switch between
             guests; guests only see their own private ledger.
-          </HelpTip>
+          </HelpTip></p>
+          <h1>{ledgerLabel}</h1>
+          <p className="subhead">
+            {isHost
+              ? "Each guest's ledger is shared only with that guest and the host."
+              : "Your ledger is private between you and your host."}
+          </p>
         </div>
         <div className="heading-actions">
           {!isEnded && (

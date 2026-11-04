@@ -103,6 +103,9 @@ export const create = mutation({
     houseInfo: v.optional(v.object(houseInfoInput)),
     paymentOptions: v.optional(paymentOptionsInput),
     terms: v.object(termsInput),
+    // Suggested reward activities the host kept in setup. Older clients omit it
+    // and receive every suggestion, as before.
+    rewardTaskIds: v.optional(v.array(v.string())),
   },
   returns: v.id("stays"),
   handler: async (ctx, args) => {
@@ -146,6 +149,9 @@ export const create = mutation({
     }
     if (args.nextCheckInDate) assertCalendarDate(args.nextCheckInDate, "Next check-in date");
     if (args.houseInfo) assertHouseInfoInput(args.houseInfo);
+    if (args.rewardTaskIds && args.rewardTaskIds.length > SUGGESTED_CONTRIBUTION_TASKS.length) {
+      throw new Error("Choose from the suggested reward activities");
+    }
     const paymentOptions = args.paymentOptions ?? [];
     assertPaymentOptionsInput(paymentOptions);
     const now = Date.now();
@@ -216,7 +222,9 @@ export const create = mutation({
 
     // Seed default suggested contribution tasks if rewards are enabled
     if (args.terms.rewards?.enabled) {
+      const selectedTaskIds = args.rewardTaskIds ? new Set(args.rewardTaskIds) : null;
       for (const task of SUGGESTED_CONTRIBUTION_TASKS) {
+        if (selectedTaskIds && !selectedTaskIds.has(task.id)) continue;
         await ctx.db.insert("contributionRules", {
           stayId,
           title: task.title,

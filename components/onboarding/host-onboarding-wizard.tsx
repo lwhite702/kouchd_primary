@@ -8,13 +8,30 @@ import { FormEvent, useMemo, useState } from "react";
 
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
-import { addCalendarDays, calendarDateInTimezone } from "@/lib/domain/dates";
+import { addCalendarDays, calendarDateInTimezone, stayDays } from "@/lib/domain/dates";
 import { SUGGESTED_HOUSE_RULES, HouseRuleItem } from "@/lib/domain/houseRulesCatalog";
 import { SUGGESTED_CONTRIBUTION_TASKS, SuggestedContributionTask } from "@/lib/domain/rewards";
 import { calculateStayChargeCents } from "@/lib/domain/pricing";
 import { HelpTip } from "@/components/onboarding/help-tip";
 import { HELP_LINKS } from "@/lib/help-links";
 import { planLimitError } from "@/lib/planLimitError";
+import { useFeatureFlag } from "@/components/flags/feature-gate";
+import { FEATURE_FLAGS } from "@/lib/flags/config";
+import { formatDate } from "@/components/workspace/types";
+
+const MAX_STAY_DAYS = 730;
+const MAX_RULE_DAYS = 365;
+const MAX_MONEY = 1_000_000;
+
+function isWholeNumber(value: string, min: number, max: number) {
+  const parsed = Number(value);
+  return value.trim() !== "" && Number.isInteger(parsed) && parsed >= min && parsed <= max;
+}
+
+function isMoney(value: string, min: number) {
+  const parsed = Number(value);
+  return value.trim() !== "" && Number.isFinite(parsed) && parsed >= min && parsed <= MAX_MONEY;
+}
 
 const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
 
@@ -28,6 +45,7 @@ export function HostOnboardingWizard({
   onPlanLimit?: () => void;
 }) {
   const viewer = useQuery(api.users.viewer, {});
+  const subleasesEnabled = useFeatureFlag(FEATURE_FLAGS.SUBLEASES);
   const createStay = useMutation(api.stays.create);
   const updatePreferences = useMutation(api.users.updatePreferences);
   const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
@@ -47,7 +65,8 @@ export function HostOnboardingWizard({
   const [landlordConsentWarningDismissed, setLandlordConsentWarningDismissed] = useState(false);
   const [paymentDayOfMonth, setPaymentDayOfMonth] = useState<number>(1);
   const [startDate, setStartDate] = useState(today);
-  const [endDate, setEndDate] = useState(addCalendarDays(today, 14));
+  // The end date is a billable day, so start + 13 is exactly two weeks.
+  const [endDate, setEndDate] = useState(addCalendarDays(today, 13));
   const [cadence, setCadence] = useState<"daily" | "weekly" | "monthly">("weekly");
   const [rate, setRate] = useState("200");
   const [nextCheckInDate, setNextCheckInDate] = useState(addCalendarDays(today, 7));
@@ -89,6 +108,53 @@ export function HostOnboardingWizard({
   const [saving, setSaving] = useState(false);
   const [creationRequestId] = useState(() => crypto.randomUUID());
   const [error, setError] = useState("");
+  const [stepError, setStepError] = useState("");
+
+  // Monthly subleases cannot use rewards or early discounts (convex/lib/validation.ts).
+  const isMonthly = cadence === "monthly";
+  const rewardsActive = rewardsEnabled && !isMonthly;
+  const earlyActive = earlyEnabled && !isMonthly;
+  const periodLabel = cadence === "monthly" ? "month" : cadence === "weekly" ? "week" : "day";
+
+  function validateStep(target: 1 | 2 | 3 | 4 | 5): string {
+    if (target === 1) {
+      const trimmedName = stayName.trim();
+      if (trimmedName && (trimmedName.length < 2 || trimmedName.length > 80)) return "Use a stay name between 2 and 80 characters, or leave it blank.";
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(startDate)) return "Choose a start date.";
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(endDate)) return "Choose a planned end date.";
+      if (endDate < startDate) return "The planned end date must be on or after the start date.";
+      if (stayDays(startDate, endDate) > MAX_STAY_DAYS) return "A stay can be up to 730 days. Choose an earlier end date.";
+      if (!isMoney(rate, 0)) return `Enter an amount per ${periodLabel} of $0 or more.`;
+      if (arrangement === "sublease" && subleaseLayout === "private_room" && !isWholeNumber(String(roommateCount), 1, 20)) return "Enter between 1 and 20 roommates.";
+    }
+    if (target === 2 && selectedRules.length > 50) return "Choose 50 or fewer house rules.";
+    if (target === 3 && rewardsActive) {
+      if (!coinName.trim()) return "Give your reward points a name, like Coins.";
+      if (!isWholeNumber(centsPerPoint, 1, 100_000)) return "Set a value of at least $0.01 for each point.";
+      if (!isMoney(maxCreditPeriod, 0)) return `Enter a credit cap per ${periodLabel} of $0 or more.`;
+    }
+    if (target === 4) {
+      if (earlyActive && !isWholeNumber(earlyDiscount, 1, 100)) return "Use a whole-number early discount from 1% to 100%.";
+      if (earlyActive && !isWholeNumber(earlyDays, 1, MAX_RULE_DAYS)) return "Use a whole number of days for the early discount.";
+      if (lateEnabled && !isMoney(lateFee, 0.01)) return "Enter a late fee of at least $0.01.";
+      if (lateEnabled && !isWholeNumber(graceDays, 1, MAX_RULE_DAYS)) return "Use a whole number of grace days.";
+    }
+    return "";
+  }
+
+  function goToStep(next: 1 | 2 | 3 | 4 | 5) {
+    if (next > step) {
+      for (let check = step; check < next; check += 1) {
+        const message = validateStep(check as 1 | 2 | 3 | 4 | 5);
+        if (message) {
+          setStepError(message);
+          return;
+        }
+      }
+    }
+    setStepError("");
+    setStep(next);
+  }
 
   const estimatedStayCharge = useMemo(() => {
     try {
@@ -135,6 +201,18 @@ export function HostOnboardingWizard({
   }
 
   async function handleFinalSubmit() {
+    for (const check of [1, 2, 3, 4] as const) {
+      const message = validateStep(check);
+      if (message) {
+        setStep(check);
+        setStepError(message);
+        return;
+      }
+    }
+    if (optInSms && !(phone.trim() || viewer?.phone?.trim())) {
+      setError("Add a mobile number to turn on text alerts, or uncheck the text alert box.");
+      return;
+    }
     setSaving(true);
     setError("");
     try {
@@ -193,9 +271,9 @@ export function HostOnboardingWizard({
             ? { paymentDayOfMonth: Number(paymentDayOfMonth) || 1 }
             : {}),
           rateCents: Math.round(Number(rate) * 100),
-          earlyDiscountEnabled: earlyEnabled,
-          earlyDiscountPercentage: earlyEnabled ? Number(earlyDiscount) : 0,
-          earlyDiscountDays: earlyEnabled ? Number(earlyDays) : 0,
+          earlyDiscountEnabled: earlyActive,
+          earlyDiscountPercentage: earlyActive ? Number(earlyDiscount) : 0,
+          earlyDiscountDays: earlyActive ? Number(earlyDays) : 0,
           lateFeeEnabled: lateEnabled,
           lateFeeCents: lateEnabled ? Math.round(Number(lateFee) * 100) : 0,
           graceDays: lateEnabled ? Number(graceDays) : 0,
@@ -208,12 +286,13 @@ export function HostOnboardingWizard({
             required: r.required,
           })),
           rewards: {
-            enabled: rewardsEnabled,
+            enabled: rewardsActive,
             coinName: coinName.trim() || "Coins",
             centsPerPoint: Math.max(1, Math.round(Number(centsPerPoint || "100"))),
             maxCreditPerPeriodCents: Math.round(Number(maxCreditPeriod || "0") * 100),
           },
         },
+        ...(rewardsActive ? { rewardTaskIds: selectedTasks.map((task) => task.id) } : {}),
       });
       onComplete?.(stayId);
     } catch (reason) {
@@ -260,6 +339,7 @@ export function HostOnboardingWizard({
           </p>
 
           <div className="form-grid" style={{ marginTop: "1.5rem" }}>
+            {(subleasesEnabled || arrangement === "sublease") && (
             <div className="full" style={{ marginBottom: "0.5rem" }}>
               <span style={{ display: "block", fontSize: "0.85rem", fontWeight: 600, marginBottom: "0.5rem" }}>
                 Arrangement type
@@ -293,6 +373,7 @@ export function HostOnboardingWizard({
                 </button>
               </div>
             </div>
+            )}
 
             {arrangement === "sublease" && (
               <div
@@ -438,7 +519,7 @@ export function HostOnboardingWizard({
               />
             </label>
             <label>
-              <span>Planned end</span>
+              <span>Planned end (included)</span>
               <input
                 name="endDate"
                 type="date"
@@ -523,13 +604,14 @@ export function HostOnboardingWizard({
             </label>
           </div>
 
+          {stepError && <p className="form-error" role="alert" style={{ marginTop: "1.25rem" }}>{stepError}</p>}
           <div className="dialog-actions" style={{ marginTop: "2rem" }}>
             {onCancel && (
               <button className="button ghost" type="button" onClick={onCancel}>
                 Cancel
               </button>
             )}
-            <button className="button primary" type="button" onClick={() => setStep(2)}>
+            <button className="button primary" type="button" onClick={() => goToStep(2)}>
               Next: House Rules <ArrowRight size={18} />
             </button>
           </div>
@@ -636,11 +718,12 @@ export function HostOnboardingWizard({
             )}
           </div>
 
+          {stepError && <p className="form-error" role="alert" style={{ marginTop: "1.25rem" }}>{stepError}</p>}
           <div className="dialog-actions" style={{ marginTop: "2rem" }}>
-            <button className="button ghost" type="button" onClick={() => setStep(1)}>
+            <button className="button ghost" type="button" onClick={() => goToStep(1)}>
               <ArrowLeft size={18} /> Back
             </button>
-            <button className="button primary" type="button" onClick={() => setStep(3)}>
+            <button className="button primary" type="button" onClick={() => goToStep(3)}>
               Next: Contribution Rewards <ArrowRight size={18} />
             </button>
           </div>
@@ -657,6 +740,11 @@ export function HostOnboardingWizard({
           </p>
 
           <div style={{ marginTop: "1.5rem" }}>
+            {isMonthly ? (
+              <p className="agreement-callout" style={{ margin: 0 }}>
+                Contribution rewards are not available on monthly subleases. You can skip this step.
+              </p>
+            ) : (
             <label className="switch-row full" style={{ marginBottom: "1.25rem" }}>
               <input
                 type="checkbox"
@@ -669,7 +757,9 @@ export function HostOnboardingWizard({
               </span>
             </label>
 
-            {rewardsEnabled && (
+            )}
+
+            {rewardsActive && (
               <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem" }}>
                 <div className="rewards-config-grid">
                   <label>
@@ -697,7 +787,7 @@ export function HostOnboardingWizard({
                     </div>
                   </label>
                   <label>
-                    <span style={{ fontSize: "0.82rem", fontWeight: 700 }}>Max Credit Cap per {cadence === "weekly" ? "Week" : "Day"}</span>
+                    <span style={{ fontSize: "0.82rem", fontWeight: 700 }}>Max Credit Cap per {periodLabel === "week" ? "Week" : "Day"}</span>
                     <div className="money-input">
                       <span>$</span>
                       <input
@@ -791,11 +881,12 @@ export function HostOnboardingWizard({
             )}
           </div>
 
+          {stepError && <p className="form-error" role="alert" style={{ marginTop: "1.25rem" }}>{stepError}</p>}
           <div className="dialog-actions" style={{ marginTop: "2rem" }}>
-            <button className="button ghost" type="button" onClick={() => setStep(2)}>
+            <button className="button ghost" type="button" onClick={() => goToStep(2)}>
               <ArrowLeft size={18} /> Back
             </button>
-            <button className="button primary" type="button" onClick={() => setStep(4)}>
+            <button className="button primary" type="button" onClick={() => goToStep(4)}>
               Next: Financial Rules <ArrowRight size={18} />
             </button>
           </div>
@@ -810,6 +901,7 @@ export function HostOnboardingWizard({
           <p className="subhead">Optional incentives to encourage timely contributions. Both are off by default.</p>
 
           <div className="form-grid" style={{ marginTop: "1.5rem" }}>
+            {!isMonthly && (
             <label className="switch-row full">
               <input
                 type="checkbox"
@@ -821,7 +913,8 @@ export function HostOnboardingWizard({
                 <small>Rewarding guests who settle before their due date.</small>
               </span>
             </label>
-            {earlyEnabled && (
+            )}
+            {earlyActive && (
               <>
                 <label>
                   <span>Discount percentage</span>
@@ -915,11 +1008,12 @@ export function HostOnboardingWizard({
             <p className="muted">Kouchd does not collect or process these payments. You can update these details later in Stay details.</p>
           </section>
 
+          {stepError && <p className="form-error" role="alert" style={{ marginTop: "1.25rem" }}>{stepError}</p>}
           <div className="dialog-actions" style={{ marginTop: "2rem" }}>
-            <button className="button ghost" type="button" onClick={() => setStep(3)}>
+            <button className="button ghost" type="button" onClick={() => goToStep(3)}>
               <ArrowLeft size={18} /> Back
             </button>
-            <button className="button primary" type="button" onClick={() => setStep(5)}>
+            <button className="button primary" type="button" onClick={() => goToStep(5)}>
               Next: Review Agreement <ArrowRight size={18} />
             </button>
           </div>
@@ -959,14 +1053,14 @@ export function HostOnboardingWizard({
                 <span style={{ fontSize: "0.75rem", textTransform: "uppercase", color: "var(--muted, #6f6b64)", fontWeight: 700 }}>
                   Stay Dates
                 </span>
-                <p style={{ margin: "2px 0 0", fontWeight: 700, fontSize: "1rem" }}>{startDate} to {endDate}</p>
+                <p style={{ margin: "2px 0 0", fontWeight: 700, fontSize: "1rem" }}>{formatDate(startDate)} to {formatDate(endDate)}</p>
               </div>
               <div>
                 <span style={{ fontSize: "0.75rem", textTransform: "uppercase", color: "var(--muted, #6f6b64)", fontWeight: 700 }}>
                   Contribution Plan
                 </span>
                 <p style={{ margin: "2px 0 0", fontWeight: 700, fontSize: "1rem" }}>
-                  ${rate} / {cadence === "monthly" ? "month" : cadence === "weekly" ? "week" : "day"}
+                  {money.format(Number(rate) || 0)} / {periodLabel}
                 </p>
               </div>
               <div>
@@ -974,7 +1068,7 @@ export function HostOnboardingWizard({
                   Contribution Rewards
                 </span>
                 <p style={{ margin: "2px 0 0", fontWeight: 700, fontSize: "1rem" }}>
-                  {rewardsEnabled ? `Active (1 ${coinName} = $${(Number(centsPerPoint) / 100).toFixed(2)})` : "Off"}
+                  {rewardsActive ? `Active (1 ${coinName.trim() || "Coins"} = ${money.format(Number(centsPerPoint) / 100)})` : "Off"}
                 </p>
               </div>
               <div>
@@ -1076,7 +1170,7 @@ export function HostOnboardingWizard({
           {error && <p className="form-error" role="alert" style={{ marginTop: "1rem" }}>{error}</p>}
 
           <div className="dialog-actions" style={{ marginTop: "2rem" }}>
-            <button className="button ghost" type="button" onClick={() => setStep(4)} disabled={saving}>
+            <button className="button ghost" type="button" onClick={() => goToStep(4)} disabled={saving}>
               <ArrowLeft size={18} /> Back
             </button>
             <button className="button primary" type="button" onClick={handleFinalSubmit} disabled={saving}>
