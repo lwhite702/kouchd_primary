@@ -3,6 +3,14 @@
  * header and proxy.ts hands it to Clerk's middleware. There is no <meta> copy:
  * a proxy in front of the app mangled it and blanked every page (WRE-253).
  *
+ * Two copies reach the browser, and it enforces both. proxy.ts passes these
+ * directives to Clerk's strict mode, which adds a per-request nonce and
+ * 'strict-dynamic' to script-src; with a nonce present, browsers ignore
+ * 'unsafe-inline' for scripts, so an injected inline script is blocked on every
+ * page the proxy serves. The static copy from next.config.ts has no nonce, and
+ * keeps 'unsafe-inline' only so Next's own nonce-tagged inline scripts also pass
+ * it. Removing it there blocks those scripts and blanks the site.
+ *
  * PostHog traffic goes through the same-origin /ingest proxy, so 'self' covers
  * it; the PostHog hosts stay listed for clients that load before the proxy is
  * deployed.

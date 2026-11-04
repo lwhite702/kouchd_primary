@@ -1,0 +1,9 @@
+# Changes to CI, deploy configuration, the Convex backend and security headers need the owner's review.
+/.github/            @lwhite702
+/vercel.json         @lwhite702
+/next.config.ts      @lwhite702
+/proxy.ts            @lwhite702
+/lib/security/       @lwhite702
+/convex/             @lwhite702
+/scripts/verify-env.mjs @lwhite702
+/scripts/smoke.sh    @lwhite702
