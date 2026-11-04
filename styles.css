@@ -113,6 +113,7 @@
   --kouchd-white-rgb: 255, 255, 255;
   --kouchd-on-fill: #17251f;
   --kouchd-on-brand: #fff;
+  --kouchd-on-primary: #fff;
   --kouchd-eyebrow: #92582b;
   --kouchd-radius-8: 8px;
   --kouchd-radius-16: 16px;
@@ -1339,5 +1340,82 @@ textarea { resize: vertical; }
     --kouchd-forest: #d5f59a;
     --kouchd-forest-rgb: 213, 245, 154;
     --kouchd-eyebrow: #dff25e;
+    --kouchd-sage: #1e2f25;
+    --kouchd-sky: #1a303a;
+    --kouchd-blue: #8cc3d6;
+    --kouchd-amber: #e0b36a;
+    --kouchd-rose: #3a2621;
+    --kouchd-on-fill: #f1f5f0;
+    --kouchd-on-primary: #16241e;
+    --kouchd-palette-faf8f5: #1b2721;
+    --kouchd-palette-e8e5dd: #24352c;
+    --kouchd-palette-eef6f0: #1c2b22;
+    --kouchd-palette-e9f3ec: #1c2b22;
+    --kouchd-palette-f4f8f2: #1c2b22;
+    --kouchd-palette-f1cfc6: #3a2621;
+    --kouchd-palette-e8eee7: #24352c;
+    --kouchd-palette-e3ecdf: #24352c;
+    --kouchd-palette-d8edf3: #1a303a;
+    --kouchd-palette-fae5dd: #3a2621;
+  }
+
+  .toast {
+    background: var(--kouchd-surface);
+    color: var(--kouchd-ink);
+    border: 1px solid var(--kouchd-line);
+  }
+
+  .stay-hub-card.past {
+    background: var(--kouchd-surface);
+    border-color: var(--kouchd-line);
+  }
+
+  .details-card.referral-code-card {
+    background: var(--kouchd-surface);
+    border-color: var(--kouchd-line);
+  }
+
+  .boundary-card {
+    background: var(--kouchd-surface);
+    border: 1px solid var(--kouchd-line);
+  }
+
+  .notes-copy {
+    color: var(--kouchd-muted);
+  }
+
+  .list-icon {
+    background: var(--kouchd-surface);
+    color: var(--kouchd-forest);
+    border: 1px solid var(--kouchd-line);
+  }
+
+  .list-icon.payment {
+    background: #17282f;
+    color: #8cc3d6;
+    border: 1px solid #274754;
+  }
+
+  .list-icon.chore {
+    background: #2a2016;
+    color: #e0b36a;
+    border: 1px solid #4e3922;
+  }
+
+  .status-pill.alert,
+  .status-pill.disputed,
+  .status-pill.late,
+  .status-pill.rejected,
+  .status-pill.failed {
+    background: #3a2621;
+    color: #f6b3a3;
+  }
+
+  .status-pill.ended,
+  .status-pill.voided,
+  .status-pill.replaced,
+  .status-pill.left {
+    background: #24352c;
+    color: var(--kouchd-muted);
   }
 }

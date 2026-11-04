@@ -4,6 +4,15 @@
 
 ### Changed
 
+- **Dark mode contrast and legibility remediation across Web & iOS (0.9.8)**:
+  - iOS Buttons: Wrapped `.borderedProminent` buttons paired with adaptive `Palette.forest` in `Introduction.swift`, `KouchdApp.swift`, and `MoreScreens.swift` with `.foregroundStyle(Palette.onPrimary)`, ensuring dark ink (`#16241e`) renders on light lime (`#d5f59a`) in dark mode instead of default white (contrast increased from 1.21:1 to 13.30:1).
+  - Web CSS Dark Theme Tokens: Updated `@media (prefers-color-scheme: dark)` in `styles.css` with semantic status and palette tokens (`--kouchd-sage`, `--kouchd-sky`, `--kouchd-blue`, `--kouchd-amber`, `--kouchd-rose`, `--kouchd-on-fill`, `--kouchd-on-primary`, `--kouchd-palette-faf8f5`, `--kouchd-palette-e8e5dd`, `--kouchd-palette-eef6f0`, `--kouchd-palette-e9f3ec`).
+  - Web Toast Contrast: Fixed `.toast` notification in `styles.css` to use dark surface and crisp line border in dark mode instead of rendering white text on inverted off-white ink.
+  - Dashboard V2.1 Dark Styles: Added `@media (prefers-color-scheme: dark)` block in `components/dashboard-v21.css` for attention cards, summary tile gradients, referral code cards, guest/other avatar badges, and host check-in cards.
+  - Production CSS Dark Styles: Added `@media (prefers-color-scheme: dark)` in `app/production.css` for house detail rows, note text, house icons (wifi, location, access, parking, notes), estimate cards, and notification urgency states.
+  - React Component Surface Tokens: Replaced hardcoded `#faf8f5` and `#eef6f0` card backgrounds with adaptive `var(--kouchd-surface)` across `join-household.tsx`, `sms-opt-in-form.tsx`, `live-stay.tsx`, `guest-onboarding-flow.tsx`, `host-onboarding-wizard.tsx`, `workspace-panels.tsx`, `bill-splitting-card.tsx`, `terms/page.tsx`, and platform console explorer components.
+  - Version 0.9.8.
+
 - **Platform Ops Brand System migration & public brand decommissioning (WRE-273, #166, branch only, not released, 0.9.7)**:
   - Relocated internal Brand & Design System to authenticated platform consoles at `/platform/brand` and `/console/[consoleKey]/brand`.
   - Added Brand System navigation item to `ConsoleShell`.

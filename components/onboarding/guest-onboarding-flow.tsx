@@ -156,7 +156,7 @@ export function GuestOnboardingFlow({
               border: "1px solid var(--line, #e2ded7)",
               borderRadius: "16px",
               padding: "1.5rem",
-              background: "#faf8f5",
+              background: "var(--kouchd-surface, #faf8f5)",
               display: "flex",
               flexDirection: "column",
               gap: "1rem",
@@ -169,7 +169,7 @@ export function GuestOnboardingFlow({
                   height: 48,
                   borderRadius: "50%",
                   background: "var(--green, #184f3a)",
-                  color: "#fff",
+                  color: "var(--kouchd-on-primary, #fff)",
                   display: "grid",
                   placeItems: "center",
                   fontWeight: 700,
@@ -425,7 +425,7 @@ export function GuestOnboardingFlow({
               border: "1px solid var(--line, #e2ded7)",
               borderRadius: "16px",
               padding: "1.5rem",
-              background: "#faf8f5",
+              background: "var(--kouchd-surface, #faf8f5)",
             }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1rem" }}>

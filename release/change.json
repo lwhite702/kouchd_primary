@@ -1,5 +1,5 @@
 {
   "type": "patch",
-  "version": "0.9.7",
-  "reason": "Move brand and design system to platform ops console and decommission public brand routes (WRE-273)."
+  "version": "0.9.8",
+  "reason": "Remediate dark mode white-on-white text and low-contrast surfaces across Web and iOS."
 }
