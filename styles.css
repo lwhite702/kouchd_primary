@@ -1328,20 +1328,22 @@ textarea { resize: vertical; }
 }
 
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    color-scheme: dark;
-    --kouchd-paper: #101713;
-    --kouchd-paper-rgb: 16 23 19;
-    --kouchd-surface: #1b2721;
-    --kouchd-surface-rgb: 27 39 33;
-    --kouchd-ink: #f1f5f0;
-    --kouchd-ink-rgb: 241 245 240;
-    --kouchd-muted: #aeb8b0;
-    --kouchd-line: #34443b;
-    --kouchd-line-rgb: 52 68 59;
-    --kouchd-forest: #d5f59a;
-    --kouchd-forest-rgb: 213 245 154;
-    --kouchd-eyebrow: #dff25e;
-  }
+/* Dark appearance is still in development (see help/product/roadmap.mdx). Many
+   product surfaces use fixed light colors, so it stays opt-in through
+   data-theme="dark" instead of following the device until it passes QA. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --kouchd-paper: #101713;
+  --kouchd-paper-rgb: 16 23 19;
+  --kouchd-surface: #1b2721;
+  --kouchd-surface-rgb: 27 39 33;
+  --kouchd-ink: #f1f5f0;
+  --kouchd-ink-rgb: 241 245 240;
+  --kouchd-muted: #aeb8b0;
+  --kouchd-line: #34443b;
+  --kouchd-line-rgb: 52 68 59;
+  --kouchd-forest: #d5f59a;
+  --kouchd-forest-rgb: 213 245 154;
+  --kouchd-eyebrow: #dff25e;
 }
+

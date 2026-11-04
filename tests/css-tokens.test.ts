@@ -36,4 +36,10 @@ describe("CSS color channel tokens", () => {
       .filter((name) => !defined.has(name) && !name.startsWith("--font-") && !name.startsWith("--tw-"));
     expect([...new Set(missing)]).toEqual([]);
   });
+
+  it("keeps the in-development dark appearance opt-in for product screens", () => {
+    const global = readFileSync(join(root, "styles.css"), "utf8");
+    expect(global).not.toMatch(/prefers-color-scheme:\s*dark/);
+    expect(global).toContain(':root[data-theme="dark"]');
+  });
 });

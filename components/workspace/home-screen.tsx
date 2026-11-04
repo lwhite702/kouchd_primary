@@ -14,6 +14,7 @@ import { FeatureGate } from "@/components/flags/feature-gate";
 import { FEATURE_FLAGS } from "@/lib/flags/config";
 import {
   activityScreen,
+  contributionTypeLabel,
   formatMoney,
   formatDate,
 } from "@/components/workspace/types";
@@ -447,14 +448,7 @@ export function HomeScreen({
                       const contributorName = isUsableName(contributor)
                         ? contributor
                         : "Household member";
-                      const contributionType =
-                        entry.type === "payment"
-                          ? "Contribution"
-                          : entry.type
-                              .replaceAll("_", " ")
-                              .replace(/\b\w/g, (letter) =>
-                                letter.toUpperCase(),
-                              );
+                      const contributionType = contributionTypeLabel(entry.type);
                       const recordStatus =
                         entry.status === "confirmed"
                           ? "Confirmed"
@@ -667,6 +661,32 @@ export function HomeScreen({
                 </p>
                 <div className="host-workspace-upcoming-divider" />
                 <p>{stayDatesSummary}</p>
+              </section>
+
+              <section className="host-workspace-card host-workspace-announcements-card">
+                <span className="host-workspace-eyebrow">House notes</span>
+                <h2>Announcements</h2>
+                {announcements.length ? (
+                  <ul className="host-workspace-announcements">
+                    {announcements.slice(0, 3).map((item) => (
+                      <li key={item._id}>
+                        <strong>{item.title}</strong>
+                        <span>{item.body}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p>Share a quick update everyone in the stay can see.</p>
+                )}
+                {!isEnded && (
+                  <button
+                    className="host-workspace-secondary-action"
+                    type="button"
+                    onClick={() => setPanel("announcement")}
+                  >
+                    <Megaphone size={15} /> Post an announcement
+                  </button>
+                )}
               </section>
 
               <section className="host-workspace-checkin-card">

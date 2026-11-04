@@ -307,7 +307,13 @@ export function HostOnboardingWizard({
   }
 
   return (
-    <div className="setup-card" style={{ maxWidth: 760, margin: "0 auto" }}>
+    <div
+      className="setup-card"
+      style={{ maxWidth: 760, margin: "0 auto" }}
+      onChange={() => {
+        if (stepError) setStepError("");
+      }}
+    >
       {/* Wizard Progress Bar */}
       <div className="wizard-header">
         <div className="wizard-progress-track">

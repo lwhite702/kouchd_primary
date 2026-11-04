@@ -11,7 +11,7 @@ import { Tooltip } from "@/components/ui/tooltip";
 import { HELP_LINKS } from "@/lib/help-links";
 import { FeatureGate } from "@/components/flags/feature-gate";
 import { FEATURE_FLAGS } from "@/lib/flags/config";
-import { formatMoney, formatDate } from "@/components/workspace/types";
+import { contributionTypeLabel, formatMoney, formatDate } from "@/components/workspace/types";
 
 import type { WorkspaceState } from "./use-live-stay";
 import { GuestTabs } from "./view-helpers";
@@ -40,6 +40,11 @@ export function ContributionsScreen({ state }: { state: WorkspaceState }) {
     disputeContributionEntry,
     stayId,
   } = state;
+  // One-off charges have their own titles; number only the scheduled periods.
+  const periodNumbers = new Map<string, number>();
+  for (const item of obligations) {
+    if (!item.title) periodNumbers.set(item._id, periodNumbers.size + 1);
+  }
   return (
     <div key="contributions" className="screen-transition">
       <div className="page-heading">
@@ -136,14 +141,14 @@ export function ContributionsScreen({ state }: { state: WorkspaceState }) {
           </div>
         </div>
         <div className="ledger-list">
-          {obligations.map((item, index) => (
+          {obligations.map((item) => (
             <article className="list-row contribution-row" key={item._id}>
               <span className="list-icon">
                 <ReceiptText size={19} />
               </span>
               <div className="list-copy">
                 <strong>
-                  {item.title ?? `Period ${index + 1}`} · due{" "}
+                  {item.title ?? `Period ${periodNumbers.get(item._id) ?? ""}`} · due{" "}
                   {formatDate(item.dueDate)}
                 </strong>
                 <span>
@@ -163,7 +168,7 @@ export function ContributionsScreen({ state }: { state: WorkspaceState }) {
                 <span
                   className="obligation-progress-track"
                   role="progressbar"
-                  aria-label={`${item.title ?? `Period ${index + 1}`} payment progress`}
+                  aria-label={`${item.title ?? `Period ${periodNumbers.get(item._id) ?? ""}`} payment progress`}
                   aria-valuemin={0}
                   aria-valuemax={100}
                   aria-valuenow={
@@ -284,7 +289,7 @@ export function ContributionsScreen({ state }: { state: WorkspaceState }) {
                 <Landmark size={19} />
               </span>
               <div className="list-copy">
-                <strong>{item.type.replaceAll("_", " ")}</strong>
+                <strong>{contributionTypeLabel(item.type)}</strong>
                 <span>
                   {item.note || "No note"} · {item.status}
                 </span>
@@ -324,7 +329,7 @@ export function ContributionsScreen({ state }: { state: WorkspaceState }) {
                         setDestructiveAction({
                           type: "voidContribution",
                           contributionId: item._id,
-                          title: `${formatMoney(item.amountCents)} ${item.type.replaceAll("_", " ")}`,
+                          title: `${formatMoney(item.amountCents)} ${contributionTypeLabel(item.type).toLowerCase()}`,
                         })
                       }
                     >
