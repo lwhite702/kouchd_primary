@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 
 export const metadata: Metadata = {
   title: "Brand & Design System | Kouchd",
@@ -12,5 +12,5 @@ export const metadata: Metadata = {
 };
 
 export default function BrandPage() {
-  redirect("/platform/brand");
+  notFound();
 }
