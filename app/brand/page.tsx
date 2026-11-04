@@ -1,17 +1,16 @@
 import type { Metadata } from "next";
-import { BrandKitGate } from "@/components/brand/brand-kit-gate";
+import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
   title: "Brand & Design System | Kouchd",
   description:
     "The official Kouchd Brand Building Design System: guidelines deck, 11-step color tokens, vector assets, social media kits, and web UI elements.",
-  openGraph: {
-    title: "Brand & Design System | Kouchd",
-    description:
-      "Private shared living made easier to coordinate. Official brand guidelines, design tokens, and components for Kouchd.",
+  robots: {
+    index: false,
+    follow: false,
   },
 };
 
 export default function BrandPage() {
-  return <BrandKitGate />;
+  redirect("/platform/brand");
 }

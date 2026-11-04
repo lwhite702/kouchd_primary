@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
 
 export default function BrandkitRedirect() {
-  redirect("/brand");
+  redirect("/platform/brand");
 }
