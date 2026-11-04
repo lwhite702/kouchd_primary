@@ -1033,7 +1033,6 @@ export function HomeScreen({
                           alt={actorName}
                           width={32}
                           height={32}
-                          unoptimized
                         />
                       ) : (
                         initials

@@ -4,7 +4,7 @@
 
 ### Changed
 
-- **iOS welcome-screen motion, host copy polish, and web Image cleanup (0.9.6)**:
+- **iOS welcome-screen motion, host copy polish, and web Image cleanup (#165, branch only, not released, 0.9.6)**:
   - Added staggered slide-in and fade animations for welcome cards and introductory features on the iOS welcome screen.
   - Updated iOS IntroductionFlow UI tests to match redesigned introduction copy and flow.
   - Refined host overview hero copy for single stays ("1 stay") and polished house detail and direct contribution cards.

@@ -258,8 +258,12 @@ struct IntroductionScreen: View {
         Label {
           Text("Kitchen reset")
         } icon: {
-          Image(systemName: "checkmark.circle.fill")
-            .symbolEffect(.bounce, value: step == 3 && !reduceMotion)
+          if reduceMotion {
+            Image(systemName: "checkmark.circle.fill")
+          } else {
+            Image(systemName: "checkmark.circle.fill")
+              .symbolEffect(.bounce, value: step == 3)
+          }
         }
           .font(.caption.weight(.semibold)).foregroundStyle(Palette.ink)
           .padding(12).background(Palette.surface, in: RoundedRectangle(cornerRadius: 14))
@@ -325,8 +329,15 @@ private struct IntroReveal: ViewModifier {
       .offset(y: visible ? 0 : rise)
       .scaleEffect(visible ? 1 : scale)
       .onAppear {
-        guard !shown, !reduceMotion else { return }
+        if reduceMotion {
+          shown = true
+          return
+        }
+        guard !shown else { return }
         withAnimation(.spring(duration: 0.55, bounce: 0.22).delay(after + 0.07 * Double(order))) { shown = true }
+      }
+      .onChange(of: reduceMotion) { _, newValue in
+        if newValue { shown = true }
       }
   }
 }

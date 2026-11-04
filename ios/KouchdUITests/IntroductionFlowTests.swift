@@ -74,11 +74,13 @@ final class IntroductionFlowTests: XCTestCase {
     _ = waitUntilHittable(field)
     var swipes = 0
     while !field.isHittable && swipes < 8 { app.swipeUp(); swipes += 1 }
+    XCTAssertTrue(field.isHittable, "Invite code field was not hittable after scrolling")
     field.tap()
     field.typeText("KCH-TEST01")
     let join = app.buttons["Join"].firstMatch
     swipes = 0
     while !join.isHittable && swipes < 8 { app.swipeUp(); swipes += 1 }
+    XCTAssertTrue(join.isHittable, "Join button was not hittable after scrolling")
     XCTAssertTrue(join.isEnabled, "Join should be enabled once a code is entered")
     join.tap()
   }

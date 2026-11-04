@@ -4,7 +4,7 @@ Internal engineering record. This file is excluded from Mintlify navigation and 
 
 ## 2026-11-04 — iOS welcome-screen motion, introduction UI tests, and web Image cleanup (0.9.6)
 
-- Branch `appto/0.9.4-self-check`.
+- Branch `codex/release-0.9.6`, PR #165 (WRE-275 follow-up / Version 1.0 redesign polish).
 - iOS welcome motion: Added staggered entry animations for introduction scene cards and interactive elements.
 - iOS IntroductionFlow UI tests: Aligned UI test expectations with the Version 1.0 redesign copy.
 - Host copy & contrast polish: Polished single-stay host hero count label, house detail info cards, pay-outside-Kouchd reminder card, and dark mode contrast for Split a bill.

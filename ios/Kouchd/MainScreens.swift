@@ -597,7 +597,7 @@ private struct SharedBillsCard: View {
         if store.isHost && !store.isEnded {
           Button { showingBillSplit = true } label: {
             // Forest turns lime in dark mode, so the label needs the matching dark ink to stay readable.
-            Text("Split a bill").foregroundStyle(Palette.adaptive(light: 0xFFFFFF, dark: 0x16241E))
+            Text("Split a bill").foregroundStyle(Palette.onPrimary)
           }
             .buttonStyle(.borderedProminent)
             .tint(Palette.forest)
