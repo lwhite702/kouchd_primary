@@ -63,6 +63,10 @@ describe("Household Referral Codes", () => {
 
     const referralCode = bundle.stay.referralCode!;
 
+    // Signed-out visitors cannot read the host, roommates or house terms
+    const anonymous = await t.query(api.referral.preview, { referralCode });
+    expect(anonymous.valid).toBe(false);
+
     // Guest previews the referral code without joining
     const preview = await guest.query(api.referral.preview, { referralCode });
     expect(preview.valid).toBe(true);

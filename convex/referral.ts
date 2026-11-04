@@ -28,6 +28,11 @@ export const preview = query({
     houseRules: schema.tables.terms.validator.fields.houseRules, rewards: schema.tables.terms.validator.fields.rewards,
   })),
   handler: async (ctx, args) => {
+    // The preview shows the host, roommates and house terms, so only signed-in
+    // accounts can look a code up. Every caller already runs signed in.
+    if (!(await ctx.auth.getUserIdentity())) {
+      return { valid: false as const, error: "Sign in to look up a household code." };
+    }
     try {
       assertReferralCode(args.referralCode);
     } catch (reason) {
