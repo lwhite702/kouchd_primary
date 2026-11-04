@@ -4,6 +4,15 @@
 
 ### Changed
 
+- **iOS welcome-screen motion, host copy polish, and web Image cleanup (0.9.6)**:
+  - Added staggered slide-in and fade animations for welcome cards and introductory features on the iOS welcome screen.
+  - Updated iOS IntroductionFlow UI tests to match redesigned introduction copy and flow.
+  - Refined host overview hero copy for single stays ("1 stay") and polished house detail and direct contribution cards.
+  - Improved dark mode contrast for "Split a bill" and secondary labels.
+  - Refactored web workspace components (`home-screen.tsx`, `live-stay.tsx`) to Next.js `<Image />` components with zero ESLint warnings.
+  - Increased Vitest test timeout to 20s to ensure deterministic execution across parallel worker suites.
+  - Version 0.9.6.
+
 - **Primary button, status tag tones, and adaptive line-art empty states (WRE-278, #152, branch only, not released, 0.9.5)**:
   - Added new `BrandButton` component (`components/ui/brand-button.tsx`) rendering the primary lime pressable action with 1.5px forest outline, 12px rounded radius, and tactile offset box-shadow, with reduced motion support.
   - Refactored `BrandTag` (`components/ui/brand-tag.tsx`) to use calm semantic status tones: sage for confirmed, sky for pending/upcoming, light coral for attention, and warm gray for neutral, reserving lime exclusively for primary actions and Plus badges.
