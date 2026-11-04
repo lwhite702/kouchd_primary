@@ -23,3 +23,13 @@ export function classifyUpstreamError(error: unknown): "timeout" | "network" | "
 
   return "unknown";
 }
+
+/** Loops is busy (429) or failing (5xx): worth one more try. */
+export function isRetryableStatus(status: number): boolean {
+  return status === 429 || status >= 500;
+}
+
+/** Loops rejected our credentials: retrying cannot help, the API key needs fixing. */
+export function isAuthFailureStatus(status: number): boolean {
+  return status === 401 || status === 403;
+}
