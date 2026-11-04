@@ -1,5 +1,5 @@
 {
   "type": "patch",
-  "version": "0.9.6",
-  "reason": "iOS welcome-screen motion, introduction UI tests, host copy polish, and zero-warning Next.js Image cleanup."
+  "version": "0.9.7",
+  "reason": "Move brand and design system to platform ops console and decommission public brand routes (WRE-273)."
 }

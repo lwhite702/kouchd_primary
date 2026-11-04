@@ -4,6 +4,14 @@
 
 ### Changed
 
+- **Platform Ops Brand System migration & public brand decommissioning (WRE-273, #166, branch only, not released, 0.9.7)**:
+  - Relocated internal Brand & Design System to authenticated platform consoles at `/platform/brand` and `/console/[consoleKey]/brand`.
+  - Added Brand System navigation item to `ConsoleShell`.
+  - Decommissioned public `/brand` and `/brandkit` routes with clean 404 responses (`notFound()`), avoiding redirects to internal endpoints.
+  - Removed public `/brand` links from sitemap, robots allowlist, marketing footer, and legal layout.
+  - Resolved nested main landmarks and formatted document title for Platform Ops.
+  - Version 0.9.7.
+
 - **iOS welcome-screen motion, host copy polish, and web Image cleanup (#165, branch only, not released, 0.9.6)**:
   - Added staggered slide-in and fade animations for welcome cards and introductory features on the iOS welcome screen.
   - Updated iOS IntroductionFlow UI tests to match redesigned introduction copy and flow.
