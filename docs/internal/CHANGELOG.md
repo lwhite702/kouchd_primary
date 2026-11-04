@@ -2,6 +2,15 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-11-04 — Relocate brand system to platform ops console and decommission public routes (WRE-273, 0.9.7)
+
+- Branch `codex/WRE-273-brand-console`, PR #166 (Linear WRE-273).
+- Relocated internal Brand System portal to `/platform/brand` guarded by `requirePlatformOpsAccess()` and `/console/[consoleKey]/brand` guarded by `requirePlatformConsole()`.
+- Added Brand System navigation item with palette icon to `ConsoleShell` for authorized operators.
+- Decommissioned public `/brand` and `/brandkit` entry points with clean 404 responses (`notFound()`), avoiding any public redirects that would expose internal admin endpoints.
+- Removed `/brand` references from sitemap, robots allowlist, marketing footer, and legal page footer.
+- Version bumped to 0.9.7.
+
 ## 2026-11-04 — iOS welcome-screen motion, introduction UI tests, and web Image cleanup (0.9.6)
 
 - Branch `codex/release-0.9.6`, PR #165 (WRE-275 follow-up / Version 1.0 redesign polish).
