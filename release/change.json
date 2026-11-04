@@ -1,5 +1,5 @@
 {
   "type": "patch",
-  "version": "0.9.5",
-  "reason": "New primary button, status colors, and adaptive line-art empty states (WRE-278)."
+  "version": "0.9.6",
+  "reason": "iOS welcome-screen motion, introduction UI tests, host copy polish, and zero-warning Next.js Image cleanup."
 }

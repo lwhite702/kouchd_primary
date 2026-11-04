@@ -312,6 +312,7 @@ import XCTest
 
   func testSpotsAreTheHostsTotalAcrossStays() {
     XCTAssertEqual(PlanCopy.guestSpotsLine(.init(used: 1, limit: 1)), "1 of 1 guest spots used across your stays")
+    XCTAssertEqual(PlanCopy.guestSpotsLine(.init(used: 2, limit: 1)), "2 guests across your stays · your plan includes 1")
     XCTAssertEqual(PlanCopy.guestSpotsLine(.init(used: 7, limit: nil)), "7 guests across your stays")
     XCTAssertEqual(PlanCopy.inviteSpotsLine(usage(plan: "free", stays: 1, guests: 0), guestsInThisStay: 0), "1 guest spot left on Free")
     XCTAssertEqual(PlanCopy.inviteSpotsLine(usage(plan: "plus", stays: 1, guests: 3), guestsInThisStay: 3), "2 guest spots left on Plus")

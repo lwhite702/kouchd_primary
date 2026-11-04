@@ -2,6 +2,16 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-11-04 — iOS welcome-screen motion, introduction UI tests, and web Image cleanup (0.9.6)
+
+- Branch `codex/release-0.9.6`, PR #165 (WRE-275 follow-up / Version 1.0 redesign polish).
+- iOS welcome motion: Added staggered entry animations for introduction scene cards and interactive elements.
+- iOS IntroductionFlow UI tests: Aligned UI test expectations with the Version 1.0 redesign copy.
+- Host copy & contrast polish: Polished single-stay host hero count label, house detail info cards, pay-outside-Kouchd reminder card, and dark mode contrast for Split a bill.
+- Web Image optimization: Converted `<img>` elements in `components/workspace/home-screen.tsx` and `components/workspace/live-stay.tsx` to Next.js `<Image />` with explicit dimensions and zero lint warnings.
+- Test runner stability: Configured `testTimeout: 20000` in `vitest.config.ts` to prevent parallel worker mock initialization timeouts.
+- Version 0.9.6.
+
 ## 2026-11-03 — Primary button, status tag tones, and adaptive line-art empty states (WRE-278, #152, 0.9.5)
 
 - Branch `codex/WRE-278-button-status-illustrations`, issue #152 (Linear WRE-278).

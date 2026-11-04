@@ -4,6 +4,7 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["tests/**/*.test.ts"],
+    testTimeout: 20000,
     // Vercel builds run the suite with real provider keys in the environment.
     // Clear them so test fixtures never reach live PostHog, Knock or Loops;
     // a test that needs a key stubs its own.

@@ -13,6 +13,7 @@ import {
   Users,
 } from "lucide-react";
 
+import Image from "next/image";
 import Link from "next/link";
 
 import type { Id } from "@/convex/_generated/dataModel";
@@ -133,11 +134,14 @@ export function LiveStay({
             <span className="v21-stay-switcher-name">{stayTitle}</span>
             <span className="v21-stay-switcher-meta">{stayDatesSummary}</span>
           </div>
-          <img
+          <Image
             src="/dashboard-v21/chevron-down.svg"
             alt=""
+            width={20}
+            height={20}
             className="v21-stay-switcher-chevron"
             aria-hidden="true"
+            unoptimized
           />
         </button>
 

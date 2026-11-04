@@ -10,6 +10,7 @@ enum Palette {
   static let muted = adaptive(light: 0x59675F, dark: 0xAEB8B0)
   static let lime = adaptive(light: 0xDFF25E, dark: 0xDFF25E)
   static let onLime = Color(red: 0.086, green: 0.141, blue: 0.118)
+  static let onPrimary = adaptive(light: 0xFFFFFF, dark: 0x16241E)
   static let line = adaptive(light: 0xDED8CE, dark: 0x34443B)
   static let sage = adaptive(light: 0xE5EDDE, dark: 0x22352B)
   static let sky = adaptive(light: 0xC9E7F0, dark: 0x1D3A44)
@@ -50,7 +51,7 @@ extension ClerkTheme {
         input: Palette.surface,
         foreground: Palette.ink,
         mutedForeground: Palette.muted,
-        primaryForeground: Palette.adaptive(light: 0xFFFFFF, dark: 0x16241E),
+        primaryForeground: Palette.onPrimary,
         inputForeground: Palette.ink,
         neutral: Palette.muted,
         ring: Palette.forest,
@@ -263,7 +264,7 @@ struct ForestButton: View {
   let action: () -> Void
   var body: some View {
     Button(action: action) {
-      Text(title).font(.headline).foregroundStyle(Palette.adaptive(light: 0xFFFFFF, dark: 0x16241E))
+      Text(title).font(.headline).foregroundStyle(Palette.onPrimary)
         .frame(maxWidth: .infinity).padding(.vertical, 15)
     }
     .buttonStyle(.plain)
