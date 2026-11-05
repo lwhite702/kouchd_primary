@@ -45,9 +45,38 @@ describe("GET /api/health/ready", () => {
     expect((await res.json()).checks).toEqual({ convex: "ok", clerk: "fail" });
   });
 
-  it("fails readiness when the Convex URL is missing", async () => {
-    delete process.env.NEXT_PUBLIC_CONVEX_URL;
+  it.each([
+    ["NEXT_PUBLIC_CONVEX_URL", "convex"],
+    ["CLERK_JWT_ISSUER_DOMAIN", "clerk"],
+  ] as const)("fails readiness in production when %s is missing", async (envVar, check) => {
+    vi.stubEnv("NODE_ENV", "production");
+    delete process.env[envVar];
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response("ok")));
+
+    const res = await GET();
+    expect(res.status).toBe(503);
+    expect((await res.json()).checks[check]).toBe("fail");
+    vi.unstubAllEnvs();
+  });
+
+  it.each([
+    ["NEXT_PUBLIC_CONVEX_URL", "convex"],
+    ["CLERK_JWT_ISSUER_DOMAIN", "clerk"],
+  ] as const)("only skips a missing %s outside production", async (envVar, check) => {
+    vi.stubEnv("NODE_ENV", "development");
+    delete process.env[envVar];
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response("ok")));
+
+    const res = await GET();
+    expect(res.status).toBe(200);
+    expect((await res.json()).checks[check]).toBe("skipped");
+    vi.unstubAllEnvs();
+  });
+
+  it("fails readiness when a configured Convex is unreachable", async () => {
+    vi.stubGlobal("fetch", vi.fn((url: string) =>
+      url.includes("convex") ? Promise.reject(new TypeError("fetch failed")) : Promise.resolve(new Response("ok"))
+    ));
 
     const res = await GET();
     expect(res.status).toBe(503);
