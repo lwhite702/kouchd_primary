@@ -341,6 +341,22 @@ describe("Newsletter API Route & Rate Limiter", () => {
       );
     });
 
+    it("returns the standard JSON 500 with a correlation id when something unexpected throws", async () => {
+      const limiter = await import("../lib/newsletter-limiter");
+      vi.spyOn(limiter, "getClientIp").mockImplementation(() => {
+        throw new Error("malformed x-forwarded-for");
+      });
+      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+      const res = await POST(signupRequest());
+      expect(res.status).toBe(500);
+      expect(await res.json()).toEqual({ message: "An unexpected error occurred. Please try again." });
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        "Newsletter route unhandled error",
+        expect.objectContaining({ correlationId: expect.any(String), message: "malformed x-forwarded-for" })
+      );
+    });
+
     it("does not retry a request that was deliberately aborted", async () => {
       const abortErr = new Error("Aborted");
       abortErr.name = "AbortError";

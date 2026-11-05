@@ -10,6 +10,21 @@ function isValidEmail(email: string) {
 }
 
 export async function POST(request: Request) {
+  try {
+    return await handleSignup(request);
+  } catch (error: unknown) {
+    // Anything the specific branches below did not anticipate still answers in the form's JSON shape.
+    const correlationId = crypto.randomUUID();
+    console.error("Newsletter route unhandled error", {
+      correlationId,
+      errorName: error instanceof Error ? error.name : "UnknownError",
+      message: error instanceof Error ? error.message : String(error),
+    });
+    return json("An unexpected error occurred. Please try again.", 500);
+  }
+}
+
+async function handleSignup(request: Request) {
   if (!request.headers.get("content-type")?.toLowerCase().startsWith("application/json")) {
     return json("Please submit the signup form again.", 415);
   }
