@@ -70,8 +70,10 @@ export async function POST(request: Request) {
 
   let response: Response | undefined;
   let lastError: unknown;
+  let attempts = 0;
 
   for (let attempt = 1; attempt <= 2; attempt++) {
+    attempts = attempt;
     try {
       response = await sendToLoops();
       // A response, even a failed one, replaces any earlier network error.
@@ -113,12 +115,13 @@ export async function POST(request: Request) {
 
   if (response && isAuthFailureStatus(response.status)) {
     // Distinct message so alerting can tell a rotated or revoked key apart from an outage.
-    console.error("Loops newsletter misconfiguration: API key rejected", { status: response.status });
+    console.error("Loops newsletter misconfiguration: API key rejected", { status: response.status, attempts });
     return json("We couldn’t add you just now. Please try again.", 502);
   }
 
   if (!response || !response.ok) {
-    console.error("Loops newsletter signup failed", { status: response?.status });
+    // The response body is not logged: Loops can echo the subscriber's email back.
+    console.error("Loops newsletter signup failed", { status: response?.status, attempts });
     return json("We couldn’t add you just now. Please try again.", 502);
   }
 

@@ -327,6 +327,20 @@ describe("Newsletter API Route & Rate Limiter", () => {
       );
     });
 
+    it("logs the upstream status and both attempts after two 503s", async () => {
+      const mockFetch = vi.fn().mockResolvedValue(new Response("Service unavailable", { status: 503 }));
+      vi.stubGlobal("fetch", mockFetch);
+      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+      const res = await POST(signupRequest());
+      expect(res.status).toBe(502);
+      expect(await res.json()).toEqual({ message: "We couldn’t add you just now. Please try again." });
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        "Loops newsletter signup failed",
+        { status: 503, attempts: 2 }
+      );
+    });
+
     it("does not retry a request that was deliberately aborted", async () => {
       const abortErr = new Error("Aborted");
       abortErr.name = "AbortError";
