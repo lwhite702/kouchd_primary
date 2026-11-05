@@ -82,8 +82,10 @@ export async function requirePlatformAdmin(ctx: AppCtx) {
     .map((id) => id.trim())
     .filter(Boolean);
 
-  const email = (user.email ?? identity.email)?.toLowerCase();
-  const hasEmailMatch = email ? adminEmails.includes(email) : false;
+  // Only the email Clerk signed into the token counts. users.email is written by the
+  // client through syncCurrent, so trusting it would let anyone claim an admin's address.
+  const tokenEmail = identity.emailVerified === false ? undefined : identity.email?.trim().toLowerCase();
+  const hasEmailMatch = tokenEmail ? adminEmails.includes(tokenEmail) : false;
   const hasIdMatch = adminUserIds.includes(user.clerkUserId) || adminUserIds.includes(identity.subject);
   const isExplicitEnvAdmin = hasEmailMatch || hasIdMatch;
   const isDbAdmin = Boolean(user.isAdmin);
