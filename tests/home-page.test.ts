@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { KouchdWorkspace } from "@/components/kouchd-workspace";
 import { AuthenticatedHome } from "@/components/authenticated-home";
 import { StartPage } from "@/components/start/start-page";
+import { SimplifiedLandingPage } from "@/components/simplified-landing-page";
 
 const mockRedirect = vi.fn((url: string) => {
   throw new Error(`REDIRECT:${url}`);
@@ -29,6 +30,10 @@ vi.mock("@/components/start/start-page", () => ({
   StartPage: vi.fn(() => null),
 }));
 
+vi.mock("@/components/simplified-landing-page", () => ({
+  SimplifiedLandingPage: vi.fn(() => null),
+}));
+
 describe("HomePage root route contract", () => {
   const originalEnv = process.env;
 
@@ -46,7 +51,7 @@ describe("HomePage root route contract", () => {
     delete process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
     const { default: HomePage } = await import("@/app/page");
-    const result = await HomePage();
+    const result = await HomePage({ searchParams: Promise.resolve({}) });
 
     expect(result.type).toBe(KouchdWorkspace);
     expect(result.props).toEqual({ servicesConfigured: false });
@@ -60,10 +65,21 @@ describe("HomePage root route contract", () => {
     mockAuth.mockResolvedValue({ userId: null });
 
     const { default: HomePage } = await import("@/app/page");
-    const result = await HomePage();
+    const result = await HomePage({ searchParams: Promise.resolve({}) });
 
     expect(result.type).toBe(StartPage);
     expect(mockRedirect).not.toHaveBeenCalled();
+  });
+
+  it("renders the simplified landing page for signed-out visitors from a simple source", async () => {
+    process.env.NEXT_PUBLIC_CONVEX_URL = "https://example.convex.cloud";
+    process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY = "pk_test_123";
+    mockAuth.mockResolvedValue({ userId: null });
+
+    const { default: HomePage } = await import("@/app/page");
+    const result = await HomePage({ searchParams: Promise.resolve({ utm_source: "sms" }) });
+
+    expect(result.type).toBe(SimplifiedLandingPage);
   });
 
   it("renders AuthenticatedHome for signed-in users when services are configured", async () => {
@@ -72,7 +88,7 @@ describe("HomePage root route contract", () => {
     mockAuth.mockResolvedValue({ userId: "user_test_123" });
 
     const { default: HomePage } = await import("@/app/page");
-    const result = await HomePage();
+    const result = await HomePage({ searchParams: Promise.resolve({}) });
 
     expect(result.type).toBe(AuthenticatedHome);
     expect(mockRedirect).not.toHaveBeenCalled();
