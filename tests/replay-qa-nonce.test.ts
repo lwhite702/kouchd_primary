@@ -33,12 +33,10 @@ describe("Replay QA site ownership nonce", () => {
     expect(text).toBe("");
   });
 
-  it("public static file matches exact 54 bytes without newline", () => {
+  it("is served only by the route handler, not a duplicate public/ file", () => {
+    // One source of truth: the route below. A second copy in public/ could drift from it.
     const filePath = path.join(process.cwd(), "public", ".well-known", "replay-qa-security-nonce");
-    expect(fs.existsSync(filePath)).toBe(true);
-    const content = fs.readFileSync(filePath, "utf8");
-    expect(content).toBe(EXPECTED_NONCE);
-    expect(fs.statSync(filePath).size).toBe(54);
+    expect(fs.existsSync(filePath)).toBe(false);
   });
 
   it("excludes .well-known routes from proxy/auth middleware", () => {
