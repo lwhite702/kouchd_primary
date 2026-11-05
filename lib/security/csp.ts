@@ -50,6 +50,7 @@ export const cspDirectives: Record<string, string[]> = {
     "https://clerk.kouchd.com",
     "https://*.clerk.accounts.dev",
     "https://challenges.cloudflare.com",
+    // Any port on purpose: Clerk's bot protection was blocked here without it (Replay QA, pinned by its test).
     "https://*.protect.clerk.com:*",
     "https://*.convex.cloud",
     "wss://*.convex.cloud",
