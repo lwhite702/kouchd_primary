@@ -327,14 +327,35 @@ describe("Newsletter API Route & Rate Limiter", () => {
       );
     });
 
+    it("does not retry a request that was deliberately aborted", async () => {
+      const abortErr = new Error("Aborted");
+      abortErr.name = "AbortError";
+      const mockFetch = vi.fn().mockRejectedValue(abortErr);
+      vi.stubGlobal("fetch", mockFetch);
+      vi.spyOn(console, "error").mockImplementation(() => {});
+
+      const res = await POST(signupRequest());
+      expect(res.status).toBe(500);
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+    });
+
     it("classifies upstream errors correctly by code, name, and cause", () => {
       const timeoutErr = new Error("Request timed out");
       timeoutErr.name = "TimeoutError";
       expect(classifyUpstreamError(timeoutErr)).toBe("timeout");
 
+      // A deliberate cancel is not a timeout, so it is never retried.
       const abortErr = new Error("Aborted");
       abortErr.name = "AbortError";
-      expect(classifyUpstreamError(abortErr)).toBe("timeout");
+      expect(classifyUpstreamError(abortErr)).toBe("unknown");
+
+      // An abort whose cause is the timeout still counts as one.
+      const abortFromTimeout = new Error("Aborted", { cause: { name: "TimeoutError" } });
+      abortFromTimeout.name = "AbortError";
+      expect(classifyUpstreamError(abortFromTimeout)).toBe("timeout");
+
+      // The real shape AbortSignal.timeout() produces.
+      expect(classifyUpstreamError(new DOMException("The operation was aborted due to timeout", "TimeoutError"))).toBe("timeout");
 
       const causeTimeoutErr = new Error("Fetch failed", { cause: { name: "TimeoutError" } });
       expect(classifyUpstreamError(causeTimeoutErr)).toBe("timeout");
