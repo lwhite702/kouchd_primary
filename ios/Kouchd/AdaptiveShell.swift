@@ -405,7 +405,7 @@ private struct StaySidebar: View {
   }
 
   private func row(_ title: String, symbol: String, section: ShellSection) -> some View {
-    Label(title, systemImage: symbol).tag(section).listItemTint(Palette.forest)
+    SidebarLabel(title: title, symbol: symbol).tag(section).listItemTint(Palette.forest)
   }
 
   @ViewBuilder private func toolSection(_ title: String, _ tools: [StayTool]) -> some View {
@@ -415,12 +415,12 @@ private struct StaySidebar: View {
         ForEach(visible, id: \.self) { tool in
           // At the limit, nothing gets typed before the host knows why it can't be saved.
           if tool == .createStay, let limit = store.planUsage.flatMap(PlanLimitError.stayLimit) {
-            Button { store.planLimit = limit } label: { Label(tool.title, systemImage: tool.symbol) }
+            Button { store.planLimit = limit } label: { SidebarLabel(title: tool.title, symbol: tool.symbol) }
               .foregroundStyle(Palette.ink).listItemTint(Palette.forest)
           } else if let route = tool.route {
             row(tool.title, symbol: tool.symbol, section: .tool(route))
           } else {
-            Link(destination: StayTool.helpURL) { Label(tool.title, systemImage: tool.symbol) }
+            Link(destination: StayTool.helpURL) { SidebarLabel(title: tool.title, symbol: tool.symbol) }
               .foregroundStyle(Palette.ink).listItemTint(Palette.forest)
           }
         }
@@ -454,6 +454,26 @@ private struct StaySidebar: View {
     .padding(.horizontal, 16).padding(.vertical, 8)
     .accessibilityLabel("Switch stay, current stay: \(store.stayName)")
     .hoverEffect(.highlight)
+  }
+}
+
+/// SF Symbols come in different widths (two speech bubbles are far wider than a question
+/// mark), which makes the sidebar column look uneven. Each icon is fitted into the same square,
+/// so they read as one size; the square grows with Dynamic Type.
+private struct SidebarLabel: View {
+  let title: String
+  let symbol: String
+  @ScaledMetric(relativeTo: .body) private var iconSize: CGFloat = 22
+
+  var body: some View {
+    Label {
+      Text(title)
+    } icon: {
+      Image(systemName: symbol)
+        .resizable()
+        .scaledToFit()
+        .frame(width: iconSize, height: iconSize)
+    }
   }
 }
 
