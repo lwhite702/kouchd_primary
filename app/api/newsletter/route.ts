@@ -1,5 +1,5 @@
 import { getClientIp, isRateLimited } from "@/lib/newsletter-limiter";
-import { classifyUpstreamError } from "@/lib/newsletter-error";
+import { classifyUpstreamError, isAuthFailureStatus, isRetryableStatus } from "@/lib/newsletter-error";
 
 function json(message: string, status: number) {
   return Response.json({ message }, { status, headers: { "Cache-Control": "no-store" } });
@@ -74,8 +74,9 @@ export async function POST(request: Request) {
   for (let attempt = 1; attempt <= 2; attempt++) {
     try {
       response = await sendToLoops();
+      // A response, even a failed one, replaces any earlier network error.
       lastError = undefined;
-      if (response.ok || response.status < 500) {
+      if (response.ok || !isRetryableStatus(response.status)) {
         break;
       }
       if (attempt === 1) {
@@ -108,6 +109,12 @@ export async function POST(request: Request) {
       message: lastError instanceof Error ? lastError.message : String(lastError),
     });
     return json("An unexpected error occurred. Please try again.", 500);
+  }
+
+  if (response && isAuthFailureStatus(response.status)) {
+    // Distinct message so alerting can tell a rotated or revoked key apart from an outage.
+    console.error("Loops newsletter misconfiguration: API key rejected", { status: response.status });
+    return json("We couldn’t add you just now. Please try again.", 502);
   }
 
   if (!response || !response.ok) {

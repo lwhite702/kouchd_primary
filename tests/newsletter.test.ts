@@ -252,6 +252,81 @@ describe("Newsletter API Route & Rate Limiter", () => {
       expect(mockFetch).toHaveBeenCalledTimes(2);
     });
 
+    const signupRequest = () =>
+      new Request("http://localhost/api/newsletter", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: "user@example.com", consent: true }),
+      });
+
+    it("retries once when Loops is rate limiting (429) and succeeds on the second attempt", async () => {
+      const mockFetch = vi
+        .fn()
+        .mockResolvedValueOnce(new Response("Too many requests", { status: 429 }))
+        .mockResolvedValueOnce(new Response(JSON.stringify({ success: true }), { status: 200 }));
+      vi.stubGlobal("fetch", mockFetch);
+
+      const res = await POST(signupRequest());
+      expect(res.status).toBe(200);
+      expect(mockFetch).toHaveBeenCalledTimes(2);
+    });
+
+    it("returns 502 after a second 429 from Loops", async () => {
+      const mockFetch = vi.fn().mockResolvedValue(new Response("Too many requests", { status: 429 }));
+      vi.stubGlobal("fetch", mockFetch);
+      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+      const res = await POST(signupRequest());
+      expect(res.status).toBe(502);
+      expect(mockFetch).toHaveBeenCalledTimes(2);
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        "Loops newsletter signup failed",
+        expect.objectContaining({ status: 429 })
+      );
+    });
+
+    it.each([401, 403])("logs a misconfiguration and does not retry when Loops returns %i", async (status) => {
+      const mockFetch = vi.fn().mockResolvedValue(new Response("Unauthorized", { status }));
+      vi.stubGlobal("fetch", mockFetch);
+      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+      const res = await POST(signupRequest());
+      expect(res.status).toBe(502);
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        "Loops newsletter misconfiguration: API key rejected",
+        expect.objectContaining({ status })
+      );
+    });
+
+    it("does not retry a permanent 422 validation rejection", async () => {
+      const mockFetch = vi.fn().mockResolvedValue(new Response("Invalid", { status: 422 }));
+      vi.stubGlobal("fetch", mockFetch);
+      vi.spyOn(console, "error").mockImplementation(() => {});
+
+      const res = await POST(signupRequest());
+      expect(res.status).toBe(502);
+      expect(mockFetch).toHaveBeenCalledTimes(1);
+    });
+
+    it("returns 502 with the upstream status when a network error is followed by a 5xx", async () => {
+      const networkError = new TypeError("fetch failed");
+      const mockFetch = vi
+        .fn()
+        .mockRejectedValueOnce(networkError)
+        .mockResolvedValueOnce(new Response("Bad gateway", { status: 502 }));
+      vi.stubGlobal("fetch", mockFetch);
+      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+      const res = await POST(signupRequest());
+      expect(res.status).toBe(502);
+      expect(mockFetch).toHaveBeenCalledTimes(2);
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        "Loops newsletter signup failed",
+        expect.objectContaining({ status: 502 })
+      );
+    });
+
     it("classifies upstream errors correctly by code, name, and cause", () => {
       const timeoutErr = new Error("Request timed out");
       timeoutErr.name = "TimeoutError";
