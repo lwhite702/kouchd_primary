@@ -1,6 +1,7 @@
 "use client";
 
 import * as Sentry from "@sentry/nextjs";
+import { retryOrReload } from "@/lib/error-retry";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
@@ -20,13 +21,7 @@ export default function GlobalError({
 
   const handleRetry = () => {
     setAttempts((prev) => prev + 1);
-    try {
-      reset();
-    } catch (retryError) {
-      // A root-layout crash can throw again on reset; a full reload is the only way out.
-      Sentry.captureException(retryError);
-      window.location.reload();
-    }
+    retryOrReload(reset, (retryError) => Sentry.captureException(retryError));
   };
 
   return (

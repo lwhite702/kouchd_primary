@@ -1,6 +1,7 @@
 "use client";
 
 import * as Sentry from "@sentry/nextjs";
+import { retryOrReload } from "@/lib/error-retry";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
@@ -22,7 +23,7 @@ export default function ErrorPage({
 
   const handleRetry = () => {
     setAttempts((prev) => prev + 1);
-    reset();
+    retryOrReload(reset, (retryError) => Sentry.captureException(retryError));
   };
 
   return (

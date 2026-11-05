@@ -91,9 +91,12 @@ async function handleSignup(request: Request) {
     attempts = attempt;
     try {
       response = await sendToLoops();
-      // A response, even a failed one, replaces any earlier network error.
-      lastError = undefined;
-      if (response.ok || !isRetryableStatus(response.status)) {
+      if (response.ok) {
+        // Only success clears an earlier failure; a later 503 must not hide a network error.
+        lastError = undefined;
+        break;
+      }
+      if (!isRetryableStatus(response.status)) {
         break;
       }
       if (attempt === 1) {
@@ -108,6 +111,13 @@ async function handleSignup(request: Request) {
       }
       break;
     }
+  }
+
+  // A rejected API key is the actionable cause even if another attempt failed on the network.
+  if (response && isAuthFailureStatus(response.status)) {
+    // Distinct message so alerting can tell a rotated or revoked key apart from an outage.
+    console.error("Loops newsletter misconfiguration: API key rejected", { status: response.status, attempts });
+    return json("We couldn’t add you just now. Please try again.", 502);
   }
 
   if (lastError && (!response || !response.ok)) {
@@ -126,12 +136,6 @@ async function handleSignup(request: Request) {
       message: lastError instanceof Error ? lastError.message : String(lastError),
     });
     return json("An unexpected error occurred. Please try again.", 500);
-  }
-
-  if (response && isAuthFailureStatus(response.status)) {
-    // Distinct message so alerting can tell a rotated or revoked key apart from an outage.
-    console.error("Loops newsletter misconfiguration: API key rejected", { status: response.status, attempts });
-    return json("We couldn’t add you just now. Please try again.", 502);
   }
 
   if (!response || !response.ok) {
