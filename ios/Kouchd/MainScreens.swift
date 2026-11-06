@@ -362,7 +362,7 @@ struct HomeScreen: View {
         ForEach(Array(store.activity.prefix(limit)), id: \.id) { item in
           Button { openActivity(item["kind"].text, item["action"].text) } label: {
             HStack(alignment: .top, spacing: 10) {
-              Text(item["detail"].text).font(.subheadline).foregroundStyle(Palette.ink)
+              Text(Display.inlineDays(item["detail"].text)).font(.subheadline).foregroundStyle(Palette.ink)
                 .frame(maxWidth: .infinity, alignment: .leading)
               Image(systemName: "arrow.up.right").font(.caption.bold()).foregroundStyle(Palette.forest)
             }
@@ -740,7 +740,7 @@ private struct LedgerSplitContent: View {
   private func rowLabel(_ item: Value) -> some View {
     let isCharge = segment == .charges
     let title = isCharge
-      ? (item["title"].text.isEmpty ? "Stay contribution" : item["title"].text)
+      ? (item["title"].text.isEmpty ? "Stay contribution" : Display.inlineDays(item["title"].text))
       : item["type"].text.replacingOccurrences(of: "_", with: " ").capitalized
     let date = isCharge ? "Due \(Display.dayDate(item["dueDate"].text))" : Display.dayDate(item["date"].text)
     let amount = !isCharge ? Display.money(item["amountCents"].int)
@@ -778,7 +778,7 @@ private struct LedgerChargeCard: View {
   var body: some View {
     Card {
       HStack {
-        Text(item["title"].text.isEmpty ? "Stay contribution" : item["title"].text)
+        Text(item["title"].text.isEmpty ? "Stay contribution" : Display.inlineDays(item["title"].text))
           .font(.headline)
         Spacer()
         Pill(text: item["status"].text)

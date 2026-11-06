@@ -7,8 +7,9 @@ Internal engineering record. This file is excluded from Mintlify navigation and 
 - Branch `codex/ios-friendly-dates`, PR #181. No Linear issue: creating one failed because the workspace hit its free issue limit; link one when the limit allows.
 - Added `Display.dayDate` / `Display.dayRange` (`ios/Kouchd/Models.swift`) and routed every on-screen calendar day through them; stored and sent values stay ISO.
 - Raised by the App Store screenshot review, which flagged ISO dates on the Stay screen.
-- Evidence: `KouchdTests` 76/76 passed on the iPhone 18 Pro Max simulator (iOS 27.0), including 6 `DisplayDateTests` (locales, time zones from UTC-11 to UTC+14, strict `yyyy-MM-dd` shape); Stay, Home, Ledger, Chores and Check-ins checked visually through `StayLayoutTestHost`. The Release integrity workflow's steps were run locally and passed: npm audit, `verify:env`, typecheck, lint, 383 web tests, web build, `release:check`, Fastfile syntax and the iOS simulator build.
-- Follow-ups: labels the server writes with a date inside (such as "Occupied nights due …") still show ISO days and should be fixed where they are written; the Split a bill form's typed date fields could become date pickers.
+- Evidence: `KouchdTests` 77/77 passed on the iPhone 18 Pro Max simulator (iOS 27.0), including 7 `DisplayDateTests` (locales, time zones from UTC-11 to UTC+14, strict `yyyy-MM-dd` shape); Stay, Home, Ledger, Chores and Check-ins checked visually through `StayLayoutTestHost`. The Release integrity workflow's steps were run locally and passed: npm audit, `verify:env`, typecheck, lint, 383 web tests, web build, `release:check`, Fastfile syntax and the iOS simulator build.
+- Server-written labels with a day inside (Ledger charge titles, admin obligations, household activity) now go through `Display.inlineDays`, which also covers titles already stored.
+- Follow-ups: the server could write friendlier labels for the web app and emails too; the Split a bill form's typed date fields could become date pickers.
 - Not done: no Release build or real-device test. GitHub Actions did not run on the PR because the account is locked for a billing issue.
 - Version bumped to 0.9.9.
 

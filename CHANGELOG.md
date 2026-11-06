@@ -6,9 +6,10 @@
 
 - **iOS friendly dates (branch only, not released, 0.9.9)**:
   - Added `Display.dayDate` and `Display.dayRange` in `ios/Kouchd/Models.swift`, which show stored calendar days such as `2026-10-04` in the person's locale ("Oct 4, 2026"). Days are formatted in UTC so they never shift across time zones, and text that isn't a calendar day is shown unchanged.
-  - Used them for every date shown in the iOS app: stay dates and agreement ranges (`StayScreens.swift`), the guest Home stay range, next contribution and next check-in, Ledger due and record dates, bill due and service dates (`MainScreens.swift`), chore schedule labels (`HouseholdRules.swift`), check-in dates (`CoordinationScreens.swift`), and occupied nights, admin contribution dates and admin obligation due dates (`MoreScreens.swift`).
+  - Used them for every stored calendar-day field shown in the iOS app (subscription and audit timestamps already had their own formatting): stay dates and agreement ranges (`StayScreens.swift`), the guest Home stay range, next contribution and next check-in, Ledger due and record dates, bill due and service dates (`MainScreens.swift`), chore schedule labels (`HouseholdRules.swift`), check-in dates (`CoordinationScreens.swift`), and occupied nights, admin contribution dates and admin obligation due dates (`MoreScreens.swift`).
   - Only text in the exact stored `yyyy-MM-dd` shape that is a real day is reformatted; anything else is shown as-is.
-  - Stored and sent values stay in ISO `yyyy-MM-dd`. Typed date fields in the host's terms editor and the Split a bill form still take ISO input, and labels the server writes with a date inside (such as "Occupied nights due …") are unchanged.
+  - Added `Display.inlineDays`, which reformats exact calendar days inside labels Kouchd writes (Ledger charge titles such as "Occupied nights due …", the admin obligation list and household activity lines). It is never applied to text people type.
+  - Stored and sent values stay in ISO `yyyy-MM-dd`. Typed date fields in the host's terms editor and the Split a bill form still take ISO input.
   - Added `DisplayDateTests` and updated the chore label test.
   - Version 0.9.9.
 

@@ -314,7 +314,7 @@ struct ActivityScreen: View {
       }
       ForEach(store.activity, id: \.id) { event in
         Card {
-          Text(event["detail"].text).font(.headline)
+          Text(Display.inlineDays(event["detail"].text)).font(.headline)
           Text(event["kind"].text.capitalized).font(.caption).foregroundStyle(Palette.muted)
         }
       }
@@ -585,7 +585,7 @@ struct AdminStayScreen: View {
         Card { Text(chore.title).font(.headline); DataRow(title: "Completed", detail: chore["completed"].flag ? "Yes" : "No") }
       }
       ForEach(store.adminStayDetail["activity"].items.indices, id: \.self) { index in
-        Card { Text(store.adminStayDetail["activity"].items[index]["detail"].text) }
+        Card { Text(Display.inlineDays(store.adminStayDetail["activity"].items[index]["detail"].text)) }
       }
     }.task { store.loadAdminStay(stayID) }
       .onDisappear { store.stopAdmin("stay") }
@@ -776,7 +776,7 @@ struct AdminObligationList: View {
     ForEach(records.indices, id: \.self) { index in
       let record = records[index]
       Card {
-        Text(record.title.isEmpty ? "Stay contribution" : record.title).font(.headline)
+        Text(record.title.isEmpty ? "Stay contribution" : Display.inlineDays(record.title)).font(.headline)
         DataRow(title: "Amount", detail: Display.money(record["baseAmountCents"].int))
         DataRow(title: "Due", detail: Display.dayDate(record["dueDate"].text))
         if !record["voidedAt"].text.isEmpty { Pill(text: "Voided") }

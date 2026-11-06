@@ -90,6 +90,13 @@ enum Display {
     return date.formatted(style)
   }
 
+  /// Server-written labels with a day inside, such as "Occupied nights due 2026-11-05",
+  /// read as "Occupied nights due Nov 5, 2026". Use only on text Kouchd writes, never
+  /// on what people type.
+  static func inlineDays(_ text: String, locale: Locale = .autoupdatingCurrent) -> String {
+    text.replacing(/\b\d{4}-\d{2}-\d{2}\b/) { dayDate(String($0.output), locale: locale) }
+  }
+
   /// A stay's start and end days, such as "Oct 4, 2026 – Jan 18, 2027".
   static func dayRange(_ start: String, _ end: String, locale: Locale = .autoupdatingCurrent) -> String {
     dayDate(start, locale: locale) + " – " + dayDate(end, locale: locale)

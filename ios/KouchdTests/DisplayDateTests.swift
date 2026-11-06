@@ -39,6 +39,14 @@ final class DisplayDateTests: XCTestCase {
     XCTAssertEqual(Display.dayDate("2026-10-04T09:00"), "2026-10-04T09:00")
   }
 
+  func testDaysInsideServerLabelsAreReformatted() {
+    XCTAssertEqual(Display.inlineDays("Occupied nights due 2026-11-05", locale: us), "Occupied nights due Nov 5, 2026")
+    XCTAssertEqual(Display.inlineDays("Kitchen reset scheduled again for 2026-11-08.", locale: us),
+                   "Kitchen reset scheduled again for Nov 8, 2026.")
+    XCTAssertEqual(Display.inlineDays("Week of Oct 19", locale: us), "Week of Oct 19")
+    XCTAssertEqual(Display.inlineDays("Ref 12026-11-05 and 2026-02-30", locale: us), "Ref 12026-11-05 and 2026-02-30")
+  }
+
   func testStayRangeJoinsBothDays() {
     XCTAssertEqual(Display.dayRange("2026-10-04", "2027-01-18", locale: us), "Oct 4, 2026 – Jan 18, 2027")
   }
