@@ -90,11 +90,32 @@ enum Display {
     return date.formatted(style)
   }
 
-  /// Server-written labels with a day inside, such as "Occupied nights due 2026-11-05",
-  /// read as "Occupied nights due Nov 5, 2026". Use only on text Kouchd writes, never
-  /// on what people type.
-  static func inlineDays(_ text: String, locale: Locale = .autoupdatingCurrent) -> String {
-    text.replacing(/\b\d{4}-\d{2}-\d{2}\b/) { dayDate(String($0.output), locale: locale) }
+  /// A charge's title. Only the title the server writes for occupied nights
+  /// ("Occupied nights due 2026-11-05") has its day reformatted; titles hosts type are left as-is.
+  static func obligationTitle(_ obligation: Value, locale: Locale = .autoupdatingCurrent) -> String {
+    let title = obligation["title"].text
+    if title.isEmpty { return "Stay contribution" }
+    guard obligation["type"].text == "occupancy" else { return title }
+    return trailingDay(title, after: "Occupied nights due ", locale: locale)
+  }
+
+  /// An activity line. Only the day the server appends to known actions is reformatted,
+  /// so chore titles and topics people typed inside the line are left as-is.
+  static func activityDetail(_ event: Value, locale: Locale = .autoupdatingCurrent) -> String {
+    let detail = event["detail"].text
+    switch event["action"].text {
+    case "recurrence_scheduled": return trailingDay(detail, after: " scheduled again for ", locale: locale)
+    case "late_fee_waived": return trailingDay(detail, after: "Late fee waived for obligation due ", locale: locale)
+    default: return detail
+    }
+  }
+
+  /// Reformats the day that ends `text` right after the last `marker`, if there is one.
+  private static func trailingDay(_ text: String, after marker: String, locale: Locale) -> String {
+    guard let range = text.range(of: marker, options: .backwards) else { return text }
+    let day = String(text[range.upperBound...])
+    let formatted = dayDate(day, locale: locale)
+    return formatted == day ? text : text[..<range.upperBound] + formatted
   }
 
   /// A stay's start and end days, such as "Oct 4, 2026 – Jan 18, 2027".
