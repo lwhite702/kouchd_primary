@@ -80,7 +80,11 @@ enum Display {
   /// The day is formatted in UTC so it never shifts across time zones. Text that isn't
   /// a calendar day is shown unchanged.
   static func dayDate(_ day: String, locale: Locale = .autoupdatingCurrent) -> String {
-    guard let date = dayParser.date(from: day) else { return day }
+    // DateFormatter accepts "2026-1-4", so require the exact shape and a round trip,
+    // matching the server's calendar-day validation.
+    guard day.wholeMatch(of: /\d{4}-\d{2}-\d{2}/) != nil,
+          let date = dayParser.date(from: day),
+          dayParser.string(from: date) == day else { return day }
     var style = Date.FormatStyle(date: .abbreviated, time: .omitted, locale: locale, timeZone: utc)
     style.calendar = Calendar(identifier: .gregorian)
     return date.formatted(style)

@@ -4,11 +4,12 @@ Internal engineering record. This file is excluded from Mintlify navigation and 
 
 ## 2026-11-05 — Show friendly dates in the iOS app (0.9.9)
 
-- Branch `codex/ios-friendly-dates`. No Linear issue: the workspace hit its free issue limit when this was created.
+- Branch `codex/ios-friendly-dates`, PR #181. No Linear issue: creating one failed because the workspace hit its free issue limit; link one when the limit allows.
 - Added `Display.dayDate` / `Display.dayRange` (`ios/Kouchd/Models.swift`) and routed every on-screen calendar day through them; stored and sent values stay ISO.
 - Raised by the App Store screenshot review, which flagged ISO dates on the Stay screen.
-- Evidence: `KouchdTests` 75/75 passed on the iPhone 18 Pro Max simulator (iOS 27.0), including 5 new `DisplayDateTests`; Stay, Home, Ledger, Chores and Check-ins checked visually through `StayLayoutTestHost`.
-- Not done: no Release build, device test, push or PR.
+- Evidence: `KouchdTests` 76/76 passed on the iPhone 18 Pro Max simulator (iOS 27.0), including 6 `DisplayDateTests` (locales, time zones from UTC-11 to UTC+14, strict `yyyy-MM-dd` shape); Stay, Home, Ledger, Chores and Check-ins checked visually through `StayLayoutTestHost`. The Release integrity workflow's steps were run locally and passed: npm audit, `verify:env`, typecheck, lint, 383 web tests, web build, `release:check`, Fastfile syntax and the iOS simulator build.
+- Follow-ups: labels the server writes with a date inside (such as "Occupied nights due …") still show ISO days and should be fixed where they are written; the Split a bill form's typed date fields could become date pickers.
+- Not done: no Release build or real-device test. GitHub Actions did not run on the PR because the account is locked for a billing issue.
 - Version bumped to 0.9.9.
 
 ## 2026-11-04 — Remediate dark mode white-on-white text and low-contrast surfaces (0.9.8)

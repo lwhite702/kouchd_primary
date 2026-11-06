@@ -6,8 +6,9 @@
 
 - **iOS friendly dates (branch only, not released, 0.9.9)**:
   - Added `Display.dayDate` and `Display.dayRange` in `ios/Kouchd/Models.swift`, which show stored calendar days such as `2026-10-04` in the person's locale ("Oct 4, 2026"). Days are formatted in UTC so they never shift across time zones, and text that isn't a calendar day is shown unchanged.
-  - Used them for every date shown in the iOS app: stay dates and agreement ranges (`StayScreens.swift`), the guest Home stay range, next contribution and next check-in, Ledger due and record dates, bill due and service dates (`MainScreens.swift`), chore schedule labels (`HouseholdRules.swift`), check-in dates (`CoordinationScreens.swift`), and occupied nights and admin contribution records (`MoreScreens.swift`).
-  - Stored and sent values stay in ISO `yyyy-MM-dd`; the host's terms editor keeps its typed ISO fields.
+  - Used them for every date shown in the iOS app: stay dates and agreement ranges (`StayScreens.swift`), the guest Home stay range, next contribution and next check-in, Ledger due and record dates, bill due and service dates (`MainScreens.swift`), chore schedule labels (`HouseholdRules.swift`), check-in dates (`CoordinationScreens.swift`), and occupied nights, admin contribution dates and admin obligation due dates (`MoreScreens.swift`).
+  - Only text in the exact stored `yyyy-MM-dd` shape that is a real day is reformatted; anything else is shown as-is.
+  - Stored and sent values stay in ISO `yyyy-MM-dd`. Typed date fields in the host's terms editor and the Split a bill form still take ISO input, and labels the server writes with a date inside (such as "Occupied nights due …") are unchanged.
   - Added `DisplayDateTests` and updated the chore label test.
   - Version 0.9.9.
 
