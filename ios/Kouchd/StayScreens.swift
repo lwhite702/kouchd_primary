@@ -71,8 +71,8 @@ struct StayScreen: View {
             DataRow(title: "Roommates", detail: "\(max(1, store.bundle["stay"]["roommateCount"].int))")
           }
         }
-        DataRow(title: "From", detail: store.bundle["terms"]["startDate"].text)
-        DataRow(title: "Until", detail: store.bundle["terms"]["endDate"].text)
+        DataRow(title: "From", detail: Display.dayDate(store.bundle["terms"]["startDate"].text))
+        DataRow(title: "Until", detail: Display.dayDate(store.bundle["terms"]["endDate"].text))
         DataRow(title: "Rhythm", detail: store.bundle["terms"]["cadence"].text.capitalized)
         DataRow(title: "Contribution", detail: Display.money(store.bundle["terms"]["rateCents"].int))
         if store.isHost && !store.isEnded {
@@ -190,7 +190,7 @@ struct AgreementScreen: View {
       Card {
         if let terms = store.typedAgreement {
           Pill(text: "Version \(terms.version)")
-          DataRow(title: "Dates", detail: terms.startDate + " – " + terms.endDate)
+          DataRow(title: "Dates", detail: Display.dayRange(terms.startDate, terms.endDate))
           DataRow(title: "Amount", detail: Display.money(terms.rateCents))
           DataRow(title: "Cadence", detail: terms.cadence.capitalized)
           if store.bundle["terms"]["cadence"].text == "monthly" {
@@ -258,8 +258,8 @@ struct InvitationScreen: View {
           Pill(text: "Invitation")
           Text(preview["hostName"].text + " has invited you to " + preview["stayName"].text + ".")
             .font(.title3.bold())
-          DataRow(title: "From", detail: preview["terms"]["startDate"].text)
-          DataRow(title: "Until", detail: preview["terms"]["endDate"].text)
+          DataRow(title: "From", detail: Display.dayDate(preview["terms"]["startDate"].text))
+          DataRow(title: "Until", detail: Display.dayDate(preview["terms"]["endDate"].text))
           DataRow(title: "Contribution", detail: Display.money(preview["terms"]["rateCents"].int))
           Text(preview["terms"]["houseNotes"].text).font(.subheadline)
           PrimaryButton(title: "Join this stay") {

@@ -2,6 +2,15 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-11-05 — Show friendly dates in the iOS app (0.9.9)
+
+- Branch `codex/ios-friendly-dates`. No Linear issue: the workspace hit its free issue limit when this was created.
+- Added `Display.dayDate` / `Display.dayRange` (`ios/Kouchd/Models.swift`) and routed every on-screen calendar day through them; stored and sent values stay ISO.
+- Raised by the App Store screenshot review, which flagged ISO dates on the Stay screen.
+- Evidence: `KouchdTests` 75/75 passed on the iPhone 18 Pro Max simulator (iOS 27.0), including 5 new `DisplayDateTests`; Stay, Home, Ledger, Chores and Check-ins checked visually through `StayLayoutTestHost`.
+- Not done: no Release build, device test, push or PR.
+- Version bumped to 0.9.9.
+
 ## 2026-11-04 — Remediate dark mode white-on-white text and low-contrast surfaces (0.9.8)
 
 - Branch `codex/dark-mode-contrast`.

@@ -201,7 +201,7 @@ struct OccupancyScreen: View {
       AdaptiveGrid {
       ForEach(store.nights, id: \.id) { night in
         Card {
-          DataRow(title: night["nightDate"].text, detail: Display.money(night["amountCents"].int))
+          DataRow(title: Display.dayDate(night["nightDate"].text), detail: Display.money(night["amountCents"].int))
           if store.isHost && !store.isEnded && night["voidedAt"].text.isEmpty {
             Button("Remove this night") {
               Task { _ = await store.mutate("occupancy:voidOvernight", [
@@ -761,7 +761,7 @@ struct AdminContributionList: View {
       Card {
         HStack { Text(record["type"].text.capitalized).font(.headline); Spacer(); Pill(text: record["status"].text) }
         DataRow(title: "Amount", detail: Display.money(record["amountCents"].int))
-        DataRow(title: "Date", detail: record["date"].text)
+        DataRow(title: "Date", detail: Display.dayDate(record["date"].text))
         if !record["guestName"].text.isEmpty { DataRow(title: "Guest", detail: record["guestName"].text) }
         if !record["creatorName"].text.isEmpty { DataRow(title: "Recorded by", detail: record["creatorName"].text) }
         Text(record["note"].text)
@@ -778,7 +778,7 @@ struct AdminObligationList: View {
       Card {
         Text(record.title.isEmpty ? "Stay contribution" : record.title).font(.headline)
         DataRow(title: "Amount", detail: Display.money(record["baseAmountCents"].int))
-        DataRow(title: "Due", detail: record["dueDate"].text)
+        DataRow(title: "Due", detail: Display.dayDate(record["dueDate"].text))
         if !record["voidedAt"].text.isEmpty { Pill(text: "Voided") }
         if !record["lateFeeWaivedAt"].text.isEmpty { Pill(text: "Late fee waived") }
       }

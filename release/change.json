@@ -1,5 +1,5 @@
 {
   "type": "patch",
-  "version": "0.9.8",
-  "reason": "Remediate dark mode white-on-white text and low-contrast surfaces across Web and iOS."
+  "version": "0.9.9",
+  "reason": "Show stored calendar days as friendly, locale-aware dates in the iOS app."
 }

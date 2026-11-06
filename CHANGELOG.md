@@ -4,6 +4,13 @@
 
 ### Changed
 
+- **iOS friendly dates (branch only, not released, 0.9.9)**:
+  - Added `Display.dayDate` and `Display.dayRange` in `ios/Kouchd/Models.swift`, which show stored calendar days such as `2026-10-04` in the person's locale ("Oct 4, 2026"). Days are formatted in UTC so they never shift across time zones, and text that isn't a calendar day is shown unchanged.
+  - Used them for every date shown in the iOS app: stay dates and agreement ranges (`StayScreens.swift`), the guest Home stay range, next contribution and next check-in, Ledger due and record dates, bill due and service dates (`MainScreens.swift`), chore schedule labels (`HouseholdRules.swift`), check-in dates (`CoordinationScreens.swift`), and occupied nights and admin contribution records (`MoreScreens.swift`).
+  - Stored and sent values stay in ISO `yyyy-MM-dd`; the host's terms editor keeps its typed ISO fields.
+  - Added `DisplayDateTests` and updated the chore label test.
+  - Version 0.9.9.
+
 - **Dark mode contrast and legibility remediation across Web & iOS (0.9.8)**:
   - iOS Buttons: Wrapped `.borderedProminent` buttons paired with adaptive `Palette.forest` in `Introduction.swift`, `KouchdApp.swift`, and `MoreScreens.swift` with `.foregroundStyle(Palette.onPrimary)`, ensuring dark ink (`#16241e`) renders on light lime (`#d5f59a`) in dark mode instead of default white (contrast increased from 1.21:1 to 13.30:1).
   - Web CSS Dark Theme Tokens: Updated `@media (prefers-color-scheme: dark)` in `styles.css` with semantic status and palette tokens (`--kouchd-sage`, `--kouchd-sky`, `--kouchd-blue`, `--kouchd-amber`, `--kouchd-rose`, `--kouchd-on-fill`, `--kouchd-on-primary`, `--kouchd-palette-faf8f5`, `--kouchd-palette-e8e5dd`, `--kouchd-palette-eef6f0`, `--kouchd-palette-e9f3ec`).

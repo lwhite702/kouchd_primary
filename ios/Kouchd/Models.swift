@@ -75,6 +75,33 @@ enum Display {
     formatter.dateFormat = "yyyy-MM-dd"
     return formatter.string(from: date)
   }
+
+  /// Stored calendar days ("2026-10-04") read in the person's locale, such as "Oct 4, 2026".
+  /// The day is formatted in UTC so it never shifts across time zones. Text that isn't
+  /// a calendar day is shown unchanged.
+  static func dayDate(_ day: String, locale: Locale = .autoupdatingCurrent) -> String {
+    guard let date = dayParser.date(from: day) else { return day }
+    var style = Date.FormatStyle(date: .abbreviated, time: .omitted, locale: locale, timeZone: utc)
+    style.calendar = Calendar(identifier: .gregorian)
+    return date.formatted(style)
+  }
+
+  /// A stay's start and end days, such as "Oct 4, 2026 – Jan 18, 2027".
+  static func dayRange(_ start: String, _ end: String, locale: Locale = .autoupdatingCurrent) -> String {
+    dayDate(start, locale: locale) + " – " + dayDate(end, locale: locale)
+  }
+
+  private static let utc = TimeZone(identifier: "UTC")!
+
+  private static let dayParser: DateFormatter = {
+    let formatter = DateFormatter()
+    formatter.locale = Locale(identifier: "en_US_POSIX")
+    formatter.calendar = Calendar(identifier: .gregorian)
+    formatter.timeZone = utc
+    formatter.dateFormat = "yyyy-MM-dd"
+    formatter.isLenient = false
+    return formatter
+  }()
 }
 
 
