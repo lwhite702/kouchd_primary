@@ -157,7 +157,14 @@ describe("RevenueCat webhook endpoint", () => {
       accounts: await ctx.db.query("householdAccounts").collect(),
       snapshots: await ctx.db.query("subscriptionSnapshots").collect(),
       events: await ctx.db.query("providerEvents").collect(),
+      scheduled: await ctx.db.system.query("_scheduled_functions").collect(),
     }));
+    const heycatch = database.scheduled.filter((job) => job.name.includes("captureHeyCatchEventAction"));
+    expect(heycatch).toHaveLength(2);
+    expect(heycatch.map((job) => job.args[0])).toEqual([
+      expect.objectContaining({ distinctId: "clerk-host-1", event: "subscription_initial_purchase", plan: "plus" }),
+      expect.objectContaining({ distinctId: "clerk-host-1", event: "subscription_cancellation", plan: "plus" }),
+    ]);
     expect(database.accounts).toHaveLength(1);
     expect(database.snapshots).toHaveLength(2);
     expect(database.events).toHaveLength(3);

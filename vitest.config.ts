@@ -3,6 +3,7 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   test: {
     environment: "node",
+    setupFiles: ["./tests/mocks/heycatch.ts"],
     include: ["tests/**/*.test.ts"],
     testTimeout: 20000,
     // Vercel builds run the suite with real provider keys in the environment.

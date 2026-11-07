@@ -8,7 +8,7 @@ analytics.init({
   install: {
     framework: "nextjs",
     frameworkVersion: "16",
-    agent: "other",
+    agent: "codex",
   },
 });
 

@@ -328,11 +328,30 @@ export const ingestRevenueCatEvent = internalMutation({
     if (!user) return "ignored" as const;
 
     const householdAccountId = await getOrCreateHouseholdAccount(ctx, user._id);
-    return await applyProviderSnapshotEvent(ctx, {
+    const result = await applyProviderSnapshotEvent(ctx, {
       ...args,
       provider: "revenuecat",
       householdAccountId,
     });
+    // Only accepted production changes become analytics outcomes. Retries,
+    // stale events and sandbox purchases must not inflate the live funnel.
+    if (result === "applied" && args.environment === "production") {
+      const { plan } = await getEffectiveSubscriptionForAccount(ctx, householdAccountId, "production");
+      await ctx.scheduler.runAfter(0, internal.posthog.captureHeyCatchEventAction, {
+        distinctId: user.clerkUserId,
+        event: `subscription_${args.eventType.toLowerCase()}`,
+        plan: publicPlanName(plan),
+        properties: {
+          provider_event_id: args.providerEventId,
+          status: args.status,
+          plan: publicPlanName(plan),
+          ...(args.productId ? { product_id: args.productId } : {}),
+          ...(args.store ? { store: args.store } : {}),
+          ...(args.periodType ? { period_type: args.periodType } : {}),
+        },
+      });
+    }
+    return result;
   },
 });
 

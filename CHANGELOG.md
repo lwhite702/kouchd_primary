@@ -4,6 +4,8 @@
 
 ### Changed
 
+- **HeyCatch web analytics reconciliation (unreleased)**: Correct installer metadata, deliver committed server funnel outcomes to HeyCatch even without PostHog configuration, and track accepted production subscription changes with Clerk identity and public plan properties. Skip webhook duplicates/stale events and sandbox billing. Mock the SDK throughout tests to prevent synthetic ingestion.
+
 - **HeyCatch analytics SDK integration (0.9.9)**:
   - Initialized HeyCatch analytics in `instrumentation-client.ts` with project key `hck_pk_vTnA-QIqNwJkDomxrPzeV7q7FubOu6pI` and Next.js 16 metadata.
   - Allowed `https://in.heycatch.ai` in `script-src` and `connect-src` CSP directives.

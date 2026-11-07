@@ -1,7 +1,26 @@
 "use node";
 
+import { analytics } from "@heycatch/sdk";
 import { v } from "convex/values";
 import { internalAction } from "./_generated/server";
+
+analytics.init({ projectKey: "hck_pk_vTnA-QIqNwJkDomxrPzeV7q7FubOu6pI" });
+
+// RevenueCat already sends to PostHog directly; this action avoids duplicating it.
+export const captureHeyCatchEventAction = internalAction({
+  args: {
+    distinctId: v.string(),
+    event: v.string(),
+    properties: v.any(),
+    plan: v.optional(v.string()),
+  },
+  returns: v.null(),
+  handler: async (_ctx, { distinctId, event, properties, plan }) => {
+    if (plan !== undefined) await analytics.setIdentity(distinctId, { plan });
+    await analytics.trackEvent(event, properties, { userId: distinctId });
+    return null;
+  },
+});
 
 export const captureServerEventAction = internalAction({
   args: {
@@ -12,6 +31,9 @@ export const captureServerEventAction = internalAction({
   },
   returns: v.boolean(),
   handler: async (_ctx, { distinctId, event, properties = {}, stayId }) => {
+    // These actions run after the database transaction commits. Await the SDK
+    // so the action cannot finish before ingest responds, even without PostHog.
+    await analytics.trackEvent(event, properties, { userId: distinctId });
     const apiKey = process.env.NEXT_PUBLIC_POSTHOG_KEY;
     const host = process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://us.i.posthog.com";
     if (!apiKey) return false;

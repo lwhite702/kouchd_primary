@@ -1,3 +1,6 @@
+import { convexTest } from "convex-test";
+import schema from "../convex/schema";
+import { internal } from "../convex/_generated/api";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it, vi } from "vitest";
@@ -15,6 +18,8 @@ describe("HeyCatch Analytics Integration", () => {
     expect(file).toContain('projectKey: "hck_pk_vTnA-QIqNwJkDomxrPzeV7q7FubOu6pI"');
     expect(file).toContain('framework: "nextjs"');
     expect(file).toContain('frameworkVersion: "16"');
+    expect(file).toContain('agent: "codex"');
+    expect(file).not.toContain('site: "landing"');
   });
 
   it("permits https://in.heycatch.ai in script-src and connect-src CSP directives", () => {
@@ -40,5 +45,50 @@ describe("HeyCatch Analytics Integration", () => {
       expect.objectContaining({ stayId: "stay_test", date: "2026-11-05" })
     );
     trackSpy.mockRestore();
+  });
+});
+
+const modules = import.meta.glob([
+  "../convex/**/*.ts",
+  "!../convex/lib/**",
+  "!../convex/schema.ts",
+  "!../convex/auth.config.ts",
+]);
+
+describe("HeyCatch server delivery", () => {
+  it("awaits delivery with the Clerk ID even when PostHog is unconfigured", async () => {
+    const t = convexTest(schema, modules);
+    let release!: () => void;
+    const pending = new Promise<void>((resolve) => { release = resolve; });
+    const spy = vi.mocked(analytics.trackEvent).mockImplementationOnce(() => pending);
+    let finished = false;
+    const action = t.action(internal.posthog.captureServerEventAction, {
+      distinctId: "user_synthetic", event: "user_signed_up", properties: {},
+    }).then(() => { finished = true; });
+    await vi.waitFor(() => expect(spy).toHaveBeenCalledWith(
+      "user_signed_up", {}, { userId: "user_synthetic" },
+    ));
+    expect(finished).toBe(false);
+    release();
+    await action;
+    expect(finished).toBe(true);
+  });
+
+  it("updates subscription identity and awaits the outcome without sending to PostHog", async () => {
+    const t = convexTest(schema, modules);
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockRejectedValue(new Error("Unexpected network"));
+    try {
+      await t.action(internal.posthog.captureHeyCatchEventAction, {
+        distinctId: "user_synthetic", event: "subscription_initial_purchase",
+        properties: { plan: "plus" }, plan: "plus",
+      });
+      expect(analytics.setIdentity).toHaveBeenCalledWith("user_synthetic", { plan: "plus" });
+      expect(analytics.trackEvent).toHaveBeenCalledWith(
+        "subscription_initial_purchase", { plan: "plus" }, { userId: "user_synthetic" },
+      );
+      expect(fetchSpy).not.toHaveBeenCalled();
+    } finally {
+      fetchSpy.mockRestore();
+    }
   });
 });
