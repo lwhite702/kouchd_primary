@@ -2,7 +2,7 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
-## 2026-11-05 — Show friendly dates in the iOS app (0.9.9)
+## 2026-11-05 — Show friendly dates in the iOS app (0.9.10)
 
 - Branch `codex/ios-friendly-dates`, PR #181. No Linear issue: creating one failed because the workspace hit its free issue limit; link one when the limit allows.
 - Added `Display.dayDate` / `Display.dayRange` (`ios/Kouchd/Models.swift`) and routed every on-screen calendar day through them; stored and sent values stay ISO.
@@ -11,7 +11,7 @@ Internal engineering record. This file is excluded from Mintlify navigation and 
 - Server-appended days now read friendly through `Display.obligationTitle` (occupancy charges only, matched by obligation `type`) and `Display.activityDetail` (`recurrence_scheduled` and `late_fee_waived` actions, trailing day only). Typed titles and topics are never rewritten; titles already stored are covered.
 - Follow-ups: the server could write friendlier labels for the web app and emails too; the Split a bill form's typed date fields could become date pickers.
 - Not done: no Release build or real-device test. GitHub Actions did not run on the PR because the account is locked for a billing issue.
-- Version bumped to 0.9.9.
+- Version bumped to 0.9.10 (main took 0.9.9 for the HeyCatch analytics release while this PR was open).
 
 ## 2026-11-04 — Remediate dark mode white-on-white text and low-contrast surfaces (0.9.8)
 

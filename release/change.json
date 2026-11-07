@@ -1,5 +1,5 @@
 {
   "type": "patch",
-  "version": "0.9.9",
+  "version": "0.9.10",
   "reason": "Show stored calendar days as friendly, locale-aware dates in the iOS app."
 }

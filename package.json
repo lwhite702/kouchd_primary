@@ -1,6 +1,6 @@
 {
   "name": "kouchd",
-  "version": "0.9.9",
+  "version": "0.9.10",
   "private": true,
   "type": "module",
   "scripts": {
@@ -23,6 +23,7 @@
   },
   "dependencies": {
     "@clerk/nextjs": "7.9.1",
+    "@heycatch/sdk": "^0.8.5",
     "@knocklabs/node": "^1.35.0",
     "@knocklabs/react": "^0.13.2",
     "@revenuecat/purchases-js": "^1.70.0",

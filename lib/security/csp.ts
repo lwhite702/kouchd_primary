@@ -33,6 +33,7 @@ export const cspDirectives: Record<string, string[]> = {
     "https://us.i.posthog.com",
     "https://us-assets.i.posthog.com",
     "https://connect.facebook.net",
+    "https://in.heycatch.ai",
   ],
   "style-src": ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
   "font-src": ["'self'", "https://fonts.gstatic.com", "data:"],
@@ -62,6 +63,7 @@ export const cspDirectives: Record<string, string[]> = {
     "wss://api.knock.app",
     "https://www.facebook.com",
     "https://connect.facebook.net",
+    "https://in.heycatch.ai",
   ],
   "frame-src": [
     "'self'",
