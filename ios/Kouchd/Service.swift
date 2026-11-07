@@ -52,6 +52,7 @@ enum KouchdAnalytics {
   }
 
   static func identify(_ userID: String?) {
+    HeyCatchNative.shared.identify(userId: userID)
     guard AppConfig.analyticsEnabled else { return }
     if let userID, !userID.isEmpty {
       PostHogSDK.shared.identify(userID)
@@ -61,6 +62,7 @@ enum KouchdAnalytics {
   }
 
   static func screenViewed(_ screen: String) {
+    HeyCatchNative.shared.screen(name: screen)
     guard AppConfig.analyticsEnabled, screens.contains(screen) else { return }
     PostHogSDK.shared.capture("screen_viewed", properties: ["screen": screen])
   }
