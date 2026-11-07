@@ -333,6 +333,16 @@ export function useLiveStay(stayId: Id<"stays">, onBackToHub: () => void) {
     setTourOpen(false);
   }, [guideRole, persistTourProgress, visibleTourStep]);
 
+  // Choosing a screen while the tour is showing pauses it, since the tour
+  // otherwise keeps its own screen in view and the click appears to do nothing.
+  const goToScreen = useCallback(
+    (next: Screen) => {
+      if (isTourVisible) pauseTour();
+      setScreen(next);
+    },
+    [isTourVisible, pauseTour],
+  );
+
   const skipTour = useCallback(() => {
     if (guideRole) persistTourProgress(guideRole, visibleTourStep, "skipped");
     setTourSuppressedForRole(guideRole ?? null);
@@ -987,7 +997,7 @@ export function useLiveStay(stayId: Id<"stays">, onBackToHub: () => void) {
     stayTitle,
     stayDatesSummary,
     visibleScreen,
-    setScreen,
+    setScreen: goToScreen,
     setPanel,
     viewer,
     isHost,

@@ -2,6 +2,24 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- **Web launch audit (branch only, not released, 0.9.6)**. Found by running the real UI against the real Convex functions in memory (host signup through stay creation, invitation, guest join and agreement, contributions, chores, shopping, check-ins, announcements, plan limits and ending a stay, on desktop and phone).
+  - **Sublease creation failed at the last step.** Subleases use monthly rent, which the backend refuses with rewards or early discounts, but the setup wizard had rewards on by default. The wizard now hides rewards and early discounts for monthly subleases, and only offers "Subletting my place" when `feature_subleases` is on (it defaults to off, and hosts only learned that after all five steps).
+  - **Setup wizard validation.** Each step is checked before moving on (stay name length, dates, 730-day limit, amounts, whole-number discounts and grace days, a phone number when text alerts are ticked) instead of failing on "Create stay". Errors clear as soon as a field changes.
+  - **Reward activities.** The activities a host unticked in setup were ignored and every suggestion was created. `stays.create` takes an optional `rewardTaskIds`; older clients that omit it still get every suggestion. Covered by `tests/stay-creation.test.ts`.
+  - **Guest join.** Accepting an invitation marks it used, which re-ran the preview query and replaced the success screen with "This invite was already accepted". The page now keeps the joined state and opens the guest's stay.
+  - **Announcements.** The only "Add" control lived in the guest layout behind a host check, so hosts could not post announcements on the web. The host overview has an Announcements card with "Post an announcement".
+  - **Phone navigation.** Hosts had no way to reach Shopping list or House check-ins on a phone. The phone menu now lists Shopping list, House check-ins and House guide (respecting their flags).
+  - **CSS color channels.** Since 0.9.0 the `--kouchd-*-rgb` and `--kouchd-rgb-*` tokens were comma-separated but read as `rgb(var(--token) / alpha)`, which browsers reject, so about 100 backgrounds, borders and shadows were dropped (the sidebar stay switcher was unreadable). Tokens are space-separated now, the `--forest`, `--surface`, `--red` and `--danger` aliases used by sublease cards are defined, and `tests/css-tokens.test.ts` guards both.
+  - **Dark appearance.** Following the device's dark setting left many surfaces unreadable (light text on fixed cream cards, dark text on forest). Dark appearance remains in development, so its tokens now apply only under `:root[data-theme="dark"]`, and the browser theme color is the light paper color.
+  - **Help tips** no longer open when a dialog focuses them, which covered the first field of Add contribution and other dialogs. Page-level tips sit beside their eyebrow label instead of on a line of their own.
+  - **Guided tour.** Choosing a screen while the tour is showing pauses the tour; before, the tour kept its own screen and the click did nothing.
+  - **Ledger and labels.** Scheduled periods are numbered separately from one-off charges (rows started at "Period 2"). Contribution types use the form's labels everywhere ("Groceries", "House work"). Stay status reads "Waiting for guests", "Active" or "Ended". The invitation expiry shows a date instead of a UTC timestamp. The schedule activity reads "Contribution schedule set with N due dates".
+  - **Small polish.** Someone with exactly one active stay opens it directly. The sidebar item is "Stay details" to match its page. The wizard defaults to an exact two-week stay, labels the end date as included, and shows formatted dates and amounts on the review step. The Get Started page no longer repeats the wizard's artwork.
+  - **Privacy.** `referral.preview` returns the host, roommate names and house terms, so it now requires a signed-in account. All callers already run signed in.
+  - Version 0.9.6.
+
 ### Changed
 
 - **Primary button, status tag tones, and adaptive line-art empty states (WRE-278, #152, branch only, not released, 0.9.5)**:

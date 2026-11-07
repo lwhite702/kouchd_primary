@@ -49,7 +49,7 @@ export function InviteHero({
           </div>
         </div>
         {expiresAt !== undefined && (
-          <p className="invite-expiry"><Clock3 size={15} aria-hidden="true" /> Invite expires {new Date(expiresAt).toUTCString()}</p>
+          <p className="invite-expiry"><Clock3 size={15} aria-hidden="true" /> Invite expires {new Date(expiresAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</p>
         )}
       </div>
     </section>

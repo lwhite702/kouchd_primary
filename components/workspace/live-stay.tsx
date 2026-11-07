@@ -40,7 +40,7 @@ import { MobileHeaderMenu } from "@/components/navigation/header-menu";
 import { Tooltip } from "@/components/ui/tooltip";
 import { isUsableName } from "@/lib/names";
 import { HELP_LINKS } from "@/lib/help-links";
-import { FeatureGate } from "@/components/flags/feature-gate";
+import { FeatureGate, useFeatureFlag } from "@/components/flags/feature-gate";
 import { FEATURE_FLAGS } from "@/lib/flags/config";
 
 import dynamic from "next/dynamic";
@@ -74,6 +74,8 @@ export function LiveStay({
   onBackToHub: () => void;
 }) {
   const state = useLiveStay(stayId, onBackToHub);
+  const shoppingEnabled = useFeatureFlag(FEATURE_FLAGS.SHOPPING_LIST);
+  const checkInsEnabled = useFeatureFlag(FEATURE_FLAGS.CHECK_IN_BOARD);
   const {
     stayTitle,
     stayDatesSummary,
@@ -388,7 +390,18 @@ export function LiveStay({
               onStays={onBackToHub}
               onJoinCode={() => setJoinModalOpen(true)}
               onSettings={() => setPanel("settings")}
-              docsHref="https://help.kouchd.com"
+              docsHref={HELP_LINKS.home}
+              sections={[
+                ...(shoppingEnabled
+                  ? [{ label: "Shopping list", description: "Shared and personal items", icon: ShoppingBasket, onSelect: () => setScreen("shopping") }]
+                  : []),
+                ...(checkInsEnabled
+                  ? [{ label: "House check-ins", description: "Plan and follow up on check-ins", icon: Users, onSelect: () => setScreen("checkins") }]
+                  : []),
+                ...(!isEnded
+                  ? [{ label: "House guide", description: "WiFi, address, and access details", icon: BookOpen, onSelect: () => setPanel("houseInfo") }]
+                  : []),
+              ]}
             />
 
             <div className="desktop-hide">

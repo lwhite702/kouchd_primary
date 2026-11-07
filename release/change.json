@@ -1,5 +1,5 @@
 {
   "type": "patch",
-  "version": "0.9.5",
-  "reason": "New primary button, status colors, and adaptive line-art empty states (WRE-278)."
+  "version": "0.9.6",
+  "reason": "Launch audit fixes: setup wizard and sublease creation, guest join success, host announcements, ledger labels, mobile navigation, CSS tokens, and dark appearance gated until ready."
 }
