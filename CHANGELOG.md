@@ -4,6 +4,14 @@
 
 ### Changed
 
+- **HeyCatch analytics SDK integration (0.9.9)**:
+  - Initialized HeyCatch analytics in `instrumentation-client.ts` with project key `hck_pk_vTnA-QIqNwJkDomxrPzeV7q7FubOu6pI` and Next.js 16 metadata.
+  - Allowed `https://in.heycatch.ai` in `script-src` and `connect-src` CSP directives.
+  - Added HeyCatch single-character short-link attribution redirect rule in `next.config.ts`.
+  - Added `HeyCatchAuthSync` in `app/providers.tsx` to sync authenticated identities on sign-in and reset on sign-out.
+  - Connected product events in `lib/analytics/track.ts` to `analytics.trackEvent(...)`.
+  - Version 0.9.9.
+
 - **Dark mode contrast and legibility remediation across Web & iOS (0.9.8)**:
   - iOS Buttons: Wrapped `.borderedProminent` buttons paired with adaptive `Palette.forest` in `Introduction.swift`, `KouchdApp.swift`, and `MoreScreens.swift` with `.foregroundStyle(Palette.onPrimary)`, ensuring dark ink (`#16241e`) renders on light lime (`#d5f59a`) in dark mode instead of default white (contrast increased from 1.21:1 to 13.30:1).
   - Web CSS Dark Theme Tokens: Updated `@media (prefers-color-scheme: dark)` in `styles.css` with semantic status and palette tokens (`--kouchd-sage`, `--kouchd-sky`, `--kouchd-blue`, `--kouchd-amber`, `--kouchd-rose`, `--kouchd-on-fill`, `--kouchd-on-primary`, `--kouchd-palette-faf8f5`, `--kouchd-palette-e8e5dd`, `--kouchd-palette-eef6f0`, `--kouchd-palette-e9f3ec`).
