@@ -19,6 +19,10 @@ done
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 TARGET="${1:-all}"
+case "$TARGET" in
+  iphone|ipad|all) ;;
+  *) echo "Unknown target '$TARGET'. Use iphone, ipad, or all." >&2; exit 2 ;;
+esac
 OUT_ROOT="${OUT_DIR:-$ROOT/ios/artifacts/screenshots/$(date +%Y%m%d-%H%M%S)}"
 DERIVED="$ROOT/ios/artifacts/screenshots-derived-data"
 mkdir -p "$OUT_ROOT"
@@ -58,20 +62,23 @@ capture() {
   local label="$1" device="$2" udid dir
   udid="${device#*|}"
   dir="$OUT_ROOT/$label"
+  # Start each device from an empty folder so an earlier run's images are never reported.
+  rm -rf "$dir"
   mkdir -p "$dir"
   echo "==> $label: ${device%|*} ($udid)"
   prepare_simulator "$udid"
-  run_tests "$udid" "$dir" 0
+  run_tests "$udid" "$dir" 0 "$OUT_ROOT/$label-light.xcresult"
   if [[ "${DARK:-0}" == "1" ]]; then
     xcrun simctl ui "$udid" appearance dark
-    run_tests "$udid" "$dir" 1
+    run_tests "$udid" "$dir" 1 "$OUT_ROOT/$label-dark.xcresult"
   fi
   xcrun simctl status_bar "$udid" clear || true
   report "$dir"
 }
 
 run_tests() {
-  local udid="$1" dir="$2" dark="$3"
+  local udid="$1" dir="$2" dark="$3" bundle="$4"
+  rm -rf "$bundle"
   TEST_RUNNER_KOUCHD_SCREENSHOT_DIR="$dir" \
   TEST_RUNNER_KOUCHD_SCREENSHOT_DARK="$dark" \
   TEST_RUNNER_KOUCHD_SCREENSHOT_IPAD_PORTRAIT="${IPAD_PORTRAIT:-0}" \
@@ -80,17 +87,25 @@ run_tests() {
     -project "$ROOT/ios/Kouchd.xcodeproj" -scheme Kouchd -configuration Debug \
     -destination "id=$udid" -derivedDataPath "$DERIVED" \
     -only-testing:KouchdUITests/AppStoreScreenshotTests \
+    -resultBundlePath "$bundle" \
     CODE_SIGNING_ALLOWED=NO -quiet
+  # The test writes PNGs straight to $dir; if the runner could not, fall back to its attachments.
+  if ! compgen -G "$dir/*.png" >/dev/null; then
+    echo "  No PNGs written directly; exporting attachments from $(basename "$bundle")"
+    xcrun xcresulttool export attachments --path "$bundle" --output-path "$dir/attachments-$(basename "$bundle" .xcresult)"
+  fi
 }
 
 report() {
   local dir="$1" file w h
-  for file in "$dir"/*.png; do
-    [[ -e "$file" ]] || { echo "No screenshots written to $dir" >&2; exit 1; }
+  for file in "$dir"/*.png "$dir"/attachments-*/*.png; do
+    [[ -e "$file" ]] || continue
     w="$(sips -g pixelWidth "$file" | awk '/pixelWidth/ {print $2}')"
     h="$(sips -g pixelHeight "$file" | awk '/pixelHeight/ {print $2}')"
     printf '  %-28s %sx%s\n' "$(basename "$file")" "$w" "$h"
   done
+  compgen -G "$dir/*.png" >/dev/null || compgen -G "$dir/attachments-*/*.png" >/dev/null \
+    || { echo "No screenshots found for $dir" >&2; exit 1; }
 }
 
 xcodegen generate --spec "$ROOT/ios/project.yml" >/dev/null
