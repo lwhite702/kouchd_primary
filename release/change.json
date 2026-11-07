@@ -1,5 +1,5 @@
 {
   "type": "patch",
-  "version": "0.9.6",
-  "reason": "Launch audit fixes: setup wizard and sublease creation, guest join success, host announcements, ledger labels, mobile navigation, CSS tokens, and dark appearance gated until ready."
+  "version": "0.9.9",
+  "reason": "Launch audit fixes: setup wizard and sublease creation, guest join success, host announcements, ledger labels, phone navigation, and CSS color channel tokens."
 }

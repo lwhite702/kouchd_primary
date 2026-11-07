@@ -397,7 +397,7 @@ export function WorkspacePanels({ state }: { state: WorkspaceState }) {
             style={{
               margin: "0.85rem 0",
               padding: "0.85rem",
-              background: "#faf8f5",
+              background: "var(--kouchd-surface, #faf8f5)",
               borderRadius: "10px",
               border: "1px solid var(--line)",
               fontSize: "0.78rem",
@@ -538,7 +538,7 @@ export function WorkspacePanels({ state }: { state: WorkspaceState }) {
               border: "1px dashed var(--line)",
               borderRadius: "12px",
               padding: "1rem",
-              background: "#faf8f5",
+              background: "var(--kouchd-surface, #faf8f5)",
               marginBottom: "1rem",
             }}
           >

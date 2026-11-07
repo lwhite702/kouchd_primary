@@ -2309,3 +2309,92 @@ body {
 
 .workspace-dialog, .billing-dialog { margin: auto; border: 0; max-height: 90dvh; overflow-y: auto; }
 .workspace-dialog::backdrop, .billing-dialog::backdrop { background: rgb(var(--kouchd-rgb-17-32-25) / .45); }
+
+@media (prefers-color-scheme: dark) {
+  .house-field-row {
+    background: var(--kouchd-surface);
+    border-color: var(--kouchd-line);
+  }
+  .house-note-text {
+    background: var(--kouchd-paper);
+    border-color: var(--kouchd-line);
+    color: var(--kouchd-ink);
+  }
+  .house-icon {
+    background: var(--kouchd-surface);
+    color: var(--kouchd-forest);
+    border: 1px solid var(--kouchd-line);
+  }
+  .house-icon.wifi {
+    background: #17282f;
+    color: #8cc3d6;
+    border: 1px solid #274754;
+  }
+  .house-icon.location {
+    background: #2a2016;
+    color: #e0b36a;
+    border: 1px solid #4e3922;
+  }
+  .house-icon.access {
+    background: #1c2b22;
+    color: var(--kouchd-forest);
+    border: 1px solid #2e4436;
+  }
+  .house-icon.parking {
+    background: #1f2722;
+    color: var(--kouchd-muted);
+    border: 1px solid var(--kouchd-line);
+  }
+  .house-icon.trash {
+    background: #1c2b22;
+    color: var(--kouchd-muted);
+    border: 1px solid var(--kouchd-line);
+  }
+  .house-icon.emergency {
+    background: #3a2621;
+    color: #f6b3a3;
+    border: 1px solid #5a362e;
+  }
+  .house-icon.notes {
+    background: #2a2016;
+    color: #e0b36a;
+    border: 1px solid #4e3922;
+  }
+  .house-icon.payment {
+    background: #1c2b22;
+    color: var(--kouchd-forest);
+    border: 1px solid #2e4436;
+  }
+  .estimate-card {
+    background: var(--kouchd-surface);
+    border-color: var(--kouchd-line);
+  }
+  .estimate-card strong {
+    color: var(--kouchd-forest);
+  }
+  .notification-item.urgency-info {
+    background: var(--kouchd-surface);
+    border-color: var(--kouchd-line);
+    color: var(--kouchd-ink);
+  }
+  .notification-item.urgency-notice {
+    background: #2a2016;
+    border-color: #4e3922;
+    color: var(--kouchd-ink);
+  }
+  .notification-item.urgency-alert {
+    background: #3a2621;
+    border-color: #5a362e;
+    color: var(--kouchd-ink);
+  }
+  .notification-status-bar {
+    background: var(--kouchd-surface);
+    border-color: var(--kouchd-line);
+    color: var(--kouchd-ink);
+  }
+  .mobile-menu-icon {
+    background: var(--kouchd-surface);
+    color: var(--kouchd-forest);
+    border: 1px solid var(--kouchd-line);
+  }
+}

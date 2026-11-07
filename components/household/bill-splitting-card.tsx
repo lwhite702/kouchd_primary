@@ -633,7 +633,7 @@ export function SplitBillModalForm({
                     padding: "0.6rem 0.75rem",
                     borderRadius: "10px",
                     border: "1px solid var(--line)",
-                    background: "#faf8f5",
+                    background: "var(--kouchd-surface, #faf8f5)",
                   }}
                 >
                   <label
@@ -716,7 +716,7 @@ export function SplitBillModalForm({
             padding: "0.65rem 0.85rem",
             borderRadius: "10px",
             border: "1px solid var(--line)",
-            background: "#eef6f0",
+            background: "var(--kouchd-surface, #eef6f0)",
             color: "var(--ink)",
           }}
         >
@@ -731,7 +731,7 @@ export function SplitBillModalForm({
           padding: "0.8rem 0.9rem",
           borderRadius: "10px",
           border: "1px solid var(--line)",
-          background: "#faf8f5",
+          background: "var(--kouchd-surface, #faf8f5)",
         }}
       >
         <strong style={{ display: "block", marginBottom: "0.35rem" }}>

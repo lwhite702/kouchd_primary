@@ -192,7 +192,7 @@ export function SmsOptInForm() {
 
   if (!isAuthenticated) {
     return (
-      <div role="status" style={{ background: "#faf8f5", border: "1px solid var(--kouchd-line, #ded8ce)", borderRadius: "14px", padding: "1.25rem" }}>
+      <div role="status" style={{ background: "var(--kouchd-surface, #faf8f5)", border: "1px solid var(--kouchd-line, #ded8ce)", borderRadius: "14px", padding: "1.25rem" }}>
         <p style={{ marginTop: 0 }}>Sign in or create a Kouchd account before enrolling. Your number and consent will be saved to your account only after you confirm the opt-in.</p>
         <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap" }}>
           <SignInButton mode="modal" forceRedirectUrl="/sms-opt-in">
@@ -219,7 +219,7 @@ export function SmsOptInForm() {
       {/* Overview Card */}
       <div
         style={{
-          background: "#faf8f5",
+          background: "var(--kouchd-surface, #faf8f5)",
           border: "1px solid var(--kouchd-line, #ded8ce)",
           borderRadius: "14px",
           padding: "1.25rem 1.5rem",

@@ -1,7 +1,7 @@
 # Web launch audit, November 2026
 
 **Branch:** `claude/loving-ptolemy-f7sjmy` (from `main` at `8fdc321`, 0.9.5)
-**Version prepared:** 0.9.6 (not released)
+**Version prepared:** 0.9.9 (not released; merged with `main` at 0.9.8)
 **Linear:** no issue was created from this session; file one before promotion.
 
 ## Verdict
@@ -35,7 +35,7 @@ Journeys exercised, desktop and phone:
 6. Plus household with two guests, back-dated history, overdue and pending
    records (used for the screenshot set).
 7. Every workspace screen at 390 px wide: no horizontal overflow.
-8. Dark appearance on every workspace screen (failed; see fixes).
+8. Dark appearance on every workspace screen (failed on 0.9.5; rechecked after merging 0.9.8).
 
 ## Defects found and fixed
 
@@ -47,7 +47,7 @@ Journeys exercised, desktop and phone:
 | High | Hosts could not post announcements on the web (control only in guest layout) | Announcements card on host overview |
 | High | Hosts could not reach Shopping list or House check-ins on phones | Phone menu lists both, plus House guide |
 | High | About 100 CSS declarations silently dropped since 0.9.0 (comma RGB tokens in slash syntax); sidebar stay switcher unreadable | Space-separated tokens, regression test |
-| High | Dark appearance followed the device and left many surfaces unreadable | Gated behind `data-theme="dark"` until it passes QA |
+| High | Dark appearance left many surfaces unreadable | `main` fixed contrast in 0.9.8 (#167); this branch converts its comma RGB tokens so they apply |
 | Medium | Dialog help popovers opened on focus and covered the first field | Open on click or Enter only |
 | Medium | Reward activities unticked in setup were still created | `rewardTaskIds` passed and honored |
 | Medium | No per-step validation in setup; errors only on the last step | Per-step validation |
@@ -61,7 +61,7 @@ Journeys exercised, desktop and phone:
 - `npm run typecheck`: clean.
 - `npm test`: 57 files, 370 tests passed (baseline 55 files, 363 tests).
 - `next build --webpack`: passed on the final source.
-- `node scripts/release-version.mjs check`: 0.9.6 synchronized; `node scripts/release-gate.mjs`: release artifacts checked.
+- `node scripts/release-version.mjs check`: 0.9.9 synchronized; `node scripts/release-gate.mjs`: release artifacts checked.
 
 These are source and local-runtime evidence only. They do not prove production
 configuration, provider delivery, or behavior for real accounts.
@@ -75,9 +75,7 @@ configuration, provider delivery, or behavior for real accounts.
    request replaces the host's own late fee with a fixed $5 daily or $25 weekly
    (`convex/paymentSchedule.ts`). The UI explains it, but it overrides a term
    the host set. Product decision needed.
-3. **Dark appearance** needs a full pass (many components use fixed light
-   colors) before `data-theme="dark"` is applied automatically again. The
-   public roadmap already lists it as in development.
+3. **Dark appearance** shipped from `main` in 0.9.8; recheck it on a preview deployment.
 4. **Referral codes** use `Math.random` with 32^6 combinations and there is no
    rate limit on code lookups or joins. Consider a crypto source and limits.
 5. **Internal doc drift.** `LAUNCH_READINESS.md` "Approved decisions" says Plus

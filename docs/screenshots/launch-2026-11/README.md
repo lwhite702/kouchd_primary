@@ -14,8 +14,7 @@ of Mintlify navigation (`docs/` is excluded by `.mintignore`).
   synthetic. No customer data was used.
 - Desktop: 1440 x 900 viewport at 2x (2880 px wide). Phone: 390 x 844 at 3x
   (1170 px wide). Files ending in `-full` are full-page captures.
-- Light appearance only. Dark appearance is still in development and is not
-  shown.
+- Light appearance only; dark appearance was not captured.
 - These show branch behavior that is not yet released. Use them publicly only
   after the matching release is verified in production.
 

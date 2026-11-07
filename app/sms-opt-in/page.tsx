@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { LegalPageHeader } from "@/components/legal/legal-article";
 import { LegalPageLayout } from "@/components/legal/legal-page-layout";
 import { SmsOptInForm } from "@/components/sms/sms-opt-in-form";
 
@@ -18,34 +19,16 @@ export default function SmsOptInPage() {
 
   return (
     <LegalPageLayout activeRoute="sms-opt-in">
-      <div style={{ borderBottom: "1px solid var(--kouchd-line, #ded8ce)", paddingBottom: "1.25rem", marginBottom: "1.75rem" }}>
-        <p
-          style={{
-            textTransform: "uppercase",
-            letterSpacing: "1.5px",
-            fontSize: "0.78rem",
-            fontWeight: 800,
-            color: "var(--kouchd-forest, #184f3a)",
-            margin: "0 0 0.5rem",
-          }}
-        >
-          Wrelik Brands LLC &middot; Carrier 10DLC Compliance
-        </p>
-        <h1
-          style={{
-            fontSize: "2.1rem",
-            fontWeight: 800,
-            color: "var(--kouchd-forest, #184f3a)",
-            margin: "0 0 0.5rem",
-            letterSpacing: "-0.5px",
-          }}
-        >
-          Text Message Opt-In &amp; Acceptance Form
-        </h1>
-        <p style={{ margin: 0, color: "var(--kouchd-muted, #59675f)", fontSize: "0.9rem" }}>
-          Registered Brand: <strong>Wrelik Brands LLC</strong> &middot; Product: <strong>Kouchd</strong>
-        </p>
-      </div>
+      <LegalPageHeader
+        eyebrow={<>Wrelik Brands LLC &middot; Carrier 10DLC Compliance</>}
+        title={<>Text Message Opt-In &amp; Acceptance Form</>}
+        titleSize="2.1rem"
+        meta={
+          <>
+            Registered Brand: <strong>Wrelik Brands LLC</strong> &middot; Product: <strong>Kouchd</strong>
+          </>
+        }
+      />
 
       {servicesConfigured ? (
         <SmsOptInForm />

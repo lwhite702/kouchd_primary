@@ -2,15 +2,45 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
-## 2026-11-07 — Web launch audit fixes and screenshot library (0.9.6)
+## 2026-11-07 — Web launch audit fixes and screenshot library (0.9.9)
 
-- Branch `claude/loving-ptolemy-f7sjmy`; no Linear issue yet. Not pushed, merged, deployed or released.
+- Branch `claude/loving-ptolemy-f7sjmy`; no Linear issue yet. Draft PR #182; not merged, deployed or released.
 - Full findings, evidence and open items: `docs/internal/LAUNCH_AUDIT_2026-11.md`. Technical detail: root `CHANGELOG.md` `[Unreleased]`.
-- Blockers fixed: default sublease creation failed on the last step; sublease option shown while its flag was off; joined guests saw "already accepted"; hosts could not post announcements; hosts could not reach Shopping list or House check-ins on phones; dropped CSS declarations from comma RGB tokens; unreadable automatic dark appearance (now opt-in).
+- Blockers fixed: default sublease creation failed on the last step; sublease option shown while its flag was off; joined guests saw "already accepted"; hosts could not post announcements; hosts could not reach Shopping list or House check-ins on phones; dropped CSS declarations from comma RGB tokens; dark theme tokens from 0.9.8 used the same comma channels and are converted.
 - Tests added: `tests/css-tokens.test.ts`, `tests/stay-creation.test.ts`, referral preview sign-in case.
-- Checks: lint 0 errors, typecheck clean, 57 files / 370 tests, production build, version 0.9.6 synchronized, release gate artifacts checked.
+- Checks: lint 0 errors, typecheck clean, 57 files / 370 tests, production build, version synchronized, release gate artifacts checked.
 - Screenshots: `docs/screenshots/launch-2026-11/` (56 captures, synthetic data, branch behavior; publish only after release verification).
-- Open: Clerk-hosted flows, RevenueCat checkout, Knock/SMS delivery not exercised; schedule-change late fee override needs a product decision; dark appearance needs a full pass.
+- Open: Clerk-hosted flows, RevenueCat checkout, Knock/SMS delivery not exercised; schedule-change late fee override needs a product decision.
+
+## 2026-11-04 — Remediate dark mode white-on-white text and low-contrast surfaces (0.9.8)
+
+- Branch `codex/dark-mode-contrast`.
+- iOS Button Contrast: Wrapped `.borderedProminent` buttons paired with adaptive `Palette.forest` in `ios/Kouchd/Introduction.swift`, `ios/Kouchd/KouchdApp.swift`, and `ios/Kouchd/MoreScreens.swift` with `.foregroundStyle(Palette.onPrimary)`, ensuring dark ink (`#16241e`) renders on light lime (`#d5f59a`) in dark mode instead of default white (contrast increased from 1.21:1 to 13.30:1).
+- Web CSS Dark Theme Tokens: Updated `@media (prefers-color-scheme: dark)` in `styles.css` with semantic tokens (`--kouchd-sage`, `--kouchd-sky`, `--kouchd-blue`, `--kouchd-amber`, `--kouchd-rose`, `--kouchd-on-fill`, `--kouchd-on-primary`, `--kouchd-palette-faf8f5`, `--kouchd-palette-e8e5dd`, `--kouchd-palette-eef6f0`, `--kouchd-palette-e9f3ec`).
+- Web Toast Contrast: Fixed `.toast` notification in `styles.css` to use dark surface and crisp line border in dark mode instead of rendering white text on inverted off-white ink.
+- Dashboard V2.1 Dark Styles: Added `@media (prefers-color-scheme: dark)` block in `components/dashboard-v21.css` for attention cards, summary tile gradients, referral code cards, guest/other avatar badges, and host check-in cards.
+- Production CSS Dark Styles: Added `@media (prefers-color-scheme: dark)` in `app/production.css` for house detail rows, note text, house icons (wifi, location, access, parking, notes), estimate cards, and notification urgency states.
+- React Component Surface Tokens: Replaced hardcoded `#faf8f5` and `#eef6f0` card backgrounds with adaptive `var(--kouchd-surface)` across `join-household.tsx`, `sms-opt-in-form.tsx`, `live-stay.tsx`, `guest-onboarding-flow.tsx`, `host-onboarding-wizard.tsx`, `workspace-panels.tsx`, `bill-splitting-card.tsx`, `terms/page.tsx`, and platform console explorer components.
+- Version bumped to 0.9.8.
+
+## 2026-11-04 — Relocate brand system to platform ops console and decommission public routes (WRE-273, 0.9.7)
+
+- Branch `codex/WRE-273-brand-console`, PR #166 (Linear WRE-273).
+- Relocated internal Brand System portal to `/platform/brand` guarded by `requirePlatformOpsAccess()` and `/console/[consoleKey]/brand` guarded by `requirePlatformConsole()`.
+- Added Brand System navigation item with palette icon to `ConsoleShell` for authorized operators.
+- Decommissioned public `/brand` and `/brandkit` entry points with clean 404 responses (`notFound()`), avoiding any public redirects that would expose internal admin endpoints.
+- Removed `/brand` references from sitemap, robots allowlist, marketing footer, and legal page footer.
+- Version bumped to 0.9.7.
+
+## 2026-11-04 — iOS welcome-screen motion, introduction UI tests, and web Image cleanup (0.9.6)
+
+- Branch `codex/release-0.9.6`, PR #165 (WRE-275 follow-up / Version 1.0 redesign polish).
+- iOS welcome motion: Added staggered entry animations for introduction scene cards and interactive elements.
+- iOS IntroductionFlow UI tests: Aligned UI test expectations with the Version 1.0 redesign copy.
+- Host copy & contrast polish: Polished single-stay host hero count label, house detail info cards, pay-outside-Kouchd reminder card, and dark mode contrast for Split a bill.
+- Web Image optimization: Converted `<img>` elements in `components/workspace/home-screen.tsx` and `components/workspace/live-stay.tsx` to Next.js `<Image />` with explicit dimensions and zero lint warnings.
+- Test runner stability: Configured `testTimeout: 20000` in `vitest.config.ts` to prevent parallel worker mock initialization timeouts.
+- Version 0.9.6.
 
 ## 2026-11-03 — Primary button, status tag tones, and adaptive line-art empty states (WRE-278, #152, 0.9.5)
 

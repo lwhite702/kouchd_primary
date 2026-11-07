@@ -6,50 +6,16 @@ vi.mock("next/font/google", () => ({
   Manrope: () => ({ variable: "--font-manrope" }),
 }));
 
-import { applyScriptSRI, CLERK_SRI_HASHES, initSecurityRuntime } from "../lib/security-runtime";
+import { initSecurityRuntime, SECURITY_RUNTIME_INLINE_SCRIPT } from "../lib/security-runtime";
 import { metadata as layoutMetadata } from "../app/layout";
 import { metadata as pageMetadata } from "../app/page";
 import nextConfig from "../next.config";
 
-describe("Replay QA: Subresource Integrity (SRI) for Clerk UI Chunks", () => {
-  it("defines cryptographic integrity hashes for Clerk vendor and UI chunks", () => {
-    expect(CLERK_SRI_HASHES["vendors_ui_e564da_1.41.2.js"]).toBe(
-      "sha384-n1qf8LZfE2TLHN1Eh3B3t0LvQVqZYr/WKDzGzK1VwkhfLYrZRFinzvauGI4mHpFu"
-    );
-    expect(CLERK_SRI_HASHES["signin_ui_e564da_1.41.2.js"]).toBe(
-      "sha384-GDLSsBq/mg4LaXeEdaQhupD+AA2shJNiVW/V/pKRELWgrJmraK6qUH7O9qxkmGZq"
-    );
-    expect(CLERK_SRI_HASHES["ui-common_ui_e564da_1.41.2.js"]).toBe(
-      "sha384-GzvvsBBuxWU6/TxyU+PjVhiFtGBk5mPCFx0O4ewPfOGWoH16e8lvCL35MsBwNXRa"
-    );
-  });
-
-  it("applies crossorigin and integrity attributes to matching Clerk script elements", () => {
-    const mockScript = {
-      crossOrigin: "",
-      integrity: "",
-    } as unknown as HTMLScriptElement;
-
-    const vendorUrl =
-      "https://clerk.kouchd.com/npm/@clerk/ui@1.41.2/dist/vendors_ui_e564da_1.41.2.js";
-    applyScriptSRI(mockScript, vendorUrl);
-
-    expect(mockScript.crossOrigin).toBe("anonymous");
-    expect(mockScript.integrity).toBe(
-      "sha384-n1qf8LZfE2TLHN1Eh3B3t0LvQVqZYr/WKDzGzK1VwkhfLYrZRFinzvauGI4mHpFu"
-    );
-  });
-
-  it("does not mutate scripts that do not match known Clerk chunk patterns", () => {
-    const mockScript = {
-      crossOrigin: "",
-      integrity: "",
-    } as unknown as HTMLScriptElement;
-
-    applyScriptSRI(mockScript, "https://app.kouchd.com/_next/static/chunks/main.js");
-
-    expect(mockScript.crossOrigin).toBe("");
-    expect(mockScript.integrity).toBe("");
+describe("Clerk script loading", () => {
+  it("no longer patches script elements or DOM insertion (version-pinned SRI went stale)", () => {
+    for (const needle of ["HTMLScriptElement", "appendChild", "insertBefore", "integrity", "sha384-"]) {
+      expect(SECURITY_RUNTIME_INLINE_SCRIPT).not.toContain(needle);
+    }
   });
 });
 

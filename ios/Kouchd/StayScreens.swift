@@ -111,12 +111,16 @@ struct StayScreen: View {
         if let message = accessCodesHiddenMessage {
           Text(message).font(.subheadline).foregroundStyle(Palette.muted)
         } else if HouseDetail.fields.allSatisfy({ store.bundle["stay"]["houseInfo"][$0.key].text.isEmpty }) {
-          Text("Your host hasn't added house details yet.").foregroundStyle(Palette.muted)
+          Text(store.isHost
+               ? "You haven't added house details yet."
+               : "Your host hasn't added house details yet.").foregroundStyle(Palette.muted)
         }
       }
       Card {
         Text("Pay outside Kouchd").font(.headline)
-        Text("Choose an option with your host, then record the contribution on the Ledger.")
+        Text(store.isHost
+             ? "Agree on an option with your guests, then record each contribution on the Ledger."
+             : "Choose an option with your host, then record the contribution on the Ledger.")
           .font(.subheadline).foregroundStyle(Palette.muted)
         ForEach(store.bundle["stay"]["paymentOptions"].items.indices, id: \.self) { index in
           let option = store.bundle["stay"]["paymentOptions"].items[index]

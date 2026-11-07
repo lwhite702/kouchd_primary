@@ -1041,7 +1041,7 @@ export function HostOnboardingWizard({
               border: "1px solid var(--line, #e2ded7)",
               borderRadius: "16px",
               padding: "1.5rem",
-              background: "#faf8f5",
+              background: "var(--kouchd-surface, #faf8f5)",
             }}
           >
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 170px), 1fr))", gap: "1.25rem", marginBottom: "1.5rem" }}>

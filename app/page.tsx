@@ -46,5 +46,3 @@ export default async function HomePage() {
   if (!userId) return <StartPage />;
   return <AuthenticatedHome />;
 }
-
-

@@ -58,11 +58,14 @@ export const syncCurrent = mutation({
       familyName: identity.familyName,
       nickname: identity.nickname,
       preferredUsername: identity.preferredUsername,
-      email: args.email ?? identity.email,
+      email: identity.email ?? args.email,
       existingName: existing?.name,
       role,
     });
-    const email = args.email?.trim() || identity.email || existing?.email;
+    // Clerk's token is the source of truth for email. A client-supplied address is only
+    // used when the token carries none, and never to replace the token's address.
+    const clientEmail = args.email?.trim() || undefined;
+    const email = identity.email || existing?.email || clientEmail;
     const imageUrl = args.imageUrl || identity.pictureUrl || existing?.imageUrl;
     let userId = existing?._id;
     if (existing) {

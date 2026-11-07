@@ -3,6 +3,8 @@ import Link from "next/link";
 import { LegalPageLayout } from "@/components/legal/legal-page-layout";
 import {
   LegalArticle,
+  LegalPageHeader,
+  legalTitleStyle,
   LegalSectionList,
   LegalCrossLinks,
 } from "@/components/legal/legal-article";
@@ -20,34 +22,16 @@ export default function TermsAndConditionsPage() {
   return (
     <LegalPageLayout activeRoute="terms">
       <LegalArticle>
-        <div style={{ borderBottom: "1px solid var(--kouchd-line, #ded8ce)", paddingBottom: "1.25rem", marginBottom: "1.75rem" }}>
-          <p
-            style={{
-              textTransform: "uppercase",
-              letterSpacing: "1.5px",
-              fontSize: "0.78rem",
-              fontWeight: 800,
-              color: "var(--kouchd-forest, #184f3a)",
-              margin: "0 0 0.5rem",
-            }}
-          >
-            {legalMeta.provider} &middot; Legal Documentation
-          </p>
-          <h1
-            style={{
-              fontSize: "2.25rem",
-              fontWeight: 800,
-              color: "var(--kouchd-forest, #184f3a)",
-              margin: "0 0 0.5rem",
-              letterSpacing: "-0.5px",
-            }}
-          >
-            Terms &amp; Conditions
-          </h1>
-          <p style={{ margin: 0, color: "var(--kouchd-muted, #59675f)", fontSize: "0.9rem" }}>
-            Effective Date: {termsOfUse.effectiveDate} &middot; Last updated: {termsOfUse.lastUpdated} &middot; Brand: <strong>{legalMeta.provider}</strong> (operating <strong>Kouchd</strong>)
-          </p>
-        </div>
+        <LegalPageHeader
+          eyebrow={<>{legalMeta.provider} &middot; Legal Documentation</>}
+          heading={<h1 style={legalTitleStyle}>Terms &amp; Conditions</h1>}
+          meta={
+            <>
+              Effective Date: {termsOfUse.effectiveDate} &middot; Last updated: {termsOfUse.lastUpdated} &middot; Brand:{" "}
+              <strong>{legalMeta.provider}</strong> (operating <strong>Kouchd</strong>)
+            </>
+          }
+        />
 
         {/* Platform Role Overview */}
         <div
@@ -119,14 +103,14 @@ export default function TermsAndConditionsPage() {
               </p>
             </div>
 
-            <div style={{ background: "#eef6f0", padding: "1rem", borderRadius: "10px", border: "1px solid #b8d2c1" }}>
+            <div style={{ background: "var(--kouchd-surface, #eef6f0)", padding: "1rem", borderRadius: "10px", border: "1px solid var(--kouchd-line, #b8d2c1)" }}>
               <strong style={{ color: "var(--kouchd-forest, #184f3a)", display: "block", marginBottom: "0.25rem" }}>
                 2. Rates &amp; Charges Disclosure
               </strong>
-              <p style={{ margin: 0, fontWeight: 700, color: "#184f3a", fontSize: "0.95rem" }}>
+              <p style={{ margin: 0, fontWeight: 700, color: "var(--kouchd-ink, #184f3a)", fontSize: "0.95rem" }}>
                 Message and data rates may apply.
               </p>
-              <p style={{ margin: "0.35rem 0 0", fontSize: "0.88rem", color: "#2d4438" }}>
+              <p style={{ margin: "0.35rem 0 0", fontSize: "0.88rem", color: "var(--kouchd-muted, #2d4438)" }}>
                 Depending on your mobile carrier and telephone plan, standard text messaging fees or data charges may be billed to you by your mobile carrier. Wrelik Brands LLC does not charge additional fees for sending SMS alerts.
               </p>
             </div>

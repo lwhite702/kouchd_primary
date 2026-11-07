@@ -45,7 +45,6 @@ export function MarketingFooter({ hasClerk }: MarketingFooterProps = {}) {
         <nav className="v21-footer-nav-col" aria-label="Media and company">
           <strong className="v21-footer-col-title">Company & Media</strong>
           <ul>
-            <li><Link href="/brand">Brand & Press Kit</Link></li>
             <li><a href="mailto:support@kouchd.com">Email support</a></li>
             <li><Link href="/sms-opt-in">SMS updates</Link></li>
           </ul>

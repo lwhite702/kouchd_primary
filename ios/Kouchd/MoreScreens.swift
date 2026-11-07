@@ -836,9 +836,11 @@ struct HouseholdGuideScreen: View {
         HStack {
           if step > 0 { Button("Back") { advance(to: step - 1) } }
           Spacer()
-          Button(step == 3 ? "Finish" : "Next") {
+          Button {
             if step == 3 { save(status: "completed", close: true) }
             else { advance(to: step + 1) }
+          } label: {
+            Text(step == 3 ? "Finish" : "Next").foregroundStyle(Palette.onPrimary)
           }.buttonStyle(.borderedProminent).tint(Palette.forest)
         }
         Button("Skip for now") { save(status: "skipped", close: true) }

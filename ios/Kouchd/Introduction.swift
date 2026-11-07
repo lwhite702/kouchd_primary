@@ -83,7 +83,12 @@ struct IntroductionScreen: View {
     .safeAreaInset(edge: .bottom, spacing: 0) {
       if !typeSize.isAccessibilitySize {
         footer.frame(maxWidth: 600).frame(maxWidth: .infinity)
-          .padding(.horizontal, 24).padding(.bottom, 16).background(Palette.cream)
+          .padding(.horizontal, 24).padding(.top, 16).padding(.bottom, 16).background(Palette.cream)
+          // Fade the page content into the footer so preview cards never end in a hard cut under the dots.
+          .overlay(alignment: .top) {
+            LinearGradient(colors: [Palette.cream.opacity(0), Palette.cream], startPoint: .top, endPoint: .bottom)
+              .frame(height: 28).offset(y: -28).allowsHitTesting(false).accessibilityHidden(true)
+          }
       }
     }
     .foregroundStyle(Palette.ink)
@@ -147,24 +152,34 @@ struct IntroductionScreen: View {
       if page > 0 {
         Image("CouchMark").renderingMode(.template).resizable().scaledToFit().frame(width: 48, height: 48)
           .foregroundStyle(Palette.forest).accessibilityHidden(true)
+          .introReveal(order: 1, rise: 10, scale: 0.85)
       }
-      if page > 0 { Pill(text: ["", "01 / Your stay", "02 / Contributions", "03 / Everyday living"][page]) }
+      if page > 0 {
+        Pill(text: ["", "01 / Your stay", "02 / Contributions", "03 / Everyday living"][page])
+          .introReveal(order: 1)
+      }
       Text(titles[page]).font(Palette.heading).accessibilityAddTraits(.isHeader)
+        .introReveal(order: 2, after: lead(page))
       Text(descriptions[page]).foregroundStyle(Palette.muted)
+        .introReveal(order: 3, after: lead(page))
     } else {
       Text("How are you making room?").font(Palette.heading).accessibilityAddTraits(.isHeader)
+        .introReveal(order: 0)
       Text("Choose how you’re joining. You can host and be a guest in different stays.")
         .foregroundStyle(Palette.muted)
+        .introReveal(order: 1)
     }
   }
   @ViewBuilder private func pagePreview(_ page: Int) -> some View {
     preview(page)
+      .introReveal(order: 0, rise: 28, scale: 0.94, after: lead(page))
       .scaleEffect(reduceMotion ? 1 : (ambientMotion ? 1.025 : 0.975))
       .offset(y: reduceMotion ? 0 : (ambientMotion ? -7 : 5))
       .animation(.easeInOut(duration: 4.5), value: ambientMotion)
     if page == 2 {
       Text("The other person confirms each record. Money is settled outside Kouchd.")
         .font(.footnote).foregroundStyle(Palette.muted)
+        .introReveal(order: 4)
     }
   }
   @ViewBuilder private var roleCards: some View {
@@ -174,6 +189,7 @@ struct IntroductionScreen: View {
         PrimaryButton(title: "Start free as a host") { finish(.host, nil) }
       }
       .overlay(RoundedRectangle(cornerRadius: 24).stroke(Palette.forest, lineWidth: 1))
+      .introReveal(order: 2, rise: 24)
       Card {
         Text("I’m joining a stay").font(Palette.section)
         Text("Enter the invite code your host shared.").font(.subheadline).foregroundStyle(Palette.muted)
@@ -181,11 +197,16 @@ struct IntroductionScreen: View {
           .textInputAutocapitalization(.characters).autocorrectionDisabled()
           .padding(14).background(Palette.surface, in: RoundedRectangle(cornerRadius: 14))
           .overlay(RoundedRectangle(cornerRadius: 14).stroke(Palette.line))
-        Button("Join") { finish(.guest, inviteCode.trimmingCharacters(in: .whitespacesAndNewlines)) }
-          .buttonStyle(.borderedProminent).tint(Palette.forest)
+        Button {
+          finish(.guest, inviteCode.trimmingCharacters(in: .whitespacesAndNewlines))
+        } label: {
+          Text("Join").foregroundStyle(Palette.onPrimary)
+        }
+        .buttonStyle(.borderedProminent).tint(Palette.forest)
           .disabled(inviteCode.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
       }
       .background(Palette.sage, in: RoundedRectangle(cornerRadius: 24))
+      .introReveal(order: 3, rise: 24)
   }
   private var footer: some View {
     VStack(spacing: 12) {
@@ -193,9 +214,12 @@ struct IntroductionScreen: View {
           if step > 0 {
             HStack(spacing: 12) {
               ForEach(1..<4) { index in
-                Circle().fill(step == index ? Palette.forest : Palette.line).frame(width: 8, height: 8)
+                Capsule().fill(step == index ? Palette.forest : Palette.line)
+                  .frame(width: step == index ? 22 : 8, height: 8)
               }
-            }.accessibilityElement(children: .ignore).accessibilityLabel("Preview \(step) of 3")
+            }
+            .animation(reduceMotion ? nil : .spring(duration: 0.45, bounce: 0.3), value: step)
+            .accessibilityElement(children: .ignore).accessibilityLabel("Preview \(step) of 3")
           }
           PrimaryButton(title: step == 0 ? "Get started" : step == 3 ? (replay ? "Done" : "Choose how you’re joining") : "Continue") {
             if replay && step == 3 { finish(nil, nil) } else { move(to: step + 1) }
@@ -227,6 +251,7 @@ struct IntroductionScreen: View {
           .font(.caption.weight(.semibold)).foregroundStyle(Palette.ink)
           .padding(12).background(Palette.surface, in: RoundedRectangle(cornerRadius: 14))
           .shadow(color: .black.opacity(0.08), radius: 8, y: 3).padding(12)
+          .introReveal(order: 4, rise: 14, scale: 0.7)
           .offset(y: ambientMotion && !reduceMotion ? -8 : 0)
           .animation(.easeInOut(duration: 3.5), value: ambientMotion)
       }
@@ -234,15 +259,28 @@ struct IntroductionScreen: View {
       ZStack(alignment: .bottomTrailing) {
         Image("ChoreBoardIllustration").resizable().scaledToFit().frame(maxWidth: .infinity)
           .padding(20).background(Palette.sage, in: RoundedRectangle(cornerRadius: 28))
-        Label("Kitchen reset", systemImage: "checkmark.circle.fill")
+        Label {
+          Text("Kitchen reset")
+        } icon: {
+          if reduceMotion {
+            Image(systemName: "checkmark.circle.fill")
+          } else {
+            Image(systemName: "checkmark.circle.fill")
+              .symbolEffect(.bounce, value: step == 3)
+          }
+        }
           .font(.caption.weight(.semibold)).foregroundStyle(Palette.ink)
           .padding(12).background(Palette.surface, in: RoundedRectangle(cornerRadius: 14))
           .shadow(color: .black.opacity(0.08), radius: 8, y: 3).padding(12)
+          .introReveal(order: 4, rise: 14, scale: 0.7)
           .offset(y: ambientMotion && !reduceMotion ? -8 : 0)
           .animation(.easeInOut(duration: 3.5), value: ambientMotion)
       }
     }
   }
+  /// The welcome page opens while the brand splash is still fading out; start its entrance once the splash is gone.
+  private func lead(_ page: Int) -> Double { page == 0 && !replay ? 0.4 : 0 }
+
   private func move(to value: Int) {
     guard value != step else { return }
     pendingStep = value
@@ -274,6 +312,43 @@ struct IntroductionScreen: View {
       return
     }
     step = value
+  }
+}
+
+/// Lets introduction content rise and fade in, one piece after another, the first time a page comes into view.
+/// Pages in the pager appear as they slide in, so the reveal plays during the swipe or tap.
+/// With Reduce Motion the content is simply there.
+private struct IntroReveal: ViewModifier {
+  @Environment(\.accessibilityReduceMotion) private var reduceMotion
+  @State private var shown = false
+  let order: Int
+  let rise: CGFloat
+  let scale: CGFloat
+  let after: Double
+
+  func body(content: Content) -> some View {
+    let visible = shown || reduceMotion
+    content
+      .opacity(visible ? 1 : 0)
+      .offset(y: visible ? 0 : rise)
+      .scaleEffect(visible ? 1 : scale)
+      .onAppear {
+        if reduceMotion {
+          shown = true
+          return
+        }
+        guard !shown else { return }
+        withAnimation(.spring(duration: 0.55, bounce: 0.22).delay(after + 0.07 * Double(order))) { shown = true }
+      }
+      .onChange(of: reduceMotion) { _, newValue in
+        if newValue { shown = true }
+      }
+  }
+}
+
+private extension View {
+  func introReveal(order: Int, rise: CGFloat = 16, scale: CGFloat = 1, after: Double = 0) -> some View {
+    modifier(IntroReveal(order: order, rise: rise, scale: scale, after: after))
   }
 }
 

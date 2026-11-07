@@ -1626,3 +1626,89 @@ button.host-workspace-activity-row:focus-visible {
 .host-workspace-mobile-summary > strong {
   font-family: var(--font-manrope), "Manrope", sans-serif;
 }
+
+@media (prefers-color-scheme: dark) {
+  .v21-workspace-root {
+    --v21-amber: #e0b36a;
+    --v21-amber-soft: #2a2016;
+    --v21-amber-border: #4e3922;
+    --v21-sky: #1a303a;
+    --v21-sky-soft: #17282f;
+    --v21-sky-border: #274754;
+    --v21-sage: #1e2f25;
+    --v21-sage-soft: #1c2b22;
+    --v21-sage-border: #2e4436;
+    --v21-lime-soft: #223016;
+    --v21-clear: var(--kouchd-forest);
+  }
+
+  .v21-summary-tile.tile-guests {
+    background: linear-gradient(180deg, #1c2b32 0%, var(--v21-surface) 60%);
+  }
+
+  .v21-summary-tile.tile-contributions {
+    background: linear-gradient(180deg, #1d2e24 0%, var(--v21-surface) 60%);
+  }
+
+  .v21-summary-tile.tile-chores {
+    background: linear-gradient(180deg, #1e2c1e 0%, var(--v21-surface) 60%);
+  }
+
+  .referral-code-card {
+    background: var(--v21-surface) !important;
+    border-color: var(--v21-line) !important;
+  }
+
+  .host-workspace-avatar.guest {
+    background: var(--kouchd-sky);
+    color: var(--kouchd-on-fill);
+  }
+
+  .host-workspace-avatar.other {
+    background: var(--kouchd-rose);
+    color: var(--kouchd-on-fill);
+  }
+
+  .host-workspace-checkin-card {
+    background: #1f2d26;
+    border-color: var(--v21-line);
+  }
+
+  .host-workspace-checkin-card h2,
+  .host-workspace-checkin-card p {
+    color: var(--v21-ink);
+  }
+
+  .host-workspace-checkin-card button {
+    color: var(--v21-forest);
+  }
+
+  .host-workspace-upcoming-card {
+    color: #ffffff;
+  }
+
+  .host-workspace-upcoming-card .host-workspace-eyebrow,
+  .host-workspace-upcoming-card h2 {
+    color: #ffffff;
+  }
+
+  .host-workspace-upcoming-card p {
+    color: rgba(255, 255, 255, 0.92);
+  }
+
+  .host-workspace-icon-action {
+    background: var(--v21-surface);
+    color: var(--v21-forest);
+    border: 1px solid var(--v21-line);
+  }
+
+  .host-workspace-secondary-action {
+    background: var(--v21-surface);
+    color: var(--v21-forest);
+    border: 1px solid var(--v21-line);
+  }
+
+  .host-workspace-summary-card > small {
+    color: var(--v21-amber);
+  }
+}
