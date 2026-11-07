@@ -139,6 +139,16 @@ export async function assertPlanCapacity(
   // Verified legacy Pro has no limit, so a truncated count cannot refuse it.
   if (usage.plan !== null && getPlanLimits(usage.plan)[limitKey] === null) return;
   if (usage.scanTruncated) {
+    // More than SCAN_LIMIT stays or guests is far past every finite plan limit, so the refusal
+    // stands; log it so ops sees the account before the host contacts support.
+    console.warn(JSON.stringify({
+      event: "plan_capacity.scan_truncated",
+      dimension,
+      ownerUserId,
+      householdAccountId: householdAccountId ?? null,
+      plan: usage.plan,
+      scanLimit: SCAN_LIMIT,
+    }));
     throw new Error(dimension === "stay"
       ? "This account needs a capacity review before adding another stay. Please contact support."
       : "Your host needs to review household capacity before adding another guest.");
