@@ -34,6 +34,7 @@ export function HomeScreen({
   onBackToHub: () => void;
 }) {
   const [greeting, setGreeting] = useState("Welcome back,");
+  const [showAllAnnouncements, setShowAllAnnouncements] = useState(false);
   useEffect(() => {
     const timeout = window.setTimeout(() => {
       const hour = new Date().getHours();
@@ -668,7 +669,7 @@ export function HomeScreen({
                 <h2>Announcements</h2>
                 {announcements.length ? (
                   <ul className="host-workspace-announcements">
-                    {announcements.slice(0, 3).map((item) => (
+                    {(showAllAnnouncements ? announcements : announcements.slice(0, 3)).map((item) => (
                       <li key={item._id}>
                         <strong>{item.title}</strong>
                         <span>{item.body}</span>
@@ -677,6 +678,16 @@ export function HomeScreen({
                   </ul>
                 ) : (
                   <p>Share a quick update everyone in the stay can see.</p>
+                )}
+                {announcements.length > 3 && (
+                  <button
+                    className="host-workspace-text-action"
+                    type="button"
+                    aria-expanded={showAllAnnouncements}
+                    onClick={() => setShowAllAnnouncements((value) => !value)}
+                  >
+                    {showAllAnnouncements ? "Show fewer" : `Show all ${announcements.length}`}
+                  </button>
                 )}
                 {!isEnded && (
                   <button

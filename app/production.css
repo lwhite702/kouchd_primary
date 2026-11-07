@@ -230,6 +230,10 @@
 .help-tip-title { font-weight: 800; }
 /* Tips placed inside an eyebrow label must not inherit its uppercase tracking. */
 .eyebrow .help-tip-wrap { margin-left: 4px; }
+/* Anchor an eyebrow tip's popover to the label's left edge, not the icon, so it
+   stays inside narrow screens. */
+.eyebrow:has(.help-tip-wrap) { position: relative; }
+.eyebrow .help-tip-wrap { position: static; }
 .eyebrow .help-tip-popover { text-transform: none; letter-spacing: normal; font-family: var(--font-inter), "Inter", sans-serif; }
 .help-tip-close { position: absolute; top: 8px; right: 8px; width: 26px; height: 26px; color: var(--muted); }
 

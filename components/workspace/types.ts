@@ -196,7 +196,7 @@ const contributionTypeLabels: Record<string, string> = {
   other: "Other",
 };
 
-/** Matches the labels in the Add contribution form. */
+/** Short ledger labels for contribution types ("payment" is the form's "Send money / Cash"). */
 export function contributionTypeLabel(type: string) {
   return contributionTypeLabels[type] ?? type.replaceAll("_", " ");
 }

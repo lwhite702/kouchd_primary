@@ -149,8 +149,14 @@ export const create = mutation({
     }
     if (args.nextCheckInDate) assertCalendarDate(args.nextCheckInDate, "Next check-in date");
     if (args.houseInfo) assertHouseInfoInput(args.houseInfo);
-    if (args.rewardTaskIds && args.rewardTaskIds.length > SUGGESTED_CONTRIBUTION_TASKS.length) {
-      throw new Error("Choose from the suggested reward activities");
+    if (args.rewardTaskIds) {
+      const knownTaskIds = new Set(SUGGESTED_CONTRIBUTION_TASKS.map((task) => task.id));
+      if (
+        args.rewardTaskIds.length > knownTaskIds.size ||
+        args.rewardTaskIds.some((taskId) => !knownTaskIds.has(taskId))
+      ) {
+        throw new Error("Choose from the suggested reward activities");
+      }
     }
     const paymentOptions = args.paymentOptions ?? [];
     assertPaymentOptionsInput(paymentOptions);

@@ -16,7 +16,7 @@ import { HelpTip } from "@/components/onboarding/help-tip";
 import { HELP_LINKS } from "@/lib/help-links";
 import { planLimitError } from "@/lib/planLimitError";
 import { useFeatureFlag } from "@/components/flags/feature-gate";
-import { FEATURE_FLAGS } from "@/lib/flags/config";
+import { FEATURE_FLAGS, FEATURE_FLAGS_REGISTRY } from "@/lib/flags/config";
 import { formatDate } from "@/components/workspace/types";
 
 const MAX_STAY_DAYS = 730;
@@ -45,7 +45,15 @@ export function HostOnboardingWizard({
   onPlanLimit?: () => void;
 }) {
   const viewer = useQuery(api.users.viewer, {});
-  const subleasesEnabled = useFeatureFlag(FEATURE_FLAGS.SUBLEASES);
+  // stays.create checks only the Convex override and the registry default, so a
+  // PostHog or local override alone must not offer an option the server refuses.
+  const subleasesFlag = useFeatureFlag(FEATURE_FLAGS.SUBLEASES);
+  const flagOverrides = useQuery(api.flags.list);
+  const subleaseOverride = flagOverrides?.find((entry) => entry.key === FEATURE_FLAGS.SUBLEASES)?.override;
+  const subleasesServerEnabled =
+    subleaseOverride === "enabled" ||
+    (subleaseOverride !== "disabled" && Boolean(FEATURE_FLAGS_REGISTRY[FEATURE_FLAGS.SUBLEASES]?.defaultValue));
+  const subleasesEnabled = subleasesFlag && subleasesServerEnabled;
   const createStay = useMutation(api.stays.create);
   const updatePreferences = useMutation(api.users.updatePreferences);
   const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
@@ -129,7 +137,7 @@ export function HostOnboardingWizard({
     }
     if (target === 2 && selectedRules.length > 50) return "Choose 50 or fewer house rules.";
     if (target === 3 && rewardsActive) {
-      if (!coinName.trim()) return "Give your reward points a name, like Coins.";
+      if (!coinName.trim() || coinName.length > 30) return "Give your reward points a name of up to 30 characters, like Coins.";
       if (!isWholeNumber(centsPerPoint, 1, 100_000)) return "Set a value of at least $0.01 for each point.";
       if (!isMoney(maxCreditPeriod, 0)) return `Enter a credit cap per ${periodLabel} of $0 or more.`;
     }
@@ -774,6 +782,7 @@ export function HostOnboardingWizard({
                       type="text"
                       value={coinName}
                       onChange={(e) => setCoinName(e.target.value)}
+                      maxLength={30}
                       placeholder="e.g. Coins, Points"
                       required
                     />

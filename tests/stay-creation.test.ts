@@ -67,4 +67,16 @@ describe("stay creation reward activities", () => {
     });
     expect(await ruleTitles(t)).toEqual([]);
   });
+
+  it("refuses reward activity IDs that are not suggestions", async () => {
+    const t = convexTest(schema, modules);
+    const actor = await host(t);
+    await expect(
+      actor.mutation(api.stays.create, {
+        timezone: "America/New_York",
+        terms,
+        rewardTaskIds: ["not_a_real_task"],
+      }),
+    ).rejects.toThrow("Choose from the suggested reward activities");
+  });
 });
