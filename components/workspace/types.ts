@@ -187,3 +187,16 @@ export type StayMembershipSummary = {
   stay: Doc<"stays">;
   membership: Doc<"memberships">;
 };
+
+const contributionTypeLabels: Record<string, string> = {
+  payment: "Payment",
+  groceries: "Groceries",
+  supplies: "Supplies",
+  house_work: "House work",
+  other: "Other",
+};
+
+/** Matches the labels in the Add contribution form. */
+export function contributionTypeLabel(type: string) {
+  return contributionTypeLabels[type] ?? type.replaceAll("_", " ");
+}

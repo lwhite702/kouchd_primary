@@ -29,16 +29,15 @@ export function ChoresScreen({ state }: { state: WorkspaceState }) {
     <div key="chores" className="screen-transition">
       <div className="page-heading">
         <div>
-          <p className="eyebrow">Shared across the house</p>
+          <p className="eyebrow">Shared across the house <HelpTip title="Shared chores" href={HELP_LINKS.houseRulesAndChores}>
+            Everyone in the stay can see tasks, assignments, and completion. Use
+            the chore form to add a task and set a due date.
+          </HelpTip></p>
           <h1>Chore board</h1>
           <p className="subhead">
             Household coordination stays shared while financial records stay
             private.
           </p>
-          <HelpTip title="Shared chores" href={HELP_LINKS.houseRulesAndChores}>
-            Everyone in the stay can see tasks, assignments, and completion. Use
-            the chore form to add a task and set a due date.
-          </HelpTip>
         </div>
         {!isEnded && (
           <button

@@ -12,7 +12,15 @@ import {
   Users,
   X,
 } from "lucide-react";
+import type { ComponentType } from "react";
 import { HELP_LINKS } from "@/lib/help-links";
+
+export interface MobileMenuSection {
+  label: string;
+  description: string;
+  icon: ComponentType<{ size?: number }>;
+  onSelect: () => void;
+}
 
 export interface MobileHeaderMenuProps {
   onTakeTour?: () => void;
@@ -20,6 +28,8 @@ export interface MobileHeaderMenuProps {
   onJoinCode?: () => void;
   onSettings?: () => void;
   docsHref?: string;
+  /** Stay sections that have no slot in the phone bottom navigation. */
+  sections?: MobileMenuSection[];
 }
 
 export function MobileHeaderMenu({
@@ -28,6 +38,7 @@ export function MobileHeaderMenu({
   onJoinCode,
   onSettings,
   docsHref = HELP_LINKS.home,
+  sections = [],
 }: MobileHeaderMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -44,7 +55,7 @@ export function MobileHeaderMenu({
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [isOpen]);
 
-  const hasAnyAction = Boolean(onTakeTour || onStays || onJoinCode || onSettings || docsHref);
+  const hasAnyAction = Boolean(sections.length || onTakeTour || onStays || onJoinCode || onSettings || docsHref);
   if (!hasAnyAction) return null;
 
   return (
@@ -88,6 +99,26 @@ export function MobileHeaderMenu({
             </div>
 
             <nav className="mobile-menu-list" aria-label="Household menu options">
+              {sections.map(({ label, description, icon: Icon, onSelect }) => (
+                <button
+                  key={label}
+                  type="button"
+                  className="mobile-menu-item"
+                  onClick={() => {
+                    setIsOpen(false);
+                    onSelect();
+                  }}
+                >
+                  <span className="mobile-menu-icon">
+                    <Icon size={18} />
+                  </span>
+                  <div className="mobile-menu-text">
+                    <strong>{label}</strong>
+                    <span>{description}</span>
+                  </div>
+                  <ChevronRight size={16} className="mobile-menu-chevron" />
+                </button>
+              ))}
               {onTakeTour && (
                 <button
                   type="button"

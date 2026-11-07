@@ -15,9 +15,8 @@ export function HelpTip({ title, children, href, linkLabel = "Read the guide" }:
       onBlur={(event) => {
         if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setOpen(false);
       }}
-      onFocus={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget as Node | null)) setOpen(true);
-      }}
+      // Opening only on click (or Enter/Space) keeps a dialog's initial focus
+      // from covering its first field with the help popover.
       onKeyDown={(event) => {
         if (event.key === "Escape" && open) {
           event.preventDefault();
@@ -31,7 +30,7 @@ export function HelpTip({ title, children, href, linkLabel = "Read the guide" }:
         aria-expanded={open}
         aria-controls={id}
         className="help-tip-trigger"
-        onClick={() => setOpen(true)}
+        onClick={() => setOpen((value) => !value)}
         ref={triggerRef}
         type="button"
       >

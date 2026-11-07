@@ -86,16 +86,15 @@ export function StayScreen({ state }: { state: WorkspaceState }) {
       )}
       <div className="page-heading">
         <div>
-          <p className="eyebrow">The agreement</p>
+          <p className="eyebrow">The agreement <HelpTip title="Stay details" href={HELP_LINKS.stayAgreements}>
+            Find the current terms, house rules, and household access
+            information here.
+          </HelpTip></p>
           <h1>Stay details</h1>
           <p className="subhead">
             Everyone sees shared house guidelines, while guest money details
             stay private.
           </p>
-          <HelpTip title="Stay details" href={HELP_LINKS.stayAgreements}>
-            Find the current terms, house rules, and household access
-            information here.
-          </HelpTip>
         </div>
         {!isEnded && !isHost && !hasAccepted && (
           <div className="heading-actions">
@@ -158,7 +157,13 @@ export function StayScreen({ state }: { state: WorkspaceState }) {
             </span>
           </div>
         </div>
-        <span className="accepted-pill">{bundle.stay.status}</span>
+        <span className="accepted-pill">
+          {bundle.stay.status === "pending"
+            ? "Waiting for guests"
+            : bundle.stay.status === "ended"
+              ? "Ended"
+              : "Active"}
+        </span>
       </div>
       {isHost && !isEnded && (
         <section className="section-block">

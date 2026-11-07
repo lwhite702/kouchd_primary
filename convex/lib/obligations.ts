@@ -73,7 +73,7 @@ export async function ensureObligationsForTerms(
     guestUserId,
     kind: "obligation",
     action: "generated",
-    detail: `${periods.length} contribution obligation${periods.length === 1 ? "" : "s"} created`,
+    detail: `Contribution schedule set with ${periods.length} due date${periods.length === 1 ? "" : "s"}`,
     entityId: termsId,
   });
 }

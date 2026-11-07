@@ -4,9 +4,11 @@ import { Show, SignUp, useUser } from "@clerk/nextjs";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { FormEvent, useEffect, useState } from "react";
 
 import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
 import { InviteSkeleton } from "@/components/skeleton-loader";
 import { InviteHero, InvitePrivacyPanel } from "@/components/invite-guest-panels";
 import { planLimitError, STAY_FULL_MESSAGE } from "@/lib/planLimitError";
@@ -15,6 +17,17 @@ const nameKey = (tokenHash: string) => `kouchd:invite-display-name:${tokenHash}`
 
 export function InviteAccept({ token, tokenHash }: { token: string; tokenHash: string }) {
   const preview = useQuery(api.invites.preview, { tokenHash });
+  // Accepting the invite marks it used, which re-runs the preview query. Remember
+  // the join here so the guest sees the success state, not "already accepted".
+  const [joinedStayId, setJoinedStayId] = useState<Id<"stays"> | null>(null);
+
+  if (joinedStayId) {
+    return (
+      <main className="auth-landing invite-landing screen-transition">
+        <JoinedHousehold stayId={joinedStayId} />
+      </main>
+    );
+  }
 
   if (preview === undefined) {
     return <main className="auth-landing screen-transition"><InviteSkeleton /></main>;
@@ -46,7 +59,7 @@ export function InviteAccept({ token, tokenHash }: { token: string; tokenHash: s
         <Registration token={token} tokenHash={tokenHash} />
       </Show>
       <Show when="signed-in">
-        <Accept tokenHash={tokenHash} />
+        <Accept tokenHash={tokenHash} onJoined={setJoinedStayId} />
       </Show>
       <InvitePrivacyPanel />
     </main>
@@ -113,7 +126,25 @@ function Registration({ token, tokenHash }: { token: string; tokenHash: string }
   );
 }
 
-function Accept({ tokenHash }: { tokenHash: string }) {
+function JoinedHousehold({ stayId }: { stayId: Id<"stays"> }) {
+  const router = useRouter();
+  const stayHref = `/?stayId=${encodeURIComponent(stayId)}`;
+  useEffect(() => {
+    const timer = window.setTimeout(() => router.replace(stayHref), 1200);
+    return () => window.clearTimeout(timer);
+  }, [router, stayHref]);
+  return (
+    <section className="invite-hero-card" role="status">
+      <CheckCircle2 className="auth-success" size={36} aria-hidden="true" />
+      <p className="invite-eyebrow">Invitation accepted</p>
+      <h1>You’re part of the household.</h1>
+      <p className="invite-hero-body">Opening your stay so you can review the agreement and house rules.</p>
+      <Link className="kouchd-main-action invite-action" href={stayHref}>Open your stay</Link>
+    </section>
+  );
+}
+
+function Accept({ tokenHash, onJoined }: { tokenHash: string; onJoined: (stayId: Id<"stays">) => void }) {
   const { isLoading: authLoading, isAuthenticated } = useConvexAuth();
   const { user } = useUser();
   const sync = useMutation(api.users.syncCurrent);
@@ -154,7 +185,7 @@ function Accept({ tokenHash }: { tokenHash: string }) {
         email: updatedClerkUser.primaryEmailAddress?.emailAddress,
         imageUrl: updatedClerkUser.imageUrl,
       });
-      await accept({ tokenHash });
+      const joinedStayId = await accept({ tokenHash });
       try {
         window.sessionStorage.removeItem(nameKey(tokenHash));
       } catch {
@@ -162,6 +193,7 @@ function Accept({ tokenHash }: { tokenHash: string }) {
       }
       setDone(true);
       setStatus("You joined the household. Your host can now see your name.");
+      onJoined(joinedStayId);
     } catch (reason) {
       if (planLimitError(reason)) {
         setStatus(STAY_FULL_MESSAGE);
