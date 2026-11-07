@@ -207,6 +207,7 @@ struct PlusSheet: View {
         }
       }
       plans
+      freeOption
       footer
       if entry == .stayLimit, let stayID = store.hostedStayToEnd {
         Button("End current stay instead") {
@@ -272,6 +273,21 @@ struct PlusSheet: View {
         Text(billing.error).font(.footnote).foregroundStyle(.red)
       }
     }
+  }
+
+  /// Free stays a clear choice, not a hidden close button.
+  private var freeOption: some View {
+    Button { dismiss() } label: {
+      VStack(spacing: 2) {
+        Text(store.typedSubscriptionSummary?.hasPlus == true ? "Not now" : "Keep using Free")
+          .font(.subheadline.weight(.semibold))
+        Text("\(PlanCopy.freeStays) active stay and \(PlanCopy.freeGuests) guest, always free")
+          .font(.footnote).foregroundStyle(Palette.muted)
+      }
+      .frame(maxWidth: .infinity, minHeight: 44)
+    }
+    .disabled(billing.isConfirming)
+    .accessibilityIdentifier("plus-keep-free")
   }
 
   private var footer: some View {
