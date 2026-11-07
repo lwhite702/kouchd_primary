@@ -9,7 +9,8 @@ The GitHub Actions `Release integrity` workflow runs alongside it:
 - **Production deploy smoke test** runs on pushes to `main` after the web job. It waits (up to 25 minutes)
   for Vercel's production deployment of that commit, using the deployment statuses Vercel reports to GitHub,
   then runs the smoke test below against `https://app.kouchd.com`. A failed smoke test fails the run and, when
-  the `DEPLOY_ALERT_WEBHOOK_URL` repository secret is set (Slack-compatible incoming webhook), posts an alert.
+  the `DEPLOY_ALERT_WEBHOOK_URL` repository secret (Slack-compatible incoming webhook) posts an alert. The secret is required:
+  the job fails up front when it is missing, so a failed smoke test can never go unnoticed.
 
 ### Required checks
 Protect `main` so a red run blocks the merge: require the **Web verification and build** and

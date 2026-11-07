@@ -28,6 +28,20 @@ if (process.env.NEXT_PUBLIC_DISABLE_AUTH) {
   process.exit(1);
 }
 
+// Security: NEXT_PUBLIC_* values are bundled into the browser, so a secret-looking name means
+// someone is about to publish a credential. Public keys by design (publishable keys, DSNs,
+// *_PUBLIC_API_KEY) do not match these patterns.
+const secretLikePublicName = /SECRET|PRIVATE|PASSWORD|TOKEN|WEBHOOK|SERVICE_ROLE|DEPLOY_KEY/i;
+const leakedPublicVars = Object.keys(process.env).filter(
+  (name) => name.startsWith("NEXT_PUBLIC_") && secretLikePublicName.test(name) && process.env[name]
+);
+if (leakedPublicVars.length > 0) {
+  console.error(
+    `Security violation: ${leakedPublicVars.join(", ")} would be exposed to the browser through the NEXT_PUBLIC_ prefix. Rename it without the prefix and read it on the server.`
+  );
+  process.exit(1);
+}
+
 // Security: Auth bypass flags must never be active in production
 const isProduction =
   process.env.NODE_ENV === "production" ||

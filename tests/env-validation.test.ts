@@ -86,6 +86,24 @@ describe("verify-env script", () => {
     expect(res.stderr).toContain("SUBSCRIPTION_EXPECTED_ENVIRONMENT must be set to \"production\" or \"sandbox\"");
   });
 
+  it("fails when a secret-looking name carries the NEXT_PUBLIC_ prefix", () => {
+    const res = runVerifyEnv({ ...validBaseEnv, NEXT_PUBLIC_STRIPE_SECRET_KEY: "sk_live_dummy" });
+    expect(res.status).toBe(1);
+    expect(res.stderr).toContain("NEXT_PUBLIC_STRIPE_SECRET_KEY");
+    expect(res.stderr).toContain("exposed to the browser");
+  });
+
+  it("allows the public keys the app ships on purpose", () => {
+    const res = runVerifyEnv({
+      ...validBaseEnv,
+      NEXT_PUBLIC_KNOCK_PUBLIC_API_KEY: "pk_dummy",
+      NEXT_PUBLIC_REVENUECAT_WEB_API_KEY: "rcb_dummy",
+      NEXT_PUBLIC_SENTRY_DSN: "https://dummy@sentry.io/1",
+      NEXT_PUBLIC_POSTHOG_KEY: "phc_dummy",
+    });
+    expect(res.status).toBe(0);
+  });
+
   it("allows sandbox on Vercel production while the feature lock is off", () => {
     const res = runVerifyEnv({
       ...validBaseEnv,
