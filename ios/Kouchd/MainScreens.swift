@@ -144,7 +144,7 @@ struct HomeScreen: View {
         .accessibilityAddTraits(.isHeader)
       Text(store.isHost
            ? "Welcome back, \(store.viewer["name"].text)."
-           : "Your stay with \(store.members.first(where: { $0["membership"]["role"].text == "host" })?["person"]["name"].text ?? "your host") · \(store.bundle["terms"]["startDate"].text) – \(store.bundle["terms"]["endDate"].text)")
+           : "Your stay with \(store.members.first(where: { $0["membership"]["role"].text == "host" })?["person"]["name"].text ?? "your host") · \(Display.dayRange(store.bundle["terms"]["startDate"].text, store.bundle["terms"]["endDate"].text))")
         .font(.subheadline).foregroundStyle(Palette.muted)
     }
   }
@@ -157,7 +157,7 @@ struct HomeScreen: View {
            ? "1 stay. One welcoming home."
            : "\(store.stays.count) stays. One welcoming home.")
         .font(Palette.section).foregroundStyle(Palette.heroForeground)
-      Text("Next shared check-in · \(store.bundle["stay"]["nextCheckInDate"].text.isEmpty ? "Set a date" : store.bundle["stay"]["nextCheckInDate"].text)")
+      Text("Next shared check-in · \(store.bundle["stay"]["nextCheckInDate"].text.isEmpty ? "Set a date" : Display.dayDate(store.bundle["stay"]["nextCheckInDate"].text))")
         .font(.subheadline).foregroundStyle(Palette.heroForeground.opacity(0.8))
     }
     .padding(24).frame(maxWidth: .infinity, alignment: .leading)
@@ -196,7 +196,7 @@ struct HomeScreen: View {
       Text("NEXT CONTRIBUTION").font(.caption.bold()).foregroundStyle(Palette.lime)
       Text(nextContribution.map { Display.money($0.balanceCents) } ?? "All caught up")
         .font(.largeTitle.bold()).foregroundStyle(Palette.heroForeground)
-      Text(nextContribution.map { "Due \($0.dueDate)" } ?? "No contribution is currently due.")
+      Text(nextContribution.map { "Due \(Display.dayDate($0.dueDate))" } ?? "No contribution is currently due.")
         .font(.subheadline).foregroundStyle(Palette.heroForeground.opacity(0.85))
       Button(action: openLedger) {
         Text("View contributions")
@@ -214,7 +214,7 @@ struct HomeScreen: View {
     if let next = nextChore {
       Card {
         Text(next.title).font(.headline)
-        Text("Your turn · \(next["dueDate"].text)")
+        Text("Your turn · \(Display.dayDate(next["dueDate"].text))")
           .font(.subheadline).foregroundStyle(Palette.muted)
       }
     }
@@ -362,7 +362,7 @@ struct HomeScreen: View {
         ForEach(Array(store.activity.prefix(limit)), id: \.id) { item in
           Button { openActivity(item["kind"].text, item["action"].text) } label: {
             HStack(alignment: .top, spacing: 10) {
-              Text(item["detail"].text).font(.subheadline).foregroundStyle(Palette.ink)
+              Text(Display.activityDetail(item)).font(.subheadline).foregroundStyle(Palette.ink)
                 .frame(maxWidth: .infinity, alignment: .leading)
               Image(systemName: "arrow.up.right").font(.caption.bold()).foregroundStyle(Palette.forest)
             }
@@ -625,8 +625,8 @@ private struct SharedBillsCard: View {
                 Pill(text: "Voided")
               }
             }
-            DataRow(title: "Service", detail: "\(bill["serviceStart"].text) – \(bill["serviceEnd"].text)")
-            DataRow(title: "Due", detail: bill["dueDate"].text)
+            DataRow(title: "Service", detail: Display.dayRange(bill["serviceStart"].text, bill["serviceEnd"].text))
+            DataRow(title: "Due", detail: Display.dayDate(bill["dueDate"].text))
             DataRow(title: "Total", detail: Display.money(bill["totalCents"].int))
             DataRow(title: "Split", detail: splitMethodDetail(for: bill, guestShare: guestShare))
             if store.isHost {
@@ -740,9 +740,9 @@ private struct LedgerSplitContent: View {
   private func rowLabel(_ item: Value) -> some View {
     let isCharge = segment == .charges
     let title = isCharge
-      ? (item["title"].text.isEmpty ? "Stay contribution" : item["title"].text)
+      ? Display.obligationTitle(item)
       : item["type"].text.replacingOccurrences(of: "_", with: " ").capitalized
-    let date = isCharge ? "Due \(item["dueDate"].text)" : item["date"].text
+    let date = isCharge ? "Due \(Display.dayDate(item["dueDate"].text))" : Display.dayDate(item["date"].text)
     let amount = !isCharge ? Display.money(item["amountCents"].int)
       : item["balanceCents"].int > 0 ? "\(Display.money(item["balanceCents"].int)) left" : Display.money(item["effectiveChargeCents"].int)
     return HStack(spacing: 12) {
@@ -778,12 +778,12 @@ private struct LedgerChargeCard: View {
   var body: some View {
     Card {
       HStack {
-        Text(item["title"].text.isEmpty ? "Stay contribution" : item["title"].text)
+        Text(Display.obligationTitle(item))
           .font(.headline)
         Spacer()
         Pill(text: item["status"].text)
       }
-      DataRow(title: "Due", detail: item["dueDate"].text)
+      DataRow(title: "Due", detail: Display.dayDate(item["dueDate"].text))
       DataRow(title: "Charge", detail: Display.money(item["effectiveChargeCents"].int))
       DataRow(title: "Confirmed credit", detail: Display.money(item["creditedCents"].int))
       DataRow(title: "Balance", detail: Display.money(item["balanceCents"].int))
@@ -813,7 +813,7 @@ private struct ContributionRecordCard: View {
       }
       DataRow(title: "Amount", detail: Display.money(item["amountCents"].int))
       DataRow(title: "Recorded by", detail: recorderName)
-      DataRow(title: "Date", detail: item["date"].text)
+      DataRow(title: "Date", detail: Display.dayDate(item["date"].text))
       DataRow(title: "Stay balance", detail: item["countsTowardBalance"].flag ? "Counts toward balance" : "Does not count toward balance")
       if !item["note"].text.isEmpty { Text(item["note"].text).font(.subheadline) }
       VStack(alignment: .leading, spacing: 8) {

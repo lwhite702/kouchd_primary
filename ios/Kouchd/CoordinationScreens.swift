@@ -235,7 +235,7 @@ private struct CheckInCard: View {
   var body: some View {
     Card {
       Text(item["topic"].text).font(.headline)
-      Text("\(item["guestName"].text) · \(item["checkInDate"].text) · \(item["status"].text.replacingOccurrences(of: "_", with: " "))")
+      Text("\(item["guestName"].text) · \(Display.dayDate(item["checkInDate"].text)) · \(item["status"].text.replacingOccurrences(of: "_", with: " "))")
         .font(.caption).foregroundStyle(Palette.muted)
       Text(item["note"].text)
       ForEach(Array(item["responses"].items.enumerated()), id: \.offset) { _, reply in

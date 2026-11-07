@@ -75,6 +75,65 @@ enum Display {
     formatter.dateFormat = "yyyy-MM-dd"
     return formatter.string(from: date)
   }
+
+  /// Stored calendar days ("2026-10-04") read in the person's locale, such as "Oct 4, 2026".
+  /// The day is formatted in UTC so it never shifts across time zones. Text that isn't
+  /// a calendar day is shown unchanged.
+  static func dayDate(_ day: String, locale: Locale = .autoupdatingCurrent) -> String {
+    // DateFormatter accepts "2026-1-4", so require the exact shape and a round trip,
+    // matching the server's calendar-day validation.
+    guard day.wholeMatch(of: /\d{4}-\d{2}-\d{2}/) != nil,
+          let date = dayParser.date(from: day),
+          dayParser.string(from: date) == day else { return day }
+    var style = Date.FormatStyle(date: .abbreviated, time: .omitted, locale: locale, timeZone: utc)
+    style.calendar = Calendar(identifier: .gregorian)
+    return date.formatted(style)
+  }
+
+  /// A charge's title. Only the title the server writes for occupied nights
+  /// ("Occupied nights due 2026-11-05") has its day reformatted; titles hosts type are left as-is.
+  static func obligationTitle(_ obligation: Value, locale: Locale = .autoupdatingCurrent) -> String {
+    let title = obligation["title"].text
+    if title.isEmpty { return "Stay contribution" }
+    guard obligation["type"].text == "occupancy" else { return title }
+    return trailingDay(title, after: "Occupied nights due ", locale: locale)
+  }
+
+  /// An activity line. Only the day the server appends to known actions is reformatted,
+  /// so chore titles and topics people typed inside the line are left as-is.
+  static func activityDetail(_ event: Value, locale: Locale = .autoupdatingCurrent) -> String {
+    let detail = event["detail"].text
+    switch event["action"].text {
+    case "recurrence_scheduled": return trailingDay(detail, after: " scheduled again for ", locale: locale)
+    case "late_fee_waived": return trailingDay(detail, after: "Late fee waived for obligation due ", locale: locale)
+    default: return detail
+    }
+  }
+
+  /// Reformats the day that ends `text` right after the last `marker`, if there is one.
+  private static func trailingDay(_ text: String, after marker: String, locale: Locale) -> String {
+    guard let range = text.range(of: marker, options: .backwards) else { return text }
+    let day = String(text[range.upperBound...])
+    let formatted = dayDate(day, locale: locale)
+    return formatted == day ? text : text[..<range.upperBound] + formatted
+  }
+
+  /// A stay's start and end days, such as "Oct 4, 2026 – Jan 18, 2027".
+  static func dayRange(_ start: String, _ end: String, locale: Locale = .autoupdatingCurrent) -> String {
+    dayDate(start, locale: locale) + " – " + dayDate(end, locale: locale)
+  }
+
+  private static let utc = TimeZone(identifier: "UTC")!
+
+  private static let dayParser: DateFormatter = {
+    let formatter = DateFormatter()
+    formatter.locale = Locale(identifier: "en_US_POSIX")
+    formatter.calendar = Calendar(identifier: .gregorian)
+    formatter.timeZone = utc
+    formatter.dateFormat = "yyyy-MM-dd"
+    formatter.isLenient = false
+    return formatter
+  }()
 }
 
 

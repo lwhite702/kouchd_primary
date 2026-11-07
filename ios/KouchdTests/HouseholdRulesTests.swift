@@ -40,7 +40,7 @@ final class HouseholdRulesTests: XCTestCase {
   func testChoreScheduleLabelShowsCadenceOnlyForRepeatingChores() {
     let oneTime: Value = .object(["assignee": .string("shared"), "dueDate": .string("2026-10-30")])
     let weekly: Value = .object(["assignee": .string("guest"), "dueDate": .string("2026-10-30"), "repeatCadence": .string("weekly")])
-    XCTAssertEqual(HouseholdRules.choreScheduleLabel(oneTime), "Shared · 2026-10-30")
-    XCTAssertEqual(HouseholdRules.choreScheduleLabel(weekly), "Guest · 2026-10-30 · Repeats weekly")
+    XCTAssertEqual(HouseholdRules.choreScheduleLabel(oneTime), "Shared · " + Display.dayDate("2026-10-30"))
+    XCTAssertEqual(HouseholdRules.choreScheduleLabel(weekly), "Guest · " + Display.dayDate("2026-10-30") + " · Repeats weekly")
   }
 }

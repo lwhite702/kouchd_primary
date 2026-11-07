@@ -11,6 +11,7 @@
 		2528C99FDCCFD805D4DE9A44 /* HouseholdRulesTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1326795EFD71D2C8C7676FC5 /* HouseholdRulesTests.swift */; };
 		2B83BA614BB09882524DE561 /* LaunchContractTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A2C23CE4D758536585C5F62 /* LaunchContractTests.swift */; };
 		2FF47254E3CA13D7C4C05DC0 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F456BBBC4E5A79C83B94DD4 /* Models.swift */; };
+		427AADA8A3DAC9851285E27F /* DisplayDateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AAAF00D1682C6853DCB0ACB /* DisplayDateTests.swift */; };
 		4E6EBFAE13DA5C841793ED4C /* RevenueCat in Frameworks */ = {isa = PBXBuildFile; productRef = 13C6BB1611F94C28C66319C8 /* RevenueCat */; };
 		50DD2C11C824695D4C0B9F3F /* MainScreens.swift in Sources */ = {isa = PBXBuildFile; fileRef = 28FB67FA8ACEEF88028EB12D /* MainScreens.swift */; };
 		54611A406021F7270CE43B98 /* StayFeature.swift in Sources */ = {isa = PBXBuildFile; fileRef = 547C9B65F24DB992638D44B8 /* StayFeature.swift */; };
@@ -78,6 +79,7 @@
 		4FAB50E0AF654FC7D39E3074 /* Design.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Design.swift; sourceTree = "<group>"; };
 		547C9B65F24DB992638D44B8 /* StayFeature.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StayFeature.swift; sourceTree = "<group>"; };
 		5A2C23CE4D758536585C5F62 /* LaunchContractTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchContractTests.swift; sourceTree = "<group>"; };
+		7AAAF00D1682C6853DCB0ACB /* DisplayDateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DisplayDateTests.swift; sourceTree = "<group>"; };
 		94F34D6A302D22BE5484C401 /* IntroductionFlowTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntroductionFlowTests.swift; sourceTree = "<group>"; };
 		9D4E9A2F9C52E7B0F9D9EC5F /* KouchdApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KouchdApp.swift; sourceTree = "<group>"; };
 		A426A500DE744298EF653CD0 /* PlusFlow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlusFlow.swift; sourceTree = "<group>"; };
@@ -118,6 +120,7 @@
 			children = (
 				CD83839B0E312802EAAC4D74 /* AdaptiveLayoutTests.swift */,
 				DC77B35B06634EFB0769E8DB /* BillingModelTests.swift */,
+				7AAAF00D1682C6853DCB0ACB /* DisplayDateTests.swift */,
 				1326795EFD71D2C8C7676FC5 /* HouseholdRulesTests.swift */,
 				5A2C23CE4D758536585C5F62 /* LaunchContractTests.swift */,
 			);
@@ -354,6 +357,7 @@
 			files = (
 				BF2BCA85A11709EDA46CFA7A /* AdaptiveLayoutTests.swift in Sources */,
 				02658DCCB5B3A7C59CE23249 /* BillingModelTests.swift in Sources */,
+				427AADA8A3DAC9851285E27F /* DisplayDateTests.swift in Sources */,
 				2528C99FDCCFD805D4DE9A44 /* HouseholdRulesTests.swift in Sources */,
 				2B83BA614BB09882524DE561 /* LaunchContractTests.swift in Sources */,
 			);
@@ -599,7 +603,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.9.9;
+				MARKETING_VERSION = 0.9.10;
 				PRODUCT_BUNDLE_IDENTIFIER = com.wrelikbrands.kouchd;
 				PROVISIONING_PROFILE_SPECIFIER = "$(KOUCHD_PROVISIONING_PROFILE_SPECIFIER)";
 				SDKROOT = iphoneos;
@@ -643,7 +647,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 0.9.9;
+				MARKETING_VERSION = 0.9.10;
 				PRODUCT_BUNDLE_IDENTIFIER = com.wrelikbrands.kouchd;
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 5.0;
