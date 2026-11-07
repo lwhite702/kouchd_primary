@@ -70,6 +70,26 @@ are not event properties. The web client is different: it uses autocapture and
 session replay (typed input masked) and identifies signed-in users with their
 Clerk ID, name and email, as the in-app Privacy Policy says.
 
+## App Store screenshots
+
+Capture fresh screenshots on a Mac with Xcode and xcodegen:
+
+```sh
+ios/scripts/app-store-screenshots.sh
+```
+
+or `cd ios && fastlane screenshots` (`target:iphone` or `target:ipad` for one
+device). The script picks the newest available iPhone Pro Max (6.9") and iPad
+Pro 13-inch simulators, sets a clean 9:41 status bar, and runs
+`AppStoreScreenshotTests`, which launches the synthetic-data test hosts (no real
+account, Clerk, Convex, or RevenueCat data). PNGs land in
+`ios/artifacts/screenshots/<timestamp>/` (ignored by git) with their pixel
+sizes listed. Options: `DARK=1` adds dark-mode shots, `IPAD_PORTRAIT=1` captures
+iPad in portrait instead of landscape, `ONLY=03-ledger,06-shopping` captures a
+subset, and `IPHONE_DEVICE`/`IPAD_DEVICE` pick a named simulator. The test is
+skipped in normal test runs. Uploading to App Store Connect is a separate,
+manual step.
+
 ## Verification
 
 Build locally with:

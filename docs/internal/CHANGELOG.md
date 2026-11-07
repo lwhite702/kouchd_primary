@@ -2,6 +2,14 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-11-07 — Repeatable App Store screenshot capture (iOS tooling)
+
+- Added `ios/KouchdUITests/AppStoreScreenshotTests.swift`: captures 10 screens (welcome, guest home, Ledger, Add contribution, chores, shopping, host home, house info, check-ins, rewards) from the existing synthetic-data test hosts and writes PNGs to `KOUCHD_SCREENSHOT_DIR`. Skipped when that variable is unset, so regular test runs are unaffected.
+- Added `ios/scripts/app-store-screenshots.sh` and a `fastlane screenshots` lane: resolves iPhone 6.9" and iPad 13" simulators, overrides the status bar, runs only the screenshot test, and reports pixel sizes. No App Store Connect upload.
+- Documented usage in `ios/README.md`.
+- Evidence: `bash -n` syntax check only. This container is Linux without Xcode, so the Swift test and script have not been compiled or run; first Mac run is the verification step.
+- Linear issue not created: the workspace rejected new issues (free issue limit reached).
+
 ## 2026-11-04 — Remediate dark mode white-on-white text and low-contrast surfaces (0.9.8)
 
 - Branch `codex/dark-mode-contrast`.
