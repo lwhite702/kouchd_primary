@@ -100,19 +100,19 @@ export function MarketingExplorer() {
         </div>
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: "1rem", fontSize: "0.84rem" }}>
-          <div style={{ background: "#faf8f5", padding: "0.9rem", borderRadius: 10, border: "1px solid var(--kouchd-line)" }}>
+          <div style={{ background: "var(--kouchd-surface, #faf8f5)", padding: "0.9rem", borderRadius: 10, border: "1px solid var(--kouchd-line)" }}>
             <strong>Allowed Opt-In Source Filter</strong>
             <div style={{ marginTop: 4, color: "var(--kouchd-muted)" }}>
               <code>{data.config.allowedOptInSource}</code> (rate-limited public marketing form only)
             </div>
           </div>
-          <div style={{ background: "#faf8f5", padding: "0.9rem", borderRadius: 10, border: "1px solid var(--kouchd-line)" }}>
+          <div style={{ background: "var(--kouchd-surface, #faf8f5)", padding: "0.9rem", borderRadius: 10, border: "1px solid var(--kouchd-line)" }}>
             <strong>Double Opt-In &amp; Suppression</strong>
             <div style={{ marginTop: 4, color: "var(--kouchd-muted)" }}>
               Required: {data.config.doubleOptInRequired ? "Yes" : "No"} &middot; Unsubscribe and bounce suppression states are immutable from Platform Ops.
             </div>
           </div>
-          <div style={{ background: "#faf8f5", padding: "0.9rem", borderRadius: 10, border: "1px solid var(--kouchd-line)" }}>
+          <div style={{ background: "var(--kouchd-surface, #faf8f5)", padding: "0.9rem", borderRadius: 10, border: "1px solid var(--kouchd-line)" }}>
             <strong>App Environment Status</strong>
             <div style={{ marginTop: 4, color: "var(--kouchd-muted)" }}>
               API Key in App Env: {data.config.hasApiKey ? "Present" : "Not set in app env (configured on marketing site)"} &middot; Form ID: {data.config.hasFormId ? "Present" : "Marketing site"}

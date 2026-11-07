@@ -20,7 +20,13 @@ export default function GlobalError({
 
   const handleRetry = () => {
     setAttempts((prev) => prev + 1);
-    reset();
+    try {
+      reset();
+    } catch (retryError) {
+      // A root-layout crash can throw again on reset; a full reload is the only way out.
+      Sentry.captureException(retryError);
+      window.location.reload();
+    }
   };
 
   return (

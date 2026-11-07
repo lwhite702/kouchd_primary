@@ -247,7 +247,7 @@ export function UsersExplorer() {
             </div>
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem", marginBottom: "1.5rem" }}>
-              <div style={{ background: "#faf8f5", padding: "0.85rem", borderRadius: 10, border: "1px solid var(--kouchd-line)" }}>
+              <div style={{ background: "var(--kouchd-surface, #faf8f5)", padding: "0.85rem", borderRadius: 10, border: "1px solid var(--kouchd-line)" }}>
                 <span style={{ fontSize: "0.75rem", color: "var(--kouchd-muted)", textTransform: "uppercase", fontWeight: 700 }}>Contact Info</span>
                 <div style={{ marginTop: 4, fontSize: "0.85rem" }}>
                   <div><strong>Email:</strong> {userDetail.user.email ?? "None"}</div>
@@ -255,7 +255,7 @@ export function UsersExplorer() {
                 </div>
               </div>
 
-              <div style={{ background: "#faf8f5", padding: "0.85rem", borderRadius: 10, border: "1px solid var(--kouchd-line)" }}>
+              <div style={{ background: "var(--kouchd-surface, #faf8f5)", padding: "0.85rem", borderRadius: 10, border: "1px solid var(--kouchd-line)" }}>
                 <span style={{ fontSize: "0.75rem", color: "var(--kouchd-muted)", textTransform: "uppercase", fontWeight: 700 }}>Preferences & Role</span>
                 <div style={{ marginTop: 4, fontSize: "0.85rem" }}>
                   <div><strong>Email Reminders:</strong> {userDetail.user.notifyEmail ? "Yes" : "No"}</div>
@@ -312,7 +312,7 @@ export function UsersExplorer() {
               Latest Kouchd records from RevenueCat, Knock, and Loops. Marketing consent is separate from transactional notifications.
             </p>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))", gap: "0.65rem", marginBottom: "1.5rem" }}>
-              <div style={{ background: "#faf8f5", padding: "0.8rem", borderRadius: 10, border: "1px solid var(--kouchd-line)" }}>
+              <div style={{ background: "var(--kouchd-surface, #faf8f5)", padding: "0.8rem", borderRadius: 10, border: "1px solid var(--kouchd-line)" }}>
                 <strong style={{ fontSize: "0.82rem" }}>RevenueCat</strong>
                 {userDetail.providerContext.billing.length ? userDetail.providerContext.billing.map((billing, index) => (
                   <div key={`${billing.updatedAt}-${index}`} style={{ marginTop: 6, fontSize: "0.8rem" }}>
@@ -326,7 +326,7 @@ export function UsersExplorer() {
                   </div>
                 )) : <div style={{ marginTop: 6, color: "var(--kouchd-muted)", fontSize: "0.8rem" }}>No owned billing account.</div>}
               </div>
-              <div style={{ background: "#faf8f5", padding: "0.8rem", borderRadius: 10, border: "1px solid var(--kouchd-line)" }}>
+              <div style={{ background: "var(--kouchd-surface, #faf8f5)", padding: "0.8rem", borderRadius: 10, border: "1px solid var(--kouchd-line)" }}>
                 <strong style={{ fontSize: "0.82rem" }}>Knock notifications</strong>
                 {userDetail.providerContext.notifications.length ? userDetail.providerContext.notifications.map((event, index) => (
                   <div key={`${event.workflow}-${event.occurredAt}-${index}`} style={{ marginTop: 6, fontSize: "0.8rem" }}>
@@ -336,7 +336,7 @@ export function UsersExplorer() {
                   </div>
                 )) : <div style={{ marginTop: 6, color: "var(--kouchd-muted)", fontSize: "0.8rem" }}>No notification events recorded.</div>}
               </div>
-              <div style={{ background: "#faf8f5", padding: "0.8rem", borderRadius: 10, border: "1px solid var(--kouchd-line)" }}>
+              <div style={{ background: "var(--kouchd-surface, #faf8f5)", padding: "0.8rem", borderRadius: 10, border: "1px solid var(--kouchd-line)" }}>
                 <strong style={{ fontSize: "0.82rem" }}>Loops marketing consent</strong>
                 {userDetail.providerContext.marketing ? <div style={{ marginTop: 6, fontSize: "0.8rem" }}>
                   <span className={`console-status-pill ${userDetail.providerContext.marketing.status}`}>{userDetail.providerContext.marketing.status.replaceAll("_", " ")}</span>
@@ -356,8 +356,8 @@ export function UsersExplorer() {
                     display: "flex",
                     justifyContent: "space-between",
                     padding: "0.5rem 0.75rem",
-                    background: "#faf8f5",
-                    border: "1px solid #f0ebe1",
+                    background: "var(--kouchd-surface, #faf8f5)",
+                    border: "1px solid var(--kouchd-line, #f0ebe1)",
                     borderRadius: 8,
                     marginBottom: 4,
                     fontSize: "0.8rem",

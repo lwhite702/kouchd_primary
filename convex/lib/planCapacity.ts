@@ -42,9 +42,22 @@ export function publicPlanName(plan: SubscriptionPlan): "free" | "plus" | "pro" 
   return "free";
 }
 
+let warnedMissingSubscriptionEnvironment = false;
+
 function expectedSubscriptionEnvironment() {
   const environment = process.env.SUBSCRIPTION_EXPECTED_ENVIRONMENT;
-  return environment === "production" || environment === "sandbox" ? environment : undefined;
+  if (environment === "production" || environment === "sandbox") return environment;
+  // Convex keeps its own environment, separate from the Vercel one that verify:env checks.
+  // Without this value every host gets "plan limits are being configured", so say so loudly once.
+  if (!warnedMissingSubscriptionEnvironment) {
+    warnedMissingSubscriptionEnvironment = true;
+    console.warn(JSON.stringify({
+      event: "plan_capacity.misconfigured",
+      reason: "SUBSCRIPTION_EXPECTED_ENVIRONMENT is not set to production or sandbox in the Convex deployment",
+      value: environment ?? null,
+    }));
+  }
+  return undefined;
 }
 
 /**

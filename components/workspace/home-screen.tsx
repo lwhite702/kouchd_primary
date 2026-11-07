@@ -720,15 +720,21 @@ export function HomeScreen({
           {/* 2. Shared Home Panel with Organic Curves & Room Illustration */}
           <section className="v21-shared-home-panel">
             <div className="v21-panel-curves" aria-hidden="true">
-              <img
+              <Image
                 src="/dashboard-v21/curve-sky.svg"
                 alt=""
+                width={470}
+                height={250}
                 className="v21-panel-curve-sky"
+                unoptimized
               />
-              <img
+              <Image
                 src="/dashboard-v21/curve-lime.svg"
                 alt=""
+                width={240}
+                height={190}
                 className="v21-panel-curve-lime"
+                unoptimized
               />
             </div>
             <div className="v21-panel-copy">
@@ -742,9 +748,12 @@ export function HomeScreen({
               </p>
             </div>
             <div className="v21-panel-illustration" aria-hidden="true">
-              <img
+              <Image
                 src="/dashboard-v21/room-illustration-dashboard.svg"
                 alt="Cozy room illustration"
+                width={220}
+                height={158}
+                unoptimized
               />
             </div>
           </section>
@@ -1019,9 +1028,11 @@ export function HomeScreen({
                   >
                     <div className="v21-activity-avatar">
                       {actorMember?.person.imageUrl ? (
-                        <img
+                        <Image
                           src={actorMember.person.imageUrl}
                           alt={actorName}
+                          width={32}
+                          height={32}
                         />
                       ) : (
                         initials

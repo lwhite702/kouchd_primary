@@ -81,6 +81,7 @@ struct RootView: View {
   @State private var introductionRevision = UserDefaults.standard.integer(forKey: "kouchd.introductionRevision")
   @State private var splashVisible = true
   @State private var pendingRoute: EntryRoute?
+  @State private var pendingReferralCode = ""
   @State private var destination: EntryRoute?
   @State private var activeSheet: ActiveSheet?
   @State private var inviteToken = ""
@@ -157,8 +158,9 @@ struct RootView: View {
     splashVisible = false
   }
 
-  private func handleIntroductionCompletion(_ route: EntryRoute?) {
+  private func handleIntroductionCompletion(_ route: EntryRoute?, _ referralCode: String?) {
     pendingRoute = route
+    pendingReferralCode = referralCode ?? ""
     markIntroductionComplete()
     Task { @MainActor in
       try? await Task.sleep(for: .milliseconds(250))
@@ -268,8 +270,10 @@ struct RootView: View {
           Text("Start a shared stay").font(.title3.bold())
           Text("Set the dates, contribution rhythm, and house notes for your guests.")
             .foregroundStyle(Palette.muted)
-          NavigationLink("Create a stay", value: KouchdRoute.createStay)
-            .buttonStyle(.borderedProminent).tint(Palette.forest)
+          NavigationLink(value: KouchdRoute.createStay) {
+            Text("Create a stay").foregroundStyle(Palette.onPrimary)
+          }
+          .buttonStyle(.borderedProminent).tint(Palette.forest)
         }
         } trailing: {
         Card {
@@ -288,7 +292,7 @@ struct RootView: View {
       .navigationDestination(item: $destination) { route in
         switch route {
         case .host: CreateStayScreen(store: store)
-        case .guest: JoinCodeScreen(store: store)
+        case .guest: JoinCodeScreen(store: store, initialCode: pendingReferralCode)
         }
       }
     }

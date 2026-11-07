@@ -13,7 +13,7 @@ final class AppStoreScreenshotTests: XCTestCase {
   }
 
   private static let shots: [Shot] = [
-    Shot(name: "01-welcome", arguments: ["--ui-test-introduction"], waitFor: "See how Kouchd works"),
+    Shot(name: "01-welcome", arguments: ["--ui-test-introduction"], waitFor: "Get started"),
     Shot(name: "02-guest-home", arguments: ["--ui-test-stay-layout", "guest"], waitFor: nil),
     Shot(name: "03-ledger", arguments: ["--ui-test-stay-layout", "guest", "--ui-test-section", "ledger"], waitFor: "Add contribution"),
     Shot(name: "04-add-contribution", arguments: ["--ui-test-contribution=venmo-saved"], waitFor: nil),

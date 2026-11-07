@@ -104,7 +104,7 @@ export function DocsExplorer({ status }: { status: MintlifyOpsStatus }) {
                 justifyContent: "space-between",
                 alignItems: "center",
                 padding: "0.6rem 0.85rem",
-                background: "#faf8f5",
+                background: "var(--kouchd-surface, #faf8f5)",
                 border: "1px solid var(--kouchd-line)",
                 borderRadius: 8,
                 textDecoration: "none",
@@ -119,7 +119,7 @@ export function DocsExplorer({ status }: { status: MintlifyOpsStatus }) {
           ))}
         </div>
 
-        <div style={{ background: "#faf8f5", padding: "1rem", borderRadius: 12, border: "1px solid var(--kouchd-line)" }}>
+        <div style={{ background: "var(--kouchd-surface, #faf8f5)", padding: "1rem", borderRadius: 12, border: "1px solid var(--kouchd-line)" }}>
           <strong style={{ display: "flex", alignItems: "center", gap: 6, fontSize: "0.88rem", marginBottom: 6 }}>
             <ShieldCheck size={15} color="var(--kouchd-forest)" />
             Mintlify Repository &amp; Release Rules

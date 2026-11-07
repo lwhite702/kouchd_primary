@@ -14,6 +14,7 @@ import {
   Home,
   LifeBuoy,
   Mail,
+  Palette,
   Shield,
   Users,
 } from "lucide-react";
@@ -48,6 +49,7 @@ export function ConsoleShell({ consoleKey, basePath: explicitBasePath, admin, ch
     { label: "Financials & Disputes", href: `${basePath}/financials`, icon: FileText },
     { label: "10DLC Compliance", href: `${basePath}/compliance`, icon: CheckCircle2 },
     { label: "Feature Flags", href: `${basePath}/flags`, icon: Flag },
+    { label: "Brand System", href: `${basePath}/brand`, icon: Palette },
   ];
 
   return (

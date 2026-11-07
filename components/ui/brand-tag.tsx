@@ -52,7 +52,7 @@ const sizeClasses: Record<BrandTagSize, { container: string; text: string; icon:
 
 const variantClasses: Record<BrandTagVariant, string> = {
   primary:
-    "bg-[var(--kouchd-lime-40)] text-[var(--kouchd-forest-90)] border border-[var(--kouchd-lime-60)] shadow-sm",
+    "bg-[var(--kouchd-sage)] text-[var(--kouchd-on-fill)] border border-[var(--kouchd-sage)]",
   secondary:
     "bg-[var(--kouchd-sage-20)] text-[var(--kouchd-forest-90)] border border-[var(--kouchd-sage-40)]",
   light:
@@ -62,13 +62,13 @@ const variantClasses: Record<BrandTagVariant, string> = {
   outline:
     "bg-transparent text-[var(--kouchd-forest-80)] border border-[var(--kouchd-neutral-30)] hover:border-[var(--kouchd-forest-50)]",
   info:
-    "bg-[var(--kouchd-info-10)] text-[var(--kouchd-info-80)] border border-[var(--kouchd-info-30)]",
+    "bg-[var(--kouchd-sky)] text-[var(--kouchd-on-fill)] border border-[var(--kouchd-sky)]",
   success:
-    "bg-[var(--kouchd-success-10)] text-[var(--kouchd-success-80)] border border-[var(--kouchd-success-30)]",
+    "bg-[var(--kouchd-sage)] text-[var(--kouchd-on-fill)] border border-[var(--kouchd-sage)]",
   alert:
-    "bg-[var(--kouchd-alert-10)] text-[var(--kouchd-alert-80)] border border-[var(--kouchd-alert-30)]",
+    "bg-[var(--kouchd-palette-f1cfc6)] text-[var(--kouchd-on-fill)] border border-[var(--kouchd-palette-f1cfc6)]",
   error:
-    "bg-[var(--kouchd-error-10)] text-[var(--kouchd-error-80)] border border-[var(--kouchd-error-30)]",
+    "bg-[var(--kouchd-palette-f1cfc6)] text-[var(--kouchd-on-fill)] border border-[var(--kouchd-palette-f1cfc6)]",
 };
 
 export const BrandTag = React.forwardRef<HTMLSpanElement, BrandTagProps>(

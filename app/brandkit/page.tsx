@@ -1,5 +1,5 @@
-import { redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 
-export default function BrandkitRedirect() {
-  redirect("/brand");
+export default function BrandkitPage() {
+  notFound();
 }

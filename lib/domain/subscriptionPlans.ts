@@ -159,6 +159,17 @@ export const SMS_ALLOWANCES: Readonly<Record<SubscriptionPlan, SmsAllowance>> = 
   householdPro: { status: "pendingProductDecision", monthlyMessageLimit: null, requiresExplicitConsent: true },
 };
 
+/**
+ * Display prices for Kouchd Plus in USD, shown on plan cards before checkout.
+ * They mirror the RevenueCat web catalog and the iOS fallback catalog
+ * (ios/Kouchd/Billing.swift). Checkout always shows the live store price,
+ * which wins if the two ever differ.
+ */
+export const PLUS_DISPLAY_PRICES = {
+  monthly: "$6.99",
+  yearly: "$69.99",
+} as const;
+
 export function getPlanLimits(plan: SubscriptionPlan): PlanLimits {
   return PLAN_LIMITS[plan];
 }

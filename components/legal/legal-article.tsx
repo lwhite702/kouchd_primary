@@ -2,6 +2,78 @@ import React from "react";
 import Link from "next/link";
 import type { LegalSection } from "@/lib/legal";
 
+// Module-level style objects: created once, not on every render of a long legal document.
+const headerStyle: React.CSSProperties = {
+  borderBottom: "1px solid var(--kouchd-line, #ded8ce)",
+  paddingBottom: "1.25rem",
+  marginBottom: "1.75rem",
+};
+const eyebrowStyle: React.CSSProperties = {
+  textTransform: "uppercase",
+  letterSpacing: "1.5px",
+  fontSize: "0.78rem",
+  fontWeight: 800,
+  color: "var(--kouchd-forest, #184f3a)",
+  margin: "0 0 0.5rem",
+};
+const titleRowStyle: React.CSSProperties = { display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "0.5rem" };
+export const legalTitleStyle: React.CSSProperties = {
+  fontSize: "2.25rem",
+  fontWeight: 800,
+  color: "var(--kouchd-forest, #184f3a)",
+  margin: 0,
+  letterSpacing: "-0.5px",
+};
+const metaStyle: React.CSSProperties = { margin: 0, color: "var(--kouchd-muted, #59675f)", fontSize: "0.9rem" };
+const overviewStyle: React.CSSProperties = {
+  background: "#f7faf7",
+  border: "1px solid #b8d2c1",
+  borderRadius: "14px",
+  padding: "1.25rem 1.5rem",
+  margin: "1.75rem 0",
+};
+const overviewTextStyle: React.CSSProperties = { margin: 0, fontSize: "0.95rem", color: "var(--kouchd-ink, #17251f)" };
+
+interface LegalPageHeaderProps {
+  eyebrow: React.ReactNode;
+  /** Plain title text; or pass a ready <h1> as `heading` when its literal markup must stay in the page source. */
+  title?: React.ReactNode;
+  heading?: React.ReactNode;
+  meta: React.ReactNode;
+  icon?: React.ReactNode;
+  titleSize?: string;
+}
+
+/** Eyebrow, optional icon, title and effective-date line shared by every legal page. */
+export function LegalPageHeader({ eyebrow, title, heading: customHeading, meta, icon, titleSize }: LegalPageHeaderProps) {
+  const heading = customHeading ?? (
+    <h1 style={titleSize ? { ...legalTitleStyle, fontSize: titleSize } : legalTitleStyle}>{title}</h1>
+  );
+  return (
+    <div style={headerStyle}>
+      <p style={eyebrowStyle}>{eyebrow}</p>
+      {icon ? (
+        <div style={titleRowStyle}>
+          {icon}
+          {heading}
+        </div>
+      ) : (
+        <div style={{ marginBottom: "0.5rem" }}>{heading}</div>
+      )}
+      <p style={metaStyle}>{meta}</p>
+    </div>
+  );
+}
+
+/** The highlighted summary box under a legal page header. */
+export function LegalOverview({ children }: { children: React.ReactNode }) {
+  return (
+    <div style={overviewStyle}>
+      <p style={overviewTextStyle}>{children}</p>
+    </div>
+  );
+}
+
 interface LegalArticleProps {
   children: React.ReactNode;
 }

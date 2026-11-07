@@ -11,7 +11,7 @@ describe("Carrier 10DLC & SMS compliance rules", () => {
   const signUpPagePath = path.join(rootDir, "app/sign-up/[[...sign-up]]/page.tsx");
   const guestOnboardingPath = path.join(rootDir, "components/onboarding/guest-onboarding-flow.tsx");
   const hostOnboardingPath = path.join(rootDir, "components/onboarding/host-onboarding-wizard.tsx");
-  const landingPagePath = path.join(rootDir, "components/landing-page.tsx");
+  const startPagePath = path.join(rootDir, "components/start/start-page.tsx");
 
   it("ensures Privacy Policy fulfills all carrier requirements", () => {
     expect(fs.existsSync(privacyPath)).toBe(true);
@@ -96,12 +96,12 @@ describe("Carrier 10DLC & SMS compliance rules", () => {
     expect(hostContent.toLowerCase()).toContain("message and data rates may apply");
   });
 
-  it("ensures landing page footer links to Privacy Policy, Terms, and SMS opt-in", () => {
-    const landingContent = fs.readFileSync(landingPagePath, "utf8");
-    expect(landingContent).toContain('href="/privacy"');
-    expect(landingContent).toContain('href="/terms"');
-    expect(landingContent).toContain('href="/sms-opt-in"');
-    expect(landingContent).toContain('<Link href="/sms-opt-in">SMS opt-in</Link>');
-    expect(landingContent).toContain("Wrelik Brands LLC");
+  it("ensures the signed-out Start page footer links to Privacy Policy, Terms, and SMS opt-in", () => {
+    const startContent = fs.readFileSync(startPagePath, "utf8");
+    expect(startContent).toContain('privacy: "/privacy"');
+    expect(startContent).toContain('terms: "/terms"');
+    expect(startContent).toContain('smsPreferences: "/sms-opt-in"');
+    expect(startContent).toContain("<Link href={START_ROUTES.smsPreferences}>SMS preferences</Link>");
+    expect(startContent).toContain("Wrelik Brands LLC");
   });
 });

@@ -71,10 +71,16 @@ export function BrandButton({
   // Variant color definitions
   const variantStyles: Record<string, React.CSSProperties> = {
     primary: {
-      background: state === "hover" ? "#cce43b" : "#dff25e",
-      color: "#17251f",
-      border: state === "focused" ? "3px solid #8c9e13" : "1px solid rgba(0,0,0,0.06)",
-      boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+      background: "var(--kouchd-lime)",
+      color: "var(--kouchd-on-fill)",
+      border: "1.5px solid var(--kouchd-brand-forest)",
+      borderRadius: "12px",
+      ...(state === "hover"
+        ? { transform: "translate(2px, 2px)", boxShadow: "2px 2px 0 var(--kouchd-brand-forest)" }
+        : {}),
+      ...(state === "focused"
+        ? { outline: "3px solid var(--kouchd-forest)", outlineOffset: "3px" }
+        : {}),
     },
     secondary: {
       background: state === "hover" ? "#296d55" : "#184f3a",
@@ -113,14 +119,14 @@ export function BrandButton({
   return (
     <button
       disabled={isDisabled}
-      className={`brand-button font-heading ${className}`}
+      className={`brand-button brand-button--${variant} font-heading ${className}`}
       style={{
         display: "inline-flex",
         alignItems: "center",
         justifyContent: "center",
         fontWeight: 800,
         letterSpacing: "-0.01em",
-        transition: "all 0.18s ease-in-out",
+        transition: variant === "primary" ? undefined : "all 0.18s ease-in-out",
         cursor: isDisabled ? "not-allowed" : "pointer",
         lineHeight: 1,
         ...currentSize,

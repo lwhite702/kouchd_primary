@@ -1,0 +1,263 @@
+/* Free and Plus plan cards (Version 1.0 redesign). */
+.plus-plans {
+  display: grid;
+  gap: 16px;
+  font-family: var(--font-family-text);
+  color: var(--kouchd-ink);
+}
+
+.plus-plans-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: 16px;
+}
+
+.plus-plan-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 24px;
+  border-radius: 26px;
+  text-align: left;
+}
+
+.plus-plan-card.is-free {
+  background: var(--kouchd-surface);
+  border: 1px solid var(--kouchd-line);
+  color: var(--kouchd-ink);
+}
+
+/* Brand forest never changes between themes, so its light text is fixed too. */
+.plus-plan-card.is-plus {
+  background: var(--kouchd-forest-60);
+  border: 1px solid var(--kouchd-forest-60);
+  color: var(--kouchd-neutral-0);
+}
+
+.plus-plan-card h3 {
+  margin: 0;
+  font-family: var(--font-family-title);
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: inherit;
+}
+
+.plus-plan-eyebrow {
+  margin: 0;
+  font-family: var(--font-family-title);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--kouchd-muted);
+}
+
+.plus-plan-card.is-plus .plus-plan-eyebrow {
+  color: var(--kouchd-sage-10);
+}
+
+.plus-plan-tag {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: var(--kouchd-lime-30);
+  color: var(--kouchd-neutral-80);
+  font-family: var(--font-family-title);
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.plus-plan-price {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 6px;
+  margin: 0;
+  font-family: var(--font-family-title);
+  font-size: 1.75rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.plus-plan-price span {
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.plus-plan-price small {
+  flex-basis: 100%;
+  font-family: var(--font-family-text);
+  font-size: 0.85rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  opacity: 0.85;
+}
+
+.plus-plan-features {
+  display: grid;
+  gap: 8px;
+  margin: 4px 0 8px;
+  padding: 0;
+  list-style: none;
+  font-size: 0.93rem;
+  line-height: 1.45;
+}
+
+.plus-plan-features li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.plus-plan-features svg {
+  flex: none;
+  margin-top: 3px;
+  color: var(--kouchd-forest-60);
+}
+
+.plus-plan-card.is-plus .plus-plan-features svg {
+  color: var(--kouchd-lime-30);
+}
+
+.plus-plan-card.is-plus .kouchd-main-action {
+  margin-top: auto;
+}
+
+/* The default sky ring is too dark against brand forest. */
+.plus-plan-card.is-plus .kouchd-main-action:focus-visible {
+  outline-color: var(--kouchd-neutral-0);
+}
+
+.plus-plans-guest-note {
+  margin: 0;
+  padding: 14px 18px;
+  border-radius: 18px;
+  background: var(--kouchd-sage-10);
+  color: var(--kouchd-neutral-80);
+  font-family: var(--font-family-title);
+  font-weight: 700;
+  font-size: 0.93rem;
+}
+
+.plus-plans-fine-print {
+  margin: 0;
+  color: var(--kouchd-muted);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+/* Paywall dialog shell. */
+.plus-paywall-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(19, 31, 26, 0.55);
+  backdrop-filter: blur(4px);
+}
+
+.plus-paywall-dialog {
+  position: relative;
+  width: min(720px, 100%);
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  border: 1px solid var(--kouchd-line);
+  border-radius: 28px;
+  background: var(--kouchd-paper);
+  color: var(--kouchd-ink);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+}
+
+.plus-paywall-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 22px 24px 0;
+}
+
+.plus-paywall-header h2 {
+  margin: 0;
+  font-family: var(--font-family-title);
+  font-size: 1.4rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.plus-paywall-header p {
+  margin: 4px 0 0;
+  color: var(--kouchd-muted);
+  font-size: 0.93rem;
+}
+
+.plus-paywall-close {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  border: 1px solid var(--kouchd-line);
+  border-radius: 12px;
+  background: var(--kouchd-surface);
+  color: var(--kouchd-ink);
+  cursor: pointer;
+}
+
+.plus-paywall-close:focus-visible,
+.plus-paywall-secondary:focus-visible {
+  outline: 3px solid var(--kouchd-sky-50);
+  outline-offset: 2px;
+}
+
+.plus-paywall-body {
+  padding: 20px 24px 24px;
+}
+
+.plus-paywall-state {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  padding: 24px 8px;
+  text-align: center;
+}
+
+.plus-paywall-state h3 {
+  margin: 0;
+  font-family: var(--font-family-title);
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.plus-paywall-state p {
+  max-width: 440px;
+  margin: 0;
+  color: var(--kouchd-muted);
+  line-height: 1.55;
+}
+
+.plus-paywall-state .plus-paywall-error {
+  color: var(--kouchd-coral-60);
+}
+
+.plus-paywall-secondary {
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1px solid var(--kouchd-line);
+  border-radius: 12px;
+  background: var(--kouchd-surface);
+  color: var(--kouchd-ink);
+  font-family: var(--font-family-title);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.plus-paywall-checkout {
+  width: 100%;
+  min-height: 380px;
+}

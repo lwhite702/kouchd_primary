@@ -8,7 +8,6 @@ export default function robots(): MetadataRoute.Robots {
         allow: [
           "/",
           "/about",
-          "/brand",
           "/privacy",
           "/terms",
           "/sms-opt-in",

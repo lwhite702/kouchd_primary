@@ -197,7 +197,7 @@ export function StaysExplorer() {
             </div>
 
             {/* Living Logistics Summary (Redacted for Privacy) */}
-            <div style={{ background: "#faf8f5", padding: "0.85rem", borderRadius: 10, border: "1px solid var(--kouchd-line)", marginBottom: "1.25rem" }}>
+            <div style={{ background: "var(--kouchd-surface, #faf8f5)", padding: "0.85rem", borderRadius: 10, border: "1px solid var(--kouchd-line)", marginBottom: "1.25rem" }}>
               <span style={{ fontSize: "0.75rem", color: "var(--kouchd-muted)", textTransform: "uppercase", fontWeight: 700 }}>
                 House Logistics & Privacy Summary (Sensitive Credentials Redacted)
               </span>
@@ -259,15 +259,15 @@ export function StaysExplorer() {
 
             {/* Counts of obligations, contributions, chores */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0.75rem", textAlign: "center" }}>
-              <div style={{ background: "#faf8f5", padding: "0.75rem", borderRadius: 8 }}>
+              <div style={{ background: "var(--kouchd-surface, #faf8f5)", padding: "0.75rem", borderRadius: 8 }}>
                 <span style={{ fontSize: "0.72rem", color: "var(--kouchd-muted)", textTransform: "uppercase" }}>Obligations</span>
                 <div style={{ fontSize: "1.25rem", fontWeight: 800 }}>{stayDetail.obligations.length}</div>
               </div>
-              <div style={{ background: "#faf8f5", padding: "0.75rem", borderRadius: 8 }}>
+              <div style={{ background: "var(--kouchd-surface, #faf8f5)", padding: "0.75rem", borderRadius: 8 }}>
                 <span style={{ fontSize: "0.72rem", color: "var(--kouchd-muted)", textTransform: "uppercase" }}>Contributions</span>
                 <div style={{ fontSize: "1.25rem", fontWeight: 800 }}>{stayDetail.contributions.length}</div>
               </div>
-              <div style={{ background: "#faf8f5", padding: "0.75rem", borderRadius: 8 }}>
+              <div style={{ background: "var(--kouchd-surface, #faf8f5)", padding: "0.75rem", borderRadius: 8 }}>
                 <span style={{ fontSize: "0.72rem", color: "var(--kouchd-muted)", textTransform: "uppercase" }}>Chores</span>
                 <div style={{ fontSize: "1.25rem", fontWeight: 800 }}>{stayDetail.chores.length}</div>
               </div>

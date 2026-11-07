@@ -2,13 +2,96 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
-## 2026-11-03 — Repeatable App Store screenshot capture (iOS tooling)
+## 2026-11-07 — Repeatable App Store screenshot capture (iOS tooling)
 
 - Added `ios/KouchdUITests/AppStoreScreenshotTests.swift`: captures 10 screens (welcome, guest home, Ledger, Add contribution, chores, shopping, host home, house info, check-ins, rewards) from the existing synthetic-data test hosts and writes PNGs to `KOUCHD_SCREENSHOT_DIR`. Skipped when that variable is unset, so regular test runs are unaffected.
 - Added `ios/scripts/app-store-screenshots.sh` and a `fastlane screenshots` lane: resolves iPhone 6.9" and iPad 13" simulators, overrides the status bar, runs only the screenshot test, and reports pixel sizes. No App Store Connect upload.
 - Documented usage in `ios/README.md`.
 - Evidence: `bash -n` syntax check only. This container is Linux without Xcode, so the Swift test and script have not been compiled or run; first Mac run is the verification step.
 - Linear issue not created: the workspace rejected new issues (free issue limit reached).
+
+## 2026-11-04 — Remediate dark mode white-on-white text and low-contrast surfaces (0.9.8)
+
+- Branch `codex/dark-mode-contrast`.
+- iOS Button Contrast: Wrapped `.borderedProminent` buttons paired with adaptive `Palette.forest` in `ios/Kouchd/Introduction.swift`, `ios/Kouchd/KouchdApp.swift`, and `ios/Kouchd/MoreScreens.swift` with `.foregroundStyle(Palette.onPrimary)`, ensuring dark ink (`#16241e`) renders on light lime (`#d5f59a`) in dark mode instead of default white (contrast increased from 1.21:1 to 13.30:1).
+- Web CSS Dark Theme Tokens: Updated `@media (prefers-color-scheme: dark)` in `styles.css` with semantic tokens (`--kouchd-sage`, `--kouchd-sky`, `--kouchd-blue`, `--kouchd-amber`, `--kouchd-rose`, `--kouchd-on-fill`, `--kouchd-on-primary`, `--kouchd-palette-faf8f5`, `--kouchd-palette-e8e5dd`, `--kouchd-palette-eef6f0`, `--kouchd-palette-e9f3ec`).
+- Web Toast Contrast: Fixed `.toast` notification in `styles.css` to use dark surface and crisp line border in dark mode instead of rendering white text on inverted off-white ink.
+- Dashboard V2.1 Dark Styles: Added `@media (prefers-color-scheme: dark)` block in `components/dashboard-v21.css` for attention cards, summary tile gradients, referral code cards, guest/other avatar badges, and host check-in cards.
+- Production CSS Dark Styles: Added `@media (prefers-color-scheme: dark)` in `app/production.css` for house detail rows, note text, house icons (wifi, location, access, parking, notes), estimate cards, and notification urgency states.
+- React Component Surface Tokens: Replaced hardcoded `#faf8f5` and `#eef6f0` card backgrounds with adaptive `var(--kouchd-surface)` across `join-household.tsx`, `sms-opt-in-form.tsx`, `live-stay.tsx`, `guest-onboarding-flow.tsx`, `host-onboarding-wizard.tsx`, `workspace-panels.tsx`, `bill-splitting-card.tsx`, `terms/page.tsx`, and platform console explorer components.
+- Version bumped to 0.9.8.
+
+## 2026-11-04 — Relocate brand system to platform ops console and decommission public routes (WRE-273, 0.9.7)
+
+- Branch `codex/WRE-273-brand-console`, PR #166 (Linear WRE-273).
+- Relocated internal Brand System portal to `/platform/brand` guarded by `requirePlatformOpsAccess()` and `/console/[consoleKey]/brand` guarded by `requirePlatformConsole()`.
+- Added Brand System navigation item with palette icon to `ConsoleShell` for authorized operators.
+- Decommissioned public `/brand` and `/brandkit` entry points with clean 404 responses (`notFound()`), avoiding any public redirects that would expose internal admin endpoints.
+- Removed `/brand` references from sitemap, robots allowlist, marketing footer, and legal page footer.
+- Version bumped to 0.9.7.
+
+## 2026-11-04 — iOS welcome-screen motion, introduction UI tests, and web Image cleanup (0.9.6)
+
+- Branch `codex/release-0.9.6`, PR #165 (WRE-275 follow-up / Version 1.0 redesign polish).
+- iOS welcome motion: Added staggered entry animations for introduction scene cards and interactive elements.
+- iOS IntroductionFlow UI tests: Aligned UI test expectations with the Version 1.0 redesign copy.
+- Host copy & contrast polish: Polished single-stay host hero count label, house detail info cards, pay-outside-Kouchd reminder card, and dark mode contrast for Split a bill.
+- Web Image optimization: Converted `<img>` elements in `components/workspace/home-screen.tsx` and `components/workspace/live-stay.tsx` to Next.js `<Image />` with explicit dimensions and zero lint warnings.
+- Test runner stability: Configured `testTimeout: 20000` in `vitest.config.ts` to prevent parallel worker mock initialization timeouts.
+- Version 0.9.6.
+
+## 2026-11-03 — Primary button, status tag tones, and adaptive line-art empty states (WRE-278, #152, 0.9.5)
+
+- Branch `codex/WRE-278-button-status-illustrations`, issue #152 (Linear WRE-278).
+- Primary button: Created `BrandButton` (`components/ui/brand-button.tsx`) with 1.5px forest outline, tactile offset shadow (`2px 2px 0 var(--color-ink)`), 12px corner radius, and keyboard/reduced-motion support.
+- Status tag tones: Updated `BrandTag` (`components/ui/brand-tag.tsx`) to map statuses to calm semantic tones (`sage` for confirmed, `sky` for pending/upcoming, `light coral` for attention, and warm gray for neutral) with on-fill text, reserving lime for Plus badges and primary actions.
+- Empty-state line-art illustrations: Created 6 adaptive SVG line-art illustrations in `components/illustrations/empty-state-illustrations.tsx` (`HouseGuideIllustration`, `LedgerEntryIllustration`, `ChoreBoardIllustration`, `AgreementIllustration`, `PaymentOptionsIllustration`, `RemindersIllustration`) responding to CSS theme tokens.
+- Integration: Wired illustrations into `household-logistics.tsx`, `contributions-screen.tsx`, `chores-screen.tsx`, `stay-screen.tsx`, `payment-options.tsx`, and `dashboard-notifications.tsx`.
+- Tests: Added `tests/wre-278-illustrations.test.ts` (7 unit tests).
+- Bumps version to 0.9.5.
+
+## 2026-11-03 — iPhone redesign alignment (WRE-275, #149, 0.9.4)
+
+- Branch `codex/WRE-275-ios-redesign-recent-features`, issue #149 (Linear WRE-275).
+- Palette and Typography: Updated `ios/Kouchd/Design.swift` with tokens aligned with the Version 1.0 redesign (`cream`, `surface`, `forest`, `ink`, `muted`, `line`, `sage`, `sky`, `blue`, `amber`, `rose`, `paperFill`, `onFill`, `brandForest`, `onBrand`).
+- Pill tones: Updated `Pill` to map record statuses to calm semantic tones (`confirmed`, `pending`, `upcoming`, `attention`, `neutral`, `plus`) with on-fill text.
+- LimeButton: Introduced `LimeButton` for the prominent primary action per screen.
+- Illustrations & Visuals: Integrated line-art empty states and introduction illustrations (`RoomIllustration`, `AgreementIllustration`, `LedgerIllustration`, `ChoreBoardIllustration`).
+- Introduction: Added ambient gradient lighting, refreshed introductory copy ("Shared stays, made clear."), and direct referral code entry routing to `JoinCodeScreen(initialCode:)`.
+- Features & Subleases: Preserved recent shared features including bills, sublease checklists and deposit disclosures, and chore rotation.
+- Bumps version to 0.9.4 and iOS build to 3.
+
+## 2026-11-03 — Feature flag registry defaults (0.9.3)
+
+- Restored code defaults in `lib/flags/config.ts` (`BILL_SPLITTING: false`, `SUBLEASES: false`) so unit and integration test fixtures remain isolated and deterministic without live backend dependencies.
+- Runtime feature flags are enabled in production via Convex platform overrides (`featureFlags` table).
+- Release gate and version bumped to 0.9.3.
+
+## 2026-11-03 — Invite and Plus screens redesign (WRE-277, 0.9.2)
+
+- Branch `codex/WRE-277-invite-plus-redesign` (part of the Version 1.0 redesign, WRE-273).
+- Invite screen: `components/invite-accept.tsx` now renders `InviteHero` and `InvitePrivacyPanel` from the new `components/invite-guest-panels.tsx`, styled by `components/invite-accept.css`. `inviteTitle()` ignores the `convex/invites.ts` fallbacks ("A Kouchd host", "Shared stay") so the title never shows placeholder names. Accept and registration logic is unchanged; the idle join label changed from "Join household" to "Join free".
+- Privacy panel claims, checked against source: announcements (`convex/announcements.ts` `list`), house info (`convex/stays.ts` `getBundle` via `redactStayForMember`, door and Wi-Fi codes still gated), and chores (`convex/chores.ts` `list`) are returned to any stay member. Terms are scoped per guest in `getBundle` (guests get `getCurrentGuestTerms` for themselves; other members' terms only go to the host) and contributions go through `resolveFinancialGuest` (`convex/lib/auth.ts`).
+- Plus paywall: `PaywallModal` has a `plans` step showing `PlusPlanCards` (`components/billing/plus-plans.tsx`, `plus-plans.css`) before the RevenueCat checkout; the RevenueCat effect now waits for the `checkout` step. Purchase callbacks, flags, and the hosted Customer Center are unchanged. `PLUS_DISPLAY_PRICES` was added to `lib/domain/subscriptionPlans.ts` because no web price constant existed; values mirror the RevenueCat catalog noted in `docs/internal/LAUNCH_READINESS.md` and `ios/Kouchd/Billing.swift`.
+- Plus card features list only the enforced stay and guest limits plus "Everything in Free". Cards make no "unlimited" claims and add a guest note and a fine-print line that Kouchd never collects, holds, or transfers money.
+- Roadmap: "Refreshed invite and Plus screens" added as in development.
+- Version 0.9.2.
+
+## 2026-11-03 — Signed-out Start page (WRE-276, 0.9.1)
+
+- Branch `codex/WRE-276-signed-out-start-page`, part of the Version 1.0 redesign (WRE-273). Design: Figma node 533:356, "04 Start".
+- `app/page.tsx` now returns `<StartPage />` for signed-out visitors instead of `redirect("/sign-in")`; this reverses the redirect contract from WRE-178. `components/authenticated-home.tsx` renders `StartPage` in its signed-out branch. `components/landing-page.tsx` deleted; `components/landing-v21.css` kept for `/about` and `/simple`.
+- Guest code hand-off: `lib/start/join-code.ts` builds `/sign-up?redirect_url=/?join=<code>` and reads `?join=` back. `GetStartedHub` opens its join tab with the code, and `JoinHouseholdCard` takes an `initialCode` prop; the join itself still calls `api.referral.joinWithCode`. Signed-in users who already have stays land on `StayHub`, which does not read `?join=`.
+- Styles live in `components/start/start-page.css` (all classes prefixed `kd-start`) to stay clear of the parallel token/dark-mode work in `app/production.css`, `components/dashboard-v21.css`, and `app/console.css`.
+- Version 0.9.1.
+
+## 2026-11-03 — WRE-274 web color tokens and dark appearance (0.9.0, branch only)
+
+- Added system-driven dark appearance to the shared web color tokens. Exactly seven semantic values adapt: paper, surface, ink, muted, line, forest accent, and eyebrow. Brand forest remains fixed for filled controls and bands; pale lime, sage, sky, and coral fills use the fixed on-fill text color.
+- Migrated literal colors in `app/production.css`, `components/dashboard-v21.css`, and `app/console.css` to shared CSS variables while preserving their existing light-mode values.
+- Roadmap marks the work in development. No public release note or user guide was changed because this branch is unreleased and does not add a manual setting.
+- Checks: `npm run version:check`; `npm run verify:env` (skipped for local visual/demo mode); ESLint (0 errors, 5 existing `<img>` warnings in untouched workspace screens); `tsc --noEmit`; Vitest (47 files, 286 tests); `npm run build --webpack`; release gate and `git diff --check` all passed. No color literals remain in the three migrated CSS files.
+- Not verified: visual review across light/dark appearance and signed-in browser flows. No production deployment or availability claim.
 
 ## 2026-11-03 — Sublease condition checklists and security deposit records (WRE-272, Step 5)
 

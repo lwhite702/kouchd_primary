@@ -1,0 +1,59 @@
+/*
+ * Kouchd main action (Version 1.0 redesign). Use it for the single most
+ * important action on a screen. Lime fill and on-fill text keep their light
+ * values in both themes; the brand-forest border and offset shadow never change.
+ */
+.kouchd-main-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 22px;
+  border: 1.5px solid var(--kouchd-forest-60);
+  border-radius: 12px;
+  background: var(--kouchd-lime-30);
+  color: var(--kouchd-neutral-80);
+  font-family: var(--font-family-title);
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+  cursor: pointer;
+  box-shadow: 4px 4px 0 var(--kouchd-forest-60);
+  transform: translate(0, 0);
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.kouchd-main-action:hover:not(:disabled) {
+  box-shadow: 2px 2px 0 var(--kouchd-forest-60);
+  transform: translate(2px, 2px);
+}
+
+.kouchd-main-action:active:not(:disabled) {
+  box-shadow: 0 0 0 var(--kouchd-forest-60);
+  transform: translate(4px, 4px);
+}
+
+.kouchd-main-action:focus-visible {
+  outline: 3px solid var(--kouchd-sky-50);
+  outline-offset: 3px;
+}
+
+.kouchd-main-action:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.kouchd-main-action.is-full-width {
+  width: 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kouchd-main-action,
+  .kouchd-main-action:hover:not(:disabled),
+  .kouchd-main-action:active:not(:disabled) {
+    transition: none;
+    transform: none;
+  }
+}

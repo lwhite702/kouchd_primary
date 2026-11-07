@@ -2,7 +2,77 @@
 
 ## [Unreleased]
 
+### Changed
+
+- **HeyCatch analytics SDK integration (0.9.9)**:
+  - Initialized HeyCatch analytics in `instrumentation-client.ts` with project key `hck_pk_vTnA-QIqNwJkDomxrPzeV7q7FubOu6pI` and Next.js 16 metadata.
+  - Allowed `https://in.heycatch.ai` in `script-src` and `connect-src` CSP directives.
+  - Added HeyCatch single-character short-link attribution redirect rule in `next.config.ts`.
+  - Added `HeyCatchAuthSync` in `app/providers.tsx` to sync authenticated identities on sign-in and reset on sign-out.
+  - Connected product events in `lib/analytics/track.ts` to `analytics.trackEvent(...)`.
+  - Version 0.9.9.
+
+- **Dark mode contrast and legibility remediation across Web & iOS (0.9.8)**:
+  - iOS Buttons: Wrapped `.borderedProminent` buttons paired with adaptive `Palette.forest` in `Introduction.swift`, `KouchdApp.swift`, and `MoreScreens.swift` with `.foregroundStyle(Palette.onPrimary)`, ensuring dark ink (`#16241e`) renders on light lime (`#d5f59a`) in dark mode instead of default white (contrast increased from 1.21:1 to 13.30:1).
+  - Web CSS Dark Theme Tokens: Updated `@media (prefers-color-scheme: dark)` in `styles.css` with semantic status and palette tokens (`--kouchd-sage`, `--kouchd-sky`, `--kouchd-blue`, `--kouchd-amber`, `--kouchd-rose`, `--kouchd-on-fill`, `--kouchd-on-primary`, `--kouchd-palette-faf8f5`, `--kouchd-palette-e8e5dd`, `--kouchd-palette-eef6f0`, `--kouchd-palette-e9f3ec`).
+  - Web Toast Contrast: Fixed `.toast` notification in `styles.css` to use dark surface and crisp line border in dark mode instead of rendering white text on inverted off-white ink.
+  - Dashboard V2.1 Dark Styles: Added `@media (prefers-color-scheme: dark)` block in `components/dashboard-v21.css` for attention cards, summary tile gradients, referral code cards, guest/other avatar badges, and host check-in cards.
+  - Production CSS Dark Styles: Added `@media (prefers-color-scheme: dark)` in `app/production.css` for house detail rows, note text, house icons (wifi, location, access, parking, notes), estimate cards, and notification urgency states.
+  - React Component Surface Tokens: Replaced hardcoded `#faf8f5` and `#eef6f0` card backgrounds with adaptive `var(--kouchd-surface)` across `join-household.tsx`, `sms-opt-in-form.tsx`, `live-stay.tsx`, `guest-onboarding-flow.tsx`, `host-onboarding-wizard.tsx`, `workspace-panels.tsx`, `bill-splitting-card.tsx`, `terms/page.tsx`, and platform console explorer components.
+  - Version 0.9.8.
+
+- **Platform Ops Brand System migration & public brand decommissioning (WRE-273, #166, branch only, not released, 0.9.7)**:
+  - Relocated internal Brand & Design System to authenticated platform consoles at `/platform/brand` and `/console/[consoleKey]/brand`.
+  - Added Brand System navigation item to `ConsoleShell`.
+  - Decommissioned public `/brand` and `/brandkit` routes with clean 404 responses (`notFound()`), avoiding redirects to internal endpoints.
+  - Removed public `/brand` links from sitemap, robots allowlist, marketing footer, and legal layout.
+  - Resolved nested main landmarks and formatted document title for Platform Ops.
+  - Version 0.9.7.
+
+- **iOS welcome-screen motion, host copy polish, and web Image cleanup (#165, branch only, not released, 0.9.6)**:
+  - Added staggered slide-in and fade animations for welcome cards and introductory features on the iOS welcome screen.
+  - Updated iOS IntroductionFlow UI tests to match redesigned introduction copy and flow.
+  - Refined host overview hero copy for single stays ("1 stay") and polished house detail and direct contribution cards.
+  - Improved dark mode contrast for "Split a bill" and secondary labels.
+  - Refactored web workspace components (`home-screen.tsx`, `live-stay.tsx`) to Next.js `<Image />` components with zero ESLint warnings.
+  - Increased Vitest test timeout to 20s to ensure deterministic execution across parallel worker suites.
+  - Version 0.9.6.
+
+- **Primary button, status tag tones, and adaptive line-art empty states (WRE-278, #152, branch only, not released, 0.9.5)**:
+  - Added new `BrandButton` component (`components/ui/brand-button.tsx`) rendering the primary lime pressable action with 1.5px forest outline, 12px rounded radius, and tactile offset box-shadow, with reduced motion support.
+  - Refactored `BrandTag` (`components/ui/brand-tag.tsx`) to use calm semantic status tones: sage for confirmed, sky for pending/upcoming, light coral for attention, and warm gray for neutral, reserving lime exclusively for primary actions and Plus badges.
+  - Added six adaptive SVG line-art empty state illustrations (`components/illustrations/empty-state-illustrations.tsx`): HouseGuide, LedgerEntry, ChoreBoard, Agreement, PaymentOptions, and Reminders, responding smoothly to light and dark theme tokens.
+  - Integrated illustrations across web empty states in Household Logistics, Ledger Contributions, Chores Screen, Agreement & Stay Screen, Payment Options, and Dashboard Reminders.
+  - Added unit test suite `tests/wre-278-illustrations.test.ts`.
+  - Version 0.9.5.
+
+- **Kouchd iOS: align iPhone design with the Version 1.0 redesign (WRE-275, #149, branch only, not released, 0.9.4)**:
+  - Aligned native iOS tokens in `ios/Kouchd/Design.swift` with the Version 1.0 web brand: light colors match web values (`cream`, `surface`, `forest`, `ink`, `muted`, `line`), keeping dark values unchanged, and adds fixed `sage`, `sky`, `blue`, `amber`, `rose`, `paperFill`, `onFill`, `brandForest`, and `onBrand` tokens.
+  - Implemented the dynamic Manrope type scale (`display`, `page`, `section`, `cardTitle`).
+  - Updated `Pill` to support calmer status tones (`confirmed`, `pending`, `upcoming`, `attention`, `neutral`, `plus`) with on-fill text, reserving lime for Plus and primary actions.
+  - Added new `LimeButton` for the single prominent action per screen (introduction host choice, "Add contribution" on the Ledger, and Plus purchase).
+  - Introduction flow (`ios/Kouchd/Introduction.swift`) refreshed with warm ambient lighting, updated copy ("Shared stays, made clear."), and newly illustrated scenes for Agreements, Ledger, Chores, and Rooms. Direct referral code entry connects directly to `JoinCodeScreen(initialCode:)`.
+  - Empty chore board displays line-art illustration (`ChoreBoardIllustration` / `ChoreBoardIllustrationDark`).
+  - Added `needsFriendlyName` prompt in settings to guide members with placeholder names to set a clear household name (WRE-269 alignment).
+  - Version 0.9.4, iOS build 3.
+
+- **Invite and Plus screens follow the Version 1.0 redesign (WRE-277, branch only, not released, 0.9.2)**:
+  - The guest invite screen (`components/invite-accept.tsx`, new `components/invite-guest-panels.tsx`) opens with a "For invited guests" card. The title uses the host and stay names only when the invite has real ones ("Lee made room for you at Maple Street."), and falls back to "Someone made room for you." It says joining is always free and that no payment details are needed. The join, registration, and "Open Kouchd" actions use the new lime main-action button; the idle join label is now "Join free". Loading, invalid, already-used, signed-out, already-a-member, and full-stay states and their logic are unchanged.
+  - A privacy panel explains who sees what, matched to current Convex access rules: announcements, house info, and the chore board are shared with the stay; agreement terms and contribution records are visible only to the guest and host; money never moves through Kouchd. House rules are not listed as shared because each guest's terms carry their own copy.
+  - The Plus paywall (`components/billing/paywall-modal.tsx`) first shows Free and Plus plan cards (new `components/billing/plus-plans.tsx`), then loads the existing RevenueCat checkout after "Start with Plus". Card limits come from `PLAN_LIMITS` (Free: 1 active stay and 1 guest; Plus: up to 3 active stays and up to 5 guests across stays). Prices come from a new `PLUS_DISPLAY_PRICES` constant ($6.99/month or $69.99/year) in `lib/domain/subscriptionPlans.ts`; checkout still shows the live store price. Cards make no "unlimited" claims and add a guest note and a fine-print line that Kouchd never collects, holds, or transfers money.
+  - `PlanLimitModal` uses the main-action button for its primary action. The shared button lives in `components/ui/main-action.css` (offset shadow, focus ring, reduced-motion support).
+  - Covered by `tests/invite-plus-redesign.test.ts`.
+
+- **Signed-out Start page (WRE-276, branch only, not released)**:
+  - Signed-out visitors to `/` now see a short Start page (`components/start/start-page.tsx`, styles in `components/start/start-page.css`) instead of being redirected to `/sign-in`. The client home shell's signed-out branch renders the same page, replacing the older long-form `LandingPage`.
+  - The page offers two choices: hosts go to `/sign-up`, and guests enter an invite code. Joining needs an account, so a valid code is sent through `/sign-up?redirect_url=/?join=KCH-...`; after sign-up, `GetStartedHub` opens the existing "Join with Code" card pre-filled with that code, which still joins through `api.referral.joinWithCode`. No new backend path.
+  - Top bar links to `/sign-in`; the footer links to Privacy, Terms, Cookies, SMS preferences (`/sms-opt-in`), and the help center. Includes a `prefers-color-scheme: dark` variant and reduced-motion handling.
+  - Removed `components/landing-page.tsx`, which nothing else imported. `components/landing-v21.css` stays because `/about` and `/simple` still use it.
+  - Tests: `tests/start-page.test.ts` (new), `tests/home-page.test.ts` and `tests/carrier-compliance.test.ts` updated.
+
 ### Fixed
+
+- **Feature flag registry defaults (0.9.3)**: Aligned code default values in `lib/flags/config.ts` with unit test invariants while runtime feature enablement is driven via Convex platform overrides.
 
 - **Eliminated "Kouchd member" placeholder across client and server (WRE-269, #136, branch only, not released)**:
   - Removed `"Kouchd member"` fallback in `convex/lib/names.ts`, ensuring that name resolution never generates or returns `"Kouchd member"`. If all candidate names and email formatting are missing, fallbacks resolve to friendly, role-based labels (`"Host"` or `"Guest"`).
@@ -15,35 +85,9 @@
 
 ### Added
 
-### Added
+- **Web color tokens and dark appearance (WRE-274, in development):** Migrated color literals in `app/production.css`, `components/dashboard-v21.css`, and `app/console.css` to shared CSS color variables. Added system dark appearance for the seven adaptive colors (paper, surface, ink, muted, line, forest accent, and eyebrow); brand forest and on-fill text stay fixed for contrast.
 
 - **Sublease condition checklists and security deposit records (WRE-272, branch only, not released)**:
-  - **Condition checklists:** Added `conditionChecklists` table (`convex/schema.ts`) and `convex/checklists.ts` (`getByStay`, `submit`, `review`) supporting move-in and move-out inspections. In `private_room` subleases, private bedroom areas and shared household spaces are inspected separately. Submissions and counterpart reviews (confirmations or itemized dispute notes) are timestamped and immutable once confirmed.
-  - **Security deposit records:** Added `depositRecords` table (`convex/schema.ts`) and `convex/deposits.ts` (`getByStay`, `record`, `proposeDeductions`, `respond`) tracking amount, funds holder (host, landlord, or third party), agreed return date, and itemized deductions with dispute notes.
-  - **Financial separation & non-holding boundary:** In accordance with Kouchd operating policy and architecture, deposit records never alter obligations, rent ledger balances, or credits. Kouchd does not hold, transfer, or escrow funds, nor mediate condition disputes.
-  - **Sublease lock enforcement:** Blocked checklist submissions, reviews, and deposit record modifications on locked subleases.
-  - **Web & iOS UI:** Added `ConditionChecklistCard` and `DepositRecordCard` components on web (`components/subleases/`, integrated into `components/workspace/stay-screen.tsx`) and native iOS cards in `ios/Kouchd/StayScreens.swift`.
-
-- **Sublease stay type, landlord consent flow, sublease lock engine, bill presets, and access-code end-date redaction (WRE-272, branch only, not released)**:
-  - **Schema & feature flag:** Registered `FEATURE_FLAGS.SUBLEASES` (`feature_subleases`, `defaultValue: false` in `lib/flags/config.ts`) and added sublease fields to `stays` (`subleaseLayout`, `roommateCount`, `roommateNames`, `landlordConsent`, `subleaseBillPreset`, `subleaseLockedAt`) and `billingRetryStartedAt` to `subscriptionSnapshots` in `convex/schema.ts`.
-  - **Lock engine & mutation guards:** Implemented `getSubleaseLockState`, `assertSubleaseUnlocked`, and `reconcileAccountSubleaseLocks` in `convex/lib/subleaseLock.ts`. Subleases lock upon subscription expiration, refund, or when `billing_retry` exceeds 7 days. Sublease locks are enforced across all 14 stay-scoped mutation modules (`stays`, `terms`, `invites`, `referral`, `contributions`, `obligations`, `bills`, `paymentSchedule`, `occupancy`, `chores`, `shopping`, `checkIns`, `announcements`, `rewards`), pausing late fees and reminders while permitting host stay termination.
-  - **Access code protection & landlord consent:** Redacted door codes and Wi-Fi passwords from guest queries past the sublease agreement end date (`convex/lib/houseInfoAccess.ts`). Enforced landlord consent recording (`stays.recordLandlordConsent`) prior to issuing the first invite on a sublease.
-  - **Web & iOS UI:** Added sublease arrangement selection, whole place vs private room layouts with roommate configuration, monthly cadence default, landlord consent picker with dismissible guidance warning, lock disclosures, and live sublease lock banners across web (`components/onboarding/`, `components/workspace/`, `components/household/`) and iOS (`ios/Kouchd/StayScreens.swift`, `ios/Kouchd/MainScreens.swift`, `ios/Kouchd/MoreScreens.swift`).
-  - **Policy & export updates:** Updated `lib/domain/subscriptionPlans.ts` and `help/support/app-support.mdx` reflecting that routine support exports pause during sublease locks while formal legal data requests are handled separately.
-
-- **Plus household bill splitting (WRE-268, branch only, not released)**:
-  - **Plan capabilities & feature flag:** Added `billSplits` and `subleases` boolean capabilities to `PlanCapabilities` (`false` on `starter`, `true` on `hostPlus` and `householdPro` in `lib/domain/subscriptionPlans.ts`), `assertPlanCapability` in `convex/lib/planCapacity.ts` (reusing the `plan_limit` error shape so Free hosts open the Plus upgrade flow in `lib/planLimitError.ts` and iOS), and `FEATURE_FLAGS.BILL_SPLITTING` (`feature_bill_splitting`, `defaultValue: false` in `lib/flags/config.ts`).
-  - **Deterministic whole-cent calculation:** Added `calculateBillShares` in `lib/domain/billSplitting.ts` supporting `equal`, `percentage`, and `fixed` splits, optional host inclusion (`includeHost`), and optional stay-date proration (`prorateByStayDates` scaling each guest's share by inclusive overlap days over service days), with largest-remainder cent allocation and ties broken by earliest membership `joinedAt`.
-  - **Schema, mutations, and privacy boundaries:** Added `bills` and `billShares` tables in `convex/schema.ts` and `convex/bills.ts` (`create`, `voidBill`, `list`). `bills.create` writes the bill, per-guest `adhoc` ledger obligations, and `billShares` atomically; `bills.list` returns full share breakdowns to the host and redacts guest responses to only that guest's own `billShare`; `obligations.voidAdhocCharge` (`convex/obligations.ts`) refuses direct voiding of bill-linked obligations so bills are voided atomically via `bills.voidBill`.
-  - **Web & iOS Ledger UI:** Added the gated **Shared bills** section and **Split a bill** modal/sheet on web (`components/household/bill-splitting-card.tsx`, `components/workspace/contributions-screen.tsx`, `components/workspace/workspace-panels.tsx`, `components/workspace/use-live-stay.ts`, `components/workspace/view-helpers.tsx`, `components/workspace/types.ts`) and iOS (`ios/Kouchd/MainScreens.swift`, `ios/Kouchd/HostExtras.swift`, `ios/Kouchd/Service.swift`), including live per-guest previews, equal-split privacy notice when more than one guest is selected, and Plus upgrade routing on `plan_limit`.
-
-- **Automated turn-taking chore rotation for household stays (WRE-267, branch only, not released)**:
-  - Enabled automatic turn-taking chore rotation across active stay members (host and guests) on recurring chores.
-  - Backend schema extended with `rotateAssignee: v.optional(v.boolean())` on `chores`.
-  - When a recurring chore with `rotateAssignee: true` is completed, `convex/chores.ts` automatically advances the assignee to the next active household member in sequence ordered by join date (`joinedAt`), cycling smoothly from host to guests and back to host.
-  - Added "Rotate turns automatically" option to chore creation panels and forms on both Web (`components/workspace/workspace-panels.tsx`, `use-live-stay.ts`) and native iOS SwiftUI (`ios/Kouchd/MainScreens.swift`).
-  - Added "Rotating turns" badge to chore lists and cards across Web (`components/workspace/chores-screen.tsx`) and iOS (`ios/Kouchd/HouseholdRules.swift`, `MainScreens.swift`).
-  - Covered by automated integration tests in `tests/chore-rotation.test.ts`.
 
 - **Simplified introduction landing page & brand kit password protection (WRE-243)**:
 

@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 enum EntryRoute: String, Identifiable, Hashable {
   case host, guest
@@ -25,9 +26,10 @@ struct BrandSplash: View {
 
 struct IntroductionScreen: View {
   var replay = false
-  let finish: (EntryRoute?) -> Void
+  let finish: (EntryRoute?, String?) -> Void
   @Environment(\.accessibilityReduceMotion) private var reduceMotion
   @Environment(\.dynamicTypeSize) private var typeSize
+  @Environment(\.colorScheme) private var colorScheme
   @State private var step = 0
   /// Set while a tapped button moves the pager. The pager reports the page it is
   /// leaving during that slide, which must not pull `step` back.
@@ -36,13 +38,15 @@ struct IntroductionScreen: View {
   @State private var moveGeneration = 0
   /// The replay ends on "Done", so it has only the four preview pages, no role choice.
   private var pageCount: Int { replay ? 4 : 5 }
-  private let titles = ["A shared stay.\nOn the same page.", "Good stays start\nwith clarity.",
-                        "Clear records.\nFewer awkward asks.", "Make the everyday\nfeel more shared."]
+  @State private var inviteCode = ""
+  @State private var ambientMotion = false
+  private let titles = ["Shared stays, made clear.", "Agree on the stay.",
+                        "Keep a clear record.", "Share the everyday."]
   private let descriptions = [
-    "Staying with someone—or opening your home? Keep expectations, contributions and everyday plans in one place.",
-    "Agree on dates, house guidelines and contributions before the stay begins. Revisit changes together.",
-    "Record contributions made outside Kouchd. The people involved confirm or dispute the shared record.",
-    "Coordinate chores, check-ins and occupied nights. Keep the little things from becoming a guessing game."
+    "One private place for house notes, agreements, chores, and a shared Ledger.",
+    "Set the dates and house expectations together, then keep them easy to revisit.",
+    "Record contributions made outside Kouchd. The other person confirms each record.",
+    "Keep everyday tasks clear, with a fair turn for everyone in the household."
   ]
   @State private var windowWidth: CGFloat = 0
   private var usesWideLayout: Bool { windowWidth >= 900 && !typeSize.isAccessibilitySize }
@@ -53,9 +57,9 @@ struct IntroductionScreen: View {
         else { Text("kouchd").font(.custom("Manrope", size: 20, relativeTo: .title3).bold()) }
         Spacer()
         // The role choice is the last step, so Skip has nowhere to go there.
-        if replay || step < 4 {
+        if replay || (step > 0 && step < 4) {
           Button(replay ? "Done" : "Skip") {
-            if replay { finish(nil) } else { move(to: 4) }
+        if replay { finish(nil, nil) } else { move(to: 4) }
           }
         }
       }.frame(minHeight: 44).padding(.horizontal, 24).foregroundStyle(Palette.forest)
@@ -79,13 +83,46 @@ struct IntroductionScreen: View {
     .safeAreaInset(edge: .bottom, spacing: 0) {
       if !typeSize.isAccessibilitySize {
         footer.frame(maxWidth: 600).frame(maxWidth: .infinity)
-          .padding(.horizontal, 24).padding(.bottom, 16).background(Palette.cream)
+          .padding(.horizontal, 24).padding(.top, 16).padding(.bottom, 16).background(Palette.cream)
+          // Fade the page content into the footer so preview cards never end in a hard cut under the dots.
+          .overlay(alignment: .top) {
+            LinearGradient(colors: [Palette.cream.opacity(0), Palette.cream], startPoint: .top, endPoint: .bottom)
+              .frame(height: 28).offset(y: -28).allowsHitTesting(false).accessibilityHidden(true)
+          }
       }
     }
     .foregroundStyle(Palette.ink)
     .tint(Palette.forest)
-    .background(Palette.cream.ignoresSafeArea())
+    .background {
+      if step == 0 {
+        ZStack(alignment: .topLeading) {
+          LinearGradient(
+            colors: colorScheme == .dark
+              ? [Palette.cream, Palette.surface, Palette.cream]
+              : [Palette.cream, Palette.sage, Palette.cream],
+            startPoint: .topLeading, endPoint: .bottomTrailing
+          )
+          Circle().fill(Palette.sage.opacity(colorScheme == .dark ? 0.32 : 0.42))
+            .frame(width: 260, height: 260).blur(radius: 64)
+            .offset(x: ambientMotion && !reduceMotion ? 90 : 145,
+                    y: ambientMotion && !reduceMotion ? 310 : 365)
+            .scaleEffect(ambientMotion && !reduceMotion ? 0.84 : 1.08)
+            .animation(.easeInOut(duration: 8), value: ambientMotion)
+          Circle().fill(Palette.lime.opacity(colorScheme == .dark ? 0.18 : 0.38))
+            .frame(width: 300, height: 300).blur(radius: 72)
+            .offset(x: ambientMotion && !reduceMotion ? -82 : -120,
+                    y: ambientMotion && !reduceMotion ? 52 : 70)
+            .scaleEffect(ambientMotion && !reduceMotion ? 1.2 : 0.82)
+            .opacity(ambientMotion && !reduceMotion ? 0.92 : 0.64)
+            .animation(.easeInOut(duration: 7), value: ambientMotion)
+        }.ignoresSafeArea()
+      } else {
+        Palette.cream.ignoresSafeArea()
+      }
+    }
     .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { windowWidth = $0 }
+    .onAppear(perform: updateAmbientMotion)
+    .onChange(of: reduceMotion) { updateAmbientMotion() }
   }
   @ViewBuilder private func pageContent(_ page: Int) -> some View {
     if usesWideLayout {
@@ -101,57 +138,95 @@ struct IntroductionScreen: View {
         HStack(alignment: .top, spacing: 20) { roleCards }
       }
     } else {
-      pageText(page)
-      if page < 4 { pagePreview(page) } else { roleCards }
+      if page < 4 {
+        pagePreview(page)
+        pageText(page)
+      } else {
+        pageText(page)
+        roleCards
+      }
     }
   }
   @ViewBuilder private func pageText(_ page: Int) -> some View {
     if page < 4 {
-      Image("CouchMark").renderingMode(.template).resizable().scaledToFit().frame(width: 64, height: 64)
-        .foregroundStyle(Palette.forest)
-        .accessibilityHidden(true)
-      if page > 0 { Pill(text: ["", "01 / Your stay", "02 / Contributions", "03 / Everyday living"][page]) }
+      if page > 0 {
+        Image("CouchMark").renderingMode(.template).resizable().scaledToFit().frame(width: 48, height: 48)
+          .foregroundStyle(Palette.forest).accessibilityHidden(true)
+          .introReveal(order: 1, rise: 10, scale: 0.85)
+      }
+      if page > 0 {
+        Pill(text: ["", "01 / Your stay", "02 / Contributions", "03 / Everyday living"][page])
+          .introReveal(order: 1)
+      }
       Text(titles[page]).font(Palette.heading).accessibilityAddTraits(.isHeader)
+        .introReveal(order: 2, after: lead(page))
       Text(descriptions[page]).foregroundStyle(Palette.muted)
+        .introReveal(order: 3, after: lead(page))
     } else {
-      Text("How are you\nmaking room?").font(Palette.heading).accessibilityAddTraits(.isHeader)
-      Text("Start with your role in this stay. You can host and be a guest in different stays.")
+      Text("How are you making room?").font(Palette.heading).accessibilityAddTraits(.isHeader)
+        .introReveal(order: 0)
+      Text("Choose how you’re joining. You can host and be a guest in different stays.")
         .foregroundStyle(Palette.muted)
+        .introReveal(order: 1)
     }
   }
   @ViewBuilder private func pagePreview(_ page: Int) -> some View {
     preview(page)
+      .introReveal(order: 0, rise: 28, scale: 0.94, after: lead(page))
+      .scaleEffect(reduceMotion ? 1 : (ambientMotion ? 1.025 : 0.975))
+      .offset(y: reduceMotion ? 0 : (ambientMotion ? -7 : 5))
+      .animation(.easeInOut(duration: 4.5), value: ambientMotion)
     if page == 2 {
-      Text("Kouchd records contributions. It does not move money.")
+      Text("The other person confirms each record. Money is settled outside Kouchd.")
         .font(.footnote).foregroundStyle(Palette.muted)
+        .introReveal(order: 4)
     }
   }
   @ViewBuilder private var roleCards: some View {
       Card {
         Text("I’m hosting").font(Palette.section)
-        Text("Create a stay, set expectations and invite your guests.")
-        PrimaryButton(title: "Create a stay") { finish(.host) }
+        Text("Create a stay, set expectations and invite your guests.").font(.subheadline).foregroundStyle(Palette.muted)
+        PrimaryButton(title: "Start free as a host") { finish(.host, nil) }
       }
+      .overlay(RoundedRectangle(cornerRadius: 24).stroke(Palette.forest, lineWidth: 1))
+      .introReveal(order: 2, rise: 24)
       Card {
-        Text("I’m staying with someone").font(Palette.section)
-        Text("Join using the invitation your host shared.")
-        PrimaryButton(title: "Join a stay") { finish(.guest) }
+        Text("I’m joining a stay").font(Palette.section)
+        Text("Enter the invite code your host shared.").font(.subheadline).foregroundStyle(Palette.muted)
+        TextField("Invite code", text: $inviteCode)
+          .textInputAutocapitalization(.characters).autocorrectionDisabled()
+          .padding(14).background(Palette.surface, in: RoundedRectangle(cornerRadius: 14))
+          .overlay(RoundedRectangle(cornerRadius: 14).stroke(Palette.line))
+        Button {
+          finish(.guest, inviteCode.trimmingCharacters(in: .whitespacesAndNewlines))
+        } label: {
+          Text("Join").foregroundStyle(Palette.onPrimary)
+        }
+        .buttonStyle(.borderedProminent).tint(Palette.forest)
+          .disabled(inviteCode.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
       }
+      .background(Palette.sage, in: RoundedRectangle(cornerRadius: 24))
+      .introReveal(order: 3, rise: 24)
   }
   private var footer: some View {
     VStack(spacing: 12) {
         if step < 4 {
-          HStack(spacing: 12) {
-            ForEach(0..<4) { index in
-              Circle().fill(step == index ? Palette.forest : Palette.line).frame(width: 8, height: 8)
+          if step > 0 {
+            HStack(spacing: 12) {
+              ForEach(1..<4) { index in
+                Capsule().fill(step == index ? Palette.forest : Palette.line)
+                  .frame(width: step == index ? 22 : 8, height: 8)
+              }
             }
-          }.accessibilityElement(children: .ignore).accessibilityLabel("Preview \(step + 1) of 4")
-          PrimaryButton(title: step == 0 ? "See how Kouchd works" : step == 3 ? (replay ? "Done" : "Let’s get started") : "Continue") {
-            if replay && step == 3 { finish(nil) } else { move(to: step + 1) }
+            .animation(reduceMotion ? nil : .spring(duration: 0.45, bounce: 0.3), value: step)
+            .accessibilityElement(children: .ignore).accessibilityLabel("Preview \(step) of 3")
+          }
+          PrimaryButton(title: step == 0 ? "Get started" : step == 3 ? (replay ? "Done" : "Choose how you’re joining") : "Continue") {
+            if replay && step == 3 { finish(nil, nil) } else { move(to: step + 1) }
           }
         }
         if !replay {
-          Button("Already have an account? Sign in") { finish(nil) }
+          Button("I already have an account") { finish(nil, nil) }
             .frame(minHeight: 44).foregroundStyle(Palette.forest)
         }
       }
@@ -159,47 +234,53 @@ struct IntroductionScreen: View {
   @ViewBuilder private func preview(_ page: Int) -> some View {
     switch page {
     case 0:
-      VStack(alignment: .leading, spacing: 12) {
-        Text("A LITTLE LESS GUESSWORK").font(.caption.bold()).foregroundStyle(Palette.lime)
-        Text("Agree on the stay.\nKeep a clear record.\nShare the everyday.").font(Palette.section)
-        Text("For hosts and guests, together.").font(.subheadline)
-      }.foregroundStyle(.white).padding(20).frame(maxWidth: .infinity, alignment: .leading)
-        .background(Palette.brandForest, in: RoundedRectangle(cornerRadius: 24))
+      Image(colorScheme == .dark ? "RoomIllustrationDark" : "RoomIllustration").resizable().scaledToFit()
+        .frame(maxWidth: .infinity).frame(height: min(windowWidth * 0.70, 260))
+        .padding(.horizontal, 8).padding(.vertical, 18)
+        .background(Palette.sage, in: RoundedRectangle(cornerRadius: 30))
     case 1:
-      Card {
-        Text("Alex’s stay").font(Palette.section)
-        Text("Oct 4 – Oct 18 · Maple House").foregroundStyle(Palette.muted)
-        Divider()
-        Label("Shared expectations accepted", systemImage: "checkmark.circle.fill")
-      }
-      Card {
-        Text("One place for the details").font(.headline)
-        Text("Stay dates · House guide\nAgreements · Schedule changes")
-      }
+      Image("AgreementIllustration").resizable().scaledToFit()
+        .padding(18).background(Palette.sky, in: RoundedRectangle(cornerRadius: 28))
+      Text("Agree on dates and expectations before the stay begins.")
+        .font(.subheadline).foregroundStyle(Palette.muted)
     case 2:
-      Card {
-        Pill(text: "Your shared record")
-        Text("$120 confirmed").font(Palette.section)
-        Text("Alex + Jordan · This stay").foregroundStyle(Palette.muted)
-      }
-      Card {
-        DataRow(title: "Weekly contribution", detail: "$60")
-        Text("Oct 11 · Pending confirmation").font(.subheadline).foregroundStyle(Palette.muted)
+      ZStack(alignment: .bottomTrailing) {
+        Image("LedgerIllustration").resizable().scaledToFit().frame(maxWidth: .infinity)
+          .padding(20).background(Palette.sky, in: RoundedRectangle(cornerRadius: 28))
+        Label("Groceries  $40", systemImage: "basket.fill")
+          .font(.caption.weight(.semibold)).foregroundStyle(Palette.ink)
+          .padding(12).background(Palette.surface, in: RoundedRectangle(cornerRadius: 14))
+          .shadow(color: .black.opacity(0.08), radius: 8, y: 3).padding(12)
+          .introReveal(order: 4, rise: 14, scale: 0.7)
+          .offset(y: ambientMotion && !reduceMotion ? -8 : 0)
+          .animation(.easeInOut(duration: 3.5), value: ambientMotion)
       }
     default:
-      Card {
-        Label("Kitchen reset", systemImage: "checkmark.circle.fill").font(.headline)
-        Text("Alex · Completed today").foregroundStyle(Palette.muted)
-        Divider()
-        Label("Take out recycling", systemImage: "circle").font(.headline)
-        Text("Jordan · Due tomorrow").foregroundStyle(Palette.muted)
-      }
-      Card {
-        Text("Small contributions count.").font(.headline)
-        Text("Earn points for approved chores and claim rewards your host offers.")
+      ZStack(alignment: .bottomTrailing) {
+        Image("ChoreBoardIllustration").resizable().scaledToFit().frame(maxWidth: .infinity)
+          .padding(20).background(Palette.sage, in: RoundedRectangle(cornerRadius: 28))
+        Label {
+          Text("Kitchen reset")
+        } icon: {
+          if reduceMotion {
+            Image(systemName: "checkmark.circle.fill")
+          } else {
+            Image(systemName: "checkmark.circle.fill")
+              .symbolEffect(.bounce, value: step == 3)
+          }
+        }
+          .font(.caption.weight(.semibold)).foregroundStyle(Palette.ink)
+          .padding(12).background(Palette.surface, in: RoundedRectangle(cornerRadius: 14))
+          .shadow(color: .black.opacity(0.08), radius: 8, y: 3).padding(12)
+          .introReveal(order: 4, rise: 14, scale: 0.7)
+          .offset(y: ambientMotion && !reduceMotion ? -8 : 0)
+          .animation(.easeInOut(duration: 3.5), value: ambientMotion)
       }
     }
   }
+  /// The welcome page opens while the brand splash is still fading out; start its entrance once the splash is gone.
+  private func lead(_ page: Int) -> Double { page == 0 && !replay ? 0.4 : 0 }
+
   private func move(to value: Int) {
     guard value != step else { return }
     pendingStep = value
@@ -213,12 +294,61 @@ struct IntroductionScreen: View {
     }
   }
 
+  private func updateAmbientMotion() {
+    guard !reduceMotion else {
+      var transaction = Transaction()
+      transaction.disablesAnimations = true
+      withTransaction(transaction) { ambientMotion = false }
+      return
+    }
+    withAnimation(.easeInOut(duration: 5).repeatForever(autoreverses: true)) {
+      ambientMotion = true
+    }
+  }
+
   private func swiped(to value: Int) {
     if let pendingStep {
       if value == pendingStep { self.pendingStep = nil }
       return
     }
     step = value
+  }
+}
+
+/// Lets introduction content rise and fade in, one piece after another, the first time a page comes into view.
+/// Pages in the pager appear as they slide in, so the reveal plays during the swipe or tap.
+/// With Reduce Motion the content is simply there.
+private struct IntroReveal: ViewModifier {
+  @Environment(\.accessibilityReduceMotion) private var reduceMotion
+  @State private var shown = false
+  let order: Int
+  let rise: CGFloat
+  let scale: CGFloat
+  let after: Double
+
+  func body(content: Content) -> some View {
+    let visible = shown || reduceMotion
+    content
+      .opacity(visible ? 1 : 0)
+      .offset(y: visible ? 0 : rise)
+      .scaleEffect(visible ? 1 : scale)
+      .onAppear {
+        if reduceMotion {
+          shown = true
+          return
+        }
+        guard !shown else { return }
+        withAnimation(.spring(duration: 0.55, bounce: 0.22).delay(after + 0.07 * Double(order))) { shown = true }
+      }
+      .onChange(of: reduceMotion) { _, newValue in
+        if newValue { shown = true }
+      }
+  }
+}
+
+private extension View {
+  func introReveal(order: Int, rise: CGFloat = 16, scale: CGFloat = 1, after: Double = 0) -> some View {
+    modifier(IntroReveal(order: order, rise: rise, scale: scale, after: after))
   }
 }
 
@@ -252,7 +382,7 @@ struct AboutKouchdScreen: View {
         .font(.caption).foregroundStyle(Palette.muted)
     }
     .sheet(isPresented: $previewPresented) {
-      IntroductionScreen(replay: true) { _ in previewPresented = false }
+      IntroductionScreen(replay: true) { _, _ in previewPresented = false }
     }
   }
 }

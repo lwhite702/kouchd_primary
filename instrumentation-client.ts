@@ -1,6 +1,16 @@
+import { analytics } from "@heycatch/sdk";
 import { initSecurityRuntime } from "./lib/security-runtime";
 import { scrubErrorEvent } from "@/lib/telemetry-privacy";
 import * as Sentry from "@sentry/nextjs";
+
+analytics.init({
+  projectKey: "hck_pk_vTnA-QIqNwJkDomxrPzeV7q7FubOu6pI",
+  install: {
+    framework: "nextjs",
+    frameworkVersion: "16",
+    agent: "other",
+  },
+});
 
 initSecurityRuntime();
 

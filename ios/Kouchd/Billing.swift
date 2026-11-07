@@ -480,6 +480,9 @@ enum PlanCopy {
     guard let limit = guests.limit else {
       return "\(guests.used) \(guests.used == 1 ? "guest" : "guests") across your stays"
     }
+    if guests.used > limit {
+      return "\(guests.used) guests across your stays · your plan includes \(limit)"
+    }
     return "\(guests.used) of \(limit) guest spots used across your stays"
   }
 
@@ -731,7 +734,12 @@ struct PlanLimitPresentation: ViewModifier {
       .onChange(of: store.planLimit, initial: true) { _, limit in
         guard let limit, !limit.isGuest, !limit.atHighestPlan, purchasesEnabled else { return }
         store.planLimit = nil
-        store.plusEntry = .stayLimit
+        switch limit.dimension {
+        case "recurringChores": store.plusEntry = .choreRotation
+        case "billSplits": store.plusEntry = .billSplitting
+        case "subleases": store.plusEntry = .sublease
+        default: store.plusEntry = .stayLimit
+        }
       }
   }
 }

@@ -1,8 +1,8 @@
 import { AuthenticatedHome } from "@/components/authenticated-home";
 import { KouchdWorkspace } from "@/components/kouchd-workspace";
+import { StartPage } from "@/components/start/start-page";
 import { auth } from "@clerk/nextjs/server";
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
 
 export const metadata: Metadata = {
   title: "Kouchd | Shared stays, made clear",
@@ -43,8 +43,6 @@ export default async function HomePage() {
   if (!servicesConfigured) return <KouchdWorkspace servicesConfigured={false} />;
 
   const { userId } = await auth();
-  if (!userId) redirect("/sign-in");
+  if (!userId) return <StartPage />;
   return <AuthenticatedHome />;
 }
-
-

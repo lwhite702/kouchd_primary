@@ -109,6 +109,56 @@ describe("Convex Platform Admin Backend Authorization & Privacy", () => {
     ).rejects.toThrow("Unauthorized: Platform admin grant required");
   });
 
+  it("does not grant admin to a user who stores an allowlisted email through syncCurrent", async () => {
+    const t = convexTest(schema, modules);
+    const attacker = t.withIdentity({
+      subject: "attacker-user",
+      name: "Attacker",
+      email: "attacker@example.com",
+    });
+    await attacker.mutation(api.users.syncCurrent, { email: adminEmail });
+
+    const stored = await t.run(async (ctx) =>
+      ctx.db.query("users").withIndex("by_clerk_user_id", (q) => q.eq("clerkUserId", "attacker-user")).unique()
+    );
+    expect(stored?.email).toBe("attacker@example.com");
+    await expect(attacker.query(api.admin.getOverviewStats, {})).rejects.toThrow(
+      "Unauthorized: Platform admin grant required"
+    );
+  });
+
+  it("ignores a spoofed users.email even when it was written directly", async () => {
+    const t = convexTest(schema, modules);
+    const attacker = t.withIdentity({ subject: "attacker-2", name: "Attacker", email: "attacker2@example.com" });
+    await attacker.mutation(api.users.syncCurrent, {});
+    await t.run(async (ctx) => {
+      const user = await ctx.db.query("users").withIndex("by_clerk_user_id", (q) => q.eq("clerkUserId", "attacker-2")).unique();
+      await ctx.db.patch(user!._id, { email: adminEmail });
+    });
+
+    await expect(attacker.query(api.admin.getOverviewStats, {})).rejects.toThrow(
+      "Unauthorized: Platform admin grant required"
+    );
+  });
+
+  it("refuses an allowlisted token email that Clerk marks unverified", async () => {
+    const t = convexTest(schema, modules);
+    const unverified = t.withIdentity({ subject: "unverified-admin", name: "Unverified", email: adminEmail, emailVerified: false });
+    await unverified.mutation(api.users.syncCurrent, {});
+
+    await expect(unverified.query(api.admin.getOverviewStats, {})).rejects.toThrow(
+      "Unauthorized: Platform admin grant required"
+    );
+  });
+
+  it("still grants admin from the allowlisted email in the token", async () => {
+    const t = convexTest(schema, modules);
+    const admin = t.withIdentity({ subject: "real-admin", name: "Operator", email: adminEmail, emailVerified: true });
+    await admin.mutation(api.users.syncCurrent, {});
+
+    await expect(admin.query(api.admin.getOverviewStats, {})).resolves.toBeDefined();
+  });
+
   it("redacts sensitive household logistics in getStayDetail and enforces audited admin grants", async () => {
     const t = convexTest(schema, modules);
 
