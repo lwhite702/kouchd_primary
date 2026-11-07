@@ -40,6 +40,15 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+  async redirects() {
+    return [
+      {
+        source: "/:l([a-z0-9])",
+        destination: "/?utm_source=heycatch&utm_campaign=:l",
+        permanent: false,
+      },
+    ];
+  },
   // PostHog through the app's own origin, so ad blockers don't drop events.
   skipTrailingSlashRedirect: true,
   async rewrites() {

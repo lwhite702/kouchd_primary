@@ -1,10 +1,17 @@
 import posthog from "posthog-js";
+import { analytics, type HeyCatchProperties } from "@heycatch/sdk";
 import type { AnalyticsEventName, AnalyticsEventPayloads } from "./events";
 
 export function trackEvent<E extends AnalyticsEventName>(
   event: E,
   properties: AnalyticsEventPayloads[E]
 ): void {
+  try {
+    analytics.trackEvent(event, properties as unknown as HeyCatchProperties);
+  } catch (err) {
+    console.warn("[HeyCatch] Event track failed:", err);
+  }
+
   if (typeof window === "undefined" || !posthog.__loaded) return;
   try {
     posthog.capture(event, properties);
