@@ -2,6 +2,16 @@
 
 Internal engineering record. This file is excluded from Mintlify navigation and is not a public product changelog.
 
+## 2026-11-07 — Web launch audit fixes and screenshot library (0.9.6)
+
+- Branch `claude/loving-ptolemy-f7sjmy`; no Linear issue yet. Not pushed, merged, deployed or released.
+- Full findings, evidence and open items: `docs/internal/LAUNCH_AUDIT_2026-11.md`. Technical detail: root `CHANGELOG.md` `[Unreleased]`.
+- Blockers fixed: default sublease creation failed on the last step; sublease option shown while its flag was off; joined guests saw "already accepted"; hosts could not post announcements; hosts could not reach Shopping list or House check-ins on phones; dropped CSS declarations from comma RGB tokens; unreadable automatic dark appearance (now opt-in).
+- Tests added: `tests/css-tokens.test.ts`, `tests/stay-creation.test.ts`, referral preview sign-in case.
+- Checks: lint 0 errors, typecheck clean, 57 files / 370 tests, production build, version 0.9.6 synchronized, release gate artifacts checked.
+- Screenshots: `docs/screenshots/launch-2026-11/` (56 captures, synthetic data, branch behavior; publish only after release verification).
+- Open: Clerk-hosted flows, RevenueCat checkout, Knock/SMS delivery not exercised; schedule-change late fee override needs a product decision; dark appearance needs a full pass.
+
 ## 2026-11-03 — Primary button, status tag tones, and adaptive line-art empty states (WRE-278, #152, 0.9.5)
 
 - Branch `codex/WRE-278-button-status-illustrations`, issue #152 (Linear WRE-278).
