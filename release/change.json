@@ -1,5 +1,5 @@
 {
   "type": "patch",
-  "version": "0.9.9",
-  "reason": "Remediate dark mode white-on-white text and low-contrast surfaces across Web and iOS."
+  "version": "0.9.10",
+  "reason": "Complete HeyCatch web analytics with awaited server outcomes and verified subscription identity."
 }
