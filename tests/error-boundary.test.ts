@@ -30,3 +30,27 @@ describe("Route-level Error Boundary (app/error.tsx)", () => {
     expect(html).toContain("Back to Home");
   });
 });
+
+describe("retryOrReload", () => {
+  it("resets without reloading when the retry succeeds", async () => {
+    const { retryOrReload } = await import("../lib/error-retry");
+    const reset = vi.fn();
+    const report = vi.fn();
+    const reload = vi.fn();
+    retryOrReload(reset, report, reload);
+    expect(reset).toHaveBeenCalledOnce();
+    expect(report).not.toHaveBeenCalled();
+    expect(reload).not.toHaveBeenCalled();
+  });
+
+  it("reports and reloads when reset throws again", async () => {
+    const { retryOrReload } = await import("../lib/error-retry");
+    const failure = new Error("still broken");
+    const reset = vi.fn(() => { throw failure; });
+    const report = vi.fn();
+    const reload = vi.fn();
+    expect(() => retryOrReload(reset, report, reload)).not.toThrow();
+    expect(report).toHaveBeenCalledWith(failure);
+    expect(reload).toHaveBeenCalledOnce();
+  });
+});

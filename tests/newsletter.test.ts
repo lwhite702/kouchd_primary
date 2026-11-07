@@ -309,7 +309,7 @@ describe("Newsletter API Route & Rate Limiter", () => {
       expect(mockFetch).toHaveBeenCalledTimes(1);
     });
 
-    it("returns 502 with the upstream status when a network error is followed by a 5xx", async () => {
+    it("reports the network failure when a network error is followed by a 5xx", async () => {
       const networkError = new TypeError("fetch failed");
       const mockFetch = vi
         .fn()
@@ -321,9 +321,10 @@ describe("Newsletter API Route & Rate Limiter", () => {
       const res = await POST(signupRequest());
       expect(res.status).toBe(502);
       expect(mockFetch).toHaveBeenCalledTimes(2);
+      expect(await res.json()).toEqual({ message: "We couldn’t reach the signup service. Please try again shortly." });
       expect(consoleErrorSpy).toHaveBeenCalledWith(
-        "Loops newsletter signup failed",
-        expect.objectContaining({ status: 502 })
+        "Loops newsletter upstream network/timeout failure",
+        expect.objectContaining({ classification: "network" })
       );
     });
 
@@ -355,6 +356,46 @@ describe("Newsletter API Route & Rate Limiter", () => {
         "Newsletter route unhandled error",
         expect.objectContaining({ correlationId: expect.any(String), message: "malformed x-forwarded-for" })
       );
+    });
+
+    it("keeps the network classification when a network error is followed by a 503", async () => {
+      const mockFetch = vi
+        .fn()
+        .mockRejectedValueOnce(new TypeError("fetch failed"))
+        .mockResolvedValueOnce(new Response("Service unavailable", { status: 503 }));
+      vi.stubGlobal("fetch", mockFetch);
+      vi.spyOn(console, "error").mockImplementation(() => {});
+
+      const res = await POST(signupRequest());
+      expect(res.status).toBe(502);
+      expect(await res.json()).toEqual({ message: "We couldn’t reach the signup service. Please try again shortly." });
+    });
+
+    it("reports a rejected API key even after a network error on the first attempt", async () => {
+      const mockFetch = vi
+        .fn()
+        .mockRejectedValueOnce(new TypeError("fetch failed"))
+        .mockResolvedValueOnce(new Response("Unauthorized", { status: 401 }));
+      vi.stubGlobal("fetch", mockFetch);
+      const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
+      const res = await POST(signupRequest());
+      expect(res.status).toBe(502);
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        "Loops newsletter misconfiguration: API key rejected",
+        expect.objectContaining({ status: 401 })
+      );
+    });
+
+    it("clears an earlier network error when the retry succeeds", async () => {
+      const mockFetch = vi
+        .fn()
+        .mockRejectedValueOnce(new TypeError("fetch failed"))
+        .mockResolvedValueOnce(new Response(JSON.stringify({ success: true }), { status: 200 }));
+      vi.stubGlobal("fetch", mockFetch);
+
+      const res = await POST(signupRequest());
+      expect(res.status).toBe(200);
     });
 
     it("does not retry a request that was deliberately aborted", async () => {
