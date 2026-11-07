@@ -27,11 +27,13 @@ export async function GET() {
   const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
   const clerkIssuer = process.env.CLERK_JWT_ISSUER_DOMAIN;
 
+  // A production deployment without these settings cannot serve signed-in users, so missing
+  // config is a failure there. Locally they are often unset on purpose, so it is only skipped.
+  const missing: CheckResult = process.env.NODE_ENV === "production" ? "fail" : "skipped";
+
   const [convex, clerk] = await Promise.all([
-    convexUrl ? probe(`${convexUrl.replace(/\/$/, "")}/version`) : Promise.resolve<CheckResult>("fail"),
-    clerkIssuer
-      ? probe(`${clerkIssuer.replace(/\/$/, "")}/.well-known/jwks.json`)
-      : Promise.resolve<CheckResult>("skipped"),
+    convexUrl ? probe(`${convexUrl.replace(/\/$/, "")}/version`) : Promise.resolve(missing),
+    clerkIssuer ? probe(`${clerkIssuer.replace(/\/$/, "")}/.well-known/jwks.json`) : Promise.resolve(missing),
   ]);
 
   const checks = { convex, clerk };
